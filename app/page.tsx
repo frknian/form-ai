@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, useMemo, useState } from "react";
+import { ChangeEvent, useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 const historyQuestions = [
@@ -29,9 +29,9 @@ const answerOptions = [
 ];
 
 const workouts = [
-  { name: "Goblet Squat", sets: "3 set · 12 tekrar", level: "Bacak", tone: "orange", icon: "◒" },
-  { name: "Şınav", sets: "3 set · 10 tekrar", level: "Göğüs", tone: "blue", icon: "✦" },
-  { name: "Dambıl Row", sets: "3 set · 12 tekrar", level: "Sırt", tone: "purple", icon: "↗" },
+  { name: "Goblet Squat", sets: "3 set · 12 tekrar", level: "Bacak", tone: "orange", icon: "◒", seconds: 30 },
+  { name: "Şınav", sets: "3 set · 10 tekrar", level: "Göğüs", tone: "blue", icon: "✦", seconds: 30 },
+  { name: "Dambıl Row", sets: "3 set · 12 tekrar", level: "Sırt", tone: "purple", icon: "↗", seconds: 30 },
 ];
 
 export default function Home() {
@@ -49,6 +49,11 @@ export default function Home() {
   const [questionIndex, setQuestionIndex] = useState(0);
   const [saving, setSaving] = useState(false);
   const [activeWorkout, setActiveWorkout] = useState<number | null>(null);
+  const [timer, setTimer] = useState(30);
+  const [isRunning, setIsRunning] = useState(false);
+  const [sessionCalories, setSessionCalories] = useState(0);
+  const [spotifyConnected, setSpotifyConnected] = useState(false);
+  const [healthConnected, setHealthConnected] = useState(false);
 
   const bmi = useMemo(() => {
     const h = Number(height) / 100;
@@ -63,6 +68,34 @@ export default function Home() {
 
   function setAnswer(answer: string) {
     setHistory((current) => current.map((value, index) => index === questionIndex ? answer : value));
+    if (questionIndex < 9) window.setTimeout(() => setQuestionIndex((current) => current + 1), 220);
+  }
+
+  useEffect(() => {
+    if (!isRunning || activeWorkout === null) return;
+    const interval = window.setInterval(() => {
+      setTimer((current) => {
+        if (current <= 1) {
+          setIsRunning(false);
+          return 0;
+        }
+        return current - 1;
+      });
+      setSessionCalories((current) => current + 1);
+    }, 1000);
+    return () => window.clearInterval(interval);
+  }, [isRunning, activeWorkout]);
+
+  function openWorkout(index: number) {
+    setActiveWorkout(index);
+    setTimer(workouts[index].seconds);
+    setIsRunning(false);
+  }
+
+  function finishWorkout() {
+    setIsRunning(false);
+    setSessionCalories((current) => Math.max(current, 1));
+    setActiveWorkout(null);
   }
 
   async function createPlan() {
@@ -138,10 +171,11 @@ export default function Home() {
         </section>
       ) : (
         <section className="dashboard">
-          {activeWorkout !== null ? <div className="workout-player"><button className="back-btn" type="button" onClick={() => setActiveWorkout(null)}>← Plana dön</button><div className={`player-art ${workouts[activeWorkout].tone}`}><span>{workouts[activeWorkout].icon}</span><i>HAREKET ANİMASYONU</i></div><div className="eyebrow">HAREKET {activeWorkout + 1} / {workouts.length}</div><h1>{workouts[activeWorkout].name}</h1><p className="lead">Hareketi kontrollü yap, nefesini tutma ve ağrı hissedersen dur.</p><div className="player-meta"><strong>{workouts[activeWorkout].sets}</strong><span>{workouts[activeWorkout].level}</span></div><div className="player-actions"><button className="outline-btn" type="button" onClick={() => setActiveWorkout(activeWorkout > 0 ? activeWorkout - 1 : workouts.length - 1)}>← Önceki</button><button className="start-btn" type="button" onClick={() => setActiveWorkout((activeWorkout + 1) % workouts.length)}>Sonraki hareket <span>→</span></button></div></div> : <>
+          {activeWorkout !== null ? <div className="workout-player"><button className="back-btn" type="button" onClick={() => { setIsRunning(false); setActiveWorkout(null); }}>← Plana dön</button><div className={`player-art ${workouts[activeWorkout].tone} ${isRunning ? "is-animating" : ""}`}><span>{workouts[activeWorkout].icon}</span><i>HAREKET ANİMASYONU</i></div><div className="eyebrow">HAREKET {activeWorkout + 1} / {workouts.length}</div><h1>{workouts[activeWorkout].name}</h1><p className="lead">Hareketi kontrollü yap, nefesini tutma ve ağrı hissedersen dur.</p><div className="timer-card"><span>{isRunning ? "AKTİF SET" : timer === 0 ? "SET TAMAMLANDI" : "HAZIR"}</span><strong>00:{String(timer).padStart(2, "0")}</strong><small>Yaklaşık {sessionCalories} kcal</small></div><div className="player-meta"><strong>{workouts[activeWorkout].sets}</strong><span>{workouts[activeWorkout].level}</span></div><div className="player-actions"><button className="outline-btn" type="button" onClick={() => openWorkout(activeWorkout > 0 ? activeWorkout - 1 : workouts.length - 1)}>← Önceki</button><button className="start-btn" type="button" onClick={() => timer === 0 ? openWorkout((activeWorkout + 1) % workouts.length) : setIsRunning((running) => !running)}>{isRunning ? "Duraklat" : timer === 0 ? "Sonraki hareket" : "Seti başlat"} <span>→</span></button></div><button className="finish-btn" type="button" onClick={finishWorkout}>✓ Antrenmanı bitir</button></div> : <>
           <div className="dashboard-head"><div><div className="eyebrow">BUGÜNÜN PLANI · 01</div><h1>{name || "Ece"}, <em>hazır mısın?</em></h1><p>Verilerine göre ilk program taslağını hazırladık. İlerledikçe daha da kişiselleştireceğiz.</p></div><div className="streak-card"><span>✦</span><strong>4</strong><small>günlük seri</small></div></div>
           <div className="stats-row"><div><span>Vücut kitle indeksi</span><strong>{bmi}</strong><small>İlk ölçüm</small></div><div><span>Hedef</span><strong>{goalText ? "Kişisel" : "Güçlenme"}</strong><small>Profiline göre</small></div><div><span>Ortam</span><strong>{gym}</strong><small>{equipmentText || "Ekipmansız"}</small></div></div>
-          <div className="workout-layout"><div className="workout-main"><div className="section-title"><div><div className="eyebrow">BUGÜN</div><h2>Full body · Başlangıç</h2></div><button className="outline-btn" type="button">⋮</button></div><div className="workout-list">{workouts.map((workout, index) => <article className="workout-card" key={workout.name}><div className={`exercise-art ${workout.tone}`}><span>{workout.icon}</span><i>{String(index + 1).padStart(2, "0")}</i></div><div className="exercise-info"><div className="pill">{workout.level}</div><h3>{workout.name}</h3><p>{workout.sets}</p></div><button className="play-btn" type="button" aria-label={`${workout.name} animasyonunu oynat`} onClick={() => setActiveWorkout(index)}>▶</button></article>)}</div><button className="start-btn" type="button" onClick={() => setActiveWorkout(0)}>Antrenmana başla <span>→</span></button></div><aside className="coach-card"><div className="coach-top"><span className="spark">✦</span><span>FORM AI</span></div><h2>Bugün senden<br /><em>tek bir şey</em> istiyor:</h2><p>Hareketi mükemmel yapmak değil, devam etmek.</p><div className="coach-line" /><small>İyi antrenmanlar, {name || "Ece"}.</small></aside></div></>}
+          <div className="wellness-row"><div className="wellness-card calorie-card"><div><span>BUGÜNÜN KALORİSİ</span><strong>{sessionCalories || 0} <small>kcal</small></strong><p>Antrenman + adım verileriyle hesaplanır.</p></div><div className="calorie-ring"><i>{sessionCalories || 0}</i></div></div><div className="wellness-card"><div className="integration-title"><span>SPOTIFY</span><b>♫</b></div><h3>{spotifyConnected ? "Antrenman listesi bağlı" : "Ritmini seç"}</h3><p>{spotifyConnected ? "Form AI Workout çalıyor." : "Antrenman sırasında playlist'in yanında olsun."}</p><button className="connect-btn" type="button" onClick={() => setSpotifyConnected((connected) => !connected)}>{spotifyConnected ? "Bağlantıyı kes" : "Spotify'ı bağla"}</button></div><div className="wellness-card"><div className="integration-title"><span>ADIM TAKİBİ</span><b>⌁</b></div><h3>{healthConnected ? "Adımlar bağlı" : "Hareketini içeri al"}</h3><p>{healthConnected ? "Bugünkü adımların senkronize ediliyor." : "Google Fit, Samsung Health, Huawei Health veya Xiaomi desteği."}</p><button className="connect-btn" type="button" onClick={() => setHealthConnected((connected) => !connected)}>{healthConnected ? "Bağlantıyı kes" : "Adım hesabını bağla"}</button></div></div>
+          <div className="workout-layout"><div className="workout-main"><div className="section-title"><div><div className="eyebrow">BUGÜN</div><h2>Full body · Başlangıç</h2></div><button className="outline-btn" type="button">⋮</button></div><div className="workout-list">{workouts.map((workout, index) => <article className="workout-card" key={workout.name}><div className={`exercise-art ${workout.tone}`}><span>{workout.icon}</span><i>{String(index + 1).padStart(2, "0")}</i></div><div className="exercise-info"><div className="pill">{workout.level}</div><h3>{workout.name}</h3><p>{workout.sets}</p></div><button className="play-btn" type="button" aria-label={`${workout.name} animasyonunu oynat`} onClick={() => openWorkout(index)}>▶</button></article>)}</div><button className="start-btn" type="button" onClick={() => openWorkout(0)}>Antrenmana başla <span>→</span></button></div><aside className="coach-card"><div className="coach-top"><span className="spark">✦</span><span>FORM AI</span></div><h2>Bugün senden<br /><em>tek bir şey</em> istiyor:</h2><p>Hareketi mükemmel yapmak değil, devam etmek.</p><div className="coach-line" /><small>İyi antrenmanlar, {name || "Ece"}.</small></aside></div></>}
         </section>
       )}
       <footer><span>form.ai · daha güçlü bir sen için</span><span>© 2024</span></footer>
