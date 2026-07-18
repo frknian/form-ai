@@ -128,7 +128,7 @@ export default function Home() {
       <nav className="topbar">
         <div className="brand"><span className="brand-mark">↗</span><span>form<span className="brand-dot">.</span>ai</span></div>
         <div className="top-links"><span className="active">Antrenmanım</span><span>İlerlemem</span><span>Hareket kütüphanesi</span></div>
-        <div className="profile-mini"><span className="mini-avatar">{photo ? <img src={photo} alt="Profil" /> : "E"}</span><span>Profilim</span><span className="chevron">⌄</span></div>
+        <div className="profile-mini"><span className="mini-avatar">{name ? name.charAt(0).toUpperCase() : "E"}</span><span>Profilim</span><span className="chevron">⌄</span></div>
       </nav>
 
       {step < 5 ? (
@@ -157,9 +157,9 @@ export default function Home() {
           </div>}
 
           {step === 3 && <div className="step-content photo-step">
-            <div className="eyebrow">Son dokunuş</div><h1>İstersen<br /><em>seni de tanıyalım.</em></h1><p className="lead">Fotoğraf tamamen isteğe bağlıdır. Eklemek istemezsen fotoğrafsız devam edebilirsin.</p>
-            <label className="upload-box">{photo ? <img src={photo} alt="Yüklenen profil fotoğrafı" /> : <><span className="upload-icon">＋</span><strong>Fotoğraf ekle</strong><small>JPG veya PNG · İsteğe bağlı</small></>}<input type="file" accept="image/*" onChange={handlePhoto} /></label>
-            <div className="privacy-note"><span>⌁</span> Fotoğrafın yalnızca izin verdiğin analiz için kullanılır.</div><div className="action-row"><button className="back-btn" type="button" onClick={() => setStep(2)}>← Geri</button><button className="primary-btn" type="button" onClick={() => setStep(4)}>Teste başla <span>→</span></button></div>
+            <div className="eyebrow">İSTEĞE BAĞLI VÜCUT ANALİZİ</div><h1>Vücudunu daha iyi<br /><em>anlayalım.</em></h1><p className="lead">Fotoğraf profil resmi değildir. İzninle vücut kompozisyonu ve yağlanma dağılımı hakkında yaklaşık gözlem yapıp programı buna göre uyarlayacağız.</p>
+            <label className="upload-box">{photo ? <img src={photo} alt="Vücut analizi için yüklenen fotoğraf" /> : <><span className="upload-icon">＋</span><strong>Vücut fotoğrafı ekle</strong><small>Yüz görünmek zorunda değil · İsteğe bağlı</small></>}<input type="file" accept="image/*" onChange={handlePhoto} /></label>
+            <div className="privacy-note"><span>⌁</span> Analiz tahminidir; tıbbi yağ oranı ölçümü değildir. Fotoğrafını istediğinde silebilirsin.</div><div className="action-row"><button className="back-btn" type="button" onClick={() => setStep(2)}>← Geri</button><button className="primary-btn" type="button" onClick={() => setStep(4)}>Teste başla <span>→</span></button></div>
           </div>}
 
           {step === 4 && <div className="step-content history-step">
