@@ -1,8 +1,32 @@
 "use client";
 
 import { ChangeEvent, useMemo, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
-const equipment = ["Dambıl", "Direnç bandı", "Barfiks barı", "Bench", "Kettlebell"];
+const historyQuestions = [
+  "Daha önce düzenli olarak spor yaptın mı?",
+  "Son 3 ayda haftada kaç gün hareket ettin?",
+  "Kendini hangi seviyede görüyorsun?",
+  "Bir antrenmana ortalama ne kadar zaman ayırabilirsin?",
+  "Şu anki ana hedefin nedir?",
+  "Hangi antrenman türleri ilgini çekiyor?",
+  "Bilinen bir sakatlığın veya ağrı bölgen var mı?",
+  "Gün içinde genel hareket düzeyin nasıl?",
+  "Uyku düzenini nasıl değerlendirirsin?",
+  "Programınla ilgili özellikle bilmemiz gereken başka bir şey var mı?",
+];
+
+const answerOptions = [
+  ["Hayır", "Ara sıra", "Düzenli"],
+  ["0 gün", "1–2 gün", "3–4 gün", "5+ gün"],
+  ["Yeni başlıyorum", "Orta seviye", "İleri seviye"],
+  ["15 dakika", "30 dakika", "45 dakika", "60+ dakika"],
+  ["Kilo vermek", "Güçlenmek", "Kas geliştirmek", "Kondisyon"],
+  ["Kuvvet", "Kardiyo", "Esneklik", "Karışık"],
+  ["Yok", "Bel", "Diz", "Omuz", "Diğer"],
+  ["Düşük", "Orta", "Yüksek"],
+  ["Düzensiz", "Fena değil", "İyi"],
+];
 
 const workouts = [
   { name: "Goblet Squat", sets: "3 set · 12 tekrar", level: "Bacak", tone: "orange", icon: "◒" },
@@ -18,8 +42,12 @@ export default function Home() {
   const [weight, setWeight] = useState("");
   const [gender, setGender] = useState("Kadın");
   const [gym, setGym] = useState("Evde");
-  const [selectedEquipment, setSelectedEquipment] = useState<string[]>(["Dambıl"]);
+  const [equipmentText, setEquipmentText] = useState("");
+  const [goalText, setGoalText] = useState("");
   const [photo, setPhoto] = useState<string | null>(null);
+  const [history, setHistory] = useState<string[]>(Array(10).fill(""));
+  const [questionIndex, setQuestionIndex] = useState(0);
+  const [saving, setSaving] = useState(false);
 
   const bmi = useMemo(() => {
     const h = Number(height) / 100;
@@ -32,8 +60,33 @@ export default function Home() {
     if (file) setPhoto(URL.createObjectURL(file));
   }
 
-  function toggleEquipment(item: string) {
-    setSelectedEquipment((current) => current.includes(item) ? current.filter((x) => x !== item) : [...current, item]);
+  function setAnswer(answer: string) {
+    setHistory((current) => current.map((value, index) => index === questionIndex ? answer : value));
+  }
+
+  async function createPlan() {
+    setSaving(true);
+    const supabase = createClient();
+    if (supabase) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+      await supabase.from("profiles").upsert({
+        id: user.id,
+        display_name: name || "Sporcu",
+        age: Number(age) || null,
+        gender,
+        height_cm: Number(height) || null,
+        weight_kg: Number(weight) || null,
+        environment: gym,
+        equipment_text: equipmentText,
+        goal_text: goalText,
+        history_answers: history,
+        photo_url: null,
+      }, { onConflict: "id" });
+      }
+    }
+    setSaving(false);
+    setStep(5);
   }
 
   return (
@@ -44,44 +97,49 @@ export default function Home() {
         <div className="profile-mini"><span className="mini-avatar">{photo ? <img src={photo} alt="Profil" /> : "E"}</span><span>Profilim</span><span className="chevron">⌄</span></div>
       </nav>
 
-      {step < 4 ? (
+      {step < 5 ? (
         <section className="onboarding-wrap">
-          <div className="progress-row"><span className="progress-label">PROFİLİNİ OLUŞTUR</span><span>{step} / 3</span></div>
-          <div className="progress-track"><span style={{ width: `${(step / 3) * 100}%` }} /></div>
+          <div className="progress-row"><span className="progress-label">{step === 4 ? "SPOR GEÇMİŞİ TESTİ" : "PROFİLİNİ OLUŞTUR"}</span><span>{step} / 4</span></div>
+          <div className="progress-track"><span style={{ width: `${(step / 4) * 100}%` }} /></div>
 
           {step === 1 && <div className="step-content">
-            <div className="eyebrow">Sana özel başlangıç</div>
-            <h1>Vücudunu tanı,<br /><em>gücünü keşfet.</em></h1>
-            <p className="lead">Birkaç bilgiyle sana uygun, sürdürülebilir bir antrenman planı oluşturalım.</p>
+            <div className="eyebrow">Sana özel başlangıç</div><h1>Vücudunu tanı,<br /><em>gücünü keşfet.</em></h1><p className="lead">Birkaç bilgiyle sana uygun, sürdürülebilir bir antrenman planı oluşturalım.</p>
             <div className="form-grid">
               <label className="wide">Adın<input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nasıl hitap edelim?" /></label>
               <label>Yaşın<input type="number" value={age} onChange={(e) => setAge(e.target.value)} placeholder="24" /></label>
-              <label>Cinsiyet<div className="segmented"><button className={gender === "Kadın" ? "selected" : ""} onClick={() => setGender("Kadın")}>Kadın</button><button className={gender === "Erkek" ? "selected" : ""} onClick={() => setGender("Erkek")}>Erkek</button></div></label>
+              <label>Cinsiyet<div className="segmented"><button type="button" className={gender === "Kadın" ? "selected" : ""} onClick={() => setGender("Kadın")}>Kadın</button><button type="button" className={gender === "Erkek" ? "selected" : ""} onClick={() => setGender("Erkek")}>Erkek</button></div></label>
               <label>Boyun (cm)<input type="number" value={height} onChange={(e) => setHeight(e.target.value)} placeholder="168" /></label>
               <label>Kilon (kg)<input type="number" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="62" /></label>
             </div>
-            <button className="primary-btn" onClick={() => setStep(2)}>Devam et <span>→</span></button>
+            <button className="primary-btn" type="button" onClick={() => setStep(2)}>Devam et <span>→</span></button>
           </div>}
 
           {step === 2 && <div className="step-content equipment-step">
-            <div className="eyebrow">Planını şekillendirelim</div><h1>Nerede<br /><em>hareket ediyorsun?</em></h1><p className="lead">Sahip olduğun alan ve ekipmanları seç. Programın buna göre uyarlansın.</p>
-            <div className="choice-cards"><button className={gym === "Evde" ? "choice selected" : "choice"} onClick={() => setGym("Evde")}><span>⌂</span><strong>Evde</strong><small>Kendi alanımda</small></button><button className={gym === "Salon" ? "choice selected" : "choice"} onClick={() => setGym("Salon")}><span>▦</span><strong>Spor salonunda</strong><small>Full ekipman erişimi</small></button></div>
-            <div className="field-caption">SAHİP OLDUĞUN EKİPMANLAR <small>İsteğe bağlı</small></div><div className="equipment-list">{equipment.map((item) => <button key={item} className={selectedEquipment.includes(item) ? "equipment selected" : "equipment"} onClick={() => toggleEquipment(item)}><span className="check">{selectedEquipment.includes(item) ? "✓" : "+"}</span>{item}</button>)}</div>
-            <div className="action-row"><button className="back-btn" onClick={() => setStep(1)}>← Geri</button><button className="primary-btn" onClick={() => setStep(3)}>Devam et <span>→</span></button></div>
+            <div className="eyebrow">Planını şekillendirelim</div><h1>Nerede<br /><em>hareket ediyorsun?</em></h1><p className="lead">Ortamını ve elindeki ekipmanları kendi cümlelerinle anlat.</p>
+            <div className="choice-cards"><button type="button" className={gym === "Evde" ? "choice selected" : "choice"} onClick={() => setGym("Evde")}><span>⌂</span><strong>Evde</strong><small>Kendi alanımda</small></button><button type="button" className={gym === "Salon" ? "choice selected" : "choice"} onClick={() => setGym("Salon")}><span>▦</span><strong>Spor salonunda</strong><small>Full ekipman erişimi</small></button></div>
+            <label className="textarea-label">EKİPMANLARIN <small>İsteğe bağlı</small><textarea value={equipmentText} onChange={(e) => setEquipmentText(e.target.value)} placeholder="Örn. 2 adet 5 kg dambıl, yoga matı ve direnç bandı" /></label>
+            <label className="textarea-label">HEDEFİN <small>Programı daha kişisel yapar</small><textarea value={goalText} onChange={(e) => setGoalText(e.target.value)} placeholder="Örn. Daha güçlü olmak ve 30 dakikada tamamlanan programlar yapmak istiyorum." /></label>
+            <div className="action-row"><button className="back-btn" type="button" onClick={() => setStep(1)}>← Geri</button><button className="primary-btn" type="button" onClick={() => setStep(3)}>Devam et <span>→</span></button></div>
           </div>}
 
           {step === 3 && <div className="step-content photo-step">
-            <div className="eyebrow">Son dokunuş</div><h1>Hazır olduğunda<br /><em>başlayalım.</em></h1><p className="lead">İstersen bir fotoğraf ekle. Form AI, duruşunu ve hareket formunu analiz ederek önerilerini daha da kişiselleştirsin.</p>
+            <div className="eyebrow">Son dokunuş</div><h1>İstersen<br /><em>seni de tanıyalım.</em></h1><p className="lead">Fotoğraf tamamen isteğe bağlıdır. Eklemek istemezsen fotoğrafsız devam edebilirsin.</p>
             <label className="upload-box">{photo ? <img src={photo} alt="Yüklenen profil fotoğrafı" /> : <><span className="upload-icon">＋</span><strong>Fotoğraf ekle</strong><small>JPG veya PNG · İsteğe bağlı</small></>}<input type="file" accept="image/*" onChange={handlePhoto} /></label>
-            <div className="privacy-note"><span>⌁</span> Fotoğrafın yalnızca analiz için kullanılır ve güvenle saklanır.</div><div className="action-row"><button className="back-btn" onClick={() => setStep(2)}>← Geri</button><button className="primary-btn" onClick={() => setStep(4)}>Planımı oluştur <span>✦</span></button></div>
+            <div className="privacy-note"><span>⌁</span> Fotoğrafın yalnızca izin verdiğin analiz için kullanılır.</div><div className="action-row"><button className="back-btn" type="button" onClick={() => setStep(2)}>← Geri</button><button className="primary-btn" type="button" onClick={() => setStep(4)}>Teste başla <span>→</span></button></div>
+          </div>}
+
+          {step === 4 && <div className="step-content history-step">
+            <div className="eyebrow">SORU {questionIndex + 1} / 10</div><h1>Seni biraz<br /><em>daha tanıyalım.</em></h1><p className="lead">Cevapların programın yoğunluğunu, hareket seçimini ve ilerleme hızını belirleyecek.</p>
+            <div className="question-card"><span className="question-number">{String(questionIndex + 1).padStart(2, "0")}</span><h2>{historyQuestions[questionIndex]}</h2><div className="answer-grid">{(answerOptions[questionIndex] ?? []).map((answer) => <button type="button" key={answer} className={history[questionIndex] === answer ? "answer selected" : "answer"} onClick={() => setAnswer(answer)}>{answer}</button>)}</div>{questionIndex === 9 && <textarea className="question-note" value={history[9]} onChange={(e) => setAnswer(e.target.value)} placeholder="Buraya yazabilirsin..." />}</div>
+            <div className="action-row"><button className="back-btn" type="button" onClick={() => questionIndex ? setQuestionIndex(questionIndex - 1) : setStep(3)}>← Geri</button>{questionIndex < 9 ? <button className="primary-btn" type="button" onClick={() => setQuestionIndex(questionIndex + 1)}>Sonraki <span>→</span></button> : <button className="primary-btn" type="button" onClick={createPlan} disabled={saving}>{saving ? "Kaydediliyor…" : "Planımı oluştur ✦"}</button>}</div>
           </div>}
           <aside className="side-note"><div className="orb"><span>✦</span></div><p><strong>Bilim + senin ritmin.</strong><br />Her plan, hedeflerine ve günlük hayatına uyum sağlar.</p></aside>
         </section>
       ) : (
         <section className="dashboard">
-          <div className="dashboard-head"><div><div className="eyebrow">BUGÜNÜN PLANI · 01</div><h1>{name || "Ece"}, <em>hazır mısın?</em></h1><p>Bugün 32 dakika ayırman yeterli. Vücudun teşekkür edecek.</p></div><div className="streak-card"><span>✦</span><strong>4</strong><small>günlük seri</small></div></div>
-          <div className="stats-row"><div><span>Vücut kitle indeksi</span><strong>{bmi}</strong><small>Normal aralık</small></div><div><span>Hedef</span><strong>Güçlenme</strong><small>Başlangıç seviyesi</small></div><div><span>Ortam</span><strong>{gym}</strong><small>{selectedEquipment.length ? selectedEquipment.join(" · ") : "Ekipmansız"}</small></div></div>
-          <div className="workout-layout"><div className="workout-main"><div className="section-title"><div><div className="eyebrow">BUGÜN</div><h2>Full body · Başlangıç</h2></div><button className="outline-btn">⋮</button></div><div className="workout-list">{workouts.map((workout, index) => <article className="workout-card" key={workout.name}><div className={`exercise-art ${workout.tone}`}><span>{workout.icon}</span><i>{String(index + 1).padStart(2, "0")}</i></div><div className="exercise-info"><div className="pill">{workout.level}</div><h3>{workout.name}</h3><p>{workout.sets}</p></div><button className="play-btn" aria-label={`${workout.name} animasyonunu oynat`}>▶</button></article>)}</div><button className="start-btn" onClick={() => setStep(1)}>Antrenmana başla <span>→</span></button></div><aside className="coach-card"><div className="coach-top"><span className="spark">✦</span><span>FORM AI</span></div><h2>Bugün senden<br /><em>tek bir şey</em> istiyor:</h2><p>Hareketi mükemmel yapmak değil, devam etmek.</p><div className="coach-line" /><small>İyi antrenmanlar, {name || "Ece"}.</small></aside></div>
+          <div className="dashboard-head"><div><div className="eyebrow">BUGÜNÜN PLANI · 01</div><h1>{name || "Ece"}, <em>hazır mısın?</em></h1><p>Verilerine göre ilk program taslağını hazırladık. İlerledikçe daha da kişiselleştireceğiz.</p></div><div className="streak-card"><span>✦</span><strong>4</strong><small>günlük seri</small></div></div>
+          <div className="stats-row"><div><span>Vücut kitle indeksi</span><strong>{bmi}</strong><small>İlk ölçüm</small></div><div><span>Hedef</span><strong>{goalText ? "Kişisel" : "Güçlenme"}</strong><small>Profiline göre</small></div><div><span>Ortam</span><strong>{gym}</strong><small>{equipmentText || "Ekipmansız"}</small></div></div>
+          <div className="workout-layout"><div className="workout-main"><div className="section-title"><div><div className="eyebrow">BUGÜN</div><h2>Full body · Başlangıç</h2></div><button className="outline-btn" type="button">⋮</button></div><div className="workout-list">{workouts.map((workout, index) => <article className="workout-card" key={workout.name}><div className={`exercise-art ${workout.tone}`}><span>{workout.icon}</span><i>{String(index + 1).padStart(2, "0")}</i></div><div className="exercise-info"><div className="pill">{workout.level}</div><h3>{workout.name}</h3><p>{workout.sets}</p></div><button className="play-btn" type="button" aria-label={`${workout.name} animasyonunu oynat`}>▶</button></article>)}</div><button className="start-btn" type="button" onClick={() => setStep(1)}>Antrenmana başla <span>→</span></button></div><aside className="coach-card"><div className="coach-top"><span className="spark">✦</span><span>FORM AI</span></div><h2>Bugün senden<br /><em>tek bir şey</em> istiyor:</h2><p>Hareketi mükemmel yapmak değil, devam etmek.</p><div className="coach-line" /><small>İyi antrenmanlar, {name || "Ece"}.</small></aside></div>
         </section>
       )}
       <footer><span>form.ai · daha güçlü bir sen için</span><span>© 2024</span></footer>
