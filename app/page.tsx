@@ -2,6 +2,7 @@
 
 import { ChangeEvent, useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { fitnessSources } from "@/lib/knowledge-sources";
 
 const historyQuestions = [
   "Daha önce düzenli olarak spor yaptın mı?",
@@ -28,11 +29,31 @@ const answerOptions = [
   ["Düzensiz", "Fena değil", "İyi"],
 ];
 
-const workouts = [
-  { name: "Goblet Squat", sets: "3 set · 12 tekrar", level: "Bacak", tone: "orange", icon: "◒", seconds: 30 },
-  { name: "Şınav", sets: "3 set · 10 tekrar", level: "Göğüs", tone: "blue", icon: "✦", seconds: 30 },
-  { name: "Dambıl Row", sets: "3 set · 12 tekrar", level: "Sırt", tone: "purple", icon: "↗", seconds: 30 },
+const exerciseLibrary = [
+  { name: "Goblet Squat", english: "Goblet Squat", area: "Bacak", tone: "orange", icon: "◒", requires: ["dambıl", "kettlebell"], bodyweight: true, goals: ["güç", "kas", "kilo"] },
+  { name: "Eğimli Şınav", english: "Incline Push-up", area: "Göğüs", tone: "blue", icon: "✦", requires: ["bench", "sehpa"], bodyweight: true, goals: ["güç", "kondisyon", "kilo"] },
+  { name: "Dambıl Row", english: "Dumbbell Row", area: "Sırt", tone: "purple", icon: "↗", requires: ["dambıl"], bodyweight: false, goals: ["güç", "kas"] },
+  { name: "Glute Bridge", english: "Glute Bridge", area: "Kalça", tone: "orange", icon: "◓", requires: [], bodyweight: true, goals: ["güç", "kilo"] },
+  { name: "Plank", english: "Plank", area: "Core", tone: "blue", icon: "—", requires: [], bodyweight: true, goals: ["güç", "kondisyon", "kilo"] },
+  { name: "Reverse Lunge", english: "Reverse Lunge", area: "Bacak", tone: "purple", icon: "↘", requires: [], bodyweight: true, goals: ["güç", "kilo", "kondisyon"] },
+  { name: "Band Row", english: "Resistance Band Row", area: "Sırt", tone: "blue", icon: "↔", requires: ["band", "lastik"], bodyweight: false, goals: ["güç", "kas"] },
 ];
+
+function createPersonalPlan(gym: string, equipmentText: string, history: string[], goalText: string) {
+  const profileText = `${equipmentText} ${goalText} ${history.join(" ")}`.toLowerCase();
+  const goal = profileText.includes("kilo") || profileText.includes("yağ") ? "kilo" : profileText.includes("kas") ? "kas" : profileText.includes("kondisyon") ? "kondisyon" : "güç";
+  const isBeginner = history[2] === "Yeni başlıyorum" || !history[2];
+  const wantsGym = gym === "Salon";
+  const equipment = equipmentText.toLowerCase();
+  const matchesEquipment = (item: typeof exerciseLibrary[number]) => wantsGym || item.bodyweight || item.requires.some((requirement) => equipment.includes(requirement));
+  const selected = exerciseLibrary.filter((item) => matchesEquipment(item) && item.goals.includes(goal));
+  const fallback = exerciseLibrary.filter(matchesEquipment);
+  const chosen = [...selected, ...fallback].filter((item, index, list) => list.findIndex((candidate) => candidate.name === item.name) === index).slice(0, 5);
+  const sets = isBeginner ? 3 : 4;
+  const reps = goal === "kondisyon" || goal === "kilo" ? 12 : isBeginner ? 10 : 8;
+  const rest = isBeginner ? 60 : 90;
+  return chosen.map((item) => ({ ...item, level: item.area, sets: `${sets} set · ${item.name === "Plank" ? "30 sn" : `${reps} tekrar`}`, rest: `${rest} sn dinlenme`, seconds: item.name === "Plank" ? 30 : 45 }));
+}
 
 export default function Home() {
   const [step, setStep] = useState(1);
@@ -54,6 +75,11 @@ export default function Home() {
   const [sessionCalories, setSessionCalories] = useState(0);
   const [spotifyConnected, setSpotifyConnected] = useState(false);
   const [healthConnected, setHealthConnected] = useState(false);
+
+  const workouts = useMemo(() => createPersonalPlan(gym, equipmentText, history, goalText), [gym, equipmentText, history, goalText]);
+  const planLevel = history[2] || "Yeni başlıyorum";
+  const planGoal = history[4] || goalText || "Güçlenme";
+  const planSources = fitnessSources.slice(0, 3);
 
   const bmi = useMemo(() => {
     const h = Number(height) / 100;
@@ -175,7 +201,8 @@ export default function Home() {
           <div className="dashboard-head"><div><div className="eyebrow">BUGÜNÜN PLANI · 01</div><h1>{name || "Ece"}, <em>hazır mısın?</em></h1><p>Verilerine göre ilk program taslağını hazırladık. İlerledikçe daha da kişiselleştireceğiz.</p></div><div className="streak-card"><span>✦</span><strong>4</strong><small>günlük seri</small></div></div>
           <div className="stats-row"><div><span>Vücut kitle indeksi</span><strong>{bmi}</strong><small>İlk ölçüm</small></div><div><span>Hedef</span><strong>{goalText ? "Kişisel" : "Güçlenme"}</strong><small>Profiline göre</small></div><div><span>Ortam</span><strong>{gym}</strong><small>{equipmentText || "Ekipmansız"}</small></div></div>
           <div className="wellness-row"><div className="wellness-card calorie-card"><div><span>BUGÜNÜN KALORİSİ</span><strong>{sessionCalories || 0} <small>kcal</small></strong><p>Antrenman + adım verileriyle hesaplanır.</p></div><div className="calorie-ring"><i>{sessionCalories || 0}</i></div></div><div className="wellness-card"><div className="integration-title"><span>SPOTIFY</span><b>♫</b></div><h3>{spotifyConnected ? "Antrenman listesi bağlı" : "Ritmini seç"}</h3><p>{spotifyConnected ? "Form AI Workout çalıyor." : "Antrenman sırasında playlist'in yanında olsun."}</p><button className="connect-btn" type="button" onClick={() => setSpotifyConnected((connected) => !connected)}>{spotifyConnected ? "Bağlantıyı kes" : "Spotify'ı bağla"}</button></div><div className="wellness-card"><div className="integration-title"><span>ADIM TAKİBİ</span><b>⌁</b></div><h3>{healthConnected ? "Adımlar bağlı" : "Hareketini içeri al"}</h3><p>{healthConnected ? "Bugünkü adımların senkronize ediliyor." : "Google Fit, Samsung Health, Huawei Health veya Xiaomi desteği."}</p><button className="connect-btn" type="button" onClick={() => setHealthConnected((connected) => !connected)}>{healthConnected ? "Bağlantıyı kes" : "Adım hesabını bağla"}</button></div></div>
-          <div className="workout-layout"><div className="workout-main"><div className="section-title"><div><div className="eyebrow">BUGÜN</div><h2>Full body · Başlangıç</h2></div><button className="outline-btn" type="button">⋮</button></div><div className="workout-list">{workouts.map((workout, index) => <article className="workout-card" key={workout.name}><div className={`exercise-art ${workout.tone}`}><span>{workout.icon}</span><i>{String(index + 1).padStart(2, "0")}</i></div><div className="exercise-info"><div className="pill">{workout.level}</div><h3>{workout.name}</h3><p>{workout.sets}</p></div><button className="play-btn" type="button" aria-label={`${workout.name} animasyonunu oynat`} onClick={() => openWorkout(index)}>▶</button></article>)}</div><button className="start-btn" type="button" onClick={() => openWorkout(0)}>Antrenmana başla <span>→</span></button></div><aside className="coach-card"><div className="coach-top"><span className="spark">✦</span><span>FORM AI</span></div><h2>Bugün senden<br /><em>tek bir şey</em> istiyor:</h2><p>Hareketi mükemmel yapmak değil, devam etmek.</p><div className="coach-line" /><small>İyi antrenmanlar, {name || "Ece"}.</small></aside></div></>}
+          <div className="plan-explanation"><div><div className="eyebrow">PLANIN NEDEN BÖYLE?</div><h2>{planLevel} · {planGoal}</h2><p>Programın; seçtiğin ortam, ekipmanların, spor geçmişin ve yazdığın hedef birlikte değerlendirilerek oluşturuldu. İlerledikçe set, tekrar ve hareket varyasyonları güncellenecek.</p></div><div className="source-stack">{planSources.map((source) => <a key={source.url} href={source.url} target="_blank" rel="noreferrer">{source.title.split(" — ")[0]} <span>↗</span></a>)}</div></div>
+          <div className="workout-layout"><div className="workout-main"><div className="section-title"><div><div className="eyebrow">BUGÜN</div><h2>Full body · {planLevel}</h2></div><button className="outline-btn" type="button">⋮</button></div><div className="workout-list">{workouts.map((workout, index) => <article className="workout-card" key={workout.name}><div className={`exercise-art ${workout.tone}`}><span>{workout.icon}</span><i>{String(index + 1).padStart(2, "0")}</i></div><div className="exercise-info"><div className="pill">{workout.level}</div><h3>{workout.name} <small>{workout.english}</small></h3><p>{workout.sets} · {workout.rest}</p></div><button className="play-btn" type="button" aria-label={`${workout.name} animasyonunu oynat`} onClick={() => openWorkout(index)}>▶</button></article>)}</div><button className="start-btn" type="button" onClick={() => openWorkout(0)}>Antrenmana başla <span>→</span></button></div><aside className="coach-card"><div className="coach-top"><span className="spark">✦</span><span>FORM AI</span></div><h2>Bugün senden<br /><em>tek bir şey</em> istiyor:</h2><p>Hareketi mükemmel yapmak değil, devam etmek.</p><div className="coach-line" /><small>İyi antrenmanlar, {name || "Ece"}.</small></aside></div></>}
         </section>
       )}
       <footer><span>form.ai · daha güçlü bir sen için</span><span>© 2024</span></footer>
