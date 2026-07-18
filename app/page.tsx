@@ -55,6 +55,13 @@ function createPersonalPlan(gym: string, equipmentText: string, history: string[
   return chosen.map((item) => ({ ...item, level: item.area, sets: `${sets} set · ${item.name === "Plank" ? "30 sn" : `${reps} tekrar`}`, rest: `${rest} sn dinlenme`, seconds: item.name === "Plank" ? 30 : 45 }));
 }
 
+type AiWorkout = { name: string; english: string; area: string; sets: string; rest: string; seconds: number; tone: string; icon: string; level: string };
+
+function normalizeAiWorkouts(items: Array<{ name: string; english: string; area: string; sets: number; reps: string; restSeconds: number }>): AiWorkout[] {
+  const visuals: Record<string, { tone: string; icon: string }> = { Bacak: { tone: "orange", icon: "◒" }, Göğüs: { tone: "blue", icon: "✦" }, Sırt: { tone: "purple", icon: "↗" }, Kalça: { tone: "orange", icon: "◓" }, Core: { tone: "blue", icon: "—" } };
+  return items.map((item) => ({ ...item, sets: `${item.sets} set · ${item.reps}`, rest: `${item.restSeconds} sn dinlenme`, seconds: item.reps.includes("sn") ? 30 : 45, level: item.area, ...(visuals[item.area] || { tone: "purple", icon: "✦" }) }));
+}
+
 export default function Home() {
   const [step, setStep] = useState(1);
   const [name, setName] = useState("");
@@ -75,8 +82,11 @@ export default function Home() {
   const [sessionCalories, setSessionCalories] = useState(0);
   const [spotifyConnected, setSpotifyConnected] = useState(false);
   const [healthConnected, setHealthConnected] = useState(false);
+  const [aiWorkouts, setAiWorkouts] = useState<AiWorkout[]>([]);
+  const [aiRationale, setAiRationale] = useState("");
+  const [aiSafetyNote, setAiSafetyNote] = useState("");
 
-  const workouts = useMemo(() => createPersonalPlan(gym, equipmentText, history, goalText), [gym, equipmentText, history, goalText]);
+  const workouts = useMemo(() => aiWorkouts.length ? aiWorkouts : createPersonalPlan(gym, equipmentText, history, goalText), [aiWorkouts, gym, equipmentText, history, goalText]);
   const planLevel = history[2] || "Yeni başlıyorum";
   const planGoal = history[4] || goalText || "Güçlenme";
   const planSources = fitnessSources.slice(0, 3);
@@ -145,6 +155,17 @@ export default function Home() {
       }, { onConflict: "id" });
       }
     }
+    try {
+      const aiResponse = await fetch("/api/generate-plan", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, age, gender, height, weight, environment: gym, equipment: equipmentText, goal: goalText, history }) });
+      if (aiResponse.ok) {
+        const aiPlan = await aiResponse.json() as { workouts?: Array<{ name: string; english: string; area: string; sets: number; reps: string; restSeconds: number }>; rationale?: string; safetyNote?: string };
+        if (aiPlan.workouts?.length) setAiWorkouts(normalizeAiWorkouts(aiPlan.workouts));
+        setAiRationale(aiPlan.rationale || "");
+        setAiSafetyNote(aiPlan.safetyNote || "");
+      }
+    } catch {
+      // The local source-based planner remains the safe fallback when the API is unavailable.
+    }
     setSaving(false);
     setStep(5);
   }
@@ -201,7 +222,7 @@ export default function Home() {
           <div className="dashboard-head"><div><div className="eyebrow">BUGÜNÜN PLANI · 01</div><h1>{name || "Ece"}, <em>hazır mısın?</em></h1><p>Verilerine göre ilk program taslağını hazırladık. İlerledikçe daha da kişiselleştireceğiz.</p></div><div className="streak-card"><span>✦</span><strong>4</strong><small>günlük seri</small></div></div>
           <div className="stats-row"><div><span>Vücut kitle indeksi</span><strong>{bmi}</strong><small>İlk ölçüm</small></div><div><span>Hedef</span><strong>{goalText ? "Kişisel" : "Güçlenme"}</strong><small>Profiline göre</small></div><div><span>Ortam</span><strong>{gym}</strong><small>{equipmentText || "Ekipmansız"}</small></div></div>
           <div className="wellness-row"><div className="wellness-card calorie-card"><div><span>BUGÜNÜN KALORİSİ</span><strong>{sessionCalories || 0} <small>kcal</small></strong><p>Antrenman + adım verileriyle hesaplanır.</p></div><div className="calorie-ring"><i>{sessionCalories || 0}</i></div></div><div className="wellness-card"><div className="integration-title"><span>SPOTIFY</span><b>♫</b></div><h3>{spotifyConnected ? "Antrenman listesi bağlı" : "Ritmini seç"}</h3><p>{spotifyConnected ? "Form AI Workout çalıyor." : "Antrenman sırasında playlist'in yanında olsun."}</p><button className="connect-btn" type="button" onClick={() => setSpotifyConnected((connected) => !connected)}>{spotifyConnected ? "Bağlantıyı kes" : "Spotify'ı bağla"}</button></div><div className="wellness-card"><div className="integration-title"><span>ADIM TAKİBİ</span><b>⌁</b></div><h3>{healthConnected ? "Adımlar bağlı" : "Hareketini içeri al"}</h3><p>{healthConnected ? "Bugünkü adımların senkronize ediliyor." : "Google Fit, Samsung Health, Huawei Health veya Xiaomi desteği."}</p><button className="connect-btn" type="button" onClick={() => setHealthConnected((connected) => !connected)}>{healthConnected ? "Bağlantıyı kes" : "Adım hesabını bağla"}</button></div></div>
-          <div className="plan-explanation"><div><div className="eyebrow">PLANIN NEDEN BÖYLE?</div><h2>{planLevel} · {planGoal}</h2><p>Programın; seçtiğin ortam, ekipmanların, spor geçmişin ve yazdığın hedef birlikte değerlendirilerek oluşturuldu. İlerledikçe set, tekrar ve hareket varyasyonları güncellenecek.</p></div><div className="source-stack">{planSources.map((source) => <a key={source.url} href={source.url} target="_blank" rel="noreferrer">{source.title.split(" — ")[0]} <span>↗</span></a>)}</div></div>
+          <div className="plan-explanation"><div><div className="eyebrow">PLANIN NEDEN BÖYLE?</div><h2>{planLevel} · {planGoal}</h2><p>{aiRationale || "Programın; seçtiğin ortam, ekipmanların, spor geçmişin ve yazdığın hedef birlikte değerlendirilerek oluşturuldu. İlerledikçe set, tekrar ve hareket varyasyonları güncellenecek."}</p>{aiSafetyNote && <div className="ai-safety"><strong>Güvenlik notu</strong><span>{aiSafetyNote}</span></div>}</div><div className="source-stack">{planSources.map((source) => <a key={source.url} href={source.url} target="_blank" rel="noreferrer">{source.title.split(" — ")[0]} <span>↗</span></a>)}</div></div>
           <div className="workout-layout"><div className="workout-main"><div className="section-title"><div><div className="eyebrow">BUGÜN</div><h2>Full body · {planLevel}</h2></div><button className="outline-btn" type="button">⋮</button></div><div className="workout-list">{workouts.map((workout, index) => <article className="workout-card" key={workout.name}><div className={`exercise-art ${workout.tone}`}><span>{workout.icon}</span><i>{String(index + 1).padStart(2, "0")}</i></div><div className="exercise-info"><div className="pill">{workout.level}</div><h3>{workout.name} <small>{workout.english}</small></h3><p>{workout.sets} · {workout.rest}</p></div><button className="play-btn" type="button" aria-label={`${workout.name} animasyonunu oynat`} onClick={() => openWorkout(index)}>▶</button></article>)}</div><button className="start-btn" type="button" onClick={() => openWorkout(0)}>Antrenmana başla <span>→</span></button></div><aside className="coach-card"><div className="coach-top"><span className="spark">✦</span><span>FORM AI</span></div><h2>Bugün senden<br /><em>tek bir şey</em> istiyor:</h2><p>Hareketi mükemmel yapmak değil, devam etmek.</p><div className="coach-line" /><small>İyi antrenmanlar, {name || "Ece"}.</small></aside></div></>}
         </section>
       )}
