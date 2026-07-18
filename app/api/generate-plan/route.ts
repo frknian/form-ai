@@ -30,7 +30,10 @@ export async function POST(request: Request) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return Response.json({ error: "GEMINI_API_KEY tanımlı değil" }, { status: 503 });
 
-  const profile = await request.json() as Record<string, unknown>;
+  const payload = await request.json() as Record<string, unknown>;
+  const photoDataUrl = typeof payload.photoDataUrl === "string" ? payload.photoDataUrl : null;
+  const profile = { ...payload };
+  delete profile.photoDataUrl;
   const sourceNotes = fitnessSources.map((source) => `${source.title}: ${source.notes.join("; ")}`).join("\n");
   const prompt = `Sen güvenli fitness programı hazırlayan bir asistansın. Aşağıdaki kullanıcı verilerine göre Türkçe, yapılandırılmış bir başlangıç programı oluştur.
 
@@ -43,7 +46,13 @@ ${sourceNotes}
 GÜVENLİK KURALLARI:
 ${fitnessPlannerRules.join("\n")}
 
-Yalnızca kullanıcının ortamında ve ekipmanında yapılabilecek hareketleri seç. Sakatlık veya ağrı belirtilmişse riskli hareketleri çıkar. Fotoğraf veya BMI verisinden tıbbi tanı ya da kesin yağ oranı üretme. Programda 4-6 hareket olsun ve her harekete Türkçe açıklama ekle.`;
+Yalnızca kullanıcının ortamında ve ekipmanında yapılabilecek hareketleri seç. Sakatlık veya ağrı belirtilmişse riskli hareketleri çıkar. Fotoğraf veya BMI verisinden tıbbi tanı ya da kesin yağ oranı üretme. Programda 4-6 hareket olsun ve her harekete Türkçe açıklama ekle. Kullanıcının metin hedefini, ekipman metnini, 10 test cevabını ve ölçümlerini fotoğraf varsa fotoğrafla birlikte değerlendir; hiçbir alanı yok sayma.`;
+
+  const parts: Array<Record<string, unknown>> = [{ text: prompt }];
+  if (photoDataUrl?.startsWith("data:image/")) {
+    const match = photoDataUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
+    if (match) parts.push({ inline_data: { mime_type: match[1], data: match[2] } });
+  }
 
   let response: Response;
   try {
@@ -51,7 +60,7 @@ Yalnızca kullanıcının ortamında ve ekipmanında yapılabilecek hareketleri 
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
+      contents: [{ role: "user", parts }],
         generationConfig: { responseMimeType: "application/json", responseSchema, temperature: 0.2 },
       }),
     });
@@ -60,8 +69,8 @@ Yalnızca kullanıcının ortamında ve ekipmanında yapılabilecek hareketleri 
   }
 
   if (!response.ok) return Response.json({ error: "Gemini program üretimi başarısız" }, { status: 502 });
-  const payload = await response.json() as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
-  const text = payload.candidates?.[0]?.content?.parts?.[0]?.text;
+  const geminiPayload = await response.json() as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
+  const text = geminiPayload.candidates?.[0]?.content?.parts?.[0]?.text;
   if (!text) return Response.json({ error: "Gemini boş yanıt döndürdü" }, { status: 502 });
 
   try {

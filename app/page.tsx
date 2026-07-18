@@ -73,6 +73,7 @@ export default function Home() {
   const [equipmentText, setEquipmentText] = useState("");
   const [goalText, setGoalText] = useState("");
   const [photo, setPhoto] = useState<string | null>(null);
+  const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null);
   const [history, setHistory] = useState<string[]>(Array(10).fill(""));
   const [questionIndex, setQuestionIndex] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -99,7 +100,12 @@ export default function Home() {
 
   function handlePhoto(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
-    if (file) setPhoto(URL.createObjectURL(file));
+    if (file) {
+      setPhoto(URL.createObjectURL(file));
+      const reader = new FileReader();
+      reader.onload = () => setPhotoDataUrl(typeof reader.result === "string" ? reader.result : null);
+      reader.readAsDataURL(file);
+    }
   }
 
   function setAnswer(answer: string) {
@@ -156,7 +162,7 @@ export default function Home() {
       }
     }
     try {
-      const aiResponse = await fetch("/api/generate-plan", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, age, gender, height, weight, environment: gym, equipment: equipmentText, goal: goalText, history }) });
+      const aiResponse = await fetch("/api/generate-plan", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, age, gender, height, weight, environment: gym, equipment: equipmentText, goal: goalText, history, photoDataUrl }) });
       if (aiResponse.ok) {
         const aiPlan = await aiResponse.json() as { workouts?: Array<{ name: string; english: string; area: string; sets: number; reps: string; restSeconds: number }>; rationale?: string; safetyNote?: string };
         if (aiPlan.workouts?.length) setAiWorkouts(normalizeAiWorkouts(aiPlan.workouts));
