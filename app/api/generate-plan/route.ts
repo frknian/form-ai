@@ -45,14 +45,19 @@ ${fitnessPlannerRules.join("\n")}
 
 Yalnızca kullanıcının ortamında ve ekipmanında yapılabilecek hareketleri seç. Sakatlık veya ağrı belirtilmişse riskli hareketleri çıkar. Fotoğraf veya BMI verisinden tıbbi tanı ya da kesin yağ oranı üretme. Programda 4-6 hareket olsun ve her harekete Türkçe açıklama ekle.`;
 
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: { responseMimeType: "application/json", responseSchema, temperature: 0.2 },
-    }),
-  });
+  let response: Response;
+  try {
+    response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: { responseMimeType: "application/json", responseSchema, temperature: 0.2 },
+      }),
+    });
+  } catch {
+    return Response.json({ error: "Gemini ağına erişilemedi; yerel plan kullanılacak" }, { status: 503 });
+  }
 
   if (!response.ok) return Response.json({ error: "Gemini program üretimi başarısız" }, { status: 502 });
   const payload = await response.json() as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
