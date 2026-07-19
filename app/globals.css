@@ -226,3 +226,46 @@ button,input { font:inherit; } button { cursor:pointer; }
   .player-tools { flex-wrap:wrap; }.player-tools button { min-width:44%; }
   .session-list article { flex-direction:column; gap:8px; }.session-list article > div:last-child { text-align:left; }
 }
+
+/* AI kişiselleştirme ve enerji raporu. */
+.analysis-steps { display:flex; gap:4px; width:150px; margin-top:9px; }
+.analysis-steps i { flex:1; height:3px; border-radius:99px; background:#d9dfc2; }
+.analysis-steps i.done { background:#91ad32; }
+.ai-insights { margin:0 0 32px; padding:22px; border:1px solid #dce9ad; border-radius:11px; background:linear-gradient(135deg,#fbfdf2,#f4f9df); }
+.ai-insights h2 { margin:0; font-size:22px; letter-spacing:-1px; }
+.analysis-id { padding:7px 10px; border-radius:999px; background:#22221f; color:#cde966; font-size:9px; font-weight:800; letter-spacing:1px; }
+.analysis-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:19px 0 14px; }
+.analysis-grid article { min-height:105px; padding:14px; border:1px solid #e1e9c7; border-radius:8px; background:rgba(255,255,255,.62); }
+.analysis-grid span,.adaptation-list > div > span,.week-schedule span { display:block; color:#87916a; font-size:9px; font-weight:800; letter-spacing:1.2px; }
+.analysis-grid strong { display:block; margin:12px 0 5px; font-size:15px; }
+.analysis-grid small { color:#7e8667; font-size:10px; line-height:1.4; }
+.adaptation-list { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.adaptation-list > div { padding:15px; border-radius:8px; background:#fff; }
+.adaptation-list p { display:flex; gap:8px; margin:10px 0 0; color:#686d59; font-size:10px; line-height:1.45; }
+.adaptation-list p b { display:grid; place-items:center; flex:0 0 19px; height:19px; border-radius:50%; background:#e9f4c5; color:#687b28; font-size:9px; }
+.week-schedule { display:flex; gap:7px; margin-top:10px; overflow:auto; }
+.week-schedule > div { min-width:135px; padding:12px; border:1px solid #dfe8bf; border-radius:8px; background:#f9fce9; }
+.week-schedule strong,.week-schedule small { display:block; }.week-schedule strong { margin:8px 0 4px; font-size:11px; }.week-schedule small { color:#92997d; font-size:9px; }
+.energy-dashboard { display:grid; grid-template-columns:1fr 1fr .85fr; gap:10px; margin:-26px 0 32px; }
+.energy-dashboard > * { min-height:118px; padding:16px; border:1px solid var(--line); border-radius:9px; background:#fbfbf7; }
+.energy-dashboard article span { color:#8b8b84; font-size:9px; font-weight:800; letter-spacing:1.1px; }
+.energy-dashboard article strong { display:block; margin:15px 0 6px; font-size:24px; }.energy-dashboard article strong small { color:#7b7b74; font-size:10px; }
+.energy-dashboard p { margin:0; color:#92928b; font-size:10px; line-height:1.45; }
+.energy-dashboard > div { display:flex; flex-direction:column; justify-content:center; border-color:#ead9bd; background:#fff8ed; }.energy-dashboard > div strong { margin-bottom:8px; color:#795d2d; font-size:11px; }
+.monthly-report { display:grid; grid-template-columns:1.2fr .8fr; gap:24px; margin:0 0 18px; padding:22px; border-radius:10px; background:#22221f; color:#fff; }
+.monthly-report h2 { margin:0 0 7px; font-size:23px; }.monthly-report p { max-width:500px; margin:0; color:#aaa; font-size:10px; line-height:1.5; }
+.monthly-numbers { display:flex; gap:20px; margin-top:20px; }
+.monthly-numbers span { display:grid; gap:3px; color:#8f8f89; font-size:9px; }.monthly-numbers strong { color:#d2ed72; font-size:20px; }
+.month-bars { display:flex; align-items:flex-end; justify-content:space-around; gap:10px; min-height:145px; padding-top:10px; }
+.month-bars > div { display:grid; grid-template-rows:1fr auto auto; align-items:end; justify-items:center; gap:5px; width:36px; height:135px; }
+.month-bars span { width:22px; min-height:8px; border-radius:5px 5px 2px 2px; background:#cde966; }
+.month-bars small { color:#888; font-size:8px; }.month-bars b { color:#fff; font-size:10px; }
+.energy-reference { display:grid; grid-template-columns:1fr 1fr 1.4fr; gap:12px; margin:0 0 18px; padding:17px; border:1px solid #dbe6b4; border-radius:9px; background:#f8fce9; }
+.energy-reference span,.energy-reference small { display:block; color:#87916b; font-size:9px; }.energy-reference strong { display:block; margin:8px 0 4px; font-size:18px; }.energy-reference p { align-self:center; margin:0; color:#858c72; font-size:10px; line-height:1.5; }
+@media (max-width:700px) {
+  .analysis-grid,.adaptation-list,.energy-dashboard,.monthly-report,.energy-reference { grid-template-columns:1fr; }
+  .analysis-id { display:none; }
+  .monthly-numbers { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .month-bars { min-height:120px; }
+  .energy-dashboard { margin-top:-15px; }
+}

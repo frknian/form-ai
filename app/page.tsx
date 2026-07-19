@@ -235,6 +235,10 @@ type AiWorkout = { name: string; english: string; area: string; sets: string; re
 type MotionPattern = "floor-press" | "pushup" | "press" | "overhead" | "row" | "pulldown" | "squat" | "lunge" | "hinge" | "bridge" | "plank" | "core" | "cardio" | "mobility";
 type WorkoutPhase = "work" | "rest" | "done";
 type WorkoutSessionRecord = { id: string; completedAt: string; durationSeconds: number; calories: number; completedExercises: number; totalExercises: number; exerciseNames: string[] };
+type AiPlanAnalysis = { experienceLevel: string; weeklyFrequency: string; sessionMinutes: number; primaryGoal: string; intensity: string; equipmentMode: string; focusAreas: string[]; adaptations: string[] };
+type AiScheduleDay = { day: string; focus: string; durationMinutes: number };
+type EnergyMetrics = { bmr: number; tdee: number; activityLabel: string; activityFactor: number };
+type AiStage = "profile" | "history" | "planning" | "complete";
 
 const motionGuides: Record<MotionPattern, { action: string; focus: string; start: string; move: string; finish: string; breathe: string; mistake: string }> = {
   "floor-press": { action: "YUKARI İT", focus: "Göğüs · triceps", start: "Sırt üstü yat, dizleri bük ve dambılları dirseklerin üzerinde tut.", move: "Dambılları göğsünün üzerinde birbirine yaklaştırarak yukarı it.", finish: "Dirsekleri yere çarpmadan kontrollü indir.", breathe: "İterken nefes ver, indirirken nefes al.", mistake: "Omuzları kulaklara çekme; bilekleri geriye kırma." },
@@ -314,6 +318,35 @@ function asWorkout(exercise: typeof exerciseLibrary[number]): AiWorkout {
   return { ...exercise, level: exercise.area, sets: `3 set · ${timed ? "30 sn" : "10 tekrar"}`, rest: "60 sn dinlenme", seconds: timed ? 30 : 45 };
 }
 
+function calculateEnergyMetrics(gender: string, ageValue: string, heightValue: string, weightValue: string, movementLevel: string): EnergyMetrics | null {
+  const age = Number(ageValue);
+  const height = Number(heightValue);
+  const weight = Number(weightValue);
+  if (!age || !height || !weight) return null;
+  const sexConstant = gender === "Erkek" ? 5 : -161;
+  const bmr = Math.round(10 * weight + 6.25 * height - 5 * age + sexConstant);
+  const activity = movementLevel === "Yüksek" ? { factor: 1.55, label: "Yüksek hareket" } : movementLevel === "Orta" ? { factor: 1.375, label: "Orta hareket" } : { factor: 1.2, label: "Düşük hareket" };
+  return { bmr, tdee: Math.round(bmr * activity.factor), activityLabel: activity.label, activityFactor: activity.factor };
+}
+
+function workoutMet(exercise: AiWorkout, phase: WorkoutPhase, intensity: string) {
+  if (phase === "rest") return 2.0;
+  const pattern = getMotionPattern(exercise);
+  const vigorous = /yüksek|ileri/i.test(intensity);
+  if (pattern === "cardio") return vigorous ? 8 : 7.5;
+  if (["squat", "lunge", "hinge"].includes(pattern)) return vigorous ? 6 : 5;
+  if (["pushup", "plank", "core"].includes(pattern)) return vigorous ? 6.5 : 3.8;
+  if (pattern === "mobility") return 2.8;
+  return vigorous ? 6 : 3.5;
+}
+
+function fallbackAnalysis(gym: string, equipmentText: string, history: string[], goalText: string): AiPlanAnalysis {
+  const duration = Number(history[3]?.match(/\d+/)?.[0]) || 30;
+  const primaryGoal = history[4] || goalText || "Güçlenme";
+  const experienceLevel = history[2] || "Yeni başlıyorum";
+  return { experienceLevel, weeklyFrequency: history[1] || "1–2 gün", sessionMinutes: duration, primaryGoal, intensity: /ileri|yüksek/i.test(`${experienceLevel} ${history[7]}`) ? "Orta-yüksek" : "Düşük-orta", equipmentMode: gym === "Salon" ? "Spor salonu ekipmanları" : equipmentText || "Ekipmansız", focusAreas: primaryGoal.toLowerCase().includes("kilo") ? ["Tüm vücut", "Kondisyon"] : primaryGoal.toLowerCase().includes("kas") ? ["Direnç", "Kas grubu dengesi"] : ["Temel kuvvet", "Hareket kalitesi"], adaptations: [`${duration} dakikalık seansa göre hareket sayısı ayarlandı.`, `${experienceLevel} seviyesine göre set ve dinlenme seçildi.`, history[6] && history[6] !== "Yok" ? `${history[6]} bölgesi için riskli hareketler elendi.` : "Belirtilen ağrı bölgesi olmadığı için dengeli seçim yapıldı."] };
+}
+
 function findRequestedLibraryExercises(requestedExercises: string, goalText: string, gym: string, equipmentText: string, history: string[]) {
   const requestedNames = `${requestedExercises} ${goalText}`.toLowerCase().split(/[\n,;]+/).map((value) => value.trim()).filter(Boolean);
   const equipment = equipmentText.toLowerCase();
@@ -380,17 +413,31 @@ function normalizeAiWorkouts(items: Array<{ name: string; english: string; area:
   });
 }
 
-function AiScanFigure({ compact = false, status = "scanning" }: { compact?: boolean; status?: "idle" | "scanning" | "complete" | "fallback" }) {
-  const copy = status === "complete" ? ["AI verileri taradı", "Kişisel programın hazırlandı"] : status === "fallback" ? ["Veriler tarandı", "Yedek plan hazırlandı; AI bağlantısı yeniden denenebilir"] : status === "idle" ? ["AI analizi hazır", "Profil, test ve ölçümler birlikte değerlendirilecek"] : ["AI verilerini tarıyor", "Metin, test ve ölçümler birlikte analiz ediliyor"];
-  return <div className={`${compact ? "ai-scan compact" : "ai-scan"} ${status}`}><div className="scan-figure"><span className="scan-head" /><span className="scan-body" /><span className="scan-line" /></div><div><strong>{copy[0]}</strong><small>{copy[1]}</small></div></div>;
+function AiScanFigure({ compact = false, status = "scanning", stage = "profile" }: { compact?: boolean; status?: "idle" | "scanning" | "complete" | "fallback"; stage?: AiStage }) {
+  const stageCopy: Record<AiStage, [string, string]> = { profile: ["Profil ölçüleri taranıyor", "Yaş, boy, kilo, ortam ve ekipman değerlendiriliyor"], history: ["Spor geçmişi çözümleniyor", "10 test cevabı, hedef ve ağrı bölgeleri birlikte okunuyor"], planning: ["Program kişiselleştiriliyor", "Hareket, set, tekrar ve dinlenme seçiliyor"], complete: ["AI verileri taradı", "Kişisel programın ve uyarlamaların hazır"] };
+  const copy = status === "complete" ? stageCopy.complete : status === "fallback" ? ["Veriler tarandı", "Güvenli yerel plan hazırlandı; AI bağlantısı yeniden denenebilir"] : status === "idle" ? ["AI analizi hazır", "Profil, test ve ölçümler birlikte değerlendirilecek"] : stageCopy[stage];
+  return <div className={`${compact ? "ai-scan compact" : "ai-scan"} ${status}`}><div className="scan-figure"><span className="scan-head" /><span className="scan-body" /><span className="scan-line" /></div><div><strong>{copy[0]}</strong><small>{copy[1]}</small>{!compact && status === "scanning" && <div className="analysis-steps"><i className="done" /><i className={stage === "history" || stage === "planning" || stage === "complete" ? "done" : ""} /><i className={stage === "planning" || stage === "complete" ? "done" : ""} /></div>}</div></div>;
 }
 
-function ProgressView({ name, sessions, referenceTime }: { name: string; sessions: WorkoutSessionRecord[]; referenceTime: number }) {
+function AiPlanInsights({ analysis, schedule, progression, fingerprint }: { analysis: AiPlanAnalysis; schedule: AiScheduleDay[]; progression: string[]; fingerprint: string }) {
+  return <section className="ai-insights"><div className="section-title"><div><div className="eyebrow">AI KİŞİSELLEŞTİRME RAPORU</div><h2>Programını değiştiren veriler</h2></div><span className="analysis-id">ANALİZ {fingerprint || "YEREL"}</span></div><div className="analysis-grid"><article><span>SEVİYE</span><strong>{analysis.experienceLevel}</strong><small>{analysis.intensity} yoğunluk</small></article><article><span>SIKLIK</span><strong>{analysis.weeklyFrequency}</strong><small>{analysis.sessionMinutes} dk / seans</small></article><article><span>ORTAM</span><strong>{analysis.equipmentMode}</strong><small>{analysis.focusAreas.join(" · ")}</small></article></div><div className="adaptation-list"><div><span>NEDEN FARKLI?</span>{analysis.adaptations.map((adaptation) => <p key={adaptation}>✓ {adaptation}</p>)}</div><div><span>4 HAFTALIK İLERLEME</span>{progression.slice(0, 4).map((item, index) => <p key={`${item}-${index}`}><b>{index + 1}</b>{item}</p>)}</div></div>{schedule.length > 0 && <div className="week-schedule">{schedule.map((item) => <div key={`${item.day}-${item.focus}`}><span>{item.day}</span><strong>{item.focus}</strong><small>{item.durationMinutes} dk</small></div>)}</div>}</section>;
+}
+
+function ProgressView({ name, sessions, referenceTime, energyMetrics }: { name: string; sessions: WorkoutSessionRecord[]; referenceTime: number; energyMetrics: EnergyMetrics | null }) {
   const weekAgo = referenceTime - 7 * 24 * 60 * 60 * 1000;
   const weeklySessions = sessions.filter((session) => new Date(session.completedAt).getTime() >= weekAgo);
   const totalSeconds = sessions.reduce((total, session) => total + session.durationSeconds, 0);
   const totalCalories = sessions.reduce((total, session) => total + session.calories, 0);
-  return <div className="subview"><div className="eyebrow">İLERLEMEM</div><h1>{name || "Sporcu"}, <em>ritmini gör.</em></h1><p className="lead">Tamamladığın antrenmanlar, süreler ve enerji verileri burada birikir.</p><div className="progress-cards"><div><span>BU HAFTA</span><strong>{weeklySessions.length}</strong><small>tamamlanan antrenman</small></div><div><span>TOPLAM SÜRE</span><strong>{Math.round(totalSeconds / 60)} dk</strong><small>{sessions.length ? "tüm kayıtlar" : "ilk antrenmanı bekliyor"}</small></div><div><span>YAKILAN ENERJİ</span><strong>{totalCalories} kcal</strong><small>tahmini toplam</small></div></div><div className="progress-panel"><div className="section-title"><div><div className="eyebrow">İLERLEME GÜNLÜĞÜ</div><h2>{sessions.length ? "Son antrenmanların" : "İlk kaydını oluşturalım"}</h2></div><span className="progress-status">{sessions.length ? `${sessions.length} kayıt` : "Hazır"}</span></div>{sessions.length ? <div className="session-list">{sessions.slice(0, 6).map((session) => <article key={session.id}><div><strong>{session.exerciseNames.slice(0, 3).join(" · ") || "Kişisel antrenman"}</strong><small>{new Intl.DateTimeFormat("tr-TR", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }).format(new Date(session.completedAt))}</small></div><div><b>{Math.max(1, Math.round(session.durationSeconds / 60))} dk</b><span>{session.calories} kcal · {session.completedExercises}/{session.totalExercises} hareket</span></div></article>)}</div> : <div className="empty-progress"><span>✦</span><p>İlk antrenmanını bitirdiğinde süre, kalori ve tamamlanan hareketler burada görünecek.</p></div>}</div></div>;
+  const referenceDate = new Date(referenceTime);
+  const monthlySessions = sessions.filter((session) => { const date = new Date(session.completedAt); return date.getMonth() === referenceDate.getMonth() && date.getFullYear() === referenceDate.getFullYear(); });
+  const monthlyMinutes = Math.round(monthlySessions.reduce((total, session) => total + session.durationSeconds, 0) / 60);
+  const monthlyCalories = monthlySessions.reduce((total, session) => total + session.calories, 0);
+  const completedTotal = monthlySessions.reduce((total, session) => total + session.completedExercises, 0);
+  const exerciseTotal = monthlySessions.reduce((total, session) => total + session.totalExercises, 0);
+  const completionRate = exerciseTotal ? Math.round((completedTotal / exerciseTotal) * 100) : 0;
+  const weekBuckets = [3, 2, 1, 0].map((weeksAgo) => { const end = referenceTime - weeksAgo * 7 * 24 * 60 * 60 * 1000; const start = end - 7 * 24 * 60 * 60 * 1000; return sessions.filter((session) => { const time = new Date(session.completedAt).getTime(); return time > start && time <= end; }).length; });
+  const maxWeek = Math.max(1, ...weekBuckets);
+  return <div className="subview"><div className="eyebrow">İLERLEMEM</div><h1>{name || "Sporcu"}, <em>ritmini gör.</em></h1><p className="lead">Tamamladığın antrenmanlar, süreler ve tahmini enerji verileri burada birikir.</p><div className="progress-cards"><div><span>BU HAFTA</span><strong>{weeklySessions.length}</strong><small>tamamlanan antrenman</small></div><div><span>TOPLAM SÜRE</span><strong>{Math.round(totalSeconds / 60)} dk</strong><small>{sessions.length ? "tüm kayıtlar" : "ilk antrenmanı bekliyor"}</small></div><div><span>YAKILAN ENERJİ</span><strong>{totalCalories} kcal</strong><small>MET tabanlı tahmin</small></div></div><section className="monthly-report"><div><div className="eyebrow">AYLIK RAPOR</div><h2>{new Intl.DateTimeFormat("tr-TR", { month: "long" }).format(referenceDate)} özeti</h2><p>Kalori ve enerji değerleri tahminidir; tıbbi ölçüm veya beslenme hedefi değildir.</p><div className="monthly-numbers"><span><strong>{monthlySessions.length}</strong>antrenman</span><span><strong>{monthlyMinutes}</strong>dakika</span><span><strong>{monthlyCalories}</strong>kcal</span><span><strong>%{completionRate}</strong>tamamlama</span></div></div><div className="month-bars" aria-label="Son dört haftadaki antrenman sayısı">{weekBuckets.map((count, index) => <div key={index}><span style={{ height: `${Math.max(8, (count / maxWeek) * 100)}%` }} /><small>{index + 1}. hf</small><b>{count}</b></div>)}</div></section>{energyMetrics && <div className="energy-reference"><div><span>BAZAL ENERJİ (BMR)</span><strong>{energyMetrics.bmr} kcal</strong><small>Dinlenme enerjisi tahmini</small></div><div><span>GÜNLÜK TOPLAM (TDEE)</span><strong>{energyMetrics.tdee} kcal</strong><small>{energyMetrics.activityLabel} katsayısı</small></div><p>Bu değerler Mifflin–St Jeor denklemi ve testteki hareket düzeyine göre yaklaşık hesaplanır.</p></div>}<div className="progress-panel"><div className="section-title"><div><div className="eyebrow">İLERLEME GÜNLÜĞÜ</div><h2>{sessions.length ? "Son antrenmanların" : "İlk kaydını oluşturalım"}</h2></div><span className="progress-status">{sessions.length ? `${sessions.length} kayıt` : "Hazır"}</span></div>{sessions.length ? <div className="session-list">{sessions.slice(0, 6).map((session) => <article key={session.id}><div><strong>{session.exerciseNames.slice(0, 3).join(" · ") || "Kişisel antrenman"}</strong><small>{new Intl.DateTimeFormat("tr-TR", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }).format(new Date(session.completedAt))}</small></div><div><b>{Math.max(1, Math.round(session.durationSeconds / 60))} dk</b><span>{session.calories} kcal · {session.completedExercises}/{session.totalExercises} hareket</span></div></article>)}</div> : <div className="empty-progress"><span>✦</span><p>İlk antrenmanını bitirdiğinde süre, kalori ve tamamlanan hareketler burada görünecek.</p></div>}</div></div>;
 }
 
 function LibraryView({ onOpenWorkout }: { onOpenWorkout: (exercise: AiWorkout) => void }) {
@@ -449,6 +496,11 @@ export default function Home() {
   const [aiWorkouts, setAiWorkouts] = useState<AiWorkout[]>([]);
   const [aiRationale, setAiRationale] = useState("");
   const [aiSafetyNote, setAiSafetyNote] = useState("");
+  const [aiAnalysis, setAiAnalysis] = useState<AiPlanAnalysis | null>(null);
+  const [aiSchedule, setAiSchedule] = useState<AiScheduleDay[]>([]);
+  const [aiProgression, setAiProgression] = useState<string[]>([]);
+  const [aiFingerprint, setAiFingerprint] = useState("");
+  const [aiStage, setAiStage] = useState<AiStage>("profile");
   const [activeView, setActiveView] = useState<"plan" | "progress" | "library">("plan");
   const [aiStatus, setAiStatus] = useState<"idle" | "scanning" | "complete" | "fallback">("idle");
   const [aiError, setAiError] = useState("");
@@ -458,6 +510,8 @@ export default function Home() {
   const currentWorkout = activeWorkout === null ? null : playerQueue[activeWorkout] || null;
   const currentGuide = currentWorkout ? getMotionGuide(currentWorkout) : null;
   const currentPrescription = currentWorkout ? workoutPrescription(currentWorkout) : null;
+  const energyMetrics = useMemo(() => calculateEnergyMetrics(gender, age, height, weight, history[7]), [age, gender, height, history, weight]);
+  const displayedSessionCalories = Math.round(sessionCalories);
   const planLevel = history[2] || "Yeni başlıyorum";
   const planGoal = history[4] || goalText || "Güçlenme";
   const bmi = useMemo(() => {
@@ -531,13 +585,14 @@ export default function Home() {
       setSessionSeconds((current) => {
         const next = current + 1;
         const userWeight = Math.max(40, Number(weight) || 70);
-        const estimatedCalories = Math.round((((workoutPhase === "rest" ? 2.5 : 6) * 3.5 * userWeight) / 200) * (next / 60));
-        setSessionCalories(Math.max(0, estimatedCalories));
+        const met = workoutMet(currentWorkout, workoutPhase, aiAnalysis?.intensity || "Orta");
+        const caloriesPerSecond = ((met * 3.5 * userWeight) / 200) / 60;
+        setSessionCalories((calories) => calories + caloriesPerSecond);
         return next;
       });
     }, 1000);
     return () => window.clearInterval(interval);
-  }, [activeWorkout, currentSet, currentWorkout, isRunning, weight, workoutPhase]);
+  }, [activeWorkout, aiAnalysis?.intensity, currentSet, currentWorkout, isRunning, weight, workoutPhase]);
 
   function openWorkout(index: number, queue: AiWorkout[] = workouts) {
     const nextWorkout = queue[index];
@@ -599,7 +654,7 @@ export default function Home() {
     if (!playerQueue.length) return;
     setIsRunning(false);
     const completed = activeWorkout !== null && workoutPhase === "done" && !skippedExercises.includes(activeWorkout) && !completedExercises.includes(activeWorkout) ? [...completedExercises, activeWorkout] : completedExercises;
-    const record: WorkoutSessionRecord = { id: crypto.randomUUID(), completedAt: new Date().toISOString(), durationSeconds: Math.max(1, sessionSeconds), calories: Math.max(1, sessionCalories), completedExercises: completed.length, totalExercises: playerQueue.length, exerciseNames: playerQueue.map((exercise) => exercise.name) };
+    const record: WorkoutSessionRecord = { id: crypto.randomUUID(), completedAt: new Date().toISOString(), durationSeconds: Math.max(1, sessionSeconds), calories: Math.max(1, Math.round(sessionCalories)), completedExercises: completed.length, totalExercises: playerQueue.length, exerciseNames: playerQueue.map((exercise) => exercise.name) };
     setSessionHistory((current) => [record, ...current]);
     setActiveWorkout(null);
     setActiveView("progress");
@@ -617,8 +672,13 @@ export default function Home() {
   async function createPlan() {
     setSaving(true);
     setAiStatus("scanning");
+    setAiStage("profile");
     setAiError("");
     setAiWorkouts([]);
+    setAiAnalysis(null);
+    setAiSchedule([]);
+    setAiProgression([]);
+    setAiFingerprint("");
     try {
       const supabase = createClient();
       if (supabase) {
@@ -642,26 +702,40 @@ export default function Home() {
     } catch {
       // Profil kaydı başarısız olsa bile AI planı üretmeye devam eder.
     }
+    setAiStage("history");
     try {
       const exerciseCatalog = exerciseLibrary.map(({ name: exerciseName, english, area, requires, bodyweight, goals }) => ({ name: exerciseName, english, area, requires, bodyweight, goals }));
+      setAiStage("planning");
       const aiResponse = await fetch("/api/generate-plan", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, age, gender, height, weight, environment: gym, equipment: equipmentText, goal: goalText, requestedExercises, history, exerciseCatalog, photoDataUrl }) });
       if (aiResponse.ok) {
-        const aiPlan = await aiResponse.json() as { workouts?: Array<{ name: string; english: string; area: string; sets: number; reps: string; restSeconds: number; instructions?: string }>; rationale?: string; safetyNote?: string };
+        const aiPlan = await aiResponse.json() as { workouts?: Array<{ name: string; english: string; area: string; sets: number; reps: string; restSeconds: number; instructions?: string }>; rationale?: string; safetyNote?: string; analysis?: AiPlanAnalysis; weeklySchedule?: AiScheduleDay[]; progression?: string[]; profileFingerprint?: string };
         const normalizedWorkouts = aiPlan.workouts?.length ? normalizeAiWorkouts(aiPlan.workouts) : [];
         const personalizedWorkouts = personalizeAiWorkouts(normalizedWorkouts, gym, equipmentText, history, goalText, requestedExercises);
         if (personalizedWorkouts.length) setAiWorkouts(personalizedWorkouts);
         setAiRationale(aiPlan.rationale || "");
         setAiSafetyNote(aiPlan.safetyNote || "");
+        setAiAnalysis(aiPlan.analysis || fallbackAnalysis(gym, equipmentText, history, goalText));
+        setAiSchedule(Array.isArray(aiPlan.weeklySchedule) ? aiPlan.weeklySchedule : []);
+        setAiProgression(Array.isArray(aiPlan.progression) ? aiPlan.progression : []);
+        setAiFingerprint(aiPlan.profileFingerprint || "AI");
+        setAiStage("complete");
         setAiStatus(personalizedWorkouts.length ? "complete" : "fallback");
       } else {
         const errorPayload = await aiResponse.json().catch(() => null) as { error?: string } | null;
         setAiError(errorPayload?.error || "AI analizi tamamlanamadı");
+        setAiAnalysis(fallbackAnalysis(gym, equipmentText, history, goalText));
+        setAiProgression(["Formu öğren ve hareketleri kontrollü tamamla.", "Uygun hareketlerde bir set veya iki tekrar ekle.", "Dinlenmeyi koruyarak hareket kalitesini sürdür.", "Ağrısız ilerlediysen yükü küçük oranda artır."]);
+        setAiFingerprint("YEREL");
         setAiStatus("fallback");
       }
     } catch {
       setAiStatus("fallback");
       setAiError("AI bağlantısına ulaşılamadı; verilerinle yerel kişisel plan oluşturuldu.");
+      setAiAnalysis(fallbackAnalysis(gym, equipmentText, history, goalText));
+      setAiProgression(["Formu öğren ve hareketleri kontrollü tamamla.", "Uygun hareketlerde bir set veya iki tekrar ekle.", "Dinlenmeyi koruyarak hareket kalitesini sürdür.", "Ağrısız ilerlediysen yükü küçük oranda artır."]);
+      setAiFingerprint("YEREL");
     }
+    setAiStage("complete");
     setSaving(false);
     setStep(5);
   }
@@ -670,6 +744,10 @@ export default function Home() {
     const prepared = program.names.map((name) => exerciseLibrary.find((exercise) => exercise.name === name)).filter((exercise): exercise is typeof exerciseLibrary[number] => Boolean(exercise)).map((exercise) => ({ ...exercise, level: exercise.area, sets: `3 set · ${exercise.name === "Plank" || exercise.name === "Dead Bug" ? "30 sn" : "10 tekrar"}`, rest: "60 sn dinlenme", seconds: exercise.name === "Plank" || exercise.name === "Dead Bug" ? 30 : 45 }));
     setAiWorkouts(prepared);
     setAiRationale(`${program.title} seçildi. Bu hazır program, profilindeki AI planına alternatif olarak uygulanır.`);
+    setAiAnalysis(fallbackAnalysis(gym, equipmentText, history, goalText));
+    setAiSchedule([]);
+    setAiProgression(["Tekniği öğren.", "Tekrarları düzenli tamamla.", "Dinlenme sürelerini koru.", "Hazır olduğunda küçük bir yük artışı yap."]);
+    setAiFingerprint("HAZIR");
     setAiStatus("complete");
     setActiveView("plan");
   }
@@ -717,14 +795,14 @@ export default function Home() {
           {step === 4 && <div className="step-content history-step">
             <div className="eyebrow">SORU {questionIndex + 1} / 10</div><h1>Seni biraz<br /><em>daha tanıyalım.</em></h1><p className="lead">Cevapların programın yoğunluğunu, hareket seçimini ve ilerleme hızını belirleyecek.</p>
             <div className="question-card"><span className="question-number">{String(questionIndex + 1).padStart(2, "0")}</span><h2>{historyQuestions[questionIndex]}</h2>{questionIndex === 6 && <p className="multi-select-note">Birden fazla bölge seçebilirsin.</p>}<div className="answer-grid">{(answerOptions[questionIndex] ?? []).map((answer) => { const selected = questionIndex === 6 ? history[6].split(" · ").includes(answer) : history[questionIndex] === answer; return <button type="button" key={answer} className={selected ? "answer selected" : "answer"} onClick={() => questionIndex === 6 ? toggleInjury(answer) : setAnswer(answer)}>{answer}</button>; })}</div>{questionIndex === 9 && <textarea className="question-note" value={history[9]} onChange={(e) => setAnswer(e.target.value)} placeholder="Buraya yazabilirsin..." />}</div>
-            {saving && <AiScanFigure status="scanning" />}<div className="action-row"><button className="back-btn" type="button" onClick={() => questionIndex ? setQuestionIndex(questionIndex - 1) : setStep(3)}>← Geri</button>{questionIndex < 9 ? <button className="primary-btn" type="button" onClick={() => setQuestionIndex(questionIndex + 1)}>Sonraki <span>→</span></button> : <button className="primary-btn" type="button" onClick={createPlan} disabled={saving}>{saving ? "AI verileri tarıyor…" : "Planımı oluştur ✦"}</button>}</div>
+            {saving && <AiScanFigure status="scanning" stage={aiStage} />}<div className="action-row"><button className="back-btn" type="button" onClick={() => questionIndex ? setQuestionIndex(questionIndex - 1) : setStep(3)}>← Geri</button>{questionIndex < 9 ? <button className="primary-btn" type="button" onClick={() => setQuestionIndex(questionIndex + 1)}>Sonraki <span>→</span></button> : <button className="primary-btn" type="button" onClick={createPlan} disabled={saving}>{saving ? "AI verileri analiz ediyor…" : "Planımı oluştur ✦"}</button>}</div>
           </div>}
           <aside className="side-note"><div className="orb"><span>✦</span></div><p><strong>Bilim + senin ritmin.</strong><br />Her plan, hedeflerine ve günlük hayatına uyum sağlar.</p></aside>
         </section>
       ) : (
         <section className="dashboard">
           {profileEditing && <div className="profile-editor"><div><div className="eyebrow">PROFİLİ GÜNCELLE</div><h2>Spor ortamını ve ekipmanlarını değiştir</h2><p>Kaydettiğinde AI, yeni profil verilerinle programı yeniden oluşturur.</p></div><div className="profile-editor-fields"><div className="choice-cards"><button type="button" className={gym === "Evde" ? "choice selected" : "choice"} onClick={() => setGym("Evde")}><span>⌂</span><strong>Evde</strong><small>Ekipmansız veya ev ekipmanı</small></button><button type="button" className={gym === "Salon" ? "choice selected" : "choice"} onClick={() => setGym("Salon")}><span>▦</span><strong>Spor salonunda</strong><small>Salon makineleri ve ağırlıklar</small></button></div><label className="textarea-label">EKİPMANLARIN<textarea value={equipmentText} onChange={(event) => setEquipmentText(event.target.value)} placeholder="Örn. dambıl, direnç bandı, bench" /></label><label className="textarea-label">İSTEDİĞİN HAREKETLER<textarea value={requestedExercises} onChange={(event) => setRequestedExercises(event.target.value)} placeholder="Örn. Yerde Dambıl Göğüs Presi" /></label><button className="primary-btn" type="button" onClick={() => { setProfileEditing(false); void createPlan(); }} disabled={saving}>{saving ? "AI yeniden tarıyor…" : "Profili kaydet ve programı yenile →"}</button></div></div>}
-          {activeView === "progress" ? <ProgressView name={name} sessions={sessionHistory} referenceTime={progressReferenceTime} /> : activeView === "library" ? <LibraryView onOpenWorkout={(exercise) => { setActiveView("plan"); openWorkout(0, [exercise]); }} /> : <>
+          {activeView === "progress" ? <ProgressView name={name} sessions={sessionHistory} referenceTime={progressReferenceTime} energyMetrics={energyMetrics} /> : activeView === "library" ? <LibraryView onOpenWorkout={(exercise) => { setActiveView("plan"); openWorkout(0, [exercise]); }} /> : <>
           {activeWorkout !== null && currentWorkout && currentGuide && currentPrescription ? <div className="workout-player">
             <button className="back-btn" type="button" onClick={() => { setIsRunning(false); setActiveWorkout(null); }}>← Plana dön</button>
             <div className="workout-session-progress" aria-label="Antrenman ilerlemesi">{playerQueue.map((exercise, index) => <span key={`${exercise.name}-${index}`} className={completedExercises.includes(index) ? "complete" : skippedExercises.includes(index) ? "skipped" : index === activeWorkout ? "active" : ""} />)}</div>
@@ -732,7 +810,7 @@ export default function Home() {
             <div className="player-title-row"><div><div className="eyebrow">HAREKET {activeWorkout + 1} / {playerQueue.length}</div><h1>{currentWorkout.name}</h1></div><span className={`phase-badge ${workoutPhase}`}>{workoutPhase === "rest" ? "DİNLENME" : workoutPhase === "done" ? "TAMAMLANDI" : `SET ${currentSet}/${currentPrescription.totalSets}`}</span></div>
             <div className="movement-guide"><div className="guide-heading"><span>3 ADIMDA UYGULA</span><strong>{currentGuide.focus}</strong></div><ol><li>{currentGuide.start}</li><li>{currentWorkout.instructions}</li><li>{currentGuide.finish}</li></ol></div>
             <div className="form-cues"><div><span>NEFES</span><strong>{currentGuide.breathe}</strong></div><div className="warning"><span>SIK HATA</span><strong>{currentGuide.mistake}</strong></div></div>
-            <div className={`timer-card phase-${workoutPhase}`}><span>{isRunning ? workoutPhase === "rest" ? "DİNLENME SÜRÜYOR" : "AKTİF SET" : workoutPhase === "done" ? "HAREKET TAMAM" : workoutPhase === "rest" ? "DİNLENMEYE HAZIR" : "HAZIR"}</span><strong>{formatClock(timer)}</strong><small>{workoutPhase === "rest" ? `Sonraki: set ${Math.min(currentSet + 1, currentPrescription.totalSets)}` : `${currentPrescription.target} · yaklaşık ${sessionCalories} kcal`}</small></div>
+            <div className={`timer-card phase-${workoutPhase}`}><span>{isRunning ? workoutPhase === "rest" ? "DİNLENME SÜRÜYOR" : "AKTİF SET" : workoutPhase === "done" ? "HAREKET TAMAM" : workoutPhase === "rest" ? "DİNLENMEYE HAZIR" : "HAZIR"}</span><strong>{formatClock(timer)}</strong><small>{workoutPhase === "rest" ? `Sonraki: set ${Math.min(currentSet + 1, currentPrescription.totalSets)}` : `${currentPrescription.target} · yaklaşık ${displayedSessionCalories} kcal`}</small></div>
             <div className="set-tracker"><div><span>SETLER</span><strong>{currentSet} / {currentPrescription.totalSets}</strong></div><div className="set-dots">{Array.from({ length: currentPrescription.totalSets }, (_, index) => <i key={index} className={index + 1 < currentSet || workoutPhase === "done" ? "complete" : index + 1 === currentSet ? "active" : ""} />)}</div><small>{currentWorkout.rest}</small></div>
             <div className="player-tools"><button type="button" onClick={() => activeWorkout > 0 && goToWorkout(activeWorkout - 1)} disabled={activeWorkout === 0}>← Önceki</button>{workoutPhase !== "done" && <button type="button" onClick={completeCurrentPhase}>{workoutPhase === "rest" ? "Dinlenmeyi atla" : "Seti tamamla"}</button>}<button type="button" onClick={skipExercise}>Hareketi atla →</button></div>
             <div className="player-actions"><button className="start-btn" type="button" onClick={() => workoutPhase === "done" ? activeWorkout < playerQueue.length - 1 ? goToWorkout(activeWorkout + 1) : void finishWorkout() : setIsRunning((running) => !running)}>{workoutPhase === "done" ? activeWorkout < playerQueue.length - 1 ? "Sonraki harekete geç" : "Antrenmanı kaydet" : isRunning ? "Duraklat" : workoutPhase === "rest" ? "Dinlenmeyi başlat" : "Seti başlat"} <span>→</span></button></div>
@@ -740,8 +818,10 @@ export default function Home() {
           </div> : <>
           <div className="dashboard-head"><div><div className="eyebrow">BUGÜNÜN PLANI · 01</div><h1>{name || "Ece"}, <em>hazır mısın?</em></h1><p>Verilerine göre ilk program taslağını hazırladık. İlerledikçe daha da kişiselleştireceğiz.</p></div><div className="streak-card"><span>✦</span><strong>4</strong><small>günlük seri</small></div></div>
           <div className="stats-row"><div><span>Vücut kitle indeksi</span><strong>{bmi}</strong><small>İlk ölçüm</small></div><div><span>Hedef</span><strong>{goalText ? "Kişisel" : "Güçlenme"}</strong><small>Profiline göre</small></div><div><span>Ortam</span><strong>{gym}</strong><small>{equipmentText || "Ekipmansız"}</small></div></div>
-          <div className="wellness-row"><div className="wellness-card calorie-card"><div><span>BUGÜNÜN KALORİSİ</span><strong>{sessionCalories || 0} <small>kcal</small></strong><p>Aktif set süresi arttıkça tahmini değer güncellenir.</p></div><div className="calorie-ring"><i>{sessionCalories || 0}</i></div><div className="calorie-note"><span>TAKİP</span><strong>Antrenman içi</strong><small>Hareketi tamamladıkça kaydedilir</small></div></div></div>
-          <div className="plan-explanation"><div><div className="eyebrow">PLANIN NEDEN BÖYLE?</div><h2>{planLevel} · {planGoal}</h2><p>{aiRationale || "Programın; seçtiğin ortam, ekipmanların, spor geçmişin ve yazdığın hedef birlikte değerlendirilerek oluşturuldu. İlerledikçe set, tekrar ve hareket varyasyonları güncellenecek."}</p>{aiSafetyNote && <div className="ai-safety"><strong>Güvenlik notu</strong><span>{aiSafetyNote}</span></div>}{aiError && <div className="ai-error">{aiError}</div>}</div><AiScanFigure compact status={aiStatus} /></div>
+          <div className="wellness-row"><div className="wellness-card calorie-card"><div><span>BUGÜNÜN ANTRENMAN ENERJİSİ</span><strong>{displayedSessionCalories} <small>kcal</small></strong><p>Hareket türü, yoğunluk, süre ve kilona göre MET tabanlı tahmin.</p></div><div className="calorie-ring"><i>{displayedSessionCalories}</i></div><div className="calorie-note"><span>TAKİP</span><strong>Antrenman içi</strong><small>Aktif set ve dinlenme ayrı hesaplanır</small></div></div></div>
+          {energyMetrics && <div className="energy-dashboard"><article><span>BAZAL ENERJİ · BMR</span><strong>{energyMetrics.bmr} <small>kcal/gün</small></strong><p>Vücudunun dinlenme halindeki yaklaşık enerji ihtiyacı.</p></article><article><span>GÜNLÜK TOPLAM · TDEE</span><strong>{energyMetrics.tdee} <small>kcal/gün</small></strong><p>{energyMetrics.activityLabel} düzeyine göre bakım tahmini.</p></article><div><strong>Yaklaşık değer</strong><p>Beslenme hedefi veya tıbbi ölçüm değildir. İlerleme raporunda gerçekleşen antrenman süresi ayrıca hesaplanır.</p></div></div>}
+          <div className="plan-explanation"><div><div className="eyebrow">PLANIN NEDEN BÖYLE?</div><h2>{planLevel} · {planGoal}</h2><p>{aiRationale || "Programın; seçtiğin ortam, ekipmanların, spor geçmişin ve yazdığın hedef birlikte değerlendirilerek oluşturuldu. İlerledikçe set, tekrar ve hareket varyasyonları güncellenecek."}</p>{aiSafetyNote && <div className="ai-safety"><strong>Güvenlik notu</strong><span>{aiSafetyNote}</span></div>}{aiError && <div className="ai-error">{aiError}</div>}</div><AiScanFigure compact status={aiStatus} stage={aiStage} /></div>
+          {aiAnalysis && <AiPlanInsights analysis={aiAnalysis} schedule={aiSchedule} progression={aiProgression} fingerprint={aiFingerprint} />}
           <ReadyPrograms onApply={applyReadyProgram} />
           <div className="workout-layout"><div className="workout-main"><div className="section-title"><div><div className="eyebrow">BUGÜN</div><h2>Full body · {planLevel}</h2></div><button className="outline-btn" type="button">⋮</button></div><div className="workout-list">{workouts.map((workout, index) => { const guide = getMotionGuide(workout); return <article className="workout-card" key={workout.name}><ExerciseAnimation exercise={workout} compact /><div className="exercise-info"><div className="exercise-labels"><div className="pill">{workout.level}</div><span>{guide.action}</span></div><h3>{workout.name} <small>{workout.english}</small></h3><p>{workout.sets} · {workout.rest}</p><details className="how-to"><summary>3 adımda nasıl yapılır?</summary><ol className="mini-steps"><li>{guide.start}</li><li>{workout.instructions}</li><li>{guide.finish}</li></ol></details></div><button className="play-btn" type="button" aria-label={`${workout.name} hareket akışını ve sayacını aç`} onClick={() => openWorkout(index)}><span>▶</span><small>Aç</small></button></article>; })}</div><button className="start-btn" type="button" onClick={() => openWorkout(0)}>Antrenmana başla <span>→</span></button></div><aside className="coach-card"><div className="coach-top"><span className="spark">✦</span><span>FORM AI</span></div><h2>Bugün senden<br /><em>tek bir şey</em> istiyor:</h2><p>Hareketi mükemmel yapmak değil, devam etmek.</p><div className="coach-line" /><small>İyi antrenmanlar, {name || "Ece"}.</small></aside></div></>}
           </>}

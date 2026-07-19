@@ -1,17 +1,43 @@
 const plannerRules = [
-  "Kullanıcının hedefini, seviyesini, ortamını, ekipman metnini, süre bilgisini, sağlık kısıtlarını ve 10 test cevabını birlikte değerlendir.",
-  "Programda ısınma, ana bölüm, dinlenme ve soğuma önerisi bulunmalı.",
-  "Fotoğraf, BMI veya metinlerden tıbbi tanı ve kesin yağ oranı çıkarma.",
-  "Ağrı veya sakatlık varsa riskli hareketleri çıkar ve gerektiğinde sağlık uzmanına danışılmasını belirt.",
+  "Yaş, cinsiyet, boy, kilo, hedef metni, ortam, ekipman, istenen hareketler ve 10 test cevabının her birini değerlendir.",
+  "Programın hareket sayısını, setini, tekrarını ve dinlenmesini kullanıcının seviyesi ile ayırdığı süreye göre değiştir.",
+  "Yalnızca kullanıcının ortamında ve ekipmanıyla uygulanabilen katalog hareketlerini seç.",
+  "Ağrı veya sakatlık belirtilen tüm bölgeleri aynı anda kısıt kabul et; riskli hareketleri çıkar.",
+  "Fotoğraf, BMI veya metinlerden tıbbi tanı ya da kesin yağ oranı çıkarma.",
+  "Fotoğraf varsa yalnızca görünür duruş ve genel vücut dağılımına ilişkin yaklaşık, tanısal olmayan gözlem kullan.",
+  "Isınma, ana bölüm, dinlenme, soğuma ve dört haftalık ilerleme önerisi üret.",
 ];
-const geminiModel = process.env.GEMINI_MODEL || "gemini-3.5-flash";
 
 const responseSchema = {
   type: "object",
   properties: {
     title: { type: "string" },
+    profileSummary: { type: "string" },
     rationale: { type: "string" },
     safetyNote: { type: "string" },
+    analysis: {
+      type: "object",
+      properties: {
+        experienceLevel: { type: "string" },
+        weeklyFrequency: { type: "string" },
+        sessionMinutes: { type: "integer" },
+        primaryGoal: { type: "string" },
+        intensity: { type: "string" },
+        equipmentMode: { type: "string" },
+        focusAreas: { type: "array", items: { type: "string" } },
+        adaptations: { type: "array", items: { type: "string" } },
+      },
+      required: ["experienceLevel", "weeklyFrequency", "sessionMinutes", "primaryGoal", "intensity", "equipmentMode", "focusAreas", "adaptations"],
+    },
+    weeklySchedule: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: { day: { type: "string" }, focus: { type: "string" }, durationMinutes: { type: "integer" } },
+        required: ["day", "focus", "durationMinutes"],
+      },
+    },
+    progression: { type: "array", items: { type: "string" } },
     workouts: {
       type: "array",
       items: {
@@ -22,15 +48,38 @@ const responseSchema = {
           area: { type: "string" },
           sets: { type: "integer", minimum: 1, maximum: 6 },
           reps: { type: "string" },
-          restSeconds: { type: "integer", minimum: 30, maximum: 180 },
+          restSeconds: { type: "integer", minimum: 20, maximum: 180 },
           instructions: { type: "string" },
         },
         required: ["name", "english", "area", "sets", "reps", "restSeconds", "instructions"],
       },
     },
   },
-  required: ["title", "rationale", "safetyNote", "workouts"],
+  required: ["title", "profileSummary", "rationale", "safetyNote", "analysis", "weeklySchedule", "progression", "workouts"],
 };
+
+function text(value: unknown) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function profileSignals(payload: Record<string, unknown>) {
+  const history = Array.isArray(payload.history) ? payload.history.map(text) : [];
+  const durationMatch = history[3]?.match(/\d+/);
+  const sessionMinutes = durationMatch ? Number(durationMatch[0]) : 30;
+  const experience = history[2] || "Yeni başlıyorum";
+  const goal = `${history[4] || ""} ${text(payload.goal)}`.toLocaleLowerCase("tr-TR");
+  const primaryGoal = goal.includes("kilo") || goal.includes("yağ") ? "Kilo verme" : goal.includes("kas") ? "Kas geliştirme" : goal.includes("kondisyon") ? "Kondisyon" : "Güçlenme";
+  const frequencyText = history[1] || "1–2 gün";
+  const weeklyDays = frequencyText.includes("5+") ? 5 : frequencyText.includes("3–4") ? 3 : frequencyText.includes("0") ? 2 : 2;
+  const beginner = /yeni|hayır|0 gün/i.test(`${experience} ${history[0] || ""}`);
+  const intensity = beginner || history[7] === "Düşük" ? "Düşük-orta" : primaryGoal === "Kondisyon" ? "Orta-yüksek" : "Orta";
+  const exerciseCount = sessionMinutes <= 15 ? 3 : sessionMinutes >= 60 ? 6 : sessionMinutes >= 45 ? 5 : 4;
+  const setRange = beginner ? "2–3" : sessionMinutes >= 45 ? "3–4" : "3";
+  const restRange = primaryGoal === "Kondisyon" || primaryGoal === "Kilo verme" ? "30–60 sn" : beginner ? "60–90 sn" : "75–120 sn";
+  const raw = JSON.stringify({ age: payload.age, gender: payload.gender, height: payload.height, weight: payload.weight, environment: payload.environment, equipment: payload.equipment, goal: payload.goal, requestedExercises: payload.requestedExercises, history });
+  const fingerprint = [...raw].reduce((hash, character) => (hash * 33 + character.charCodeAt(0)) % 1000003, 17).toString(36).toUpperCase();
+  return { history, sessionMinutes, experience, primaryGoal, frequencyText, weeklyDays, intensity, exerciseCount, setRange, restRange, painAreas: history[6] || "Yok", movementLevel: history[7] || "Belirtilmedi", sleepQuality: history[8] || "Belirtilmedi", preferredStyle: history[5] || "Karışık", note: history[9] || "Yok", fingerprint };
+}
 
 export async function POST(request: Request) {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -42,18 +91,38 @@ export async function POST(request: Request) {
   const profile = { ...payload };
   delete profile.photoDataUrl;
   delete profile.exerciseCatalog;
-  const prompt = `Sen güvenli fitness programı hazırlayan bir asistansın. Aşağıdaki kullanıcı verilerine göre Türkçe, yapılandırılmış bir başlangıç programı oluştur.
+  const signals = profileSignals(payload);
+  const prompt = `Sen güvenli ve kişiselleştirilmiş fitness programı hazırlayan bir asistansın. Aynı hazır programı herkese verme. Aşağıdaki ham verileri ve türetilmiş plan parametrelerini birlikte kullan.
 
-KULLANICI VERİLERİ:
+HAM KULLANICI VERİLERİ:
 ${JSON.stringify(profile)}
+
+10 TEST CEVABININ ANALİZİ:
+${JSON.stringify(signals)}
+
+BU PROFİL İÇİN ZORUNLU PLAN PARAMETRELERİ:
+- Ana hedef: ${signals.primaryGoal}
+- Deneyim: ${signals.experience}
+- Haftalık sıklık: ${signals.weeklyDays} gün (${signals.frequencyText})
+- Seans süresi: yaklaşık ${signals.sessionMinutes} dakika
+- Hareket sayısı: ${signals.exerciseCount}
+- Set aralığı: ${signals.setRange}
+- Dinlenme aralığı: ${signals.restRange}
+- Yoğunluk: ${signals.intensity}
+- Ağrı/sakatlık kısıtları: ${signals.painAreas}
+- Tercih: ${signals.preferredStyle}
+- Günlük hareket: ${signals.movementLevel}
+- Uyku: ${signals.sleepQuality}
+- Serbest not: ${signals.note}
+- Profil çeşitlilik anahtarı: ${signals.fingerprint}
 
 UYGULAMADA KULLANILABİLEN HAREKET KATALOĞU:
 ${JSON.stringify(exerciseCatalog)}
 
-GÜVENLİK KURALLARI:
+GÜVENLİK VE KALİTE KURALLARI:
 ${plannerRules.join("\n")}
 
-Yalnızca bu katalogda bulunan hareketleri seç. Kullanıcının ortamı ve ekipman metniyle uyuşmayan hareketleri seçme. Sakatlık veya ağrı alanı birden fazlaysa tüm alanları birlikte kısıt kabul et; riskli hareketleri çıkar. Fotoğraf veya BMI verisinden tıbbi tanı ya da kesin yağ oranı üretme. Programda 4-6 hareket olsun ve her harekete Türkçe açıklama ekle. Kullanıcının yaşını, boyunu, kilosunu, cinsiyetini, hedefini, ekipmanını, süre bilgisini, 10 test cevabını ve istediği hareketleri birlikte değerlendir; hiçbir alanı yok sayma. Kilo verme hedefinde uygun yoğunlukta kondisyon hareketlerine, kas geliştirme hedefinde direnç ve kas grubu dengesine, güç hedefinde temel kuvvet hareketlerine yer ver. Kullanıcı özellikle bir hareket adı girdiyse ve güvenli/uygunsa programda mutlaka göster. Her harekete uygulama içinde gösterilecek net bir hareket açıklaması ekle; dış site veya medya URL'si üretme.`;
+Tam olarak ${signals.exerciseCount} farklı hareket seç. Hareket adlarını katalogdaki Türkçe veya İngilizce adla birebir eşleştir. Kullanıcının özellikle istediği hareket güvenli ve ekipmanla uyumluysa programa al. analysis.adaptations alanında bu profile özel en az üç somut uyarlamayı açıkla. weeklySchedule alanında ${signals.weeklyDays} antrenman günü oluştur. progression alanında 1–4. haftalar için dört kısa ilerleme adımı yaz. Dış site, bağlantı veya medya URL'si üretme.`;
 
   const parts: Array<Record<string, unknown>> = [{ text: prompt }];
   if (photoDataUrl?.startsWith("data:image/")) {
@@ -61,32 +130,47 @@ Yalnızca bu katalogda bulunan hareketleri seç. Kullanıcının ortamı ve ekip
     if (match) parts.push({ inline_data: { mime_type: match[1], data: match[2] } });
   }
 
-  let response: Response;
-  try {
-    response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${encodeURIComponent(apiKey)}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-      contents: [{ role: "user", parts }],
-        generationConfig: { responseMimeType: "application/json", responseSchema, temperature: 0.2 },
-      }),
-    });
-  } catch {
-    return Response.json({ error: "Gemini ağına erişilemedi; yerel plan kullanılacak" }, { status: 503 });
+  const preferredModel = process.env.GEMINI_MODEL || "gemini-3.5-flash";
+  const models = [...new Set([preferredModel, "gemini-3.5-flash", "gemini-3.1-flash-lite"])];
+  let lastStatus = 0;
+  let lastDetail = "";
+  for (const model of models) {
+    let response: Response;
+    try {
+      response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contents: [{ role: "user", parts }], generationConfig: { responseMimeType: "application/json", responseSchema, temperature: 0.35 } }),
+      });
+    } catch {
+      lastDetail = "Gemini ağına erişilemedi";
+      continue;
+    }
+    if (!response.ok) {
+      lastStatus = response.status;
+      lastDetail = (await response.text()).slice(0, 500);
+      console.error("Gemini response error", model, response.status, lastDetail);
+      if (![404, 429, 500, 503].includes(response.status)) break;
+      continue;
+    }
+    const geminiPayload = await response.json() as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
+    const generatedText = geminiPayload.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!generatedText) {
+      lastDetail = "Gemini boş yanıt döndürdü";
+      continue;
+    }
+    try {
+      const result = JSON.parse(generatedText) as Record<string, unknown>;
+      const workouts = Array.isArray(result.workouts) ? result.workouts : [];
+      if (workouts.length < 3) {
+        lastDetail = "Gemini yeterli hareket üretmedi";
+        continue;
+      }
+      return Response.json({ ...result, profileFingerprint: signals.fingerprint, model });
+    } catch {
+      lastDetail = "Gemini yanıtı JSON formatında değil";
+    }
   }
 
-  if (!response.ok) {
-    const detail = await response.text();
-    console.error("Gemini response error", response.status, detail.slice(0, 500));
-    return Response.json({ error: "Gemini program üretimi başarısız", detail: process.env.NODE_ENV === "development" ? detail.slice(0, 500) : undefined }, { status: 502 });
-  }
-  const geminiPayload = await response.json() as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
-  const text = geminiPayload.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) return Response.json({ error: "Gemini boş yanıt döndürdü" }, { status: 502 });
-
-  try {
-    return Response.json(JSON.parse(text));
-  } catch {
-    return Response.json({ error: "Gemini yanıtı JSON formatında değil" }, { status: 502 });
-  }
+  return Response.json({ error: lastDetail || "Gemini program üretimi başarısız", detail: process.env.NODE_ENV === "development" ? `Durum: ${lastStatus} ${lastDetail}` : undefined }, { status: 502 });
 }
