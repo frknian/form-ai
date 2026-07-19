@@ -269,3 +269,30 @@ button,input { font:inherit; } button { cursor:pointer; }
   .month-bars { min-height:120px; }
   .energy-dashboard { margin-top:-15px; }
 }
+
+/* Dokunmatik ekranlar ve dar genişlikler için son yerleşim düzeltmeleri. */
+.top-links button,.profile-mini,.ready-card button,.outline-btn,.play-btn,.play-library,.player-tools button,.finish-btn,.library-more,.answer,.back-btn { min-height:44px; }
+.outline-btn { min-width:44px; width:44px; height:44px; }
+.play-library { display:inline-flex; align-items:center; padding-inline:4px; }
+
+@media (min-width:701px) and (max-width:900px) {
+  .workout-layout,.library-grid { grid-template-columns:1fr; }
+  .workout-layout { gap:24px; }
+  .coach-card { min-height:220px; }
+  .coach-card h2 { margin-top:36px; }
+}
+
+@media (max-width:700px) {
+  .topbar { height:auto; min-height:112px; padding:8px 20px 6px; display:grid; grid-template-columns:1fr auto; grid-template-rows:48px 44px; column-gap:10px; }
+  .brand { grid-column:1; grid-row:1; }
+  .profile-mini { grid-column:2; grid-row:1; min-width:44px; justify-content:flex-end; padding:0; }
+  .top-links { grid-column:1/-1; grid-row:2; width:100%; max-width:none; height:44px; gap:2px; overflow:visible; justify-content:space-between; }
+  .top-links button { flex:1; padding:0 5px; white-space:nowrap; font-size:10px; }
+  .stats-row { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .stats-row > div { min-width:0; padding-inline:8px; }
+  .stats-row strong { overflow-wrap:anywhere; }
+  .onboarding-wrap,.dashboard { margin-top:26px; }
+  .ready-card button { padding-inline:14px; }
+  .calorie-card { display:grid; grid-template-columns:minmax(0,1fr) 74px; gap:14px; width:100%; }
+  .calorie-note { min-width:0; width:auto; }
+}

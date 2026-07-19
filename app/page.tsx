@@ -706,7 +706,9 @@ export default function Home() {
     try {
       const exerciseCatalog = exerciseLibrary.map(({ name: exerciseName, english, area, requires, bodyweight, goals }) => ({ name: exerciseName, english, area, requires, bodyweight, goals }));
       setAiStage("planning");
-      const aiResponse = await fetch("/api/generate-plan", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, age, gender, height, weight, environment: gym, equipment: equipmentText, goal: goalText, requestedExercises, history, exerciseCatalog, photoDataUrl }) });
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 45_000);
+      const aiResponse = await fetch("/api/generate-plan", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, age, gender, height, weight, environment: gym, equipment: equipmentText, goal: goalText, requestedExercises, history, exerciseCatalog, photoDataUrl }), signal: controller.signal }).finally(() => window.clearTimeout(timeout));
       if (aiResponse.ok) {
         const aiPlan = await aiResponse.json() as { workouts?: Array<{ name: string; english: string; area: string; sets: number; reps: string; restSeconds: number; instructions?: string }>; rationale?: string; safetyNote?: string; analysis?: AiPlanAnalysis; weeklySchedule?: AiScheduleDay[]; progression?: string[]; profileFingerprint?: string };
         const normalizedWorkouts = aiPlan.workouts?.length ? normalizeAiWorkouts(aiPlan.workouts) : [];

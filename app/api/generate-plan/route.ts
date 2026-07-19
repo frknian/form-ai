@@ -62,7 +62,7 @@ function text(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
 }
 
-function profileSignals(payload: Record<string, unknown>) {
+export function profileSignals(payload: Record<string, unknown>) {
   const history = Array.isArray(payload.history) ? payload.history.map(text) : [];
   const durationMatch = history[3]?.match(/\d+/);
   const sessionMinutes = durationMatch ? Number(durationMatch[0]) : 30;
@@ -85,7 +85,12 @@ export async function POST(request: Request) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return Response.json({ error: "GEMINI_API_KEY tanımlı değil" }, { status: 503 });
 
-  const payload = await request.json() as Record<string, unknown>;
+  let payload: Record<string, unknown>;
+  try {
+    payload = await request.json() as Record<string, unknown>;
+  } catch {
+    return Response.json({ error: "Profil verileri okunamadı" }, { status: 400 });
+  }
   const photoDataUrl = typeof payload.photoDataUrl === "string" ? payload.photoDataUrl : null;
   const exerciseCatalog = Array.isArray(payload.exerciseCatalog) ? payload.exerciseCatalog : [];
   const profile = { ...payload };
@@ -136,15 +141,20 @@ Tam olarak ${signals.exerciseCount} farklı hareket seç. Hareket adlarını kat
   let lastDetail = "";
   for (const model of models) {
     let response: Response;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 12_000);
     try {
       response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ contents: [{ role: "user", parts }], generationConfig: { responseMimeType: "application/json", responseSchema, temperature: 0.35 } }),
+        signal: controller.signal,
       });
     } catch {
-      lastDetail = "Gemini ağına erişilemedi";
+      lastDetail = controller.signal.aborted ? "Gemini yanıt süresi aşıldı" : "Gemini ağına erişilemedi";
       continue;
+    } finally {
+      clearTimeout(timeout);
     }
     if (!response.ok) {
       lastStatus = response.status;
