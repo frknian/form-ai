@@ -106,3 +106,123 @@ button,input { font:inherit; } button { cursor:pointer; }
   .calorie-note { grid-column:1/-1; grid-row:2; padding:10px 0 0; border-left:0; border-top:1px solid rgba(34,34,31,.14); }
   .workout-card { gap:10px; }
 }
+
+/* Hareket türüne özel, başlangıç ve bitişi birbirinden ayıran poz sistemi. */
+.exercise-media .motion-figure { position:relative; width:112px; height:142px; margin:-14px -10px -25px; color:#22221f; transform:scale(.72); transform-origin:50% 100%; opacity:1; }
+.exercise-media .motion-head { position:absolute; top:4px; left:46px; width:20px; height:20px; border-radius:50%; background:currentColor; }
+.exercise-media .motion-torso { position:absolute; top:30px; left:43px; width:26px; height:62px; border-radius:13px 13px 8px 8px; background:currentColor; transform-origin:50% 8px; }
+.exercise-media .motion-arm,.exercise-media .motion-leg { position:absolute; display:block; height:9px; border-radius:99px; background:currentColor; transform-origin:7px 50%; }
+.exercise-media .motion-arm { top:36px; left:50px; width:48px; }
+.exercise-media .motion-leg { top:88px; left:51px; width:57px; }
+.exercise-media .arm-left { transform:rotate(135deg); }
+.exercise-media .arm-right { transform:rotate(45deg); }
+.exercise-media .leg-left { transform:rotate(112deg); }
+.exercise-media .leg-right { transform:rotate(68deg); }
+.motion-load { display:none; position:absolute; z-index:3; width:14px; height:14px; border:4px solid currentColor; border-radius:50%; }
+.motion-support { display:none; position:absolute; z-index:-1; background:rgba(34,34,31,.22); border-radius:4px; }
+.motion-position:first-child .motion-figure { opacity:.48; }
+.motion-position:last-child .motion-figure { opacity:1; }
+.motion-position:last-child .motion-head,.motion-position:last-child .motion-torso,.motion-position:last-child .motion-arm,.motion-position:last-child .motion-leg { transition:transform .35s ease; }
+
+/* Yerde pres: gövde yatay, dambıllar göğüsten yukarı hareket eder. */
+.pattern-floor-press.motion-figure { width:150px; height:112px; margin:0 -28px -7px; }
+.pattern-floor-press .motion-support { display:block; left:20px; top:84px; width:112px; height:5px; }
+.pattern-floor-press .motion-head { left:116px; top:62px; }
+.pattern-floor-press .motion-torso { left:55px; top:66px; width:64px; height:19px; }
+.pattern-floor-press .motion-leg { top:76px; left:53px; width:49px; }
+.pattern-floor-press .leg-left { transform:rotate(160deg); }.pattern-floor-press .leg-right { transform:rotate(205deg); }
+.pattern-floor-press .motion-arm { top:65px; left:76px; width:43px; }
+.pattern-floor-press.pose-start .arm-left { transform:rotate(-110deg); }.pattern-floor-press.pose-start .arm-right { transform:rotate(-70deg); }
+.pattern-floor-press.pose-finish .arm-left,.pattern-floor-press.pose-finish .arm-right { transform:rotate(-90deg) translateX(23px); }
+.pattern-floor-press .motion-load { display:block; top:20px; }.pattern-floor-press .load-left { left:62px; }.pattern-floor-press .load-right { left:100px; }
+.pattern-floor-press.pose-start .motion-load { top:41px; }
+
+/* Yatay vücut hareketleri. */
+.pattern-pushup.motion-figure,.pattern-plank.motion-figure { width:148px; height:105px; margin:0 -27px -6px; }
+.pattern-pushup .motion-head,.pattern-plank .motion-head { left:115px; top:43px; }
+.pattern-pushup .motion-torso,.pattern-plank .motion-torso { left:48px; top:48px; width:69px; height:18px; transform:rotate(5deg); }
+.pattern-pushup .motion-arm,.pattern-plank .motion-arm { left:105px; top:57px; width:43px; }
+.pattern-pushup .motion-leg,.pattern-plank .motion-leg { left:47px; top:58px; width:53px; }
+.pattern-pushup .leg-left,.pattern-plank .leg-left { transform:rotate(162deg); }.pattern-pushup .leg-right,.pattern-plank .leg-right { transform:rotate(177deg); }
+.pattern-pushup.pose-start .arm-left,.pattern-pushup.pose-start .arm-right { transform:rotate(70deg); }
+.pattern-pushup.pose-finish .motion-torso { transform:translateY(13px) rotate(5deg); }
+.pattern-pushup.pose-finish .motion-head { transform:translateY(13px); }
+.pattern-pushup.pose-finish .arm-left,.pattern-pushup.pose-finish .arm-right { transform:translateY(10px) rotate(35deg); }
+.pattern-plank .arm-left,.pattern-plank .arm-right { transform:rotate(90deg); }
+.pattern-plank.pose-finish .leg-left { transform:rotate(135deg); }.pattern-plank.pose-finish .arm-right { transform:rotate(48deg); }
+
+/* Alt vücut: squat, lunge, hinge ve köprü birbirinden farklı eklem açıları kullanır. */
+.pattern-squat.pose-start .arm-left,.pattern-squat.pose-start .arm-right { transform:rotate(175deg); }
+.pattern-squat.pose-finish .motion-torso { transform:translateY(25px); }
+.pattern-squat.pose-finish .motion-head { transform:translateY(25px); }
+.pattern-squat.pose-finish .motion-arm { transform:translateY(23px) rotate(175deg); }
+.pattern-squat.pose-finish .leg-left { transform:translateY(8px) rotate(145deg); }.pattern-squat.pose-finish .leg-right { transform:translateY(8px) rotate(35deg); }
+.pattern-lunge.pose-start .leg-left { transform:rotate(135deg); }.pattern-lunge.pose-start .leg-right { transform:rotate(42deg); }
+.pattern-lunge.pose-finish .motion-torso,.pattern-lunge.pose-finish .motion-head { transform:translateY(20px); }
+.pattern-lunge.pose-finish .motion-arm { transform:translateY(19px) rotate(92deg); }
+.pattern-lunge.pose-finish .leg-left { transform:translate(-5px,8px) rotate(168deg); }.pattern-lunge.pose-finish .leg-right { transform:translate(2px,8px) rotate(22deg); }
+.pattern-hinge .motion-load,.pattern-row .motion-load { display:block; top:76px; }.pattern-hinge .load-left,.pattern-row .load-left { left:20px; }.pattern-hinge .load-right,.pattern-row .load-right { left:82px; }
+.pattern-hinge.pose-finish .motion-torso,.pattern-row .motion-torso { transform:rotate(58deg) translate(20px,-5px); }
+.pattern-hinge.pose-finish .motion-head,.pattern-row .motion-head { transform:translate(31px,34px); }
+.pattern-hinge.pose-finish .motion-arm { transform:translate(19px,23px) rotate(85deg); }
+.pattern-row .motion-arm { transform:translate(20px,21px) rotate(94deg); }
+.pattern-row.pose-finish .motion-arm { transform:translate(8px,13px) rotate(145deg); }
+.pattern-bridge.motion-figure { width:145px; height:105px; margin:0 -25px -6px; }
+.pattern-bridge .motion-head { left:116px; top:66px; }.pattern-bridge .motion-torso { left:54px; top:66px; width:66px; height:18px; }.pattern-bridge .motion-arm { left:95px; top:74px; transform:rotate(160deg); }.pattern-bridge .motion-leg { left:54px; top:73px; }.pattern-bridge .leg-left { transform:rotate(155deg); }.pattern-bridge .leg-right { transform:rotate(205deg); }
+.pattern-bridge.pose-finish .motion-torso { transform:translateY(-22px) rotate(-17deg); }.pattern-bridge.pose-finish .motion-head { transform:translateY(-4px); }.pattern-bridge.pose-finish .motion-leg { transform:translateY(-10px) rotate(150deg); }
+
+/* Üst vücut çekiş ve itiş yönleri. */
+.pattern-overhead .motion-load,.pattern-press .motion-load { display:block; top:48px; }.pattern-overhead .load-left,.pattern-press .load-left { left:11px; }.pattern-overhead .load-right,.pattern-press .load-right { left:87px; }
+.pattern-overhead.pose-start .arm-left { transform:rotate(155deg); }.pattern-overhead.pose-start .arm-right { transform:rotate(25deg); }
+.pattern-overhead.pose-finish .arm-left { transform:translate(-3px,-28px) rotate(105deg); }.pattern-overhead.pose-finish .arm-right { transform:translate(3px,-28px) rotate(75deg); }
+.pattern-overhead.pose-finish .motion-load { top:3px; }
+.pattern-press.pose-start .arm-left { transform:rotate(160deg); }.pattern-press.pose-start .arm-right { transform:rotate(20deg); }
+.pattern-press.pose-finish .arm-left { transform:translateX(-15px) rotate(180deg); }.pattern-press.pose-finish .arm-right { transform:translateX(15px) rotate(0deg); }
+.pattern-pulldown .motion-support { display:block; left:12px; top:4px; width:90px; height:4px; }
+.pattern-pulldown.pose-start .arm-left { transform:translate(-2px,-25px) rotate(110deg); }.pattern-pulldown.pose-start .arm-right { transform:translate(2px,-25px) rotate(70deg); }
+.pattern-pulldown.pose-finish .arm-left { transform:rotate(155deg); }.pattern-pulldown.pose-finish .arm-right { transform:rotate(25deg); }
+
+.pattern-core.pose-finish .motion-torso { transform:rotate(-24deg) translate(-4px,8px); }.pattern-core.pose-finish .motion-head { transform:translate(-18px,19px); }.pattern-core.pose-finish .leg-left { transform:rotate(155deg); }.pattern-core.pose-finish .arm-right { transform:rotate(8deg); }
+.pattern-cardio.pose-start .arm-left { transform:rotate(120deg); }.pattern-cardio.pose-start .leg-right { transform:rotate(92deg); }
+.motion-figure.pattern-cardio.pose-finish { transform:scale(.72) translateY(-12px); }.pattern-cardio.pose-finish .arm-left { transform:rotate(75deg); }.pattern-cardio.pose-finish .arm-right { transform:rotate(105deg); }.pattern-cardio.pose-finish .leg-left { transform:rotate(145deg); }.pattern-cardio.pose-finish .leg-right { transform:rotate(35deg); }
+.pattern-mobility.pose-finish .motion-torso { transform:rotate(-18deg); }.pattern-mobility.pose-finish .motion-head { transform:translate(-13px,4px); }.pattern-mobility.pose-finish .arm-left { transform:translate(-10px,-8px) rotate(102deg); }.pattern-mobility.pose-finish .arm-right { transform:translate(3px,-8px) rotate(78deg); }
+
+.form-cues { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:12px 0 20px; }
+.form-cues > div { min-height:74px; padding:13px 14px; border:1px solid #dbe6b5; border-radius:9px; background:#f7fbe8; }
+.form-cues > div.warning { border-color:#ead8bf; background:#fff8ee; }
+.form-cues span,.set-tracker span { display:block; margin-bottom:7px; color:#82922f; font-size:9px; font-weight:800; letter-spacing:1.3px; }
+.form-cues .warning span { color:#a16c32; }
+.form-cues strong { color:#55564e; font-size:11px; line-height:1.45; }
+.player-title-row { display:flex; align-items:flex-end; justify-content:space-between; gap:20px; }
+.phase-badge { flex:0 0 auto; margin-bottom:7px; padding:8px 11px; border-radius:999px; background:#edf7c9; color:#617026; font-size:9px; font-weight:800; letter-spacing:1px; }
+.phase-badge.rest { background:#dcecf7; color:#3a6987; }.phase-badge.done { background:#22221f; color:#d4ef75; }
+.workout-session-progress { display:flex; gap:6px; margin:0 0 18px; }
+.workout-session-progress span { flex:1; height:4px; border-radius:99px; background:#e1e1da; }
+.workout-session-progress span.active { background:#9dbb39; }.workout-session-progress span.complete { background:#22221f; }.workout-session-progress span.skipped { background:repeating-linear-gradient(90deg,#c9c9c2 0 4px,transparent 4px 7px); }
+.workout-player .timer-card { max-width:none; grid-template-columns:1fr auto; margin:0; }
+.timer-card.phase-rest { background:#24455a; }.timer-card.phase-done { background:#56651c; }
+.set-tracker { display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:18px; margin:12px 0 18px; padding:14px 16px; border:1px solid var(--line); border-radius:9px; background:#fbfbf7; }
+.set-tracker strong { font-size:17px; }.set-tracker small { color:#8e8e87; font-size:10px; }
+.set-dots { display:flex; gap:7px; }
+.set-dots i { width:11px; height:11px; border:1px solid #c9c9c2; border-radius:50%; background:#fff; }
+.set-dots i.active { border-color:#9dbb39; box-shadow:0 0 0 4px #edf6d1; }.set-dots i.complete { border-color:#22221f; background:#22221f; }
+.player-tools { display:flex; justify-content:space-between; gap:8px; margin:8px 0 0; }
+.player-tools button { flex:1; min-height:39px; border:1px solid var(--line); border-radius:7px; background:#fbfbf7; color:#686861; font-size:10px; }
+.player-tools button:hover:not(:disabled) { border-color:#999; color:#22221f; }.player-tools button:disabled { opacity:.35; cursor:not-allowed; }
+.session-list { display:grid; margin-top:20px; border-top:1px solid var(--line); }
+.session-list article { display:flex; justify-content:space-between; gap:20px; padding:16px 0; border-bottom:1px solid var(--line); }
+.session-list article > div { display:grid; gap:5px; }.session-list article > div:last-child { text-align:right; }
+.session-list strong,.session-list b { font-size:12px; }.session-list small,.session-list span { color:#92928c; font-size:10px; }
+
+@media (prefers-reduced-motion:no-preference) {
+  .motion-position:last-child .motion-figure { animation:pose-emphasis 1.8s ease-in-out infinite; }
+}
+@keyframes pose-emphasis { 0%,100% { filter:none; } 50% { filter:drop-shadow(0 4px 3px rgba(34,34,31,.18)); } }
+@media (max-width:700px) {
+  .exercise-media .motion-figure { transform:scale(.66); }
+  .form-cues { grid-template-columns:1fr; }
+  .player-title-row { align-items:flex-start; }
+  .set-tracker { grid-template-columns:auto 1fr; }.set-tracker small { grid-column:1/-1; }
+  .player-tools { flex-wrap:wrap; }.player-tools button { min-width:44%; }
+  .session-list article { flex-direction:column; gap:8px; }.session-list article > div:last-child { text-align:left; }
+}

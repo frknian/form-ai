@@ -18,3 +18,23 @@ alter table public.profiles enable row level security;
 create policy "Users can read own profile" on public.profiles for select using (auth.uid() = id);
 create policy "Users can insert own profile" on public.profiles for insert with check (auth.uid() = id);
 create policy "Users can update own profile" on public.profiles for update using (auth.uid() = id);
+
+create table if not exists public.workout_sessions (
+  id uuid primary key,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  completed_at timestamptz not null default now(),
+  duration_seconds integer not null check (duration_seconds > 0),
+  calories integer not null default 0 check (calories >= 0),
+  completed_exercises smallint not null default 0 check (completed_exercises >= 0),
+  total_exercises smallint not null check (total_exercises > 0),
+  exercise_names jsonb not null default '[]'::jsonb,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists workout_sessions_user_completed_idx
+  on public.workout_sessions (user_id, completed_at desc);
+
+alter table public.workout_sessions enable row level security;
+create policy "Users can read own workout sessions" on public.workout_sessions for select using (auth.uid() = user_id);
+create policy "Users can insert own workout sessions" on public.workout_sessions for insert with check (auth.uid() = user_id);
+create policy "Users can delete own workout sessions" on public.workout_sessions for delete using (auth.uid() = user_id);

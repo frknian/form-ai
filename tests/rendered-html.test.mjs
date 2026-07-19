@@ -28,15 +28,16 @@ test("server-renders the form.ai fitness onboarding", async () => {
 });
 
 test("keeps the AI plan and movement library wired into the product", async () => {
-  const [page, route, layout] = await Promise.all([
+  const [page, route, layout, supabaseSchema] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/api/generate-plan/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../db/supabase-schema.sql", import.meta.url), "utf8"),
   ]);
 
   assert.match(page, /HAZIR PROGRAMLAR/i);
   assert.match(page, /AI verileri taradı/);
-  assert.match(page, /Nasıl yapılır/);
+  assert.match(page, /nasıl yapılır/i);
   assert.match(page, /Yerde Dambıl Göğüs Presi/);
   assert.ok((page.match(/^  \["/gm) ?? []).length >= 100, "exercise library should contain 100+ additional movements");
   assert.match(page, /toggleInjury/);
@@ -44,6 +45,12 @@ test("keeps the AI plan and movement library wired into the product", async () =
   assert.match(page, /isExerciseSafeForProfile/);
   assert.match(page, /exerciseCatalog/);
   assert.match(page, /ExerciseAnimation/);
+  assert.match(page, /floor-press/);
+  assert.match(page, /NEFES/);
+  assert.match(page, /SIK HATA/);
+  assert.match(page, /Dinlenmeyi atla/);
+  assert.match(page, /Antrenmanı bitir ve kaydet/);
+  assert.match(page, /workout_sessions/);
   assert.match(page, /setAiWorkouts\(\[\]\)/);
   assert.match(route, /gemini-3\.5-flash/);
   assert.match(route, /KULLANICI VERİLERİ/);
@@ -53,4 +60,6 @@ test("keeps the AI plan and movement library wired into the product", async () =
   assert.doesNotMatch(page, /gymvisual|iframe/i);
   assert.doesNotMatch(page, /knowledge-sources|fitnessSources/);
   assert.doesNotMatch(route, /knowledge-sources|fitnessSources/);
+  assert.match(supabaseSchema, /create table if not exists public\.workout_sessions/i);
+  assert.match(supabaseSchema, /Users can read own workout sessions/i);
 });

@@ -232,49 +232,86 @@ function createPersonalPlan(gym: string, equipmentText: string, history: string[
 }
 
 type AiWorkout = { name: string; english: string; area: string; sets: string; rest: string; seconds: number; tone: string; icon: string; level: string; instructions: string };
+type MotionPattern = "floor-press" | "pushup" | "press" | "overhead" | "row" | "pulldown" | "squat" | "lunge" | "hinge" | "bridge" | "plank" | "core" | "cardio" | "mobility";
+type WorkoutPhase = "work" | "rest" | "done";
+type WorkoutSessionRecord = { id: string; completedAt: string; durationSeconds: number; calories: number; completedExercises: number; totalExercises: number; exerciseNames: string[] };
 
-const motionGuides: Record<string, { action: string; focus: string; start: string; move: string; finish: string }> = {
-  push: { action: "İT", focus: "Göğüs · omuz · triceps", start: "Ağırlığı göğüs hizasında başlat.", move: "Dirsekleri kontrollü bük, sonra ağırlığı ileri veya yukarı it.", finish: "Kolları kilitlemeden başlangıç pozisyonuna dön." },
-  pull: { action: "ÇEK", focus: "Sırt · arka omuz · kol", start: "Gövdeyi sabitle, omuzları kulaklardan uzak tut.", move: "Dirsekleri geriye ve kalçaya doğru çek.", finish: "Kolları kontrollü uzat, ağırlığı bırakma." },
-  lower: { action: "İN → KALK", focus: "Bacak · kalça · merkez bölge", start: "Ayakları sabitle, göğsü açık ve karnı sık tut.", move: "Kalçayı geriye indir, topuktan güç alarak yüksel.", finish: "Dizleri kilitlemeden dik pozisyona dön." },
-  core: { action: "SABİTLE", focus: "Karın · bel çevresi · kalça", start: "Bel boşluğunu kontrol et, kaburgaları aşağıda tut.", move: "Kol veya bacakları uzatırken gövdeyi oynatma.", finish: "Merkezi sıkı tutarak başlangıca dön." },
-  cardio: { action: "RİTİM", focus: "Nabız · bacak · koordinasyon", start: "Eller ve ayaklar hazır, gövde hafif öne eğik.", move: "Hareketi ritimli ve küçük adımlarla sürdür.", finish: "Nefesi düzenle, yumuşak inişlerle devam et." },
-  stretch: { action: "UZAT", focus: "Hareket açıklığı · nefes", start: "Omurgayı uzun tut, eklemleri rahat bırak.", move: "Gerilimi hafifçe artır, nefesini yavaşlat.", finish: "Zorlamadan başlangıç pozisyonuna dön." },
+const motionGuides: Record<MotionPattern, { action: string; focus: string; start: string; move: string; finish: string; breathe: string; mistake: string }> = {
+  "floor-press": { action: "YUKARI İT", focus: "Göğüs · triceps", start: "Sırt üstü yat, dizleri bük ve dambılları dirseklerin üzerinde tut.", move: "Dambılları göğsünün üzerinde birbirine yaklaştırarak yukarı it.", finish: "Dirsekleri yere çarpmadan kontrollü indir.", breathe: "İterken nefes ver, indirirken nefes al.", mistake: "Omuzları kulaklara çekme; bilekleri geriye kırma." },
+  pushup: { action: "GÖVDENİ İT", focus: "Göğüs · omuz · core", start: "Eller omuzlardan biraz açık, baştan topuğa düz çizgi kur.", move: "Dirsekleri yaklaşık 45 dereceyle büküp göğsü kontrollü indir.", finish: "Zemini iterek gövdeyi tek parça halinde yükselt.", breathe: "İnerken nefes al, yükselirken ver.", mistake: "Belini çökertme ve başını öne uzatma." },
+  press: { action: "İLERİ İT", focus: "Göğüs · ön omuz · triceps", start: "Kürek kemiklerini sabitle, ağırlığı göğüs hizasında tut.", move: "Dirsekleri kontrollü bük, ardından ağırlığı düz hatta it.", finish: "Kolları kilitlemeden başlangıca dön.", breathe: "İterken nefes ver, dönüşte al.", mistake: "Dirsekleri omuz hizasında tamamen yana açma." },
+  overhead: { action: "BAŞ ÜSTÜNE İT", focus: "Omuz · triceps · core", start: "Ağırlıkları omuz hizasında, kaburgaları aşağıda tut.", move: "Ağırlıkları başının iki yanından yukarı taşı.", finish: "Belini kamburlaştırmadan kontrollü indir.", breathe: "Yukarı iterken nefes ver.", mistake: "Bel boşluğunu artırma ve ağırlıkları öne kaçırma." },
+  row: { action: "DİRSEĞİ GERİ ÇEK", focus: "Sırt · arka omuz · biceps", start: "Kalçadan hafif eğil, sırtı düz ve omuzları aşağıda tut.", move: "Dirseği kalçaya doğru çekip kürek kemiğini sık.", finish: "Gövdeyi döndürmeden kolu yavaşça uzat.", breathe: "Çekerken nefes ver, uzatırken al.", mistake: "Omzu kulağa çekme ve ağırlığı savurma." },
+  pulldown: { action: "AŞAĞI ÇEK", focus: "Kanat · sırt · biceps", start: "Göğsü açık tut, barı omuzlardan biraz geniş kavra.", move: "Dirsekleri aşağı ve geriye sürerek barı üst göğse çek.", finish: "Omuzları yükseltmeden kolları kontrollü uzat.", breathe: "Barı çekerken nefes ver.", mistake: "Barı enseye çekme ve gövdeyi geriye savurma." },
+  squat: { action: "KALÇAYI İNDİR", focus: "Ön bacak · kalça · core", start: "Ayakları sağlam bas, dizleri ayak uçlarıyla aynı yöne çevir.", move: "Kalçayı geriye-aşağı indirirken göğsü açık tut.", finish: "Topuklardan güç alıp kalçayı sıkarak yüksel.", breathe: "İnerken nefes al, kalkarken ver.", mistake: "Dizleri içeri düşürme ve topukları kaldırma." },
+  lunge: { action: "TEK BACAK İN", focus: "Bacak · kalça · denge", start: "Ayakları ray üzerindeymiş gibi ayrı tut, gövdeyi dikleştir.", move: "İki dizi kontrollü büküp arka dizi zemine yaklaştır.", finish: "Öndeki topuktan güç alarak başlangıca dön.", breathe: "İnerken nefes al, kalkarken ver.", mistake: "Ön dizi içeri kaçırma ve adımı fazla dar tutma." },
+  hinge: { action: "KALÇAYI GERİ İT", focus: "Arka bacak · kalça · sırt", start: "Dizleri hafif bük, omurgayı nötr ve ağırlığı bacağa yakın tut.", move: "Kalçayı geriye gönderirken gövdeyi tek parça öne eğ.", finish: "Topuklardan itip kalçayı sıkarak doğrul.", breathe: "İnişte nefes al, doğrulurken ver.", mistake: "Belini yuvarlama ve ağırlığı vücuttan uzaklaştırma." },
+  bridge: { action: "KALÇAYI KALDIR", focus: "Kalça · arka bacak · core", start: "Sırt üstü yat, topukları kalçaya yaklaştır ve beli nötr tut.", move: "Topuklardan iterek kalçayı omuz-diz hattına kaldır.", finish: "Tepede kalçayı sık, beli aşırı yaymadan kontrollü in.", breathe: "Yükselirken nefes ver.", mistake: "Hareketi belden yapma ve dizleri dışa savurma." },
+  plank: { action: "GÖVDEYİ SABİTLE", focus: "Core · omuz · kalça", start: "Dirsekleri omuzların altına yerleştir, ayakları geriye uzat.", move: "Karnı ve kalçayı sıkıp baştan topuğa düz çizgiyi koru.", finish: "Süre boyunca nefesi kesmeden pozisyonu sürdür.", breathe: "Kısa ve düzenli nefes alıp ver.", mistake: "Belini çökertme veya kalçayı fazla yükseltme." },
+  core: { action: "MERKEZİ KONTROL ET", focus: "Karın · bel çevresi · kalça", start: "Bel boşluğunu kontrol et, kaburgaları aşağıda tut.", move: "Kol veya bacak hareket ederken gövdeyi sabit bırak.", finish: "Kontrolü kaybetmeden başlangıca dön.", breathe: "Zor bölümde yavaşça nefes ver.", mistake: "Hız için bel kontrolünden vazgeçme." },
+  cardio: { action: "RİTMİ KORU", focus: "Nabız · bacak · koordinasyon", start: "Gövdeyi dengeli tut, iniş için dizleri yumuşat.", move: "Kollar ve bacakları eş zamanlı, kontrollü ritimde hareket ettir.", finish: "Yumuşak inişlerle ritmi sürdür.", breathe: "Konuşabilecek kadar düzenli nefes al.", mistake: "Sert iniş yapma ve kontrolsüz hızlanma." },
+  mobility: { action: "KONTROLLÜ UZAT", focus: "Hareket açıklığı · nefes", start: "Omurgayı uzun tut, eklemleri rahat bırak.", move: "Ağrısız aralıkta gerilimi yavaşça artır.", finish: "Sekmeden ve zorlamadan başlangıca dön.", breathe: "Burundan yavaşça nefes alıp ver.", mistake: "Ağrının içine ilerleme ve nefesi tutma." },
 };
 
+function getMotionPattern(exercise: { name: string; english: string }): MotionPattern {
+  const text = `${exercise.name} ${exercise.english}`.toLocaleLowerCase("tr-TR");
+  if (/floor press|yerde dambıl göğüs/.test(text)) return "floor-press";
+  if (/push-up|şınav|dip/.test(text)) return "pushup";
+  if (/shoulder press|military press|arnold press|overhead press|lateral raise|front raise/.test(text)) return "overhead";
+  if (/pulldown|pull-up|chin-up|barfiks|hang/.test(text)) return "pulldown";
+  if (/row|face pull|reverse fly|rear delt/.test(text)) return "row";
+  if (/deadlift|romanian|good morning|pull-through|swing/.test(text)) return "hinge";
+  if (/hip thrust|glute bridge|bridge/.test(text)) return "bridge";
+  if (/lunge|split squat|step-up|step up|cossack/.test(text)) return "lunge";
+  if (/squat|leg press|calf raise|wall sit|leg extension|leg curl/.test(text)) return "squat";
+  if (/plank|mountain climber|bear crawl|inchworm/.test(text)) return "plank";
+  if (/crunch|dead bug|hollow|v-up|leg raise|pallof|woodchop|ab wheel|russian twist|bird dog|superman/.test(text)) return "core";
+  if (/stretch|pose|rotation|mobility|90\/90|dislocate|rocker/.test(text)) return "mobility";
+  if (/burpee|jumping|high knees|butt kicks|skater|squat thrust|box jump|march|run/.test(text)) return "cardio";
+  return "press";
+}
+
 function getMotionGuide(exercise: { name: string; english: string }) {
-  return motionGuides[getMotionClass(exercise)];
+  return motionGuides[getMotionPattern(exercise)];
 }
 
-function MotionFigure({ pose = "start" }: { pose?: "start" | "finish" }) {
-  return <span className={`motion-figure pose-${pose}`}><span className="motion-head" /><span className="motion-torso" /><span className="motion-arm arm-left" /><span className="motion-arm arm-right" /><span className="motion-leg leg-left" /><span className="motion-leg leg-right" /></span>;
-}
-
-function getMotionClass(exercise: { name: string; english: string }) {
-  const text = `${exercise.name} ${exercise.english}`.toLowerCase();
-  if (/stretch|pose|rotation|mobility|cossack|90\/90|dislocate|rocker/.test(text)) return "stretch";
-  if (/burpee|jumping|high knees|butt kicks|skater|mountain climber|bear crawl|inchworm|squat thrust|box jump/.test(text)) return "cardio";
-  if (/plank|crunch|dead bug|hollow|v-up|leg raise|pallof|woodchop|ab wheel|russian twist/.test(text)) return "core";
-  if (/squat|lunge|deadlift|leg |calf|glute|hip thrust|bridge|kickback|fire hydrant|step-up|nordic/.test(text)) return "lower";
-  if (/row|pulldown|pull-up|chin-up|back|superman|face pull|hang/.test(text)) return "pull";
-  return "push";
+function MotionFigure({ pattern, pose }: { pattern: MotionPattern; pose: "start" | "finish" }) {
+  return <span className={`motion-figure pattern-${pattern} pose-${pose}`} aria-hidden="true"><span className="motion-support" /><span className="motion-head" /><span className="motion-torso" /><span className="motion-arm arm-left" /><span className="motion-arm arm-right" /><span className="motion-leg leg-left" /><span className="motion-leg leg-right" /><span className="motion-load load-left" /><span className="motion-load load-right" /></span>;
 }
 
 function ExerciseAnimation({ exercise, compact = false }: { exercise: { name: string; english: string; tone: string }; compact?: boolean }) {
-  const motionClass = getMotionClass(exercise);
-  const guide = motionGuides[motionClass];
-  return <div className={`exercise-media ${exercise.tone} motion-${motionClass} ${compact ? "compact" : ""}`} aria-label={`${exercise.name} hareket akışı`}>
-    {!compact && <div className="motion-header"><span>HAREKET AKIŞI</span><strong>{guide.action}</strong></div>}
+  const pattern = getMotionPattern(exercise);
+  const guide = motionGuides[pattern];
+  return <div className={`exercise-media ${exercise.tone} movement-${pattern} ${compact ? "compact" : ""}`} aria-label={`${exercise.name}: başlangıç ve bitiş pozisyonu`}>
+    {!compact && <div className="motion-header"><span>NASIL HAREKET EDER?</span><strong>{guide.action}</strong></div>}
     <div className="motion-stage">
       <span className="motion-floor" />
       <div className="motion-sequence">
-        <div className="motion-position"><MotionFigure pose="start" /><small>Başlangıç</small></div>
+        <div className="motion-position"><MotionFigure pattern={pattern} pose="start" /><small>1 · Başlangıç</small></div>
         <div className="motion-route"><span>→</span><small>{guide.action}</small></div>
-        <div className="motion-position"><MotionFigure pose="finish" /><small>Hareket</small></div>
+        <div className="motion-position"><MotionFigure pattern={pattern} pose="finish" /><small>2 · Bitiş</small></div>
       </div>
     </div>
     {!compact && <div className="motion-caption"><strong>{guide.focus}</strong><span>{guide.move}</span></div>}
   </div>;
+}
+
+function workoutPrescription(workout: AiWorkout) {
+  const totalSets = Math.max(1, Number.parseInt(workout.sets, 10) || 3);
+  const restSeconds = Math.max(10, Number.parseInt(workout.rest, 10) || 60);
+  const target = workout.sets.split("·")[1]?.trim() || `${workout.seconds} sn`;
+  return { totalSets, restSeconds, target, workSeconds: Math.max(10, workout.seconds || 45) };
+}
+
+function formatClock(totalSeconds: number) {
+  const minutes = Math.floor(Math.max(0, totalSeconds) / 60);
+  const seconds = Math.max(0, totalSeconds) % 60;
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
+function asWorkout(exercise: typeof exerciseLibrary[number]): AiWorkout {
+  const timed = /plank|dead bug|wall sit|hollow|stretch|mobility/i.test(`${exercise.name} ${exercise.english}`);
+  return { ...exercise, level: exercise.area, sets: `3 set · ${timed ? "30 sn" : "10 tekrar"}`, rest: "60 sn dinlenme", seconds: timed ? 30 : 45 };
 }
 
 function findRequestedLibraryExercises(requestedExercises: string, goalText: string, gym: string, equipmentText: string, history: string[]) {
@@ -348,11 +385,15 @@ function AiScanFigure({ compact = false, status = "scanning" }: { compact?: bool
   return <div className={`${compact ? "ai-scan compact" : "ai-scan"} ${status}`}><div className="scan-figure"><span className="scan-head" /><span className="scan-body" /><span className="scan-line" /></div><div><strong>{copy[0]}</strong><small>{copy[1]}</small></div></div>;
 }
 
-function ProgressView({ name, calories }: { name: string; calories: number }) {
-  return <div className="subview"><div className="eyebrow">İLERLEMEM</div><h1>{name || "Sporcu"}, <em>ritmini gör.</em></h1><p className="lead">Tamamladığın antrenmanlar, süreler ve enerji verileri burada birikir.</p><div className="progress-cards"><div><span>BU HAFTA</span><strong>0</strong><small>tamamlanan antrenman</small></div><div><span>TOPLAM SÜRE</span><strong>0 dk</strong><small>hareket kaydı bekleniyor</small></div><div><span>YAKILAN ENERJİ</span><strong>{calories} kcal</strong><small>bu oturum</small></div></div><div className="progress-panel"><div className="section-title"><div><div className="eyebrow">İLERLEME GÜNLÜĞÜ</div><h2>İlk kaydını oluşturalım</h2></div><span className="progress-status">Hazır</span></div><div className="empty-progress"><span>✦</span><p>İlk antrenmanını bitirdiğinde süre, kalori ve devamlılık verilerin burada görünecek.</p></div></div></div>;
+function ProgressView({ name, sessions, referenceTime }: { name: string; sessions: WorkoutSessionRecord[]; referenceTime: number }) {
+  const weekAgo = referenceTime - 7 * 24 * 60 * 60 * 1000;
+  const weeklySessions = sessions.filter((session) => new Date(session.completedAt).getTime() >= weekAgo);
+  const totalSeconds = sessions.reduce((total, session) => total + session.durationSeconds, 0);
+  const totalCalories = sessions.reduce((total, session) => total + session.calories, 0);
+  return <div className="subview"><div className="eyebrow">İLERLEMEM</div><h1>{name || "Sporcu"}, <em>ritmini gör.</em></h1><p className="lead">Tamamladığın antrenmanlar, süreler ve enerji verileri burada birikir.</p><div className="progress-cards"><div><span>BU HAFTA</span><strong>{weeklySessions.length}</strong><small>tamamlanan antrenman</small></div><div><span>TOPLAM SÜRE</span><strong>{Math.round(totalSeconds / 60)} dk</strong><small>{sessions.length ? "tüm kayıtlar" : "ilk antrenmanı bekliyor"}</small></div><div><span>YAKILAN ENERJİ</span><strong>{totalCalories} kcal</strong><small>tahmini toplam</small></div></div><div className="progress-panel"><div className="section-title"><div><div className="eyebrow">İLERLEME GÜNLÜĞÜ</div><h2>{sessions.length ? "Son antrenmanların" : "İlk kaydını oluşturalım"}</h2></div><span className="progress-status">{sessions.length ? `${sessions.length} kayıt` : "Hazır"}</span></div>{sessions.length ? <div className="session-list">{sessions.slice(0, 6).map((session) => <article key={session.id}><div><strong>{session.exerciseNames.slice(0, 3).join(" · ") || "Kişisel antrenman"}</strong><small>{new Intl.DateTimeFormat("tr-TR", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }).format(new Date(session.completedAt))}</small></div><div><b>{Math.max(1, Math.round(session.durationSeconds / 60))} dk</b><span>{session.calories} kcal · {session.completedExercises}/{session.totalExercises} hareket</span></div></article>)}</div> : <div className="empty-progress"><span>✦</span><p>İlk antrenmanını bitirdiğinde süre, kalori ve tamamlanan hareketler burada görünecek.</p></div>}</div></div>;
 }
 
-function LibraryView({ onOpenWorkout }: { onOpenWorkout: (index: number) => void }) {
+function LibraryView({ onOpenWorkout }: { onOpenWorkout: (exercise: AiWorkout) => void }) {
   const [query, setQuery] = useState("");
   const [areaFilter, setAreaFilter] = useState("Tümü");
   const [visibleCount, setVisibleCount] = useState(30);
@@ -364,7 +405,7 @@ function LibraryView({ onOpenWorkout }: { onOpenWorkout: (index: number) => void
   });
   const visibleExercises = filteredExercises.slice(0, visibleCount);
 
-  return <div className="subview"><div className="eyebrow">HAREKET KÜTÜPHANESİ</div><h1>Doğru form,<br /><em>net hareket.</em></h1><p className="lead">{exerciseLibrary.length}+ hareketi ara. Her kartta başlangıçtan bitişe hareket akışını ve ilk form ipucunu gör.</p><div className="library-toolbar"><strong>{filteredExercises.length} hareket</strong><span>{exerciseLibrary.length} toplam kayıt</span></div><div className="library-filters"><input aria-label="Hareket ara" value={query} onChange={(event) => { setQuery(event.target.value); setVisibleCount(30); }} placeholder="Hareket ara…" /><select aria-label="Hareket kategorisi" value={areaFilter} onChange={(event) => { setAreaFilter(event.target.value); setVisibleCount(30); }}>{areas.map((area) => <option key={area} value={area}>{area}</option>)}</select></div><div className="library-grid">{visibleExercises.map((exercise) => { const index = exerciseLibrary.findIndex((candidate) => candidate.name === exercise.name); const guide = getMotionGuide(exercise); return <article className="library-card" key={exercise.name}><ExerciseAnimation exercise={exercise} compact /><div className="library-card-copy"><div className="pill">{exercise.area}</div><h3>{exercise.name}</h3><small>{exercise.english}</small><p>{guide.move}</p><div className="library-actions"><button type="button" className="play-library" onClick={() => onOpenWorkout(index)}>Hareketi aç →</button></div></div></article>; })}</div>{visibleExercises.length < filteredExercises.length && <button className="outline-btn library-more" type="button" onClick={() => setVisibleCount((count) => count + 30)}>Daha fazla hareket göster →</button>}{!filteredExercises.length && <p className="library-empty">Bu aramayla eşleşen hareket bulunamadı.</p>}</div>;
+  return <div className="subview"><div className="eyebrow">HAREKET KÜTÜPHANESİ</div><h1>Doğru form,<br /><em>net hareket.</em></h1><p className="lead">{exerciseLibrary.length}+ hareketi ara. Her kartta başlangıç ve bitiş pozunu; detay ekranında nefes ve hata uyarılarını gör.</p><div className="library-toolbar"><strong>{filteredExercises.length} hareket</strong><span>{exerciseLibrary.length} toplam kayıt</span></div><div className="library-filters"><input aria-label="Hareket ara" value={query} onChange={(event) => { setQuery(event.target.value); setVisibleCount(30); }} placeholder="Hareket ara…" /><select aria-label="Hareket kategorisi" value={areaFilter} onChange={(event) => { setAreaFilter(event.target.value); setVisibleCount(30); }}>{areas.map((area) => <option key={area} value={area}>{area}</option>)}</select></div><div className="library-grid">{visibleExercises.map((exercise) => { const guide = getMotionGuide(exercise); return <article className="library-card" key={exercise.name}><ExerciseAnimation exercise={exercise} compact /><div className="library-card-copy"><div className="pill">{exercise.area}</div><h3>{exercise.name}</h3><small>{exercise.english}</small><p>{guide.move}</p><div className="library-actions"><button type="button" className="play-library" onClick={() => onOpenWorkout(asWorkout(exercise))}>Hareketi aç →</button></div></div></article>; })}</div>{visibleExercises.length < filteredExercises.length && <button className="outline-btn library-more" type="button" onClick={() => setVisibleCount((count) => count + 30)}>Daha fazla hareket göster →</button>}{!filteredExercises.length && <p className="library-empty">Bu aramayla eşleşen hareket bulunamadı.</p>}</div>;
 }
 
 const readyPrograms = [
@@ -394,9 +435,17 @@ export default function Home() {
   const [questionIndex, setQuestionIndex] = useState(0);
   const [saving, setSaving] = useState(false);
   const [activeWorkout, setActiveWorkout] = useState<number | null>(null);
+  const [playerQueue, setPlayerQueue] = useState<AiWorkout[]>([]);
   const [timer, setTimer] = useState(30);
   const [isRunning, setIsRunning] = useState(false);
+  const [workoutPhase, setWorkoutPhase] = useState<WorkoutPhase>("work");
+  const [currentSet, setCurrentSet] = useState(1);
+  const [completedExercises, setCompletedExercises] = useState<number[]>([]);
+  const [skippedExercises, setSkippedExercises] = useState<number[]>([]);
+  const [sessionSeconds, setSessionSeconds] = useState(0);
   const [sessionCalories, setSessionCalories] = useState(0);
+  const [sessionHistory, setSessionHistory] = useState<WorkoutSessionRecord[]>([]);
+  const [progressReferenceTime] = useState(() => Date.now());
   const [aiWorkouts, setAiWorkouts] = useState<AiWorkout[]>([]);
   const [aiRationale, setAiRationale] = useState("");
   const [aiSafetyNote, setAiSafetyNote] = useState("");
@@ -406,6 +455,9 @@ export default function Home() {
   const [profileEditing, setProfileEditing] = useState(false);
 
   const workouts = useMemo(() => aiWorkouts.length ? aiWorkouts : createPersonalPlan(gym, equipmentText, history, goalText, requestedExercises), [aiWorkouts, gym, equipmentText, history, goalText, requestedExercises]);
+  const currentWorkout = activeWorkout === null ? null : playerQueue[activeWorkout] || null;
+  const currentGuide = currentWorkout ? getMotionGuide(currentWorkout) : null;
+  const currentPrescription = currentWorkout ? workoutPrescription(currentWorkout) : null;
   const planLevel = history[2] || "Yeni başlıyorum";
   const planGoal = history[4] || goalText || "Güçlenme";
   const bmi = useMemo(() => {
@@ -438,30 +490,128 @@ export default function Home() {
   }
 
   useEffect(() => {
-    if (!isRunning || activeWorkout === null) return;
+    let cancelled = false;
+    async function loadWorkoutHistory() {
+      try {
+        const supabase = createClient();
+        if (!supabase) return;
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const { data } = await supabase.from("workout_sessions").select("id, completed_at, duration_seconds, calories, completed_exercises, total_exercises, exercise_names").order("completed_at", { ascending: false }).limit(20);
+        if (!cancelled && data) setSessionHistory(data.map((session) => ({ id: String(session.id), completedAt: String(session.completed_at), durationSeconds: Number(session.duration_seconds), calories: Number(session.calories), completedExercises: Number(session.completed_exercises), totalExercises: Number(session.total_exercises), exerciseNames: Array.isArray(session.exercise_names) ? session.exercise_names.map(String) : [] })));
+      } catch {
+        // Oturum içinde tamamlanan antrenmanlar yine de ekranda gösterilir.
+      }
+    }
+    void loadWorkoutHistory();
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    if (!isRunning || !currentWorkout) return;
     const interval = window.setInterval(() => {
       setTimer((current) => {
-        if (current <= 1) {
-          setIsRunning(false);
-          return 0;
+        if (current > 1) return current - 1;
+        const prescription = workoutPrescription(currentWorkout);
+        if (workoutPhase === "work" && currentSet < prescription.totalSets) {
+          setWorkoutPhase("rest");
+          return prescription.restSeconds;
         }
-        return current - 1;
+        if (workoutPhase === "rest") {
+          setCurrentSet((set) => set + 1);
+          setWorkoutPhase("work");
+          setIsRunning(false);
+          return prescription.workSeconds;
+        }
+        setWorkoutPhase("done");
+        if (activeWorkout !== null) setCompletedExercises((completed) => completed.includes(activeWorkout) ? completed : [...completed, activeWorkout]);
+        setIsRunning(false);
+        return 0;
       });
-      setSessionCalories((current) => current + 1);
+      setSessionSeconds((current) => {
+        const next = current + 1;
+        const userWeight = Math.max(40, Number(weight) || 70);
+        const estimatedCalories = Math.round((((workoutPhase === "rest" ? 2.5 : 6) * 3.5 * userWeight) / 200) * (next / 60));
+        setSessionCalories(Math.max(0, estimatedCalories));
+        return next;
+      });
     }, 1000);
     return () => window.clearInterval(interval);
-  }, [isRunning, activeWorkout]);
+  }, [activeWorkout, currentSet, currentWorkout, isRunning, weight, workoutPhase]);
 
-  function openWorkout(index: number) {
+  function openWorkout(index: number, queue: AiWorkout[] = workouts) {
+    const nextWorkout = queue[index];
+    if (!nextWorkout) return;
+    setPlayerQueue(queue);
     setActiveWorkout(index);
-    setTimer(workouts[index].seconds);
+    setTimer(workoutPrescription(nextWorkout).workSeconds);
     setIsRunning(false);
+    setWorkoutPhase("work");
+    setCurrentSet(1);
+    setCompletedExercises([]);
+    setSkippedExercises([]);
+    setSessionSeconds(0);
+    setSessionCalories(0);
   }
 
-  function finishWorkout() {
+  function goToWorkout(index: number) {
+    const nextWorkout = playerQueue[index];
+    if (!nextWorkout) return;
+    setActiveWorkout(index);
+    setTimer(workoutPrescription(nextWorkout).workSeconds);
     setIsRunning(false);
-    setSessionCalories((current) => Math.max(current, 1));
+    setWorkoutPhase("work");
+    setCurrentSet(1);
+  }
+
+  function completeCurrentPhase() {
+    if (!currentWorkout || activeWorkout === null) return;
+    const prescription = workoutPrescription(currentWorkout);
+    setIsRunning(false);
+    if (workoutPhase === "rest") {
+      setCurrentSet((set) => set + 1);
+      setWorkoutPhase("work");
+      setTimer(prescription.workSeconds);
+      return;
+    }
+    if (currentSet < prescription.totalSets) {
+      setWorkoutPhase("rest");
+      setTimer(prescription.restSeconds);
+      return;
+    }
+    setWorkoutPhase("done");
+    setTimer(0);
+    setCompletedExercises((current) => current.includes(activeWorkout) ? current : [...current, activeWorkout]);
+  }
+
+  function skipExercise() {
+    if (activeWorkout === null) return;
+    setSkippedExercises((current) => current.includes(activeWorkout) ? current : [...current, activeWorkout]);
+    if (activeWorkout < playerQueue.length - 1) goToWorkout(activeWorkout + 1);
+    else {
+      setWorkoutPhase("done");
+      setTimer(0);
+      setIsRunning(false);
+    }
+  }
+
+  async function finishWorkout() {
+    if (!playerQueue.length) return;
+    setIsRunning(false);
+    const completed = activeWorkout !== null && workoutPhase === "done" && !skippedExercises.includes(activeWorkout) && !completedExercises.includes(activeWorkout) ? [...completedExercises, activeWorkout] : completedExercises;
+    const record: WorkoutSessionRecord = { id: crypto.randomUUID(), completedAt: new Date().toISOString(), durationSeconds: Math.max(1, sessionSeconds), calories: Math.max(1, sessionCalories), completedExercises: completed.length, totalExercises: playerQueue.length, exerciseNames: playerQueue.map((exercise) => exercise.name) };
+    setSessionHistory((current) => [record, ...current]);
     setActiveWorkout(null);
+    setActiveView("progress");
+    try {
+      const supabase = createClient();
+      if (!supabase) return;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      await supabase.from("workout_sessions").insert({ id: record.id, user_id: user.id, completed_at: record.completedAt, duration_seconds: record.durationSeconds, calories: record.calories, completed_exercises: record.completedExercises, total_exercises: record.totalExercises, exercise_names: record.exerciseNames });
+    } catch {
+      // Bağlantı yoksa kayıt bu oturumun ilerleme ekranında kalır.
+    }
   }
 
   async function createPlan() {
@@ -574,8 +724,20 @@ export default function Home() {
       ) : (
         <section className="dashboard">
           {profileEditing && <div className="profile-editor"><div><div className="eyebrow">PROFİLİ GÜNCELLE</div><h2>Spor ortamını ve ekipmanlarını değiştir</h2><p>Kaydettiğinde AI, yeni profil verilerinle programı yeniden oluşturur.</p></div><div className="profile-editor-fields"><div className="choice-cards"><button type="button" className={gym === "Evde" ? "choice selected" : "choice"} onClick={() => setGym("Evde")}><span>⌂</span><strong>Evde</strong><small>Ekipmansız veya ev ekipmanı</small></button><button type="button" className={gym === "Salon" ? "choice selected" : "choice"} onClick={() => setGym("Salon")}><span>▦</span><strong>Spor salonunda</strong><small>Salon makineleri ve ağırlıklar</small></button></div><label className="textarea-label">EKİPMANLARIN<textarea value={equipmentText} onChange={(event) => setEquipmentText(event.target.value)} placeholder="Örn. dambıl, direnç bandı, bench" /></label><label className="textarea-label">İSTEDİĞİN HAREKETLER<textarea value={requestedExercises} onChange={(event) => setRequestedExercises(event.target.value)} placeholder="Örn. Yerde Dambıl Göğüs Presi" /></label><button className="primary-btn" type="button" onClick={() => { setProfileEditing(false); void createPlan(); }} disabled={saving}>{saving ? "AI yeniden tarıyor…" : "Profili kaydet ve programı yenile →"}</button></div></div>}
-          {activeView === "progress" ? <ProgressView name={name} calories={sessionCalories} /> : activeView === "library" ? <LibraryView onOpenWorkout={(index) => { setActiveView("plan"); openWorkout(index); }} /> : <>
-          {activeWorkout !== null ? <div className="workout-player"><button className="back-btn" type="button" onClick={() => { setIsRunning(false); setActiveWorkout(null); }}>← Plana dön</button><ExerciseAnimation exercise={workouts[activeWorkout]} /><div className="eyebrow">HAREKET {activeWorkout + 1} / {workouts.length}</div><h1>{workouts[activeWorkout].name}</h1><div className="movement-guide"><div className="guide-heading"><span>3 ADIMDA UYGULA</span><strong>{getMotionGuide(workouts[activeWorkout]).focus}</strong></div><ol><li>{getMotionGuide(workouts[activeWorkout]).start}</li><li>{workouts[activeWorkout].instructions}</li><li>{getMotionGuide(workouts[activeWorkout]).finish}</li></ol></div><div className="timer-card"><span>{isRunning ? "AKTİF SET" : timer === 0 ? "SET TAMAMLANDI" : "HAZIR"}</span><strong>00:{String(timer).padStart(2, "0")}</strong><small>Yaklaşık {sessionCalories} kcal</small></div><div className="player-meta"><strong>{workouts[activeWorkout].sets}</strong><span>{workouts[activeWorkout].level}</span></div><div className="player-actions"><button className="outline-btn" type="button" onClick={() => openWorkout(activeWorkout > 0 ? activeWorkout - 1 : workouts.length - 1)}>← Önceki</button><button className="start-btn" type="button" onClick={() => timer === 0 ? openWorkout((activeWorkout + 1) % workouts.length) : setIsRunning((running) => !running)}>{isRunning ? "Duraklat" : timer === 0 ? "Sonraki hareket" : "Seti başlat"} <span>→</span></button></div><button className="finish-btn" type="button" onClick={finishWorkout}>✓ Antrenmanı bitir</button></div> : <>
+          {activeView === "progress" ? <ProgressView name={name} sessions={sessionHistory} referenceTime={progressReferenceTime} /> : activeView === "library" ? <LibraryView onOpenWorkout={(exercise) => { setActiveView("plan"); openWorkout(0, [exercise]); }} /> : <>
+          {activeWorkout !== null && currentWorkout && currentGuide && currentPrescription ? <div className="workout-player">
+            <button className="back-btn" type="button" onClick={() => { setIsRunning(false); setActiveWorkout(null); }}>← Plana dön</button>
+            <div className="workout-session-progress" aria-label="Antrenman ilerlemesi">{playerQueue.map((exercise, index) => <span key={`${exercise.name}-${index}`} className={completedExercises.includes(index) ? "complete" : skippedExercises.includes(index) ? "skipped" : index === activeWorkout ? "active" : ""} />)}</div>
+            <ExerciseAnimation exercise={currentWorkout} />
+            <div className="player-title-row"><div><div className="eyebrow">HAREKET {activeWorkout + 1} / {playerQueue.length}</div><h1>{currentWorkout.name}</h1></div><span className={`phase-badge ${workoutPhase}`}>{workoutPhase === "rest" ? "DİNLENME" : workoutPhase === "done" ? "TAMAMLANDI" : `SET ${currentSet}/${currentPrescription.totalSets}`}</span></div>
+            <div className="movement-guide"><div className="guide-heading"><span>3 ADIMDA UYGULA</span><strong>{currentGuide.focus}</strong></div><ol><li>{currentGuide.start}</li><li>{currentWorkout.instructions}</li><li>{currentGuide.finish}</li></ol></div>
+            <div className="form-cues"><div><span>NEFES</span><strong>{currentGuide.breathe}</strong></div><div className="warning"><span>SIK HATA</span><strong>{currentGuide.mistake}</strong></div></div>
+            <div className={`timer-card phase-${workoutPhase}`}><span>{isRunning ? workoutPhase === "rest" ? "DİNLENME SÜRÜYOR" : "AKTİF SET" : workoutPhase === "done" ? "HAREKET TAMAM" : workoutPhase === "rest" ? "DİNLENMEYE HAZIR" : "HAZIR"}</span><strong>{formatClock(timer)}</strong><small>{workoutPhase === "rest" ? `Sonraki: set ${Math.min(currentSet + 1, currentPrescription.totalSets)}` : `${currentPrescription.target} · yaklaşık ${sessionCalories} kcal`}</small></div>
+            <div className="set-tracker"><div><span>SETLER</span><strong>{currentSet} / {currentPrescription.totalSets}</strong></div><div className="set-dots">{Array.from({ length: currentPrescription.totalSets }, (_, index) => <i key={index} className={index + 1 < currentSet || workoutPhase === "done" ? "complete" : index + 1 === currentSet ? "active" : ""} />)}</div><small>{currentWorkout.rest}</small></div>
+            <div className="player-tools"><button type="button" onClick={() => activeWorkout > 0 && goToWorkout(activeWorkout - 1)} disabled={activeWorkout === 0}>← Önceki</button>{workoutPhase !== "done" && <button type="button" onClick={completeCurrentPhase}>{workoutPhase === "rest" ? "Dinlenmeyi atla" : "Seti tamamla"}</button>}<button type="button" onClick={skipExercise}>Hareketi atla →</button></div>
+            <div className="player-actions"><button className="start-btn" type="button" onClick={() => workoutPhase === "done" ? activeWorkout < playerQueue.length - 1 ? goToWorkout(activeWorkout + 1) : void finishWorkout() : setIsRunning((running) => !running)}>{workoutPhase === "done" ? activeWorkout < playerQueue.length - 1 ? "Sonraki harekete geç" : "Antrenmanı kaydet" : isRunning ? "Duraklat" : workoutPhase === "rest" ? "Dinlenmeyi başlat" : "Seti başlat"} <span>→</span></button></div>
+            <button className="finish-btn" type="button" onClick={() => void finishWorkout()}>✓ Antrenmanı bitir ve kaydet</button>
+          </div> : <>
           <div className="dashboard-head"><div><div className="eyebrow">BUGÜNÜN PLANI · 01</div><h1>{name || "Ece"}, <em>hazır mısın?</em></h1><p>Verilerine göre ilk program taslağını hazırladık. İlerledikçe daha da kişiselleştireceğiz.</p></div><div className="streak-card"><span>✦</span><strong>4</strong><small>günlük seri</small></div></div>
           <div className="stats-row"><div><span>Vücut kitle indeksi</span><strong>{bmi}</strong><small>İlk ölçüm</small></div><div><span>Hedef</span><strong>{goalText ? "Kişisel" : "Güçlenme"}</strong><small>Profiline göre</small></div><div><span>Ortam</span><strong>{gym}</strong><small>{equipmentText || "Ekipmansız"}</small></div></div>
           <div className="wellness-row"><div className="wellness-card calorie-card"><div><span>BUGÜNÜN KALORİSİ</span><strong>{sessionCalories || 0} <small>kcal</small></strong><p>Aktif set süresi arttıkça tahmini değer güncellenir.</p></div><div className="calorie-ring"><i>{sessionCalories || 0}</i></div><div className="calorie-note"><span>TAKİP</span><strong>Antrenman içi</strong><small>Hareketi tamamladıkça kaydedilir</small></div></div></div>
