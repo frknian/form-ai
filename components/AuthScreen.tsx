@@ -137,8 +137,8 @@ export function AuthScreen({ status, onSignedIn }: { status: "loading" | "anonym
           </div>
           <div className="auth-panel-heading"><span>{mode === "signup" ? "ÜCRETSİZ HESAP" : "TEKRAR HOŞ GELDİN"}</span><h2>{mode === "signup" ? "Önce hesabını oluşturalım." : "Programına devam et."}</h2><p>{mode === "signup" ? "Doğrulamadan sonra kişisel profil testin başlayacak." : "Kayıtlı e-posta ve şifrenle giriş yap."}</p></div>
 
-          {status === "unavailable" ? <div className="auth-message error" role="alert">Güvenli giriş servisi yapılandırılmamış. Supabase ortam değişkenlerini kontrol et.</div> : <>
-            <button type="button" className="google-auth-button" onClick={() => void handleGoogleSignIn()} disabled={busy}><span aria-hidden="true">G</span> Google ile devam et</button>
+          {status === "unavailable" && <div className="auth-message error auth-configuration" role="alert"><strong>Giriş bağlantısı bekleniyor</strong><span>E-posta alanlarını doldurabilirsin; hesap oluşturabilmek için Supabase bağlantısının yayın ortamına eklenmesi gerekiyor.</span></div>}
+          <button type="button" className="google-auth-button" onClick={() => void handleGoogleSignIn()} disabled={busy || status === "unavailable"}><span aria-hidden="true">G</span> Google ile devam et</button>
             <div className="auth-divider"><span>veya e-posta ile</span></div>
             <form className="auth-form" onSubmit={handleEmailAuth}>
               <label>E-posta adresin<input type="email" name="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="ornek@gmail.com" /></label>
@@ -146,9 +146,8 @@ export function AuthScreen({ status, onSignedIn }: { status: "loading" | "anonym
               {mode === "signup" && <label>Şifreni tekrar yaz<input type="password" name="password-confirmation" autoComplete="new-password" minLength={8} required value={passwordAgain} onChange={(event) => setPasswordAgain(event.target.value)} placeholder="Şifreni doğrula" /></label>}
               {error && <div className="auth-message error" role="alert">{error}</div>}
               {notice && <div className="auth-message success" role="status"><strong>E-postanı kontrol et</strong><span>{notice}</span><button type="button" onClick={() => void resendVerification()} disabled={busy}>Bağlantıyı yeniden gönder</button></div>}
-              <button className="auth-submit" type="submit" disabled={busy}>{busy ? "İşleniyor…" : mode === "signup" ? "Hesabımı oluştur" : "Giriş yap"}<span>→</span></button>
+              <button className="auth-submit" type="submit" disabled={busy || status === "unavailable"}>{busy ? "İşleniyor…" : status === "unavailable" ? "Bağlantı yapılandırılmalı" : mode === "signup" ? "Hesabımı oluştur" : "Giriş yap"}<span>→</span></button>
             </form>
-          </>}
           <p className="auth-privacy">Devam ederek verilerinin yalnızca kişisel planın ve ilerleme takibin için işlenmesini kabul edersin.</p>
         </div>
       </section>

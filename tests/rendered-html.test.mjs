@@ -43,6 +43,9 @@ test("keeps email verification and Google authentication wired into profile crea
   assert.match(authScreen, /signInWithPassword/);
   assert.match(authScreen, /signInWithOAuth/);
   assert.match(authScreen, /provider: "google"/);
+  assert.match(authScreen, /E-posta adresin/);
+  assert.match(authScreen, /status === "unavailable" &&/);
+  assert.doesNotMatch(authScreen, /status === "unavailable" \? <div[^]*?\: <>/);
   assert.match(callback, /exchangeCodeForSession/);
 });
 
