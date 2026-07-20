@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { POST, profileSignals } from "../app/api/generate-plan/route.ts";
+import { extractSessionMinutes } from "../lib/training-profile.ts";
 
 const scenarios = [
   {
@@ -31,6 +32,12 @@ test("üç farklı kullanıcı profilini farklı plan parametrelerine dönüşt�
     fingerprints.add(signals.fingerprint);
   }
   assert.equal(fingerprints.size, scenarios.length, "her senaryo farklı analiz anahtarı üretmeli");
+});
+
+test("serbest metindeki gün sayısını antrenman süresi sanmaz", () => {
+  assert.equal(extractSessionMinutes("Haftada 3 gün, 40 dakika ayırabilirim"), 40);
+  assert.equal(extractSessionMinutes("Hafta sonu 1 saat"), 60);
+  assert.equal(extractSessionMinutes("45"), 45);
 });
 
 test("Gemini ana modeli başarısız olunca yedek modele geçer", { concurrency: false }, async () => {

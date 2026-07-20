@@ -1,19 +1,24 @@
 "use client";
 
-import { ChangeEvent, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, lazy, Suspense, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { adaptPrescription, summarizeTrainingAdaptation, type TrainingAdaptation, type WorkoutDifficulty } from "@/lib/training-adaptation";
 import { ExerciseAnimation as ExerciseFrameAnimation } from "@/components/exercises/ExerciseAnimation";
 import { ExerciseLibrary } from "@/components/exercises/ExerciseLibrary";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { getExerciseById, getExercisesForAI } from "@/lib/exercise-service";
+import { translateExerciseLabel, turkishExerciseInstructions } from "@/lib/exercise-translations";
+import { extractSessionMinutes } from "@/lib/training-profile";
 import type { Exercise } from "@/types/exercise";
+
+const AiCoachChat = lazy(() => import("@/components/AiCoachChat").then((module) => ({ default: module.AiCoachChat })));
 
 const historyQuestions = [
   "Daha önce düzenli olarak spor yaptın mı?",
   "Son 3 ayda haftada kaç gün hareket ettin?",
   "Kendini hangi seviyede görüyorsun?",
-  "Bir antrenmana ortalama ne kadar zaman ayırabilirsin?",
+  "Antrenmana ayırabileceğin zamanı ve uygun olduğun günleri yaz.",
   "Şu anki ana hedefin nedir?",
   "Hangi antrenman türleri ilgini çekiyor?",
   "Bilinen bir sakatlığın veya ağrı bölgen var mı?",
@@ -26,7 +31,7 @@ const answerOptions = [
   ["Hayır", "Ara sıra", "Düzenli"],
   ["0 gün", "1–2 gün", "3–4 gün", "5+ gün"],
   ["Yeni başlıyorum", "Orta seviye", "İleri seviye"],
-  ["15 dakika", "30 dakika", "45 dakika", "60+ dakika"],
+  [],
   ["Kilo vermek", "Güçlenmek", "Kas geliştirmek", "Kondisyon"],
   ["Kuvvet", "Kardiyo", "Esneklik", "Karışık"],
   ["Yok", "Bel", "Diz", "Omuz", "Diğer"],
@@ -219,7 +224,7 @@ function createPersonalPlan(gym: string, equipmentText: string, history: string[
   const wantsGym = gym === "Salon";
   const equipment = equipmentText.toLowerCase();
   const durationText = history[3] || goalText.match(/(15|30|45|60)/)?.[1] || "30";
-  const duration = Number(durationText.match(/\d+/)?.[0] || "30");
+  const duration = extractSessionMinutes(durationText);
   const pain = history[6]?.toLowerCase() || "";
   const matchesEquipment = (item: typeof exerciseLibrary[number]) => wantsGym || item.bodyweight || item.requires.some((requirement) => equipment.includes(requirement));
   const avoidKneeLoad = pain.includes("diz");
@@ -295,7 +300,12 @@ function getMotionPattern(exercise: { name: string; english: string }): MotionPa
 }
 
 function getMotionGuide(exercise: { name: string; english: string }) {
-  return motionGuides[getMotionPattern(exercise)];
+  const guide = motionGuides[getMotionPattern(exercise)];
+  return { ...guide, focus: localizeMotionFocus(guide.focus) };
+}
+
+function localizeMotionFocus(value: string) {
+  return value.replace(/triceps/gi, "arka kol").replace(/biceps/gi, "biseps").replace(/core/gi, "merkez bölge");
 }
 
 function MotionFigure({ pattern, pose }: { pattern: MotionPattern; pose: MotionPose }) {
@@ -304,7 +314,7 @@ function MotionFigure({ pattern, pose }: { pattern: MotionPattern; pose: MotionP
 
 function MotionFigureAnimation({ exercise, compact = false }: { exercise: { name: string; english: string; tone: string }; compact?: boolean }) {
   const pattern = getMotionPattern(exercise);
-  const guide = motionGuides[pattern];
+  const guide = { ...motionGuides[pattern], focus: localizeMotionFocus(motionGuides[pattern].focus) };
   const [motionStep, setMotionStep] = useState(0);
   const [motionPlaying, setMotionPlaying] = useState(true);
   useEffect(() => {
@@ -374,7 +384,7 @@ function databaseExerciseAsWorkout(exercise: Exercise): AiWorkout {
   const muscle = exercise.primaryMuscles[0] || "full body";
   const area = muscle === "chest" ? "Göğüs" : ["lats", "middle back"].includes(muscle) ? "Sırt" : muscle === "shoulders" ? "Omuz" : ["biceps", "triceps", "forearms"].includes(muscle) ? "Kol" : muscle === "abdominals" ? "Core" : ["glutes"].includes(muscle) ? "Kalça" : "Bacak";
   const tone = area === "Bacak" || area === "Kalça" ? "orange" : area === "Göğüs" || area === "Core" ? "blue" : "purple";
-  return { id: exercise.id, name: exercise.name, english: exercise.name, area, level: exercise.level, sets: "3 set · 10 tekrar", rest: "60 sn dinlenme", seconds: 45, tone, icon: "↗", instructions: exercise.instructions[0] || "Hareketi kontrollü uygula ve ağrı hissedersen dur.", images: exercise.images, equipment: exercise.equipment, secondaryMuscles: exercise.secondaryMuscles, category: exercise.category };
+  return { id: exercise.id, name: exercise.name, english: exercise.name, area, level: translateExerciseLabel(exercise.level), sets: "3 set · 10 tekrar", rest: "60 sn dinlenme", seconds: 45, tone, icon: "↗", instructions: turkishExerciseInstructions(exercise).join(" "), images: exercise.images, equipment: exercise.equipment, secondaryMuscles: exercise.secondaryMuscles, category: exercise.category };
 }
 
 function calculateEnergyMetrics(gender: string, ageValue: string, heightValue: string, weightValue: string, movementLevel: string): EnergyMetrics | null {
@@ -400,7 +410,7 @@ function workoutMet(exercise: AiWorkout, phase: WorkoutPhase, intensity: string)
 }
 
 function fallbackAnalysis(gym: string, equipmentText: string, history: string[], goalText: string): AiPlanAnalysis {
-  const duration = Number(history[3]?.match(/\d+/)?.[0]) || 30;
+  const duration = extractSessionMinutes(history[3]);
   const primaryGoal = history[4] || goalText || "Güçlenme";
   const experienceLevel = history[2] || "Yeni başlıyorum";
   return { experienceLevel, weeklyFrequency: history[1] || "1–2 gün", sessionMinutes: duration, primaryGoal, intensity: /ileri|yüksek/i.test(`${experienceLevel} ${history[7]}`) ? "Orta-yüksek" : "Düşük-orta", equipmentMode: gym === "Salon" ? "Spor salonu ekipmanları" : equipmentText || "Ekipmansız", focusAreas: primaryGoal.toLowerCase().includes("kilo") ? ["Tüm vücut", "Kondisyon"] : primaryGoal.toLowerCase().includes("kas") ? ["Direnç", "Kas grubu dengesi"] : ["Temel kuvvet", "Hareket kalitesi"], adaptations: [`${duration} dakikalık seansa göre hareket sayısı ayarlandı.`, `${experienceLevel} seviyesine göre set ve dinlenme seçildi.`, history[6] && history[6] !== "Yok" ? `${history[6]} bölgesi için riskli hareketler elendi.` : "Belirtilen ağrı bölgesi olmadığı için dengeli seçim yapıldı."] };
@@ -584,6 +594,12 @@ export default function Home() {
     const w = Number(weight);
     return h && w ? (w / (h * h)).toFixed(1) : "22.4";
   }, [height, weight]);
+  const coachContext = useMemo(() => JSON.stringify({
+    profile: { name, age, gender, height, weight, bmi, environment: gym, equipment: equipmentText || "Ekipmansız", goal: goalText || planGoal, requestedExercises },
+    historyAnswers: history,
+    currentPlan: workouts.map(({ name: exerciseName, area, sets, rest, instructions }) => ({ name: exerciseName, area, sets, rest, instructions })),
+    recentWorkouts: sessionHistory.slice(0, 5).map(({ completedAt, durationSeconds, calories, completedExercises, totalExercises, difficulty, fatigue, painAreas }) => ({ completedAt, durationSeconds, calories, completedExercises, totalExercises, difficulty, fatigue, painAreas })),
+  }), [age, bmi, equipmentText, gender, goalText, gym, height, history, name, planGoal, requestedExercises, sessionHistory, weight, workouts]);
 
   function handlePhoto(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -598,6 +614,10 @@ export default function Home() {
   function setAnswer(answer: string) {
     setHistory((current) => current.map((value, index) => index === questionIndex ? answer : value));
     if (questionIndex < 9 && questionIndex !== 6) window.setTimeout(() => setQuestionIndex((current) => current + 1), 220);
+  }
+
+  function setFreeAnswer(answer: string) {
+    setHistory((current) => current.map((value, index) => index === questionIndex ? answer : value));
   }
 
   function toggleInjury(answer: string) {
@@ -625,6 +645,10 @@ export default function Home() {
     void loadWorkoutHistory();
     return () => { cancelled = true; };
   }, []);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [activeView, activeWorkout, questionIndex, step]);
 
   useEffect(() => {
     if (!isRunning || !currentWorkout) return;
@@ -841,9 +865,10 @@ export default function Home() {
     <main className="app-shell">
       {step === 5 && <nav className="topbar">
         <div className="brand"><span className="brand-mark">↗</span><span>form<span className="brand-dot">.</span>ai</span></div>
-        <div className="top-links"><button type="button" className={activeView === "plan" ? "active" : ""} onClick={() => setActiveView("plan")}>Antrenmanım</button><button type="button" className={activeView === "progress" ? "active" : ""} onClick={() => setActiveView("progress")}>İlerlemem</button><button type="button" className={activeView === "library" ? "active" : ""} onClick={() => setActiveView("library")}>Hareket kütüphanesi</button></div>
-        <button type="button" className="profile-mini" onClick={() => step === 5 && setProfileEditing((editing) => !editing)}><span className="mini-avatar">{name ? name.charAt(0).toUpperCase() : "E"}</span><span>Profilim</span><span className="chevron">⌄</span></button>
+        <div className="top-links"><button type="button" aria-pressed={activeView === "plan"} className={activeView === "plan" ? "active" : ""} onClick={() => setActiveView("plan")}>Antrenmanım</button><button type="button" aria-pressed={activeView === "progress"} className={activeView === "progress" ? "active" : ""} onClick={() => setActiveView("progress")}>İlerlemem</button><button type="button" aria-pressed={activeView === "library"} className={activeView === "library" ? "active" : ""} onClick={() => setActiveView("library")}>Hareket kütüphanesi</button></div>
+        <div className="top-actions"><ThemeToggle /><button type="button" className="profile-mini" aria-expanded={profileEditing} onClick={() => step === 5 && setProfileEditing((editing) => !editing)}><span className="mini-avatar">{name ? name.charAt(0).toUpperCase() : "E"}</span><span>Profilim</span><span className="chevron">⌄</span></button></div>
       </nav>}
+      {step < 5 && <ThemeToggle className="onboarding-theme-toggle" />}
 
       {step < 5 ? (
         <section className="onboarding-wrap">
@@ -855,7 +880,7 @@ export default function Home() {
             <div className="form-grid">
               <label className="wide">Adın<input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nasıl hitap edelim?" /></label>
               <label>Yaşın<input type="number" value={age} onChange={(e) => setAge(e.target.value)} placeholder="24" /></label>
-              <label>Cinsiyet<div className="segmented"><button type="button" className={gender === "Kadın" ? "selected" : ""} onClick={() => setGender("Kadın")}>Kadın</button><button type="button" className={gender === "Erkek" ? "selected" : ""} onClick={() => setGender("Erkek")}>Erkek</button></div></label>
+              <label>Cinsiyet<div className="segmented"><button type="button" aria-pressed={gender === "Kadın"} className={gender === "Kadın" ? "selected" : ""} onClick={() => setGender("Kadın")}>Kadın</button><button type="button" aria-pressed={gender === "Erkek"} className={gender === "Erkek" ? "selected" : ""} onClick={() => setGender("Erkek")}>Erkek</button></div></label>
               <label>Boyun (cm)<input type="number" value={height} onChange={(e) => setHeight(e.target.value)} placeholder="168" /></label>
               <label>Kilon (kg)<input type="number" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="62" /></label>
             </div>
@@ -864,7 +889,7 @@ export default function Home() {
 
           {step === 2 && <div className="step-content equipment-step">
             <div className="eyebrow">Planını şekillendirelim</div><h1>Nerede<br /><em>hareket ediyorsun?</em></h1><p className="lead">Ortamını ve elindeki ekipmanları kendi cümlelerinle anlat.</p>
-            <div className="choice-cards"><button type="button" className={gym === "Evde" ? "choice selected" : "choice"} onClick={() => setGym("Evde")}><span>⌂</span><strong>Evde</strong><small>Kendi alanımda</small></button><button type="button" className={gym === "Salon" ? "choice selected" : "choice"} onClick={() => setGym("Salon")}><span>▦</span><strong>Spor salonunda</strong><small>Full ekipman erişimi</small></button></div>
+            <div className="choice-cards"><button type="button" aria-pressed={gym === "Evde"} className={gym === "Evde" ? "choice selected" : "choice"} onClick={() => setGym("Evde")}><span>⌂</span><strong>Evde</strong><small>Kendi alanımda</small></button><button type="button" aria-pressed={gym === "Salon"} className={gym === "Salon" ? "choice selected" : "choice"} onClick={() => setGym("Salon")}><span>▦</span><strong>Spor salonunda</strong><small>Tüm ekipmanlara erişim</small></button></div>
             <label className="textarea-label">EKİPMANLARIN <small>İsteğe bağlı</small><textarea value={equipmentText} onChange={(e) => setEquipmentText(e.target.value)} placeholder="Örn. 2 adet 5 kg dambıl, yoga matı ve direnç bandı" /></label>
             <label className="textarea-label">HEDEFİN <small>Programı daha kişisel yapar</small><textarea value={goalText} onChange={(e) => setGoalText(e.target.value)} placeholder="Örn. Daha güçlü olmak ve 30 dakikada tamamlanan programlar yapmak istiyorum." /></label>
             <label className="textarea-label">ÖZELLİKLE İSTEDİĞİN HAREKETLER <small>İsteğe bağlı</small><textarea value={requestedExercises} onChange={(e) => setRequestedExercises(e.target.value)} placeholder="Örn. Yerde Dambıl Göğüs Presi, Goblet Squat" /></label>
@@ -879,14 +904,14 @@ export default function Home() {
 
           {step === 4 && <div className="step-content history-step">
             <div className="eyebrow">SORU {questionIndex + 1} / 10</div><h1>Seni biraz<br /><em>daha tanıyalım.</em></h1><p className="lead">Cevapların programın yoğunluğunu, hareket seçimini ve ilerleme hızını belirleyecek.</p>
-            <div className="question-card"><span className="question-number">{String(questionIndex + 1).padStart(2, "0")}</span><h2>{historyQuestions[questionIndex]}</h2>{questionIndex === 6 && <p className="multi-select-note">Birden fazla bölge seçebilirsin.</p>}<div className="answer-grid">{(answerOptions[questionIndex] ?? []).map((answer) => { const selected = questionIndex === 6 ? history[6].split(" · ").includes(answer) : history[questionIndex] === answer; return <button type="button" key={answer} className={selected ? "answer selected" : "answer"} onClick={() => questionIndex === 6 ? toggleInjury(answer) : setAnswer(answer)}>{answer}</button>; })}</div>{questionIndex === 9 && <textarea className="question-note" value={history[9]} onChange={(e) => setAnswer(e.target.value)} placeholder="Buraya yazabilirsin..." />}</div>
+            <div className="question-card"><span className="question-number">{String(questionIndex + 1).padStart(2, "0")}</span><h2>{historyQuestions[questionIndex]}</h2>{questionIndex === 6 && <p className="multi-select-note">Birden fazla bölge seçebilirsin.</p>}<div className="answer-grid">{(answerOptions[questionIndex] ?? []).map((answer) => { const selected = questionIndex === 6 ? history[6].split(" · ").includes(answer) : history[questionIndex] === answer; return <button type="button" key={answer} aria-pressed={selected} className={selected ? "answer selected" : "answer"} onClick={() => questionIndex === 6 ? toggleInjury(answer) : setAnswer(answer)}>{answer}</button>; })}</div>{(questionIndex === 3 || questionIndex === 9) && <textarea className="question-note" aria-label={questionIndex === 3 ? "Antrenman süresi ve uygun günler" : "Program notu"} value={history[questionIndex]} onChange={(e) => setFreeAnswer(e.target.value)} placeholder={questionIndex === 3 ? "Örn. Hafta içi üç gün, 30 dakika ayırabilirim." : "Buraya yazabilirsin..."} />}</div>
             {saving && <AiScanFigure status="scanning" stage={aiStage} />}<div className="action-row"><button className="back-btn" type="button" onClick={() => questionIndex ? setQuestionIndex(questionIndex - 1) : setStep(3)}>← Geri</button>{questionIndex < 9 ? <button className="primary-btn" type="button" onClick={() => setQuestionIndex(questionIndex + 1)}>Sonraki <span>→</span></button> : <button className="primary-btn" type="button" onClick={createPlan} disabled={saving}>{saving ? "AI verileri analiz ediyor…" : "Planımı oluştur ✦"}</button>}</div>
           </div>}
           <aside className="side-note"><div className="orb"><span>✦</span></div><p><strong>Bilim + senin ritmin.</strong><br />Her plan, hedeflerine ve günlük hayatına uyum sağlar.</p></aside>
         </section>
       ) : (
         <section className="dashboard">
-          {profileEditing && <div className="profile-editor"><div><div className="eyebrow">PROFİLİ GÜNCELLE</div><h2>Spor ortamını ve ekipmanlarını değiştir</h2><p>Kaydettiğinde AI, yeni profil verilerinle programı yeniden oluşturur.</p></div><div className="profile-editor-fields"><div className="choice-cards"><button type="button" className={gym === "Evde" ? "choice selected" : "choice"} onClick={() => setGym("Evde")}><span>⌂</span><strong>Evde</strong><small>Ekipmansız veya ev ekipmanı</small></button><button type="button" className={gym === "Salon" ? "choice selected" : "choice"} onClick={() => setGym("Salon")}><span>▦</span><strong>Spor salonunda</strong><small>Salon makineleri ve ağırlıklar</small></button></div><label className="textarea-label">EKİPMANLARIN<textarea value={equipmentText} onChange={(event) => setEquipmentText(event.target.value)} placeholder="Örn. dambıl, direnç bandı, bench" /></label><label className="textarea-label">İSTEDİĞİN HAREKETLER<textarea value={requestedExercises} onChange={(event) => setRequestedExercises(event.target.value)} placeholder="Örn. Yerde Dambıl Göğüs Presi" /></label><button className="primary-btn" type="button" onClick={() => { setProfileEditing(false); void createPlan(); }} disabled={saving}>{saving ? "AI yeniden tarıyor…" : "Profili kaydet ve programı yenile →"}</button></div></div>}
+          {profileEditing && <div className="profile-editor"><div><div className="eyebrow">PROFİLİ GÜNCELLE</div><h2>Spor ortamını ve ekipmanlarını değiştir</h2><p>Kaydettiğinde AI, yeni profil verilerinle programı yeniden oluşturur.</p></div><div className="profile-editor-fields"><div className="choice-cards"><button type="button" aria-pressed={gym === "Evde"} className={gym === "Evde" ? "choice selected" : "choice"} onClick={() => setGym("Evde")}><span>⌂</span><strong>Evde</strong><small>Ekipmansız veya ev ekipmanı</small></button><button type="button" aria-pressed={gym === "Salon"} className={gym === "Salon" ? "choice selected" : "choice"} onClick={() => setGym("Salon")}><span>▦</span><strong>Spor salonunda</strong><small>Salon makineleri ve ağırlıklar</small></button></div><label className="textarea-label">EKİPMANLARIN<textarea value={equipmentText} onChange={(event) => setEquipmentText(event.target.value)} placeholder="Örn. dambıl, direnç bandı, sehpa" /></label><label className="textarea-label">İSTEDİĞİN HAREKETLER<textarea value={requestedExercises} onChange={(event) => setRequestedExercises(event.target.value)} placeholder="Örn. Yerde Dambıl Göğüs Presi" /></label><button className="primary-btn" type="button" onClick={() => { setProfileEditing(false); void createPlan(); }} disabled={saving}>{saving ? "AI yeniden tarıyor…" : "Profili kaydet ve programı yenile →"}</button></div></div>}
           {activeView === "progress" ? <ProgressView name={name} sessions={sessionHistory} referenceTime={progressReferenceTime} energyMetrics={energyMetrics} /> : activeView === "library" ? <LibraryView onOpenWorkout={(exercise) => { setActiveView("plan"); openWorkout(0, [exercise]); }} onAddWorkout={(exercise) => setAiWorkouts((current) => current.some((item) => item.id === exercise.id) ? current : [...current, exercise])} /> : <>
           {activeWorkout !== null && currentWorkout && currentGuide && currentPrescription ? <div className="workout-player">
             <button className="back-btn" type="button" onClick={() => { setIsRunning(false); setActiveWorkout(null); }}>← Plana dön</button>
@@ -913,8 +938,9 @@ export default function Home() {
           </>}
         </section>
       )}
-      {pendingSession && <div className="feedback-overlay" role="dialog" aria-modal="true" aria-labelledby="feedback-title"><div className="feedback-dialog"><div className="feedback-check">✓</div><div className="eyebrow">ANTRENMAN TAMAMLANDI</div><h2 id="feedback-title">Programını bir sonraki<br /><em>seviyeye uyarlayalım.</em></h2><p>Bu kısa geri bildirim sonraki antrenmanın set, tekrar, dinlenme ve hareket seçimini belirler.</p><fieldset><legend>Antrenman nasıl hissettirdi?</legend><div className="feedback-options">{(["Kolay", "Uygun", "Zor"] as WorkoutDifficulty[]).map((option) => <button type="button" className={feedbackDifficulty === option ? "selected" : ""} onClick={() => setFeedbackDifficulty(option)} key={option}>{option}</button>)}</div></fieldset><fieldset><legend>Antrenman sonrası yorgunluk</legend><div className="fatigue-scale">{[1, 2, 3, 4, 5].map((value) => <button type="button" className={feedbackFatigue === value ? "selected" : ""} onClick={() => setFeedbackFatigue(value)} key={value}><strong>{value}</strong><small>{value === 1 ? "Çok düşük" : value === 3 ? "Orta" : value === 5 ? "Çok yüksek" : ""}</small></button>)}</div></fieldset><fieldset><legend>Ağrı veya rahatsızlık var mı?</legend><div className="feedback-options pain-options">{["Yok", "Bel", "Diz", "Omuz", "Diğer"].map((area) => <button type="button" className={feedbackPainAreas.includes(area) ? "selected" : ""} onClick={() => toggleFeedbackPain(area)} key={area}>{area}</button>)}</div></fieldset><label className="feedback-note">Eklemek istediğin bir not <small>İsteğe bağlı</small><textarea value={feedbackNote} onChange={(event) => setFeedbackNote(event.target.value)} placeholder="Örn. Son sette formum bozuldu veya dizimde hassasiyet hissettim." /></label><div className="feedback-summary"><span>SONRAKİ ADIM</span><strong>{feedbackPainAreas.some((area) => area !== "Yok") || feedbackDifficulty === "Zor" || feedbackFatigue >= 4 ? "Toparlanma ve güvenlik öncelikli plan" : feedbackDifficulty === "Kolay" && feedbackFatigue <= 2 ? "Kontrollü yük artışı için veri kaydı" : "Mevcut yükü değerlendiren dengeli plan"}</strong></div><button className="primary-btn feedback-save" type="button" onClick={() => void saveWorkoutFeedback()}>Kaydet ve programımı uyarla <span>→</span></button></div></div>}
-      <footer><span>form.ai · daha güçlü bir sen için</span><span>© 2024</span></footer>
+      {pendingSession && <div className="feedback-overlay" role="dialog" aria-modal="true" aria-labelledby="feedback-title"><div className="feedback-dialog"><div className="feedback-check">✓</div><div className="eyebrow">ANTRENMAN TAMAMLANDI</div><h2 id="feedback-title">Programını bir sonraki<br /><em>seviyeye uyarlayalım.</em></h2><p>Bu kısa geri bildirim sonraki antrenmanın set, tekrar, dinlenme ve hareket seçimini belirler.</p><fieldset><legend>Antrenman nasıl hissettirdi?</legend><div className="feedback-options">{(["Kolay", "Uygun", "Zor"] as WorkoutDifficulty[]).map((option) => <button type="button" aria-pressed={feedbackDifficulty === option} className={feedbackDifficulty === option ? "selected" : ""} onClick={() => setFeedbackDifficulty(option)} key={option}>{option}</button>)}</div></fieldset><fieldset><legend>Antrenman sonrası yorgunluk</legend><div className="fatigue-scale">{[1, 2, 3, 4, 5].map((value) => <button type="button" aria-pressed={feedbackFatigue === value} className={feedbackFatigue === value ? "selected" : ""} onClick={() => setFeedbackFatigue(value)} key={value}><strong>{value}</strong><small>{value === 1 ? "Çok düşük" : value === 3 ? "Orta" : value === 5 ? "Çok yüksek" : ""}</small></button>)}</div></fieldset><fieldset><legend>Ağrı veya rahatsızlık var mı?</legend><div className="feedback-options pain-options">{["Yok", "Bel", "Diz", "Omuz", "Diğer"].map((area) => <button type="button" aria-pressed={feedbackPainAreas.includes(area)} className={feedbackPainAreas.includes(area) ? "selected" : ""} onClick={() => toggleFeedbackPain(area)} key={area}>{area}</button>)}</div></fieldset><label className="feedback-note">Eklemek istediğin bir not <small>İsteğe bağlı</small><textarea value={feedbackNote} onChange={(event) => setFeedbackNote(event.target.value)} placeholder="Örn. Son sette formum bozuldu veya dizimde hassasiyet hissettim." /></label><div className="feedback-summary"><span>SONRAKİ ADIM</span><strong>{feedbackPainAreas.some((area) => area !== "Yok") || feedbackDifficulty === "Zor" || feedbackFatigue >= 4 ? "Toparlanma ve güvenlik öncelikli plan" : feedbackDifficulty === "Kolay" && feedbackFatigue <= 2 ? "Kontrollü yük artışı için veri kaydı" : "Mevcut yükü değerlendiren dengeli plan"}</strong></div><button className="primary-btn feedback-save" type="button" onClick={() => void saveWorkoutFeedback()}>Kaydet ve programımı uyarla <span>→</span></button></div></div>}
+      {step === 5 && <Suspense fallback={null}><AiCoachChat context={coachContext} /></Suspense>}
+      <footer><span>form.ai · daha güçlü bir sen için</span><span>© 2026</span></footer>
     </main>
   );
 }

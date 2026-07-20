@@ -7,7 +7,7 @@ import { nextFrameIndex, shouldCycleFrames } from "../lib/exercise-animation.ts"
 
 test("egzersiz veri seti normalize edilerek yüklenir", () => {
   const exercises = getAllExercises();
-  assert.ok(exercises.length >= 80);
+  assert.ok(exercises.length >= 100);
   assert.ok(exercises.every((exercise) => exercise.id && exercise.name && exercise.primaryMuscles.length && exercise.images.length >= 1));
 });
 
@@ -15,6 +15,11 @@ test("egzersiz adı büyük-küçük harf duyarsız aranır", () => {
   const matches = searchExercises("PRESS");
   assert.ok(matches.length > 0);
   assert.ok(matches.every((exercise) => `${exercise.name} ${exercise.primaryMuscles.join(" ")} ${exercise.secondaryMuscles.join(" ")} ${exercise.equipment}`.toLowerCase().includes("press")));
+});
+
+test("kas ve ekipman adları Türkçe aranabilir", () => {
+  assert.ok(searchExercises("göğüs").length > 0);
+  assert.ok(searchExercises("dambıl").length > 0);
 });
 
 test("kas grubu, ekipman ve seviye filtreleri ayrı ayrı çalışır", () => {

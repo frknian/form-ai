@@ -1,3 +1,5 @@
+import { extractSessionMinutes } from "../../../lib/training-profile.ts";
+
 const plannerRules = [
   "Yaş, cinsiyet, boy, kilo, hedef metni, ortam, ekipman, istenen hareketler ve 10 test cevabının her birini değerlendir.",
   "Programın hareket sayısını, setini, tekrarını ve dinlenmesini kullanıcının seviyesi ile ayırdığı süreye göre değiştir.",
@@ -68,8 +70,7 @@ function text(value: unknown) {
 
 export function profileSignals(payload: Record<string, unknown>) {
   const history = Array.isArray(payload.history) ? payload.history.map(text) : [];
-  const durationMatch = history[3]?.match(/\d+/);
-  const sessionMinutes = durationMatch ? Number(durationMatch[0]) : 30;
+  const sessionMinutes = extractSessionMinutes(history[3]);
   const experience = history[2] || "Yeni başlıyorum";
   const goal = `${history[4] || ""} ${text(payload.goal)}`.toLocaleLowerCase("tr-TR");
   const primaryGoal = goal.includes("kilo") || goal.includes("yağ") ? "Kilo verme" : goal.includes("kas") ? "Kas geliştirme" : goal.includes("kondisyon") ? "Kondisyon" : "Güçlenme";

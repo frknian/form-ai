@@ -9,17 +9,17 @@ const imageBaseUrl = "https://raw.githubusercontent.com/yuhonas/free-exercise-db
 const sourceArgument = process.argv.find((argument) => argument.startsWith("--source="))?.slice(9);
 
 const targetMuscles = [
-  ["chest", 8],
-  ["lats", 5],
-  ["middle back", 5],
-  ["shoulders", 8],
-  ["biceps", 8],
-  ["triceps", 8],
-  ["abdominals", 8],
-  ["quadriceps", 8],
-  ["hamstrings", 8],
-  ["glutes", 8],
-  ["calves", 8],
+  ["chest", 10],
+  ["lats", 8],
+  ["middle back", 8],
+  ["shoulders", 10],
+  ["biceps", 10],
+  ["triceps", 10],
+  ["abdominals", 10],
+  ["quadriceps", 10],
+  ["hamstrings", 10],
+  ["glutes", 10],
+  ["calves", 10],
 ];
 
 const preferredTerms = /push-up|press|fly|row|pull-up|pulldown|raise|curl|extension|dip|crunch|plank|squat|lunge|deadlift|bridge|calf|leg/i;

@@ -1,4 +1,5 @@
 import exerciseData from "../data/exercises.json" with { type: "json" };
+import { translateExerciseLabel } from "./exercise-translations.ts";
 import type { AIExerciseContext, Exercise, ExerciseFilters } from "@/types/exercise";
 
 const safeText = (value: unknown, fallback = "", maxLength = 300) => typeof value === "string" ? value.trim().slice(0, maxLength) : fallback;
@@ -36,7 +37,7 @@ export const getExerciseById = (id: string) => exerciseById.get(id.replace(/[^a-
 export function searchExercises(query: string) {
   const normalizedQuery = fold(query).slice(0, 100);
   if (!normalizedQuery) return getAllExercises();
-  return exercises.filter((exercise) => fold([exercise.name, ...exercise.primaryMuscles, ...exercise.secondaryMuscles, exercise.equipment || ""].join(" ")).includes(normalizedQuery));
+  return exercises.filter((exercise) => fold([exercise.name, ...exercise.primaryMuscles, ...exercise.secondaryMuscles, exercise.equipment || "", ...exercise.primaryMuscles.map((item) => translateExerciseLabel(item)), ...exercise.secondaryMuscles.map((item) => translateExerciseLabel(item)), translateExerciseLabel(exercise.equipment)].join(" ")).includes(normalizedQuery));
 }
 
 export function filterExercises(filters: ExerciseFilters = {}) {
@@ -46,7 +47,7 @@ export function filterExercises(filters: ExerciseFilters = {}) {
   const level = fold(filters.level || "");
   const category = fold(filters.category || "");
   return exercises.filter((exercise) => {
-    const searchable = fold([exercise.name, ...exercise.primaryMuscles, ...exercise.secondaryMuscles, exercise.equipment || ""].join(" "));
+    const searchable = fold([exercise.name, ...exercise.primaryMuscles, ...exercise.secondaryMuscles, exercise.equipment || "", ...exercise.primaryMuscles.map((item) => translateExerciseLabel(item)), ...exercise.secondaryMuscles.map((item) => translateExerciseLabel(item)), translateExerciseLabel(exercise.equipment)].join(" "));
     return (!search || searchable.includes(search))
       && (!muscle || exercise.primaryMuscles.some((item) => fold(item) === muscle) || exercise.secondaryMuscles.some((item) => fold(item) === muscle))
       && (!equipment || fold(exercise.equipment || "none") === equipment)
