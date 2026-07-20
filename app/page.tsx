@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
@@ -315,18 +315,45 @@ function MotionFigure({ pattern, pose }: { pattern: MotionPattern; pose: MotionP
 }
 
 function MotionFigureAnimation({ exercise, compact = false }: { exercise: { name: string; english: string; tone: string }; compact?: boolean }) {
+  const rootRef = useRef<HTMLDivElement>(null);
   const pattern = getMotionPattern(exercise);
   const guide = { ...motionGuides[pattern], focus: localizeMotionFocus(motionGuides[pattern].focus) };
   const [motionStep, setMotionStep] = useState(0);
   const [motionPlaying, setMotionPlaying] = useState(true);
+  const [isVisible, setIsVisible] = useState(true);
+  const [pageVisible, setPageVisible] = useState(() => typeof document === "undefined" || document.visibilityState === "visible");
+  const [reducedMotion, setReducedMotion] = useState(() => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+
   useEffect(() => {
-    if (!motionPlaying) return;
+    const element = rootRef.current;
+    if (!element) return;
+    if (!("IntersectionObserver" in window)) return;
+    const observer = new IntersectionObserver(([entry]) => setIsVisible(entry.isIntersecting), { rootMargin: "160px" });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const updateMotion = () => setReducedMotion(media.matches);
+    const updateVisibility = () => setPageVisible(document.visibilityState === "visible");
+    media.addEventListener("change", updateMotion);
+    document.addEventListener("visibilitychange", updateVisibility);
+    return () => {
+      media.removeEventListener("change", updateMotion);
+      document.removeEventListener("visibilitychange", updateVisibility);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!motionPlaying || !isVisible || !pageVisible || reducedMotion) return;
     const interval = window.setInterval(() => setMotionStep((step) => (step + 1) % 3), compact ? 850 : 1050);
     return () => window.clearInterval(interval);
-  }, [compact, motionPlaying]);
+  }, [compact, motionPlaying, isVisible, pageVisible, reducedMotion]);
+
   const poses: Array<{ pose: MotionPose; label: string }> = [{ pose: "start", label: "Başlangıç" }, { pose: "mid", label: "Hareket" }, { pose: "finish", label: "Kontrol" }];
   const activePose = poses[motionStep];
-  return <div className={`exercise-media exercise-live ${exercise.tone} movement-${pattern} ${compact ? "compact" : ""}`} aria-label={`${exercise.name}: canlı hareket gösterimi`}>
+  return <div ref={rootRef} className={`exercise-media exercise-live ${exercise.tone} movement-${pattern} ${compact ? "compact" : ""}`} aria-label={`${exercise.name}: canlı hareket gösterimi`}>
     {!compact && <div className="motion-header"><span><i /> CANLI HAREKET REHBERİ</span><strong>{guide.action}</strong></div>}
     <div className="motion-stage motion-live-stage">
       <span className="motion-floor" />
@@ -992,7 +1019,7 @@ export default function Home() {
         </section>
       ) : (
         <section className="dashboard">
-          {profileEditing && <div className="profile-editor"><div><div className="eyebrow">PROFİLİ GÜNCELLE</div><h2>Spor ortamını ve ekipmanlarını değiştir</h2><p>Kaydettiğinde AI, yeni profil verilerinle programı yeniden oluşturur.</p><div className="profile-account"><span>DOĞRULANMIŞ HESAP</span><strong>{authUser.email}</strong><small>{authUser.email_confirmed_at ? "E-posta doğrulandı" : "Google hesabıyla giriş yapıldı"}</small><button type="button" onClick={() => void handleSignOut()}>Oturumu kapat</button></div></div><div className="profile-editor-fields"><div className="choice-cards"><button type="button" aria-pressed={gym === "Evde"} className={gym === "Evde" ? "choice selected" : "choice"} onClick={() => setGym("Evde")}><span>⌂</span><strong>Evde</strong><small>Ekipmansız veya ev ekipmanı</small></button><button type="button" aria-pressed={gym === "Salon"} className={gym === "Salon" ? "choice selected" : "choice"} onClick={() => setGym("Salon")}><span>▦</span><strong>Spor salonunda</strong><small>Salon makineleri ve ağırlıklar</small></button></div><label className="textarea-label">EKİPMANLARIN<textarea value={equipmentText} onChange={(event) => setEquipmentText(event.target.value)} placeholder="Örn. dambıl, direnç bandı, sehpa" /></label><label className="textarea-label">İSTEDİĞİN HAREKETLER<textarea value={requestedExercises} onChange={(event) => setRequestedExercises(event.target.value)} placeholder="Örn. Yerde Dambıl Göğüs Presi" /></label><button className="primary-btn" type="button" onClick={() => { setProfileEditing(false); void createPlan(); }} disabled={saving}>{saving ? "AI yeniden tarıyor…" : "Profili kaydet ve programı yenile →"}</button></div></div>}
+          {profileEditing && <div className="profile-editor"><div><div className="eyebrow">PROFİLİ GÜNCELLE</div><h2>Spor ortamını ve ekipmanlarını değiştir</h2><p>Kaydettiğinde AI, yeni profil verilerinle programı yeniden oluşturur.</p><div className="profile-account"><span>DOĞRULANMIŞ HESAP</span><strong>{authUser.email}</strong><small>E-posta doğrulandı</small><button type="button" onClick={() => void handleSignOut()}>Oturumu kapat</button></div></div><div className="profile-editor-fields"><div className="choice-cards"><button type="button" aria-pressed={gym === "Evde"} className={gym === "Evde" ? "choice selected" : "choice"} onClick={() => setGym("Evde")}><span>⌂</span><strong>Evde</strong><small>Ekipmansız veya ev ekipmanı</small></button><button type="button" aria-pressed={gym === "Salon"} className={gym === "Salon" ? "choice selected" : "choice"} onClick={() => setGym("Salon")}><span>▦</span><strong>Spor salonunda</strong><small>Salon makineleri ve ağırlıklar</small></button></div><label className="textarea-label">EKİPMANLARIN<textarea value={equipmentText} onChange={(event) => setEquipmentText(event.target.value)} placeholder="Örn. dambıl, direnç bandı, sehpa" /></label><label className="textarea-label">İSTEDİĞİN HAREKETLER<textarea value={requestedExercises} onChange={(event) => setRequestedExercises(event.target.value)} placeholder="Örn. Yerde Dambıl Göğüs Presi" /></label><button className="primary-btn" type="button" onClick={() => { setProfileEditing(false); void createPlan(); }} disabled={saving}>{saving ? "AI yeniden tarıyor…" : "Profili kaydet ve programı yenile →"}</button></div></div>}
           {activeView === "progress" ? <ProgressView name={name} sessions={sessionHistory} referenceTime={progressReferenceTime} energyMetrics={energyMetrics} /> : activeView === "library" ? <LibraryView onOpenWorkout={(exercise) => { setActiveView("plan"); openWorkout(0, [exercise]); }} onAddWorkout={(exercise) => setAiWorkouts((current) => current.some((item) => item.id === exercise.id) ? current : [...current, exercise])} /> : <>
           {activeWorkout !== null && currentWorkout && currentGuide && currentPrescription ? <div className="workout-player">
             <button className="back-btn" type="button" onClick={() => { setIsRunning(false); setActiveWorkout(null); }}>← Plana dön</button>

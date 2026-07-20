@@ -625,10 +625,7 @@ button,input { font:inherit; } button { cursor:pointer; }
 .auth-panel-heading > span { color:#7d902d; font-size:9px; font-weight:800; letter-spacing:1.6px; }
 .auth-panel-heading h2 { margin:9px 0 8px; font-size:28px; letter-spacing:-1.3px; }
 .auth-panel-heading p,.auth-privacy { margin:0; color:var(--muted-text); font-size:11px; line-height:1.55; }
-.google-auth-button { display:flex; align-items:center; justify-content:center; gap:11px; width:100%; min-height:48px; border:1px solid var(--line); border-radius:8px; background:var(--surface-elevated); color:var(--ink); font-size:12px; font-weight:700; }
-.google-auth-button span { display:grid; place-items:center; width:24px; height:24px; border:1px solid var(--line); border-radius:50%; color:#4285f4; font-size:13px; font-weight:800; }
-.google-auth-button:hover:not(:disabled) { border-color:#9b9b94; transform:translateY(-1px); }
-.google-auth-button:disabled,.auth-submit:disabled { opacity:.55; cursor:wait; }
+.auth-submit:disabled { opacity:.55; cursor:wait; }
 .auth-divider { display:flex; align-items:center; gap:12px; margin:19px 0; color:#aaa; font-size:9px; text-transform:uppercase; letter-spacing:1px; }
 .auth-divider::before,.auth-divider::after { content:""; flex:1; height:1px; background:var(--line); }
 .auth-form { display:grid; gap:14px; }
@@ -655,7 +652,7 @@ button,input { font:inherit; } button { cursor:pointer; }
 .profile-account strong { overflow:hidden; text-overflow:ellipsis; font-size:11px; }
 .profile-account small { color:var(--muted-text); font-size:9px; }
 .profile-account button { justify-self:start; margin-top:7px; padding:0; border:0; background:transparent; color:#9a4c2e; font-size:10px; font-weight:700; text-decoration:underline; }
-.dark .auth-layout,.dark .auth-tabs,.dark .google-auth-button,.dark .auth-form input { background:var(--surface); }
+.dark .auth-layout,.dark .auth-tabs,.dark .auth-form input { background:var(--surface); }
 .dark .auth-story { border-right-color:var(--line); background:#22221f; color:#f7f7ef; }
 .dark .auth-story::after { border-color:rgba(217,247,107,.13); }
 .dark .auth-story h1 em { color:var(--lime); }

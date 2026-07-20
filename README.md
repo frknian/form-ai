@@ -46,7 +46,12 @@ Kalıcı bir kaynak egzersiz eklemek için `scripts/import-free-exercise-db.mjs`
 
 ## Hareket simülasyonu
 
-`components/exercises/ExerciseAnimation.tsx`, başlangıç ve bitiş görsellerini 600–900 ms aralığında döndürür. Animasyon yalnızca kart viewport'a yakınken ve sekme görünürken çalışır; `prefers-reduced-motion` tercihinde durur. Tek görselde timer kurulmaz, bileşen kaldırıldığında interval ve gözlemci temizlenir. Görseller lazy-load edilir ve sabit alan oranı layout kaymasını azaltır.
+Görsel tabanlı hareket simülasyonları (`components/exercises/ExerciseAnimation.tsx`) ve CSS tabanlı anatomik çizimler (`app/page.tsx` altındaki `MotionFigureAnimation`) performans odaklı çalışır:
+
+- **Seçici Yükleme ve Ön-Render (Pre-rendering)**: Hareket simülasyonu aktifken tüm kareler DOM üzerinde mutlak konumlandırma (absolute positioning) ile üst üste yerleştirilir ve görünürlükleri `opacity` ile yönetilir. Bu sayede tarayıcı kareleri önceden indirip decode eder, kare geçişlerindeki titreme (flicker) ve sayfa kaymaları (layout shift) önlenir.
+- **Kaynak Tasarrufu**: Kart ekran dışında (viewport dışı) veya sekme arka plandayken yalnızca aktif/kapak karesi render edilerek gereksiz görsel indirmeleri ve bellek tüketimi engellenir.
+- **Akıllı Duraklatma**: Animasyon döngüleri (`setInterval`) yalnızca ilgili kart viewport sınırları içindeyken (Intersection Observer ile izlenir) ve tarayıcı sekmesi aktifken çalışır. Kullanıcı `prefers-reduced-motion` tercihine sahipse döngüler tamamen devre dışı bırakılır.
+- **Temizlik**: Bileşenler unmount edildiğinde tüm zamanlayıcılar (interval) ve gözlemciler (observer) bellek sızıntısını önlemek için temizlenir.
 
 ## AI kataloğu
 

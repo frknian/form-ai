@@ -51,9 +51,47 @@ export function ExerciseAnimation({ images, name, intervalMs = 750, compact = fa
 
   const visibleFrameIndex = usableImages.length ? frameIndex % usableImages.length : 0;
   const activeImage = usableImages[visibleFrameIndex];
+  const running = shouldCycleFrames(usableImages.length, isVisible, pageVisible, reducedMotion);
 
   return <div ref={rootRef} className={`db-exercise-animation ${compact ? "compact" : "large"}`} aria-label={`${name} hareket simülasyonu`}>
-    {activeImage ? <Image src={activeImage} alt={`${name} hareketinin ${visibleFrameIndex + 1}. aşaması`} width={compact ? 180 : 720} height={compact ? 130 : 460} loading="lazy" unoptimized onError={() => setFailedImages((current) => [...new Set([...current, activeImage])])} /> : <div className="exercise-image-fallback" role="img" aria-label={`${name} için görsel bulunamadı`}><span>↗</span><strong>Egzersiz görseli bulunamadı</strong></div>}
+    {running ? (
+      usableImages.map((image, index) => (
+        <Image
+          key={image}
+          src={image}
+          alt={`${name} hareketinin ${index + 1}. aşaması`}
+          width={compact ? 180 : 720}
+          height={compact ? 130 : 460}
+          unoptimized
+          style={{
+            position: index === 0 ? "relative" : "absolute",
+            top: 0,
+            left: 0,
+            opacity: index === visibleFrameIndex ? 1 : 0,
+            pointerEvents: index === visibleFrameIndex ? "auto" : "none",
+          }}
+          onError={() => setFailedImages((current) => [...new Set([...current, image])])}
+        />
+      ))
+    ) : activeImage ? (
+      <Image
+        src={activeImage}
+        alt={`${name} hareketinin ${visibleFrameIndex + 1}. aşaması`}
+        width={compact ? 180 : 720}
+        height={compact ? 130 : 460}
+        loading="lazy"
+        unoptimized
+        style={{
+          position: "relative",
+          opacity: 1,
+        }}
+        onError={() => setFailedImages((current) => [...new Set([...current, activeImage])])}
+      />
+    ) : (
+      <div className="exercise-image-fallback" role="img" aria-label={`${name} için görsel bulunamadı`}>
+        <span>↗</span><strong>Egzersiz görseli bulunamadı</strong>
+      </div>
+    )}
     {usableImages.length > 1 && <div className="frame-dots" aria-hidden="true">{usableImages.map((image, index) => <i className={index === visibleFrameIndex ? "active" : ""} key={image} />)}</div>}
   </div>;
 }
