@@ -296,3 +296,68 @@ button,input { font:inherit; } button { cursor:pointer; }
   .calorie-card { display:grid; grid-template-columns:minmax(0,1fr) 74px; gap:14px; width:100%; }
   .calorie-note { min-width:0; width:auto; }
 }
+
+/* Üç aşamalı, eklem ve kas vurgulu hareket anlatımı. */
+.exercise-media:not(.compact) { height:380px; }
+.exercise-media:not(.compact) .motion-stage { min-height:235px; }
+.exercise-media:not(.compact) .motion-sequence { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; align-items:stretch; padding:8px 0 16px; }
+.exercise-media:not(.compact) .motion-position { position:relative; min-width:0; min-height:205px; justify-content:flex-end; padding:10px 5px 12px; border:1px solid rgba(34,34,31,.1); border-radius:10px; background:rgba(255,255,255,.28); transition:background .25s ease,border-color .25s ease,box-shadow .25s ease; }
+.exercise-media:not(.compact) .motion-position.active { border-color:rgba(34,34,31,.46); background:rgba(255,255,255,.78); box-shadow:0 8px 20px rgba(34,34,31,.1); }
+.exercise-media:not(.compact) .motion-position.active .motion-figure { opacity:1; }
+.exercise-media:not(.compact) .motion-position.active small { color:var(--ink); }
+.exercise-media:not(.compact) .motion-position .motion-figure { margin-bottom:3px; }
+.motion-position > .motion-route { position:absolute; z-index:5; top:48%; right:-18px; width:24px; margin:0; color:rgba(34,34,31,.55); font-size:22px; font-weight:800; line-height:1; animation:route-pulse 1.2s ease-in-out infinite; }
+.motion-controls { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:2px 0 8px; }
+.motion-controls > div { display:flex; gap:7px; }
+.motion-controls > div button { width:22px; height:5px; min-height:5px; padding:0; border:0; border-radius:99px; background:rgba(34,34,31,.18); }
+.motion-controls > div button.active { background:var(--ink); }
+.motion-play { min-height:34px; padding:0 12px; border:1px solid rgba(34,34,31,.16); border-radius:999px; background:rgba(255,255,255,.55); color:#50504a; font-size:9px; font-weight:800; letter-spacing:.7px; }
+.motion-muscle { position:absolute; z-index:2; left:40px; top:32px; width:31px; height:58px; border-radius:15px 15px 9px 9px; background:rgba(240,124,69,.5); pointer-events:none; }
+.motion-joint { position:absolute; z-index:4; width:7px; height:7px; border:2px solid rgba(255,255,255,.92); border-radius:50%; background:#8da82e; box-shadow:0 0 0 1px rgba(34,34,31,.14); }
+.joint-shoulder { left:50px; top:37px; }.joint-hip { left:51px; top:87px; }.joint-knee { left:26px; top:117px; }
+.motion-position:not(.active) .motion-joint,.exercise-media.compact .motion-joint { opacity:.42; }
+.motion-position.active .motion-muscle { animation:muscle-focus 1.4s ease-in-out infinite; }
+@keyframes muscle-focus { 0%,100% { opacity:.45; } 50% { opacity:.85; box-shadow:0 0 0 5px rgba(240,124,69,.12); } }
+
+/* Orta kare, hareket yolunun yarısını gösterir. */
+.pattern-floor-press.pose-mid .motion-arm { transform:rotate(-90deg) translateX(11px); }.pattern-floor-press.pose-mid .motion-load { top:30px; }
+.pattern-pushup.pose-mid .motion-torso { transform:translateY(7px) rotate(5deg); }.pattern-pushup.pose-mid .motion-head { transform:translateY(7px); }.pattern-pushup.pose-mid .motion-arm { transform:translateY(5px) rotate(52deg); }
+.pattern-squat.pose-mid .motion-torso,.pattern-squat.pose-mid .motion-head { transform:translateY(13px); }.pattern-squat.pose-mid .motion-arm { transform:translateY(12px) rotate(175deg); }.pattern-squat.pose-mid .leg-left { transform:translateY(4px) rotate(130deg); }.pattern-squat.pose-mid .leg-right { transform:translateY(4px) rotate(51deg); }
+.pattern-lunge.pose-mid .motion-torso,.pattern-lunge.pose-mid .motion-head { transform:translateY(10px); }.pattern-lunge.pose-mid .motion-arm { transform:translateY(9px) rotate(92deg); }.pattern-lunge.pose-mid .leg-left { transform:translate(-3px,4px) rotate(151deg); }.pattern-lunge.pose-mid .leg-right { transform:translate(1px,4px) rotate(31deg); }
+.pattern-hinge.pose-mid .motion-torso,.pattern-row.pose-mid .motion-torso { transform:rotate(30deg) translate(10px,-3px); }.pattern-hinge.pose-mid .motion-head,.pattern-row.pose-mid .motion-head { transform:translate(16px,17px); }.pattern-hinge.pose-mid .motion-arm { transform:translate(9px,11px) rotate(86deg); }
+.pattern-row.pose-mid .motion-arm { transform:translate(14px,17px) rotate(118deg); }
+.pattern-bridge.pose-mid .motion-torso { transform:translateY(-11px) rotate(-8deg); }.pattern-bridge.pose-mid .motion-head { transform:translateY(-2px); }.pattern-bridge.pose-mid .motion-leg { transform:translateY(-5px) rotate(152deg); }
+.pattern-overhead.pose-mid .arm-left { transform:translate(-2px,-14px) rotate(130deg); }.pattern-overhead.pose-mid .arm-right { transform:translate(2px,-14px) rotate(50deg); }.pattern-overhead.pose-mid .motion-load { top:25px; }
+.pattern-press.pose-mid .arm-left { transform:translateX(-8px) rotate(170deg); }.pattern-press.pose-mid .arm-right { transform:translateX(8px) rotate(10deg); }
+.pattern-pulldown.pose-mid .arm-left { transform:translate(-1px,-12px) rotate(132deg); }.pattern-pulldown.pose-mid .arm-right { transform:translate(1px,-12px) rotate(48deg); }
+.pattern-core.pose-mid .motion-torso { transform:rotate(-12deg) translate(-2px,4px); }.pattern-core.pose-mid .motion-head { transform:translate(-9px,9px); }.pattern-core.pose-mid .leg-left { transform:rotate(134deg); }.pattern-core.pose-mid .arm-right { transform:rotate(26deg); }
+.pattern-cardio.pose-mid .motion-figure { transform:scale(.72) translateY(-7px); }.pattern-mobility.pose-mid .motion-torso { transform:rotate(-9deg); }.pattern-mobility.pose-mid .motion-head { transform:translate(-7px,2px); }
+
+/* Yeni hareket aileleri: curl, triceps, raise, fly, baldır ve bacak makinesi. */
+.pattern-curl .motion-load,.pattern-raise .motion-load,.pattern-fly .motion-load { display:block; }
+.pattern-curl.pose-start .motion-arm { transform:rotate(88deg); }.pattern-curl.pose-start .motion-load { top:78px; }.pattern-curl.pose-mid .arm-left { transform:rotate(122deg); }.pattern-curl.pose-mid .arm-right { transform:rotate(58deg); }.pattern-curl.pose-mid .motion-load { top:57px; }.pattern-curl.pose-finish .arm-left { transform:rotate(155deg); }.pattern-curl.pose-finish .arm-right { transform:rotate(25deg); }.pattern-curl.pose-finish .motion-load { top:39px; }
+.pattern-triceps.pose-start .arm-left { transform:rotate(145deg); }.pattern-triceps.pose-start .arm-right { transform:rotate(35deg); }.pattern-triceps.pose-mid .arm-left { transform:rotate(118deg); }.pattern-triceps.pose-mid .arm-right { transform:rotate(62deg); }.pattern-triceps.pose-finish .motion-arm { transform:rotate(88deg); }
+.pattern-raise.pose-start .motion-arm { transform:rotate(88deg); }.pattern-raise.pose-start .motion-load { top:78px; }.pattern-raise.pose-mid .arm-left { transform:rotate(135deg); }.pattern-raise.pose-mid .arm-right { transform:rotate(45deg); }.pattern-raise.pose-mid .motion-load { top:56px; }.pattern-raise.pose-finish .arm-left { transform:rotate(180deg); }.pattern-raise.pose-finish .arm-right { transform:rotate(0deg); }.pattern-raise.pose-finish .motion-load { top:37px; }
+.pattern-fly.pose-start .arm-left { transform:rotate(180deg); }.pattern-fly.pose-start .arm-right { transform:rotate(0deg); }.pattern-fly.pose-mid .arm-left { transform:rotate(150deg); }.pattern-fly.pose-mid .arm-right { transform:rotate(30deg); }.pattern-fly.pose-finish .arm-left { transform:rotate(112deg); }.pattern-fly.pose-finish .arm-right { transform:rotate(68deg); }.pattern-fly .motion-load { top:41px; }
+.pattern-calf.pose-mid { transform:scale(.72) translateY(-7px); }.pattern-calf.pose-finish { transform:scale(.72) translateY(-14px); }.pattern-calf .motion-muscle { left:18px; top:91px; width:18px; height:42px; }
+.pattern-leg-machine.motion-figure { width:145px; height:115px; margin:0 -24px -8px; }.pattern-leg-machine .motion-support { display:block; left:37px; top:59px; width:48px; height:48px; }.pattern-leg-machine .motion-head { left:82px; top:20px; }.pattern-leg-machine .motion-torso { left:64px; top:39px; width:25px; height:54px; transform:rotate(-10deg); }.pattern-leg-machine .motion-arm { left:69px; top:52px; transform:rotate(118deg); }.pattern-leg-machine .motion-leg { left:58px; top:84px; }.pattern-leg-machine.pose-start .motion-leg { transform:rotate(70deg); }.pattern-leg-machine.pose-mid .motion-leg { transform:rotate(35deg); }.pattern-leg-machine.pose-finish .motion-leg { transform:rotate(3deg); }.pattern-leg-machine .motion-muscle { left:53px; top:76px; width:44px; height:16px; }
+.pattern-curl .motion-muscle,.pattern-triceps .motion-muscle,.pattern-raise .motion-muscle,.pattern-fly .motion-muscle { left:42px; top:34px; width:28px; height:24px; }
+
+@media (prefers-reduced-motion:reduce) {
+  .motion-position.active .motion-muscle,.motion-position > .motion-route { animation:none; }
+}
+
+@media (max-width:700px) {
+  .exercise-media:not(.compact) { height:350px; padding:12px; }
+  .exercise-media:not(.compact) .motion-stage { min-height:215px; }
+  .exercise-media:not(.compact) .motion-sequence { gap:6px; }
+  .exercise-media:not(.compact) .motion-position { min-height:188px; padding-inline:1px; }
+  .exercise-media:not(.compact) .motion-position .motion-figure { transform:scale(.56); margin-inline:-24px; }
+  .motion-position > .motion-route { right:-13px; width:19px; font-size:18px; }
+  .motion-position small { font-size:7px; letter-spacing:.3px; }
+  .motion-caption { align-items:flex-start; }
+}
+
+.exercise-media.compact .motion-sequence { display:grid; grid-template-columns:1fr 1fr; align-items:end; }
+.exercise-media.compact .motion-position { position:relative; min-width:0; }
+.exercise-media.compact .motion-position > .motion-route { right:-9px; top:47%; width:16px; font-size:17px; }

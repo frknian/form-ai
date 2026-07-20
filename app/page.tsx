@@ -232,7 +232,8 @@ function createPersonalPlan(gym: string, equipmentText: string, history: string[
 }
 
 type AiWorkout = { name: string; english: string; area: string; sets: string; rest: string; seconds: number; tone: string; icon: string; level: string; instructions: string };
-type MotionPattern = "floor-press" | "pushup" | "press" | "overhead" | "row" | "pulldown" | "squat" | "lunge" | "hinge" | "bridge" | "plank" | "core" | "cardio" | "mobility";
+type MotionPattern = "floor-press" | "pushup" | "press" | "overhead" | "row" | "pulldown" | "squat" | "lunge" | "hinge" | "bridge" | "plank" | "core" | "cardio" | "mobility" | "curl" | "triceps" | "raise" | "fly" | "calf" | "leg-machine";
+type MotionPose = "start" | "mid" | "finish";
 type WorkoutPhase = "work" | "rest" | "done";
 type WorkoutSessionRecord = { id: string; completedAt: string; durationSeconds: number; calories: number; completedExercises: number; totalExercises: number; exerciseNames: string[] };
 type AiPlanAnalysis = { experienceLevel: string; weeklyFrequency: string; sessionMinutes: number; primaryGoal: string; intensity: string; equipmentMode: string; focusAreas: string[]; adaptations: string[] };
@@ -255,19 +256,31 @@ const motionGuides: Record<MotionPattern, { action: string; focus: string; start
   core: { action: "MERKEZİ KONTROL ET", focus: "Karın · bel çevresi · kalça", start: "Bel boşluğunu kontrol et, kaburgaları aşağıda tut.", move: "Kol veya bacak hareket ederken gövdeyi sabit bırak.", finish: "Kontrolü kaybetmeden başlangıca dön.", breathe: "Zor bölümde yavaşça nefes ver.", mistake: "Hız için bel kontrolünden vazgeçme." },
   cardio: { action: "RİTMİ KORU", focus: "Nabız · bacak · koordinasyon", start: "Gövdeyi dengeli tut, iniş için dizleri yumuşat.", move: "Kollar ve bacakları eş zamanlı, kontrollü ritimde hareket ettir.", finish: "Yumuşak inişlerle ritmi sürdür.", breathe: "Konuşabilecek kadar düzenli nefes al.", mistake: "Sert iniş yapma ve kontrolsüz hızlanma." },
   mobility: { action: "KONTROLLÜ UZAT", focus: "Hareket açıklığı · nefes", start: "Omurgayı uzun tut, eklemleri rahat bırak.", move: "Ağrısız aralıkta gerilimi yavaşça artır.", finish: "Sekmeden ve zorlamadan başlangıca dön.", breathe: "Burundan yavaşça nefes alıp ver.", mistake: "Ağrının içine ilerleme ve nefesi tutma." },
+  curl: { action: "DİRSEĞİ BÜK", focus: "Biceps · ön kol", start: "Dirsekleri gövdenin yanında sabitle, bilekleri düz tut.", move: "Ağırlığı omuza doğru kaldırırken yalnızca dirseği bük.", finish: "Üstte kısa süre sık, ağırlığı savurmadan yavaşça indir.", breathe: "Kaldırırken nefes ver, indirirken al.", mistake: "Dirsekleri öne taşıma ve gövdeyi geriye savurma." },
+  triceps: { action: "DİRSEĞİ AÇ", focus: "Triceps · omuz dengesi", start: "Üst kolu sabitle, dirseği kontrollü bükülü tut.", move: "Ön kolu uzatarak dirseği aç ve tricepsi sık.", finish: "Dirseği yerinden oynatmadan yavaşça başlangıca dön.", breathe: "Kolu uzatırken nefes ver.", mistake: "Omzu öne düşürme ve dirseği yana açma." },
+  raise: { action: "KOLU KALDIR", focus: "Omuz · üst sırt", start: "Kolları gövdenin yanında, dirsekleri hafif bükülü tut.", move: "Ağırlıkları omuz hizasına kadar kontrollü kaldır.", finish: "Omuzları aşağıda tutarak aynı yoldan yavaşça indir.", breathe: "Kaldırırken nefes ver.", mistake: "Ağırlığı savurma ve omuz hizasının çok üstüne çıkma." },
+  fly: { action: "KOLLARI KAPAT", focus: "Göğüs · ön omuz", start: "Kolları iki yana aç, dirseklerde yumuşak bir açı bırak.", move: "Göğsünü sıkarak kolları geniş bir yay çizerek birleştir.", finish: "Omuz kontrolünü kaybetmeden kolları yavaşça yeniden aç.", breathe: "Kolları kapatırken nefes ver.", mistake: "Dirsek açısını değiştirme ve omuzu öne yuvarlama." },
+  calf: { action: "TOPUKLARI KALDIR", focus: "Baldır · ayak bileği", start: "Ayak tabanını dengeli bas, dizleri kilitleme.", move: "Başparmak kökünden güç alıp topukları kontrollü yükselt.", finish: "Üstte kısa dur, topukları yavaşça aşağı indir.", breathe: "Yükselirken nefes ver.", mistake: "Ayak bileklerini dışa kaçırma ve zıplama." },
+  "leg-machine": { action: "DİZİ AÇ / BÜK", focus: "Ön veya arka bacak", start: "Kalçanı ve belini mindere sabitle, makine eksenini dizinle hizala.", move: "Dizi kontrollü aç veya bük; hareketi bacak kasıyla yönet.", finish: "Ağırlıkları birbirine çarptırmadan yavaşça başlangıca dön.", breathe: "Zor bölümde nefes ver.", mistake: "Kalçayı minderden kaldırma ve ağırlığı hızla bırakma." },
 };
 
 function getMotionPattern(exercise: { name: string; english: string }): MotionPattern {
   const text = `${exercise.name} ${exercise.english}`.toLocaleLowerCase("tr-TR");
   if (/floor press|yerde dambıl göğüs/.test(text)) return "floor-press";
+  if (/lateral raise|front raise|yana .*açış|ön dambıl|scaption/.test(text)) return "raise";
+  if (/chest fly|fly|pec deck|crossover|göğüs açış/.test(text)) return "fly";
+  if (/curl/.test(text) && !/leg curl/.test(text)) return "curl";
+  if (/triceps|skull crusher|kickback|jm press|dar şınav|close grip/.test(text)) return "triceps";
+  if (/calf|baldır/.test(text)) return "calf";
+  if (/leg extension|leg curl|bacak açış|bacak curl/.test(text)) return "leg-machine";
   if (/push-up|şınav|dip/.test(text)) return "pushup";
-  if (/shoulder press|military press|arnold press|overhead press|lateral raise|front raise/.test(text)) return "overhead";
+  if (/shoulder press|military press|arnold press|overhead press/.test(text)) return "overhead";
   if (/pulldown|pull-up|chin-up|barfiks|hang/.test(text)) return "pulldown";
   if (/row|face pull|reverse fly|rear delt/.test(text)) return "row";
   if (/deadlift|romanian|good morning|pull-through|swing/.test(text)) return "hinge";
   if (/hip thrust|glute bridge|bridge/.test(text)) return "bridge";
   if (/lunge|split squat|step-up|step up|cossack/.test(text)) return "lunge";
-  if (/squat|leg press|calf raise|wall sit|leg extension|leg curl/.test(text)) return "squat";
+  if (/squat|leg press|wall sit/.test(text)) return "squat";
   if (/plank|mountain climber|bear crawl|inchworm/.test(text)) return "plank";
   if (/crunch|dead bug|hollow|v-up|leg raise|pallof|woodchop|ab wheel|russian twist|bird dog|superman/.test(text)) return "core";
   if (/stretch|pose|rotation|mobility|90\/90|dislocate|rocker/.test(text)) return "mobility";
@@ -279,24 +292,30 @@ function getMotionGuide(exercise: { name: string; english: string }) {
   return motionGuides[getMotionPattern(exercise)];
 }
 
-function MotionFigure({ pattern, pose }: { pattern: MotionPattern; pose: "start" | "finish" }) {
-  return <span className={`motion-figure pattern-${pattern} pose-${pose}`} aria-hidden="true"><span className="motion-support" /><span className="motion-head" /><span className="motion-torso" /><span className="motion-arm arm-left" /><span className="motion-arm arm-right" /><span className="motion-leg leg-left" /><span className="motion-leg leg-right" /><span className="motion-load load-left" /><span className="motion-load load-right" /></span>;
+function MotionFigure({ pattern, pose }: { pattern: MotionPattern; pose: MotionPose }) {
+  return <span className={`motion-figure pattern-${pattern} pose-${pose}`} aria-hidden="true"><span className="motion-support" /><span className="motion-muscle" /><span className="motion-head" /><span className="motion-torso" /><span className="motion-arm arm-left" /><span className="motion-arm arm-right" /><span className="motion-leg leg-left" /><span className="motion-leg leg-right" /><span className="motion-joint joint-shoulder" /><span className="motion-joint joint-hip" /><span className="motion-joint joint-knee" /><span className="motion-load load-left" /><span className="motion-load load-right" /></span>;
 }
 
 function ExerciseAnimation({ exercise, compact = false }: { exercise: { name: string; english: string; tone: string }; compact?: boolean }) {
   const pattern = getMotionPattern(exercise);
   const guide = motionGuides[pattern];
-  return <div className={`exercise-media ${exercise.tone} movement-${pattern} ${compact ? "compact" : ""}`} aria-label={`${exercise.name}: başlangıç ve bitiş pozisyonu`}>
-    {!compact && <div className="motion-header"><span>NASIL HAREKET EDER?</span><strong>{guide.action}</strong></div>}
+  const [motionStep, setMotionStep] = useState(0);
+  const [motionPlaying, setMotionPlaying] = useState(!compact);
+  useEffect(() => {
+    if (compact || !motionPlaying) return;
+    const interval = window.setInterval(() => setMotionStep((step) => (step + 1) % 3), 1400);
+    return () => window.clearInterval(interval);
+  }, [compact, motionPlaying]);
+  const poses: Array<{ pose: MotionPose; label: string }> = compact ? [{ pose: "start", label: "Başlangıç" }, { pose: "finish", label: "Bitiş" }] : [{ pose: "start", label: "Başlangıç" }, { pose: "mid", label: "Hareket" }, { pose: "finish", label: "Kontrol" }];
+  return <div className={`exercise-media ${exercise.tone} movement-${pattern} ${compact ? "compact" : ""}`} aria-label={`${exercise.name}: üç aşamalı hareket gösterimi`}>
+    {!compact && <div className="motion-header"><span>HAREKETİ ADIM ADIM İZLE</span><strong>{guide.action}</strong></div>}
     <div className="motion-stage">
       <span className="motion-floor" />
       <div className="motion-sequence">
-        <div className="motion-position"><MotionFigure pattern={pattern} pose="start" /><small>1 · Başlangıç</small></div>
-        <div className="motion-route"><span>→</span><small>{guide.action}</small></div>
-        <div className="motion-position"><MotionFigure pattern={pattern} pose="finish" /><small>2 · Bitiş</small></div>
+        {poses.map((item, index) => <div className={`motion-position ${!compact && motionStep === index ? "active" : ""}`} key={item.pose}><MotionFigure pattern={pattern} pose={item.pose} /><small>{index + 1} · {item.label}</small>{index < poses.length - 1 && <span className="motion-route" aria-hidden="true">→</span>}</div>)}
       </div>
     </div>
-    {!compact && <div className="motion-caption"><strong>{guide.focus}</strong><span>{guide.move}</span></div>}
+    {!compact && <><div className="motion-controls"><div aria-label={`Gösterilen aşama: ${motionStep + 1} / 3`}>{poses.map((item, index) => <button type="button" aria-label={`${index + 1}. aşamayı göster: ${item.label}`} className={motionStep === index ? "active" : ""} onClick={() => { setMotionStep(index); setMotionPlaying(false); }} key={item.pose} />)}</div><button type="button" className="motion-play" onClick={() => setMotionPlaying((playing) => !playing)}>{motionPlaying ? "Durdur Ⅱ" : "Yavaş oynat ▶"}</button></div><div className="motion-caption"><strong>{guide.focus}</strong><span>{guide.move}</span></div></>}
   </div>;
 }
 

@@ -46,6 +46,15 @@ test("keeps the AI plan and movement library wired into the product", async () =
   assert.match(page, /exerciseCatalog/);
   assert.match(page, /ExerciseAnimation/);
   assert.match(page, /floor-press/);
+  assert.match(page, /type MotionPose = "start" \| "mid" \| "finish"/);
+  assert.match(page, /HAREKETİ ADIM ADIM İZLE/);
+  assert.match(page, /Yavaş oynat/);
+  assert.match(page, /motion-muscle/);
+  assert.match(page, /"leg-machine"/);
+  assert.match(page, /return "curl"/);
+  assert.match(page, /return "triceps"/);
+  assert.match(page, /return "raise"/);
+  assert.match(page, /return "fly"/);
   assert.match(page, /NEFES/);
   assert.match(page, /SIK HATA/);
   assert.match(page, /Dinlenmeyi atla/);
@@ -69,6 +78,9 @@ test("keeps the AI plan and movement library wired into the product", async () =
   assert.match(route, /UYGULAMADA KULLANILABİLEN HAREKET KATALOĞU/);
   assert.match(route, /photoDataUrl/);
   assert.match(layout, /form\.ai — Sana özel antrenman/);
+  assert.match(layout, /generateMetadata/);
+  assert.match(layout, /og\.png/);
+  assert.match(layout, /x-forwarded-host/);
   assert.doesNotMatch(page, /gymvisual|iframe/i);
   assert.doesNotMatch(page, /knowledge-sources|fitnessSources/);
   assert.doesNotMatch(route, /knowledge-sources|fitnessSources/);
