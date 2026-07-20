@@ -2,7 +2,9 @@
 
 import { ChangeEvent, lazy, Suspense, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
+import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
+import { AuthScreen } from "@/components/AuthScreen";
 import { adaptPrescription, summarizeTrainingAdaptation, type TrainingAdaptation, type WorkoutDifficulty } from "@/lib/training-adaptation";
 import { ExerciseAnimation as ExerciseFrameAnimation } from "@/components/exercises/ExerciseAnimation";
 import { ExerciseLibrary } from "@/components/exercises/ExerciseLibrary";
@@ -534,6 +536,8 @@ function ReadyPrograms({ onApply }: { onApply: (program: typeof readyPrograms[nu
 }
 
 export default function Home() {
+  const [authStatus, setAuthStatus] = useState<"loading" | "anonymous" | "authenticated" | "unavailable">("loading");
+  const [authUser, setAuthUser] = useState<User | null>(null);
   const [step, setStep] = useState(1);
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
@@ -629,13 +633,60 @@ export default function Home() {
   }
 
   useEffect(() => {
+    const supabase = createClient();
+    if (!supabase) {
+      queueMicrotask(() => setAuthStatus("unavailable"));
+      return;
+    }
+
+    let cancelled = false;
+    void supabase.auth.getUser().then(({ data }) => {
+      if (cancelled) return;
+      setAuthUser(data.user);
+      setAuthStatus(data.user ? "authenticated" : "anonymous");
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (cancelled) return;
+      setAuthUser(session?.user ?? null);
+      setAuthStatus(session?.user ? "authenticated" : "anonymous");
+    });
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!authUser) return;
+    let cancelled = false;
+    async function loadProfile() {
+      const supabase = createClient();
+      if (!supabase) return;
+      const { data: profile } = await supabase.from("profiles").select("*").eq("id", authUser!.id).maybeSingle();
+      if (cancelled || !profile) return;
+      setName(typeof profile.display_name === "string" ? profile.display_name : "");
+      setAge(profile.age ? String(profile.age) : "");
+      setGender(typeof profile.gender === "string" ? profile.gender : "Kadın");
+      setHeight(profile.height_cm ? String(profile.height_cm) : "");
+      setWeight(profile.weight_kg ? String(profile.weight_kg) : "");
+      setGym(profile.environment === "Salon" ? "Salon" : "Evde");
+      setEquipmentText(typeof profile.equipment_text === "string" ? profile.equipment_text : "");
+      setGoalText(typeof profile.goal_text === "string" ? profile.goal_text : "");
+      const savedHistory = Array.isArray(profile.history_answers) ? profile.history_answers.map(String).slice(0, 10) : [];
+      if (savedHistory.length) setHistory([...savedHistory, ...Array(10).fill("")].slice(0, 10));
+      if (savedHistory.length === 10) setStep(5);
+    }
+    void loadProfile();
+    return () => { cancelled = true; };
+  }, [authUser]);
+
+  useEffect(() => {
     let cancelled = false;
     async function loadWorkoutHistory() {
       try {
         const supabase = createClient();
         if (!supabase) return;
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+        if (!authUser) return;
         const { data } = await supabase.from("workout_sessions").select("*").order("completed_at", { ascending: false }).limit(20);
         if (!cancelled && data) setSessionHistory(data.map((session) => ({ id: String(session.id), completedAt: String(session.completed_at), durationSeconds: Number(session.duration_seconds), calories: Number(session.calories), completedExercises: Number(session.completed_exercises), totalExercises: Number(session.total_exercises), exerciseNames: Array.isArray(session.exercise_names) ? session.exercise_names.map(String) : [], difficulty: session.difficulty === "Kolay" || session.difficulty === "Uygun" || session.difficulty === "Zor" ? session.difficulty : undefined, fatigue: session.fatigue ? Number(session.fatigue) : undefined, painAreas: Array.isArray(session.pain_areas) ? session.pain_areas.map(String) : [], feedbackNote: typeof session.feedback_note === "string" ? session.feedback_note : undefined })));
       } catch {
@@ -644,7 +695,7 @@ export default function Home() {
     }
     void loadWorkoutHistory();
     return () => { cancelled = true; };
-  }, []);
+  }, [authUser]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
@@ -861,6 +912,36 @@ export default function Home() {
     setActiveView("plan");
   }
 
+  function handleSignedIn(user: User) {
+    setAuthUser(user);
+    setAuthStatus("authenticated");
+  }
+
+  async function handleSignOut() {
+    const supabase = createClient();
+    if (supabase) await supabase.auth.signOut();
+    setAuthUser(null);
+    setAuthStatus("anonymous");
+    setStep(1);
+    setName("");
+    setAge("");
+    setHeight("");
+    setWeight("");
+    setGender("Kadın");
+    setGym("Evde");
+    setEquipmentText("");
+    setGoalText("");
+    setRequestedExercises("");
+    setHistory(Array(10).fill(""));
+    setSessionHistory([]);
+    setAiWorkouts([]);
+    setProfileEditing(false);
+  }
+
+  if (authStatus !== "authenticated" || !authUser) {
+    return <AuthScreen status={authStatus === "authenticated" ? "loading" : authStatus} onSignedIn={handleSignedIn} />;
+  }
+
   return (
     <main className="app-shell">
       {step === 5 && <nav className="topbar">
@@ -911,7 +992,7 @@ export default function Home() {
         </section>
       ) : (
         <section className="dashboard">
-          {profileEditing && <div className="profile-editor"><div><div className="eyebrow">PROFİLİ GÜNCELLE</div><h2>Spor ortamını ve ekipmanlarını değiştir</h2><p>Kaydettiğinde AI, yeni profil verilerinle programı yeniden oluşturur.</p></div><div className="profile-editor-fields"><div className="choice-cards"><button type="button" aria-pressed={gym === "Evde"} className={gym === "Evde" ? "choice selected" : "choice"} onClick={() => setGym("Evde")}><span>⌂</span><strong>Evde</strong><small>Ekipmansız veya ev ekipmanı</small></button><button type="button" aria-pressed={gym === "Salon"} className={gym === "Salon" ? "choice selected" : "choice"} onClick={() => setGym("Salon")}><span>▦</span><strong>Spor salonunda</strong><small>Salon makineleri ve ağırlıklar</small></button></div><label className="textarea-label">EKİPMANLARIN<textarea value={equipmentText} onChange={(event) => setEquipmentText(event.target.value)} placeholder="Örn. dambıl, direnç bandı, sehpa" /></label><label className="textarea-label">İSTEDİĞİN HAREKETLER<textarea value={requestedExercises} onChange={(event) => setRequestedExercises(event.target.value)} placeholder="Örn. Yerde Dambıl Göğüs Presi" /></label><button className="primary-btn" type="button" onClick={() => { setProfileEditing(false); void createPlan(); }} disabled={saving}>{saving ? "AI yeniden tarıyor…" : "Profili kaydet ve programı yenile →"}</button></div></div>}
+          {profileEditing && <div className="profile-editor"><div><div className="eyebrow">PROFİLİ GÜNCELLE</div><h2>Spor ortamını ve ekipmanlarını değiştir</h2><p>Kaydettiğinde AI, yeni profil verilerinle programı yeniden oluşturur.</p><div className="profile-account"><span>DOĞRULANMIŞ HESAP</span><strong>{authUser.email}</strong><small>{authUser.email_confirmed_at ? "E-posta doğrulandı" : "Google hesabıyla giriş yapıldı"}</small><button type="button" onClick={() => void handleSignOut()}>Oturumu kapat</button></div></div><div className="profile-editor-fields"><div className="choice-cards"><button type="button" aria-pressed={gym === "Evde"} className={gym === "Evde" ? "choice selected" : "choice"} onClick={() => setGym("Evde")}><span>⌂</span><strong>Evde</strong><small>Ekipmansız veya ev ekipmanı</small></button><button type="button" aria-pressed={gym === "Salon"} className={gym === "Salon" ? "choice selected" : "choice"} onClick={() => setGym("Salon")}><span>▦</span><strong>Spor salonunda</strong><small>Salon makineleri ve ağırlıklar</small></button></div><label className="textarea-label">EKİPMANLARIN<textarea value={equipmentText} onChange={(event) => setEquipmentText(event.target.value)} placeholder="Örn. dambıl, direnç bandı, sehpa" /></label><label className="textarea-label">İSTEDİĞİN HAREKETLER<textarea value={requestedExercises} onChange={(event) => setRequestedExercises(event.target.value)} placeholder="Örn. Yerde Dambıl Göğüs Presi" /></label><button className="primary-btn" type="button" onClick={() => { setProfileEditing(false); void createPlan(); }} disabled={saving}>{saving ? "AI yeniden tarıyor…" : "Profili kaydet ve programı yenile →"}</button></div></div>}
           {activeView === "progress" ? <ProgressView name={name} sessions={sessionHistory} referenceTime={progressReferenceTime} energyMetrics={energyMetrics} /> : activeView === "library" ? <LibraryView onOpenWorkout={(exercise) => { setActiveView("plan"); openWorkout(0, [exercise]); }} onAddWorkout={(exercise) => setAiWorkouts((current) => current.some((item) => item.id === exercise.id) ? current : [...current, exercise])} /> : <>
           {activeWorkout !== null && currentWorkout && currentGuide && currentPrescription ? <div className="workout-player">
             <button className="back-btn" type="button" onClick={() => { setIsRunning(false); setActiveWorkout(null); }}>← Plana dön</button>

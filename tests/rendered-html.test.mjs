@@ -14,17 +14,36 @@ async function render() {
   );
 }
 
-test("server-renders the form.ai fitness onboarding", async () => {
+test("server-renders the secure form.ai account entry", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
 
   const html = await response.text();
   assert.match(html, /<title>form\.ai — Sana özel antrenman<\/title>/i);
-  assert.match(html, /Vücudunu tanı,/i);
+  assert.match(html, /Güvenli hesabın hazırlanıyor/i);
   assert.doesNotMatch(html, /class="topbar"/);
   assert.doesNotMatch(html, />Antrenmanım</);
   assert.doesNotMatch(html, /Your site is taking shape|Building your site|codex-preview/i);
+});
+
+test("keeps email verification and Google authentication wired into profile creation", async () => {
+  const [page, authScreen, callback] = await Promise.all([
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../components/AuthScreen.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/auth/callback/page.tsx", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(page, /onAuthStateChange/);
+  assert.match(page, /auth\.signOut/);
+  assert.match(page, /DOĞRULANMIŞ HESAP/);
+  assert.match(authScreen, /auth\.signUp/);
+  assert.match(authScreen, /emailRedirectTo/);
+  assert.match(authScreen, /auth\.resend/);
+  assert.match(authScreen, /signInWithPassword/);
+  assert.match(authScreen, /signInWithOAuth/);
+  assert.match(authScreen, /provider: "google"/);
+  assert.match(callback, /exchangeCodeForSession/);
 });
 
 test("keeps the AI plan and movement library wired into the product", async () => {
