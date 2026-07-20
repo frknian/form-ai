@@ -28,8 +28,17 @@ create table if not exists public.workout_sessions (
   completed_exercises smallint not null default 0 check (completed_exercises >= 0),
   total_exercises smallint not null check (total_exercises > 0),
   exercise_names jsonb not null default '[]'::jsonb,
+  difficulty text check (difficulty in ('Kolay', 'Uygun', 'Zor')),
+  fatigue smallint check (fatigue between 1 and 5),
+  pain_areas jsonb not null default '[]'::jsonb,
+  feedback_note text,
   created_at timestamptz not null default now()
 );
+
+alter table public.workout_sessions add column if not exists difficulty text check (difficulty in ('Kolay', 'Uygun', 'Zor'));
+alter table public.workout_sessions add column if not exists fatigue smallint check (fatigue between 1 and 5);
+alter table public.workout_sessions add column if not exists pain_areas jsonb not null default '[]'::jsonb;
+alter table public.workout_sessions add column if not exists feedback_note text;
 
 create index if not exists workout_sessions_user_completed_idx
   on public.workout_sessions (user_id, completed_at desc);

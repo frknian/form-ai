@@ -60,6 +60,10 @@ test("keeps the AI plan and movement library wired into the product", async () =
   assert.match(page, /Dinlenmeyi atla/);
   assert.match(page, /Antrenmanı bitir ve kaydet/);
   assert.match(page, /workout_sessions/);
+  assert.match(page, /ZAMANLA UYARLANAN PROGRAM/);
+  assert.match(page, /Kaydet ve programımı uyarla/);
+  assert.match(page, /summarizeTrainingAdaptation/);
+  assert.match(page, /trainingHistory/);
   assert.match(page, /calculateEnergyMetrics/);
   assert.match(page, /workoutMet/);
   assert.match(page, /AI KİŞİSELLEŞTİRME RAPORU/);
@@ -77,6 +81,7 @@ test("keeps the AI plan and movement library wired into the product", async () =
   assert.match(route, /profileFingerprint/);
   assert.match(route, /UYGULAMADA KULLANILABİLEN HAREKET KATALOĞU/);
   assert.match(route, /photoDataUrl/);
+  assert.match(route, /ÖNCEKİ ANTRENMANLAR VE KULLANICI GERİ BİLDİRİMLERİ/);
   assert.match(layout, /form\.ai — Sana özel antrenman/);
   assert.match(layout, /generateMetadata/);
   assert.match(layout, /og\.png/);
@@ -86,4 +91,6 @@ test("keeps the AI plan and movement library wired into the product", async () =
   assert.doesNotMatch(route, /knowledge-sources|fitnessSources/);
   assert.match(supabaseSchema, /create table if not exists public\.workout_sessions/i);
   assert.match(supabaseSchema, /Users can read own workout sessions/i);
+  assert.match(supabaseSchema, /difficulty text/i);
+  assert.match(supabaseSchema, /pain_areas jsonb/i);
 });

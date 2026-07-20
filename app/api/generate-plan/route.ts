@@ -6,6 +6,9 @@ const plannerRules = [
   "Fotoğraf, BMI veya metinlerden tıbbi tanı ya da kesin yağ oranı çıkarma.",
   "Fotoğraf varsa yalnızca görünür duruş ve genel vücut dağılımına ilişkin yaklaşık, tanısal olmayan gözlem kullan.",
   "Isınma, ana bölüm, dinlenme, soğuma ve dört haftalık ilerleme önerisi üret.",
+  "Önceki antrenmanların tamamlama oranı, algılanan zorluk, yorgunluk ve ağrı geri bildirimlerini birlikte değerlendir.",
+  "Ağrı veya yüksek yorgunluk varsa yükü artırma; riskli hareketi daha güvenli bir katalog hareketiyle değiştir.",
+  "En az iki kolay, düşük yorgunluklu ve yüzde 90 üzeri tamamlanan kayıt olmadan otomatik yük artışı yapma.",
 ];
 
 const responseSchema = {
@@ -97,6 +100,8 @@ export async function POST(request: Request) {
   delete profile.photoDataUrl;
   delete profile.exerciseCatalog;
   const signals = profileSignals(payload);
+  const trainingHistory = Array.isArray(payload.trainingHistory) ? payload.trainingHistory.slice(0, 8) : [];
+  const adaptation = payload.adaptation && typeof payload.adaptation === "object" ? payload.adaptation : null;
   const prompt = `Sen güvenli ve kişiselleştirilmiş fitness programı hazırlayan bir asistansın. Aynı hazır programı herkese verme. Aşağıdaki ham verileri ve türetilmiş plan parametrelerini birlikte kullan.
 
 HAM KULLANICI VERİLERİ:
@@ -104,6 +109,12 @@ ${JSON.stringify(profile)}
 
 10 TEST CEVABININ ANALİZİ:
 ${JSON.stringify(signals)}
+
+ÖNCEKİ ANTRENMANLAR VE KULLANICI GERİ BİLDİRİMLERİ:
+${JSON.stringify(trainingHistory)}
+
+UYGULAMANIN GEÇMİŞTEN HESAPLADIĞI UYARLAMA KARARI:
+${JSON.stringify(adaptation)}
 
 BU PROFİL İÇİN ZORUNLU PLAN PARAMETRELERİ:
 - Ana hedef: ${signals.primaryGoal}
@@ -127,7 +138,7 @@ ${JSON.stringify(exerciseCatalog)}
 GÜVENLİK VE KALİTE KURALLARI:
 ${plannerRules.join("\n")}
 
-Tam olarak ${signals.exerciseCount} farklı hareket seç. Hareket adlarını katalogdaki Türkçe veya İngilizce adla birebir eşleştir. Kullanıcının özellikle istediği hareket güvenli ve ekipmanla uyumluysa programa al. analysis.adaptations alanında bu profile özel en az üç somut uyarlamayı açıkla. weeklySchedule alanında ${signals.weeklyDays} antrenman günü oluştur. progression alanında 1–4. haftalar için dört kısa ilerleme adımı yaz. Dış site, bağlantı veya medya URL'si üretme.`;
+Tam olarak ${signals.exerciseCount} farklı hareket seç. Hareket adlarını katalogdaki Türkçe veya İngilizce adla birebir eşleştir. Kullanıcının özellikle istediği hareket güvenli ve ekipmanla uyumluysa programa al. Geçmiş kayıt varsa set, tekrar, dinlenme ve hareket değişimini bu kayıtlara dayandır. analysis.adaptations alanında bu profile ve geçmişe özel en az üç somut uyarlamayı; hangi geri bildirimin hangi değişime yol açtığını açıklayarak yaz. weeklySchedule alanında ${signals.weeklyDays} antrenman günü oluştur. progression alanında 1–4. haftalar için dört kısa ilerleme adımı yaz. Dış site, bağlantı veya medya URL'si üretme.`;
 
   const parts: Array<Record<string, unknown>> = [{ text: prompt }];
   if (photoDataUrl?.startsWith("data:image/")) {
