@@ -22,8 +22,8 @@ test("server-renders the form.ai fitness onboarding", async () => {
   const html = await response.text();
   assert.match(html, /<title>form\.ai — Sana özel antrenman<\/title>/i);
   assert.match(html, /Vücudunu tanı,/i);
-  assert.match(html, /Antrenmanım/);
-  assert.match(html, /Hareket kütüphanesi/);
+  assert.doesNotMatch(html, /class="topbar"/);
+  assert.doesNotMatch(html, />Antrenmanım</);
   assert.doesNotMatch(html, /Your site is taking shape|Building your site|codex-preview/i);
 });
 
