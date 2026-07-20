@@ -46,6 +46,7 @@ const responseSchema = {
       items: {
         type: "object",
         properties: {
+          id: { type: "string" },
           name: { type: "string" },
           english: { type: "string" },
           area: { type: "string" },
@@ -54,7 +55,7 @@ const responseSchema = {
           restSeconds: { type: "integer", minimum: 20, maximum: 180 },
           instructions: { type: "string" },
         },
-        required: ["name", "english", "area", "sets", "reps", "restSeconds", "instructions"],
+        required: ["id", "name", "english", "area", "sets", "reps", "restSeconds", "instructions"],
       },
     },
   },
@@ -138,7 +139,7 @@ ${JSON.stringify(exerciseCatalog)}
 GÜVENLİK VE KALİTE KURALLARI:
 ${plannerRules.join("\n")}
 
-Tam olarak ${signals.exerciseCount} farklı hareket seç. Hareket adlarını katalogdaki Türkçe veya İngilizce adla birebir eşleştir. Kullanıcının özellikle istediği hareket güvenli ve ekipmanla uyumluysa programa al. Geçmiş kayıt varsa set, tekrar, dinlenme ve hareket değişimini bu kayıtlara dayandır. analysis.adaptations alanında bu profile ve geçmişe özel en az üç somut uyarlamayı; hangi geri bildirimin hangi değişime yol açtığını açıklayarak yaz. weeklySchedule alanında ${signals.weeklyDays} antrenman günü oluştur. progression alanında 1–4. haftalar için dört kısa ilerleme adımı yaz. Dış site, bağlantı veya medya URL'si üretme.`;
+Tam olarak ${signals.exerciseCount} farklı hareket seç. Her workout için katalogdaki id ve name alanlarını birebir kullan; katalogda bulunmayan bir kimlik veya hareket üretme. Kullanıcının özellikle istediği hareket güvenli ve ekipmanla uyumluysa programa al. Geçmiş kayıt varsa set, tekrar, dinlenme ve hareket değişimini bu kayıtlara dayandır. analysis.adaptations alanında bu profile ve geçmişe özel en az üç somut uyarlamayı; hangi geri bildirimin hangi değişime yol açtığını açıklayarak yaz. weeklySchedule alanında ${signals.weeklyDays} antrenman günü oluştur. progression alanında 1–4. haftalar için dört kısa ilerleme adımı yaz. Dış site, bağlantı veya medya URL'si üretme.`;
 
   const parts: Array<Record<string, unknown>> = [{ text: prompt }];
   if (photoDataUrl?.startsWith("data:image/")) {

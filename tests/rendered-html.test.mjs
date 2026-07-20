@@ -44,6 +44,9 @@ test("keeps the AI plan and movement library wired into the product", async () =
   assert.match(page, /personalizeAiWorkouts/);
   assert.match(page, /isExerciseSafeForProfile/);
   assert.match(page, /exerciseCatalog/);
+  assert.match(page, /getExercisesForAI/);
+  assert.match(page, /getExerciseById/);
+  assert.match(page, /ExerciseLibrary/);
   assert.match(page, /ExerciseAnimation/);
   assert.match(page, /floor-press/);
   assert.match(page, /type MotionPose = "start" \| "mid" \| "finish"/);
@@ -82,6 +85,7 @@ test("keeps the AI plan and movement library wired into the product", async () =
   assert.match(route, /profileFingerprint/);
   assert.match(route, /UYGULAMADA KULLANILABİLEN HAREKET KATALOĞU/);
   assert.match(route, /photoDataUrl/);
+  assert.match(route, /katalogdaki id ve name alanlarını birebir kullan/);
   assert.match(route, /ÖNCEKİ ANTRENMANLAR VE KULLANICI GERİ BİLDİRİMLERİ/);
   assert.match(layout, /form\.ai — Sana özel antrenman/);
   assert.match(layout, /generateMetadata/);

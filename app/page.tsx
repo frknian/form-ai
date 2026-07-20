@@ -1,8 +1,13 @@
 "use client";
 
 import { ChangeEvent, useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { adaptPrescription, summarizeTrainingAdaptation, type TrainingAdaptation, type WorkoutDifficulty } from "@/lib/training-adaptation";
+import { ExerciseAnimation as ExerciseFrameAnimation } from "@/components/exercises/ExerciseAnimation";
+import { ExerciseLibrary } from "@/components/exercises/ExerciseLibrary";
+import { getExerciseById, getExercisesForAI } from "@/lib/exercise-service";
+import type { Exercise } from "@/types/exercise";
 
 const historyQuestions = [
   "Daha önce düzenli olarak spor yaptın mı?",
@@ -232,7 +237,7 @@ function createPersonalPlan(gym: string, equipmentText: string, history: string[
   return chosen.map((item) => ({ ...item, level: item.area, sets: `${sets} set · ${item.name === "Plank" || item.name === "Dead Bug" ? "30 sn" : `${reps} tekrar`}`, rest: `${rest} sn dinlenme`, seconds: item.name === "Plank" || item.name === "Dead Bug" ? 30 : 45 }));
 }
 
-type AiWorkout = { name: string; english: string; area: string; sets: string; rest: string; seconds: number; tone: string; icon: string; level: string; instructions: string };
+type AiWorkout = { id?: string; name: string; english: string; area: string; sets: string; rest: string; seconds: number; tone: string; icon: string; level: string; instructions: string; images?: string[]; equipment?: string | null; secondaryMuscles?: string[]; category?: string };
 type MotionPattern = "floor-press" | "pushup" | "press" | "overhead" | "row" | "pulldown" | "squat" | "lunge" | "hinge" | "bridge" | "plank" | "core" | "cardio" | "mobility" | "curl" | "triceps" | "raise" | "fly" | "calf" | "leg-machine";
 type MotionPose = "start" | "mid" | "finish";
 type WorkoutPhase = "work" | "rest" | "done";
@@ -297,7 +302,7 @@ function MotionFigure({ pattern, pose }: { pattern: MotionPattern; pose: MotionP
   return <span className={`motion-figure pattern-${pattern} pose-${pose}`} aria-hidden="true"><span className="motion-support" /><span className="motion-muscle" /><span className="motion-head" /><span className="motion-torso" /><span className="motion-arm arm-left" /><span className="motion-arm arm-right" /><span className="motion-leg leg-left" /><span className="motion-leg leg-right" /><span className="motion-joint joint-shoulder" /><span className="motion-joint joint-hip" /><span className="motion-joint joint-knee" /><span className="motion-load load-left" /><span className="motion-load load-right" /></span>;
 }
 
-function ExerciseAnimation({ exercise, compact = false }: { exercise: { name: string; english: string; tone: string }; compact?: boolean }) {
+function MotionFigureAnimation({ exercise, compact = false }: { exercise: { name: string; english: string; tone: string }; compact?: boolean }) {
   const pattern = getMotionPattern(exercise);
   const guide = motionGuides[pattern];
   const [motionStep, setMotionStep] = useState(0);
@@ -319,6 +324,10 @@ function ExerciseAnimation({ exercise, compact = false }: { exercise: { name: st
     </div>
     {!compact && <><div className="motion-controls"><div aria-label={`Gösterilen aşama: ${motionStep + 1} / 3`}>{poses.map((item, index) => <button type="button" aria-label={`${index + 1}. aşamayı göster: ${item.label}`} className={motionStep === index ? "active" : ""} onClick={() => { setMotionStep(index); setMotionPlaying(false); }} key={item.pose} />)}</div><button type="button" className="motion-play" onClick={() => setMotionPlaying((playing) => !playing)}>{motionPlaying ? "Durdur Ⅱ" : "Yavaş oynat ▶"}</button></div><div className="motion-caption"><strong>{activePose.label}</strong><span>{guide.move}</span></div></>}
   </div>;
+}
+
+function ExerciseAnimation({ exercise, compact = false }: { exercise: { name: string; english: string; tone: string; images?: string[] }; compact?: boolean }) {
+  return exercise.images?.length ? <ExerciseFrameAnimation images={exercise.images} name={exercise.name} compact={compact} /> : <MotionFigureAnimation exercise={exercise} compact={compact} />;
 }
 
 function workoutPrescription(workout: AiWorkout) {
@@ -361,9 +370,11 @@ function formatClock(totalSeconds: number) {
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }
 
-function asWorkout(exercise: typeof exerciseLibrary[number]): AiWorkout {
-  const timed = /plank|dead bug|wall sit|hollow|stretch|mobility/i.test(`${exercise.name} ${exercise.english}`);
-  return { ...exercise, level: exercise.area, sets: `3 set · ${timed ? "30 sn" : "10 tekrar"}`, rest: "60 sn dinlenme", seconds: timed ? 30 : 45 };
+function databaseExerciseAsWorkout(exercise: Exercise): AiWorkout {
+  const muscle = exercise.primaryMuscles[0] || "full body";
+  const area = muscle === "chest" ? "Göğüs" : ["lats", "middle back"].includes(muscle) ? "Sırt" : muscle === "shoulders" ? "Omuz" : ["biceps", "triceps", "forearms"].includes(muscle) ? "Kol" : muscle === "abdominals" ? "Core" : ["glutes"].includes(muscle) ? "Kalça" : "Bacak";
+  const tone = area === "Bacak" || area === "Kalça" ? "orange" : area === "Göğüs" || area === "Core" ? "blue" : "purple";
+  return { id: exercise.id, name: exercise.name, english: exercise.name, area, level: exercise.level, sets: "3 set · 10 tekrar", rest: "60 sn dinlenme", seconds: 45, tone, icon: "↗", instructions: exercise.instructions[0] || "Hareketi kontrollü uygula ve ağrı hissedersen dur.", images: exercise.images, equipment: exercise.equipment, secondaryMuscles: exercise.secondaryMuscles, category: exercise.category };
 }
 
 function calculateEnergyMetrics(gender: string, ageValue: string, heightValue: string, weightValue: string, movementLevel: string): EnergyMetrics | null {
@@ -421,13 +432,15 @@ function profileGoal(goalText: string, history: string[]) {
   return text.includes("kilo") || text.includes("yağ") ? "kilo" : text.includes("kas") ? "kas" : text.includes("kondisyon") ? "kondisyon" : "güç";
 }
 
-function isExerciseSafeForProfile(exercise: { name: string; english: string }, gym: string, equipmentText: string, history: string[]) {
+function isExerciseSafeForProfile(exercise: { id?: string; name: string; english: string }, gym: string, equipmentText: string, history: string[]) {
   const text = `${exercise.name} ${exercise.english}`.toLocaleLowerCase("tr-TR");
   const pain = (history[6] || "").toLocaleLowerCase("tr-TR");
   const equipment = equipmentText.toLocaleLowerCase("tr-TR");
   if (pain.includes("diz") && /squat|lunge|jump|step|leg press|mountain climber|box jump|skater/.test(text)) return false;
   if (pain.includes("omuz") && /push|press|dip|shoulder|fly|overhead|lateral raise|pulldown|barfiks/.test(text)) return false;
   if (pain.includes("bel") && /deadlift|good morning|back extension|woodchop|superman|russian twist/.test(text)) return false;
+  const databaseExercise = exercise.id ? getExerciseById(exercise.id) : null;
+  if (databaseExercise) return gym === "Salon" || !databaseExercise.equipment || ["body only", "none"].includes(databaseExercise.equipment) || equipment.includes(databaseExercise.equipment);
   const libraryExercise = findLibraryExercise(exercise);
   if (!libraryExercise) return false;
   return gym === "Salon" || libraryExercise.bodyweight || libraryExercise.requires.some((requirement) => equipment.includes(requirement));
@@ -452,13 +465,16 @@ function personalizeAiWorkouts(items: AiWorkout[], gym: string, equipmentText: s
   return candidates.filter((item, index, list) => list.findIndex((candidate) => exerciseKey(candidate) === exerciseKey(item)) === index).slice(0, targetCount);
 }
 
-function normalizeAiWorkouts(items: Array<{ name: string; english: string; area: string; sets: number; reps: string; restSeconds: number; instructions?: string }>): AiWorkout[] {
+function normalizeAiWorkouts(items: Array<{ id: string; name: string; english: string; area: string; sets: number; reps: string; restSeconds: number; instructions?: string }>): AiWorkout[] {
   const visuals: Record<string, { tone: string; icon: string }> = { Bacak: { tone: "orange", icon: "◒" }, Göğüs: { tone: "blue", icon: "✦" }, Sırt: { tone: "purple", icon: "↗" }, Kalça: { tone: "orange", icon: "◓" }, Core: { tone: "blue", icon: "—" } };
   return items.map((item) => {
+    const databaseExercise = getExerciseById(item.id);
+    if (!databaseExercise) return null;
     const libraryExercise = findLibraryExercise(item);
-    const area = libraryExercise?.area || item.area;
-    return { ...item, name: libraryExercise?.name || item.name, english: libraryExercise?.english || item.english, area, instructions: item.instructions || libraryExercise?.instructions || "Hareketi kontrollü yap, nefesini tutma ve ağrı hissedersen dur.", sets: `${item.sets} set · ${item.reps}`, rest: `${item.restSeconds} sn dinlenme`, seconds: item.reps.includes("sn") ? 30 : 45, level: area, ...(libraryExercise ? { tone: libraryExercise.tone, icon: libraryExercise.icon } : visuals[area] || { tone: "purple", icon: "✦" }) };
-  });
+    const base = databaseExerciseAsWorkout(databaseExercise);
+    const area = libraryExercise?.area || base.area || item.area;
+    return { ...base, name: databaseExercise.name, english: databaseExercise.name, area, instructions: item.instructions || databaseExercise.instructions[0] || libraryExercise?.instructions || "Hareketi kontrollü yap, nefesini tutma ve ağrı hissedersen dur.", sets: `${item.sets} set · ${item.reps}`, rest: `${item.restSeconds} sn dinlenme`, seconds: item.reps.includes("sn") ? 30 : 45, level: databaseExercise.level, ...(libraryExercise ? { tone: libraryExercise.tone, icon: libraryExercise.icon } : visuals[area] || { tone: "purple", icon: "✦" }) };
+  }).filter((item): item is AiWorkout => Boolean(item));
 }
 
 function AiScanFigure({ compact = false, status = "scanning", stage = "profile" }: { compact?: boolean; status?: "idle" | "scanning" | "complete" | "fallback"; stage?: AiStage }) {
@@ -493,19 +509,8 @@ function ProgressView({ name, sessions, referenceTime, energyMetrics }: { name: 
   return <div className="subview"><div className="eyebrow">İLERLEMEM</div><h1>{name || "Sporcu"}, <em>ritmini gör.</em></h1><p className="lead">Tamamladığın antrenmanlar, süreler ve tahmini enerji verileri burada birikir.</p><div className="progress-cards"><div><span>BU HAFTA</span><strong>{weeklySessions.length}</strong><small>tamamlanan antrenman</small></div><div><span>TOPLAM SÜRE</span><strong>{Math.round(totalSeconds / 60)} dk</strong><small>{sessions.length ? "tüm kayıtlar" : "ilk antrenmanı bekliyor"}</small></div><div><span>YAKILAN ENERJİ</span><strong>{totalCalories} kcal</strong><small>MET tabanlı tahmin</small></div></div><section className="monthly-report"><div><div className="eyebrow">AYLIK RAPOR</div><h2>{new Intl.DateTimeFormat("tr-TR", { month: "long" }).format(referenceDate)} özeti</h2><p>Kalori ve enerji değerleri tahminidir; tıbbi ölçüm veya beslenme hedefi değildir.</p><div className="monthly-numbers"><span><strong>{monthlySessions.length}</strong>antrenman</span><span><strong>{monthlyMinutes}</strong>dakika</span><span><strong>{monthlyCalories}</strong>kcal</span><span><strong>%{completionRate}</strong>tamamlama</span></div></div><div className="month-bars" aria-label="Son dört haftadaki antrenman sayısı">{weekBuckets.map((count, index) => <div key={index}><span style={{ height: `${Math.max(8, (count / maxWeek) * 100)}%` }} /><small>{index + 1}. hf</small><b>{count}</b></div>)}</div></section>{energyMetrics && <div className="energy-reference"><div><span>BAZAL ENERJİ (BMR)</span><strong>{energyMetrics.bmr} kcal</strong><small>Dinlenme enerjisi tahmini</small></div><div><span>GÜNLÜK TOPLAM (TDEE)</span><strong>{energyMetrics.tdee} kcal</strong><small>{energyMetrics.activityLabel} katsayısı</small></div><p>Bu değerler Mifflin–St Jeor denklemi ve testteki hareket düzeyine göre yaklaşık hesaplanır.</p></div>}<div className="progress-panel"><div className="section-title"><div><div className="eyebrow">İLERLEME GÜNLÜĞÜ</div><h2>{sessions.length ? "Son antrenmanların" : "İlk kaydını oluşturalım"}</h2></div><span className="progress-status">{sessions.length ? `${sessions.length} kayıt` : "Hazır"}</span></div>{sessions.length ? <div className="session-list">{sessions.slice(0, 6).map((session) => <article key={session.id}><div><strong>{session.exerciseNames.slice(0, 3).join(" · ") || "Kişisel antrenman"}</strong><small>{new Intl.DateTimeFormat("tr-TR", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }).format(new Date(session.completedAt))}</small>{session.difficulty && <div className="session-feedback"><span>{session.difficulty}</span><span>Yorgunluk {session.fatigue || 3}/5</span>{session.painAreas?.filter((area) => area !== "Yok").map((area) => <span className="pain" key={area}>{area}</span>)}</div>}</div><div><b>{Math.max(1, Math.round(session.durationSeconds / 60))} dk</b><span>{session.calories} kcal · {session.completedExercises}/{session.totalExercises} hareket</span></div></article>)}</div> : <div className="empty-progress"><span>✦</span><p>İlk antrenmanını bitirdiğinde süre, kalori ve tamamlanan hareketler burada görünecek.</p></div>}</div></div>;
 }
 
-function LibraryView({ onOpenWorkout }: { onOpenWorkout: (exercise: AiWorkout) => void }) {
-  const [query, setQuery] = useState("");
-  const [areaFilter, setAreaFilter] = useState("Tümü");
-  const [visibleCount, setVisibleCount] = useState(30);
-  const areas = ["Tümü", ...Array.from(new Set(exerciseLibrary.map((exercise) => exercise.area)))];
-  const filteredExercises = exerciseLibrary.filter((exercise) => {
-    const matchesArea = areaFilter === "Tümü" || exercise.area === areaFilter;
-    const searchText = `${exercise.name} ${exercise.english} ${exercise.area}`.toLowerCase();
-    return matchesArea && searchText.includes(query.toLowerCase().trim());
-  });
-  const visibleExercises = filteredExercises.slice(0, visibleCount);
-
-  return <div className="subview"><div className="eyebrow">HAREKET KÜTÜPHANESİ</div><h1>Doğru form,<br /><em>net hareket.</em></h1><p className="lead">{exerciseLibrary.length}+ hareketi ara. Her kartta başlangıç ve bitiş pozunu; detay ekranında nefes ve hata uyarılarını gör.</p><div className="library-toolbar"><strong>{filteredExercises.length} hareket</strong><span>{exerciseLibrary.length} toplam kayıt</span></div><div className="library-filters"><input aria-label="Hareket ara" value={query} onChange={(event) => { setQuery(event.target.value); setVisibleCount(30); }} placeholder="Hareket ara…" /><select aria-label="Hareket kategorisi" value={areaFilter} onChange={(event) => { setAreaFilter(event.target.value); setVisibleCount(30); }}>{areas.map((area) => <option key={area} value={area}>{area}</option>)}</select></div><div className="library-grid">{visibleExercises.map((exercise) => { const guide = getMotionGuide(exercise); return <article className="library-card" key={exercise.name}><ExerciseAnimation exercise={exercise} compact /><div className="library-card-copy"><div className="pill">{exercise.area}</div><h3>{exercise.name}</h3><small>{exercise.english}</small><p>{guide.move}</p><div className="library-actions"><button type="button" className="play-library" onClick={() => onOpenWorkout(asWorkout(exercise))}>Hareketi aç →</button></div></div></article>; })}</div>{visibleExercises.length < filteredExercises.length && <button className="outline-btn library-more" type="button" onClick={() => setVisibleCount((count) => count + 30)}>Daha fazla hareket göster →</button>}{!filteredExercises.length && <p className="library-empty">Bu aramayla eşleşen hareket bulunamadı.</p>}</div>;
+function LibraryView({ onOpenWorkout, onAddWorkout }: { onOpenWorkout: (exercise: AiWorkout) => void; onAddWorkout: (exercise: AiWorkout) => void }) {
+  return <ExerciseLibrary onOpenWorkout={(exercise) => onOpenWorkout(databaseExerciseAsWorkout(exercise))} onAddWorkout={(exercise) => onAddWorkout(databaseExerciseAsWorkout(exercise))} />;
 }
 
 const readyPrograms = [
@@ -781,14 +786,14 @@ export default function Home() {
     }
     setAiStage("history");
     try {
-      const exerciseCatalog = exerciseLibrary.map(({ name: exerciseName, english, area, requires, bodyweight, goals }) => ({ name: exerciseName, english, area, requires, bodyweight, goals }));
+      const exerciseCatalog = getExercisesForAI();
       setAiStage("planning");
       const controller = new AbortController();
       const timeout = window.setTimeout(() => controller.abort(), 45_000);
       const trainingHistory = sessionHistory.slice(0, 8).map((session) => ({ completedAt: session.completedAt, completedExercises: session.completedExercises, totalExercises: session.totalExercises, difficulty: session.difficulty, fatigue: session.fatigue, painAreas: session.painAreas, feedbackNote: session.feedbackNote }));
       const aiResponse = await fetch("/api/generate-plan", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, age, gender, height, weight, environment: gym, equipment: equipmentText, goal: goalText, requestedExercises, history, trainingHistory, adaptation, exerciseCatalog, photoDataUrl }), signal: controller.signal }).finally(() => window.clearTimeout(timeout));
       if (aiResponse.ok) {
-        const aiPlan = await aiResponse.json() as { workouts?: Array<{ name: string; english: string; area: string; sets: number; reps: string; restSeconds: number; instructions?: string }>; rationale?: string; safetyNote?: string; analysis?: AiPlanAnalysis; weeklySchedule?: AiScheduleDay[]; progression?: string[]; profileFingerprint?: string };
+        const aiPlan = await aiResponse.json() as { workouts?: Array<{ id: string; name: string; english: string; area: string; sets: number; reps: string; restSeconds: number; instructions?: string }>; rationale?: string; safetyNote?: string; analysis?: AiPlanAnalysis; weeklySchedule?: AiScheduleDay[]; progression?: string[]; profileFingerprint?: string };
         const normalizedWorkouts = aiPlan.workouts?.length ? normalizeAiWorkouts(aiPlan.workouts) : [];
         const personalizedWorkouts = personalizeAiWorkouts(normalizedWorkouts, gym, equipmentText, history, goalText, requestedExercises);
         if (personalizedWorkouts.length) setAiWorkouts(personalizedWorkouts);
@@ -868,7 +873,7 @@ export default function Home() {
 
           {step === 3 && <div className="step-content photo-step">
             <div className="eyebrow">İSTEĞE BAĞLI VÜCUT ANALİZİ</div><h1>Vücudunu daha iyi<br /><em>anlayalım.</em></h1><p className="lead">Fotoğraf profil resmi değildir. İzninle vücut kompozisyonu ve yağlanma dağılımı hakkında yaklaşık gözlem yapıp programı buna göre uyarlayacağız.</p>
-            <label className="upload-box">{photo ? <img src={photo} alt="Vücut analizi için yüklenen fotoğraf" /> : <><span className="upload-icon">＋</span><strong>Vücut fotoğrafı ekle</strong><small>Yüz görünmek zorunda değil · İsteğe bağlı</small></>}<input type="file" accept="image/*" onChange={handlePhoto} /></label>
+            <label className="upload-box">{photo ? <Image src={photo} alt="Vücut analizi için yüklenen fotoğraf" width={300} height={160} unoptimized /> : <><span className="upload-icon">＋</span><strong>Vücut fotoğrafı ekle</strong><small>Yüz görünmek zorunda değil · İsteğe bağlı</small></>}<input type="file" accept="image/*" onChange={handlePhoto} /></label>
             <AiScanFigure status="idle" /><div className="privacy-note"><span>⌁</span> Analiz tahminidir; tıbbi yağ oranı ölçümü değildir. Fotoğrafını istediğinde silebilirsin.</div><div className="action-row"><button className="back-btn" type="button" onClick={() => setStep(2)}>← Geri</button><button className="primary-btn" type="button" onClick={() => setStep(4)}>Teste başla <span>→</span></button></div>
           </div>}
 
@@ -882,7 +887,7 @@ export default function Home() {
       ) : (
         <section className="dashboard">
           {profileEditing && <div className="profile-editor"><div><div className="eyebrow">PROFİLİ GÜNCELLE</div><h2>Spor ortamını ve ekipmanlarını değiştir</h2><p>Kaydettiğinde AI, yeni profil verilerinle programı yeniden oluşturur.</p></div><div className="profile-editor-fields"><div className="choice-cards"><button type="button" className={gym === "Evde" ? "choice selected" : "choice"} onClick={() => setGym("Evde")}><span>⌂</span><strong>Evde</strong><small>Ekipmansız veya ev ekipmanı</small></button><button type="button" className={gym === "Salon" ? "choice selected" : "choice"} onClick={() => setGym("Salon")}><span>▦</span><strong>Spor salonunda</strong><small>Salon makineleri ve ağırlıklar</small></button></div><label className="textarea-label">EKİPMANLARIN<textarea value={equipmentText} onChange={(event) => setEquipmentText(event.target.value)} placeholder="Örn. dambıl, direnç bandı, bench" /></label><label className="textarea-label">İSTEDİĞİN HAREKETLER<textarea value={requestedExercises} onChange={(event) => setRequestedExercises(event.target.value)} placeholder="Örn. Yerde Dambıl Göğüs Presi" /></label><button className="primary-btn" type="button" onClick={() => { setProfileEditing(false); void createPlan(); }} disabled={saving}>{saving ? "AI yeniden tarıyor…" : "Profili kaydet ve programı yenile →"}</button></div></div>}
-          {activeView === "progress" ? <ProgressView name={name} sessions={sessionHistory} referenceTime={progressReferenceTime} energyMetrics={energyMetrics} /> : activeView === "library" ? <LibraryView onOpenWorkout={(exercise) => { setActiveView("plan"); openWorkout(0, [exercise]); }} /> : <>
+          {activeView === "progress" ? <ProgressView name={name} sessions={sessionHistory} referenceTime={progressReferenceTime} energyMetrics={energyMetrics} /> : activeView === "library" ? <LibraryView onOpenWorkout={(exercise) => { setActiveView("plan"); openWorkout(0, [exercise]); }} onAddWorkout={(exercise) => setAiWorkouts((current) => current.some((item) => item.id === exercise.id) ? current : [...current, exercise])} /> : <>
           {activeWorkout !== null && currentWorkout && currentGuide && currentPrescription ? <div className="workout-player">
             <button className="back-btn" type="button" onClick={() => { setIsRunning(false); setActiveWorkout(null); }}>← Plana dön</button>
             <div className="workout-session-progress" aria-label="Antrenman ilerlemesi">{playerQueue.map((exercise, index) => <span key={`${exercise.name}-${index}`} className={completedExercises.includes(index) ? "complete" : skippedExercises.includes(index) ? "skipped" : index === activeWorkout ? "active" : ""} />)}</div>
