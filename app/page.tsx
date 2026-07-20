@@ -301,22 +301,23 @@ function ExerciseAnimation({ exercise, compact = false }: { exercise: { name: st
   const pattern = getMotionPattern(exercise);
   const guide = motionGuides[pattern];
   const [motionStep, setMotionStep] = useState(0);
-  const [motionPlaying, setMotionPlaying] = useState(!compact);
+  const [motionPlaying, setMotionPlaying] = useState(true);
   useEffect(() => {
-    if (compact || !motionPlaying) return;
-    const interval = window.setInterval(() => setMotionStep((step) => (step + 1) % 3), 1400);
+    if (!motionPlaying) return;
+    const interval = window.setInterval(() => setMotionStep((step) => (step + 1) % 3), compact ? 850 : 1050);
     return () => window.clearInterval(interval);
   }, [compact, motionPlaying]);
-  const poses: Array<{ pose: MotionPose; label: string }> = compact ? [{ pose: "start", label: "Başlangıç" }, { pose: "finish", label: "Bitiş" }] : [{ pose: "start", label: "Başlangıç" }, { pose: "mid", label: "Hareket" }, { pose: "finish", label: "Kontrol" }];
-  return <div className={`exercise-media ${exercise.tone} movement-${pattern} ${compact ? "compact" : ""}`} aria-label={`${exercise.name}: üç aşamalı hareket gösterimi`}>
-    {!compact && <div className="motion-header"><span>HAREKETİ ADIM ADIM İZLE</span><strong>{guide.action}</strong></div>}
-    <div className="motion-stage">
+  const poses: Array<{ pose: MotionPose; label: string }> = [{ pose: "start", label: "Başlangıç" }, { pose: "mid", label: "Hareket" }, { pose: "finish", label: "Kontrol" }];
+  const activePose = poses[motionStep];
+  return <div className={`exercise-media exercise-live ${exercise.tone} movement-${pattern} ${compact ? "compact" : ""}`} aria-label={`${exercise.name}: canlı hareket gösterimi`}>
+    {!compact && <div className="motion-header"><span><i /> CANLI HAREKET REHBERİ</span><strong>{guide.action}</strong></div>}
+    <div className="motion-stage motion-live-stage">
       <span className="motion-floor" />
-      <div className="motion-sequence">
-        {poses.map((item, index) => <div className={`motion-position ${!compact && motionStep === index ? "active" : ""}`} key={item.pose}><MotionFigure pattern={pattern} pose={item.pose} /><small>{index + 1} · {item.label}</small>{index < poses.length - 1 && <span className="motion-route" aria-hidden="true">→</span>}</div>)}
-      </div>
+      <div className="motion-anatomy"><MotionFigure pattern={pattern} pose={activePose.pose} /></div>
+      {!compact && <div className="motion-muscle-label"><span>HEDEF KASLAR</span><strong>{guide.focus}</strong></div>}
+      {!compact && <div className="motion-phase"><span>{String(motionStep + 1).padStart(2, "0")}</span><strong>{activePose.label}</strong></div>}
     </div>
-    {!compact && <><div className="motion-controls"><div aria-label={`Gösterilen aşama: ${motionStep + 1} / 3`}>{poses.map((item, index) => <button type="button" aria-label={`${index + 1}. aşamayı göster: ${item.label}`} className={motionStep === index ? "active" : ""} onClick={() => { setMotionStep(index); setMotionPlaying(false); }} key={item.pose} />)}</div><button type="button" className="motion-play" onClick={() => setMotionPlaying((playing) => !playing)}>{motionPlaying ? "Durdur Ⅱ" : "Yavaş oynat ▶"}</button></div><div className="motion-caption"><strong>{guide.focus}</strong><span>{guide.move}</span></div></>}
+    {!compact && <><div className="motion-controls"><div aria-label={`Gösterilen aşama: ${motionStep + 1} / 3`}>{poses.map((item, index) => <button type="button" aria-label={`${index + 1}. aşamayı göster: ${item.label}`} className={motionStep === index ? "active" : ""} onClick={() => { setMotionStep(index); setMotionPlaying(false); }} key={item.pose} />)}</div><button type="button" className="motion-play" onClick={() => setMotionPlaying((playing) => !playing)}>{motionPlaying ? "Durdur Ⅱ" : "Yavaş oynat ▶"}</button></div><div className="motion-caption"><strong>{activePose.label}</strong><span>{guide.move}</span></div></>}
   </div>;
 }
 

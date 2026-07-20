@@ -391,3 +391,53 @@ button,input { font:inherit; } button { cursor:pointer; }
   .feedback-overlay { padding:10px; align-items:end; }.feedback-dialog { max-height:94vh; padding:22px 17px; border-radius:14px 14px 5px 5px; }.feedback-dialog h2 { font-size:25px; }
   .pain-options { grid-template-columns:repeat(3,1fr); }.fatigue-scale button { min-height:52px; }
 }
+
+/* Leap Fitness benzeri tek sahneli, akıcı ve anatomik hareket anlatımı. */
+.exercise-live { isolation:isolate; border:1px solid rgba(28,33,43,.1); background:linear-gradient(145deg,#eef0f2 0%,#f8f8f5 58%,#e6e9ec 100%); }
+.exercise-live.orange,.exercise-live.blue,.exercise-live.purple { background:linear-gradient(145deg,#eef0f2 0%,#f8f8f5 58%,#e6e9ec 100%); }
+.exercise-live .motion-header { position:absolute; z-index:8; top:18px; left:20px; right:20px; display:flex; align-items:center; justify-content:space-between; color:#596066; }
+.exercise-live .motion-header span { display:flex; align-items:center; gap:7px; font-size:8px; font-weight:900; letter-spacing:1.3px; }
+.exercise-live .motion-header span i { width:7px; height:7px; border-radius:50%; background:#ff5b32; box-shadow:0 0 0 4px rgba(255,91,50,.13); animation:live-pulse 1.35s ease-in-out infinite; }
+.exercise-live .motion-header strong { padding:7px 10px; border-radius:999px; background:#1f2630; color:#fff; font-size:9px; letter-spacing:.8px; }
+.exercise-live .motion-live-stage { inset:0; min-height:0; }
+.exercise-live .motion-live-stage::before { width:240px; height:240px; top:44px; right:calc(50% - 120px); background:radial-gradient(circle,rgba(255,255,255,.95),rgba(255,255,255,.18) 65%,transparent 66%); }
+.exercise-live .motion-floor { left:25%; right:25%; bottom:43px; height:5px; border-radius:50%; background:rgba(22,28,35,.12); filter:blur(2px); }
+.motion-anatomy { position:relative; z-index:3; display:grid; place-items:center; width:230px; height:235px; padding-top:38px; transform:scale(1.24); transform-origin:50% 64%; }
+.motion-live-stage .motion-figure { margin:0; color:#7f878b; filter:drop-shadow(0 9px 8px rgba(31,38,48,.16)); }
+.motion-live-stage .motion-head { border:1px solid #666e72; background:linear-gradient(135deg,#d9ddde,#899195 60%,#626a6e); }
+.motion-live-stage .motion-head::after { content:""; position:absolute; right:3px; top:8px; width:4px; height:2px; border-radius:50%; background:#353b3f; }
+.motion-live-stage .motion-torso { border:1px solid #687075; background:linear-gradient(90deg,#8f979a,#d5d9da 47%,#747c80); box-shadow:inset 0 0 0 2px rgba(255,255,255,.12); }
+.motion-live-stage .motion-arm,.motion-live-stage .motion-leg { height:11px; border:1px solid #687075; background:linear-gradient(#c5cacb,#737b7f); box-shadow:inset 0 2px 2px rgba(255,255,255,.25); }
+.motion-live-stage .motion-head,.motion-live-stage .motion-torso,.motion-live-stage .motion-arm,.motion-live-stage .motion-leg,.motion-live-stage .motion-load { transition:transform .62s cubic-bezier(.45,0,.2,1),top .62s cubic-bezier(.45,0,.2,1),left .62s cubic-bezier(.45,0,.2,1); }
+.motion-live-stage .motion-muscle { z-index:5; background:linear-gradient(135deg,#ff7958,#de3d28 60%,#a9231b); box-shadow:inset 0 0 0 1px rgba(117,23,16,.25),0 0 18px rgba(238,69,43,.28); opacity:.82; animation:muscle-breathe 1.25s ease-in-out infinite; }
+.motion-live-stage .motion-joint { width:8px; height:8px; border-color:rgba(255,255,255,.8); background:#ff6843; opacity:.9; }
+.motion-live-stage .motion-load { color:#30363a; background:#30363a; border-color:#30363a; }
+.motion-muscle-label { position:absolute; z-index:7; left:20px; bottom:20px; display:grid; gap:4px; max-width:190px; }
+.motion-muscle-label span { color:#e24a2f; font-size:8px; font-weight:900; letter-spacing:1.2px; }.motion-muscle-label strong { color:#41484c; font-size:10px; }
+.motion-phase { position:absolute; z-index:7; right:20px; bottom:18px; display:flex; align-items:center; gap:8px; padding:7px 10px; border:1px solid rgba(31,38,48,.1); border-radius:8px; background:rgba(255,255,255,.72); backdrop-filter:blur(5px); }
+.motion-phase span { color:#f05d38; font-size:14px; font-weight:900; }.motion-phase strong { color:#51585c; font-size:9px; }
+.exercise-live .motion-controls { position:absolute; z-index:9; left:20px; right:20px; bottom:66px; padding:0; }
+.exercise-live .motion-controls > div button { height:4px; background:#c7ccce; }.exercise-live .motion-controls > div button.active { width:34px; background:#ff5b32; }
+.exercise-live .motion-play { border-color:rgba(31,38,48,.12); background:rgba(255,255,255,.72); color:#4d5559; }
+.exercise-live .motion-caption { position:absolute; z-index:7; left:0; right:0; bottom:-44px; display:none; }
+.exercise-live:not(.compact) { height:390px; padding-bottom:0; }
+.exercise-live.compact { flex:0 0 132px; width:132px; height:104px; padding:0; }
+.exercise-live.compact .motion-live-stage::before { width:90px; height:90px; top:5px; right:calc(50% - 45px); }
+.exercise-live.compact .motion-anatomy { width:132px; height:104px; padding-top:4px; transform:scale(.58); transform-origin:50% 57%; }
+.exercise-live.compact .motion-floor { left:20%; right:20%; bottom:12px; height:3px; }
+.exercise-live.compact .motion-muscle { opacity:.95; }
+@keyframes live-pulse { 0%,100% { opacity:.45; transform:scale(.8); } 50% { opacity:1; transform:scale(1); } }
+@keyframes muscle-breathe { 0%,100% { opacity:.65; } 50% { opacity:1; } }
+
+@media (prefers-reduced-motion:reduce) {
+  .exercise-live .motion-header span i,.motion-live-stage .motion-muscle { animation:none; }
+  .motion-live-stage .motion-head,.motion-live-stage .motion-torso,.motion-live-stage .motion-arm,.motion-live-stage .motion-leg,.motion-live-stage .motion-load { transition:none; }
+}
+
+@media (max-width:700px) {
+  .exercise-live:not(.compact) { height:350px; }
+  .motion-anatomy { transform:scale(1.06); }
+  .motion-muscle-label { left:14px; bottom:15px; max-width:150px; }.motion-phase { right:14px; bottom:13px; }
+  .exercise-live .motion-controls { left:14px; right:14px; bottom:57px; }
+  .exercise-live.compact { flex-basis:112px; width:112px; height:94px; }.exercise-live.compact .motion-anatomy { width:112px; height:94px; transform:scale(.52); }
+}

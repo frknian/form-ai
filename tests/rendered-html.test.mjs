@@ -47,7 +47,8 @@ test("keeps the AI plan and movement library wired into the product", async () =
   assert.match(page, /ExerciseAnimation/);
   assert.match(page, /floor-press/);
   assert.match(page, /type MotionPose = "start" \| "mid" \| "finish"/);
-  assert.match(page, /HAREKETİ ADIM ADIM İZLE/);
+  assert.match(page, /CANLI HAREKET REHBERİ/);
+  assert.match(page, /motion-live-stage/);
   assert.match(page, /Yavaş oynat/);
   assert.match(page, /motion-muscle/);
   assert.match(page, /"leg-machine"/);
