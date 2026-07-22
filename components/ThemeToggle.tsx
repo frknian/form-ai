@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 
 type Theme = "light" | "dark";
 
@@ -26,9 +26,13 @@ function subscribe(onChange: () => void) {
 export function ThemeToggle({ className = "" }: { className?: string }) {
   const theme = useSyncExternalStore(subscribe, preferredTheme, () => "light");
 
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    document.documentElement.style.colorScheme = theme;
+  }, [theme]);
+
   function toggleTheme() {
     const next = theme === "dark" ? "light" : "dark";
-    document.documentElement.classList.toggle("dark", next === "dark");
     window.localStorage.setItem("form-ai-theme", next);
     window.dispatchEvent(new Event("form-ai-theme-change"));
   }

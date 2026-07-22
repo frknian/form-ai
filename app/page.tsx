@@ -12,10 +12,15 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { CalorieTracker } from "@/components/CalorieTracker";
 import { BodyMeasurements } from "@/components/BodyMeasurements";
 import { WorkoutCalendar } from "@/components/WorkoutCalendar";
+import { ActivityStreak } from "@/components/ActivityStreak";
+import { ActivityLogger } from "@/components/ActivityLogger";
 import { WeeklyAiReview } from "@/components/WeeklyAiReview";
 import { WorkoutSetLogger } from "@/components/WorkoutSetLogger";
+import { MobileRuntime } from "@/components/MobileRuntime";
 import { PlanEditor } from "@/components/PlanEditor";
+import { FrozenAccountScreen, ProfileManager } from "@/components/ProfileManager";
 import { getExerciseById, getExercisesForAI } from "@/lib/exercise-service";
+import { trustedExerciseMedia } from "@/lib/trusted-exercise-media";
 import { translateExerciseLabel, turkishExerciseInstructions } from "@/lib/exercise-translations";
 import { extractSessionMinutes } from "@/lib/training-profile";
 import { buildCompletedExerciseLog, createWorkoutSetDrafts, exerciseLogKey, type CompletedExerciseLog, type PreviousExercisePerformance, type WorkoutSetDraft } from "@/lib/workout-log";
@@ -23,6 +28,8 @@ import { istanbulDateKey, istanbulTimeKey } from "@/lib/workout-calendar";
 import { inferWorkoutDays } from "@/lib/nutrition-goals";
 import type { EditableWorkout } from "@/lib/plan-editor";
 import type { Exercise } from "@/types/exercise";
+import { calculateAge, isValidBirthDate, type AccountStatus, type EditableProfile } from "@/lib/profile";
+import { saveProfileWithHistory, signedAvatarUrl } from "@/lib/profile-service";
 
 const AiCoachChat = lazy(() => import("@/components/AiCoachChat").then((module) => ({ default: module.AiCoachChat })));
 
@@ -256,7 +263,6 @@ function createPersonalPlan(gym: string, equipmentText: string, history: string[
 
 type AiWorkout = { id?: string; name: string; english: string; area: string; sets: string; rest: string; seconds: number; tone: string; icon: string; level: string; instructions: string; images?: string[]; equipment?: string | null; secondaryMuscles?: string[]; category?: string; bodyweight?: boolean };
 type MotionPattern = "floor-press" | "pushup" | "press" | "overhead" | "row" | "pulldown" | "squat" | "lunge" | "hinge" | "bridge" | "plank" | "core" | "cardio" | "mobility" | "curl" | "triceps" | "raise" | "fly" | "calf" | "leg-machine";
-type MotionPose = "start" | "mid" | "finish";
 type WorkoutPhase = "work" | "rest" | "done";
 type WorkoutSessionRecord = { id: string; completedAt: string; durationSeconds: number; calories: number; completedExercises: number; totalExercises: number; exerciseNames: string[]; difficulty?: WorkoutDifficulty; fatigue?: number; painAreas?: string[]; feedbackNote?: string };
 type AiPlanAnalysis = { experienceLevel: string; weeklyFrequency: string; sessionMinutes: number; primaryGoal: string; intensity: string; equipmentMode: string; focusAreas: string[]; adaptations: string[] };
@@ -320,63 +326,9 @@ function localizeMotionFocus(value: string) {
   return value.replace(/triceps/gi, "arka kol").replace(/biceps/gi, "biseps").replace(/core/gi, "merkez bölge");
 }
 
-function MotionFigure({ pattern, pose }: { pattern: MotionPattern; pose: MotionPose }) {
-  return <span className={`motion-figure pattern-${pattern} pose-${pose}`} aria-hidden="true"><span className="motion-support" /><span className="motion-muscle" /><span className="motion-head" /><span className="motion-torso" /><span className="motion-arm arm-left" /><span className="motion-arm arm-right" /><span className="motion-leg leg-left" /><span className="motion-leg leg-right" /><span className="motion-joint joint-shoulder" /><span className="motion-joint joint-hip" /><span className="motion-joint joint-knee" /><span className="motion-load load-left" /><span className="motion-load load-right" /></span>;
-}
-
-function MotionFigureAnimation({ exercise, compact = false }: { exercise: { name: string; english: string; tone: string }; compact?: boolean }) {
-  const rootRef = useRef<HTMLDivElement>(null);
-  const pattern = getMotionPattern(exercise);
-  const guide = { ...motionGuides[pattern], focus: localizeMotionFocus(motionGuides[pattern].focus) };
-  const [motionStep, setMotionStep] = useState(0);
-  const [motionPlaying, setMotionPlaying] = useState(true);
-  const [isVisible, setIsVisible] = useState(true);
-  const [pageVisible, setPageVisible] = useState(() => typeof document === "undefined" || document.visibilityState === "visible");
-  const [reducedMotion, setReducedMotion] = useState(() => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-
-  useEffect(() => {
-    const element = rootRef.current;
-    if (!element) return;
-    if (!("IntersectionObserver" in window)) return;
-    const observer = new IntersectionObserver(([entry]) => setIsVisible(entry.isIntersecting), { rootMargin: "160px" });
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const updateMotion = () => setReducedMotion(media.matches);
-    const updateVisibility = () => setPageVisible(document.visibilityState === "visible");
-    media.addEventListener("change", updateMotion);
-    document.addEventListener("visibilitychange", updateVisibility);
-    return () => {
-      media.removeEventListener("change", updateMotion);
-      document.removeEventListener("visibilitychange", updateVisibility);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!motionPlaying || !isVisible || !pageVisible || reducedMotion) return;
-    const interval = window.setInterval(() => setMotionStep((step) => (step + 1) % 3), compact ? 850 : 1050);
-    return () => window.clearInterval(interval);
-  }, [compact, motionPlaying, isVisible, pageVisible, reducedMotion]);
-
-  const poses: Array<{ pose: MotionPose; label: string }> = [{ pose: "start", label: "Başlangıç" }, { pose: "mid", label: "Hareket" }, { pose: "finish", label: "Kontrol" }];
-  const activePose = poses[motionStep];
-  return <div ref={rootRef} className={`exercise-media exercise-live ${exercise.tone} movement-${pattern} ${compact ? "compact" : ""}`} aria-label={`${exercise.name}: canlı hareket gösterimi`}>
-    {!compact && <div className="motion-header"><span><i /> CANLI HAREKET REHBERİ</span><strong>{guide.action}</strong></div>}
-    <div className="motion-stage motion-live-stage">
-      <span className="motion-floor" />
-      <div className="motion-anatomy"><MotionFigure pattern={pattern} pose={activePose.pose} /></div>
-      {!compact && <div className="motion-muscle-label"><span>HEDEF KASLAR</span><strong>{guide.focus}</strong></div>}
-      {!compact && <div className="motion-phase"><span>{String(motionStep + 1).padStart(2, "0")}</span><strong>{activePose.label}</strong></div>}
-    </div>
-    {!compact && <><div className="motion-controls"><div aria-label={`Gösterilen aşama: ${motionStep + 1} / 3`}>{poses.map((item, index) => <button type="button" aria-label={`${index + 1}. aşamayı göster: ${item.label}`} className={motionStep === index ? "active" : ""} onClick={() => { setMotionStep(index); setMotionPlaying(false); }} key={item.pose} />)}</div><button type="button" className="motion-play" onClick={() => setMotionPlaying((playing) => !playing)}>{motionPlaying ? "Durdur Ⅱ" : "Yavaş oynat ▶"}</button></div><div className="motion-caption"><strong>{activePose.label}</strong><span>{guide.move}</span></div></>}
-  </div>;
-}
-
 function ExerciseAnimation({ exercise, compact = false }: { exercise: { name: string; english: string; tone: string; images?: string[] }; compact?: boolean }) {
-  return exercise.images?.length ? <ExerciseFrameAnimation images={exercise.images} name={exercise.name} compact={compact} /> : <MotionFigureAnimation exercise={exercise} compact={compact} />;
+  const images = exercise.images?.length ? exercise.images : trustedExerciseMedia(exercise.name, exercise.english);
+  return <ExerciseFrameAnimation images={images} name={exercise.name} compact={compact} />;
 }
 
 function workoutPrescription(workout: AiWorkout) {
@@ -584,7 +536,7 @@ export default function Home() {
   const [authUser, setAuthUser] = useState<User | null>(null);
   const [step, setStep] = useState(1);
   const [name, setName] = useState("");
-  const [age, setAge] = useState("");
+  const [birthDate, setBirthDate] = useState("");
   const [height, setHeight] = useState("");
   const [weight, setWeight] = useState("");
   const [gender, setGender] = useState("Kadın");
@@ -630,6 +582,9 @@ export default function Home() {
   const [aiStatus, setAiStatus] = useState<"idle" | "scanning" | "complete" | "fallback">("idle");
   const [aiError, setAiError] = useState("");
   const [profileEditing, setProfileEditing] = useState(false);
+  const [avatarPath, setAvatarPath] = useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [accountStatus, setAccountStatus] = useState<AccountStatus | "loading">("loading");
 
   const localPlan = useMemo(() => createPersonalPlan(gym, equipmentText, history, goalText, requestedExercises), [gym, equipmentText, history, goalText, requestedExercises]);
   const adaptation = useMemo(() => summarizeTrainingAdaptation(sessionHistory), [sessionHistory]);
@@ -642,6 +597,10 @@ export default function Home() {
   const currentSetDrafts = activeWorkout === null ? [] : exerciseSetDrafts[activeWorkout] || [];
   const currentPreviousPerformance = currentWorkoutKey ? previousPerformances[currentWorkoutKey] : null;
   const currentIsBodyweight = currentWorkout ? isBodyweightWorkout(currentWorkout) : false;
+  const age = useMemo(() => {
+    const calculated = calculateAge(birthDate);
+    return calculated === null ? "" : String(calculated);
+  }, [birthDate]);
   const energyMetrics = useMemo(() => calculateEnergyMetrics(gender, age, height, weight, history[7]), [age, gender, height, history, weight]);
   const displayedSessionCalories = Math.round(sessionCalories);
   const planLevel = history[2] || "Yeni başlıyorum";
@@ -696,11 +655,13 @@ export default function Home() {
     void supabase.auth.getUser().then(({ data }) => {
       if (cancelled) return;
       setAuthUser(data.user);
+      setAccountStatus(data.user ? "loading" : "active");
       setAuthStatus(data.user ? "authenticated" : "anonymous");
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (cancelled) return;
       setAuthUser(session?.user ?? null);
+      setAccountStatus(session?.user ? "loading" : "active");
       setAuthStatus(session?.user ? "authenticated" : "anonymous");
     });
     return () => {
@@ -711,20 +672,35 @@ export default function Home() {
 
   useEffect(() => {
     if (!authUser) return;
+    const currentUser = authUser;
+    const userId = currentUser.id;
     let cancelled = false;
     async function loadProfile() {
       const supabase = createClient();
       if (!supabase) return;
-      const { data: profile } = await supabase.from("profiles").select("*").eq("id", authUser!.id).maybeSingle();
-      if (cancelled || !profile) return;
+      const { data: profile } = await supabase.from("profiles").select("*").eq("id", userId).maybeSingle();
+      if (cancelled) return;
+      if (!profile) {
+        const metadataBirthDate = typeof currentUser.user_metadata?.birth_date === "string" ? currentUser.user_metadata.birth_date : "";
+        setBirthDate(metadataBirthDate);
+        setAccountStatus("active");
+        return;
+      }
       setName(typeof profile.display_name === "string" ? profile.display_name : "");
-      setAge(profile.age ? String(profile.age) : "");
+      setBirthDate(typeof profile.birth_date === "string" ? profile.birth_date : typeof currentUser.user_metadata?.birth_date === "string" ? currentUser.user_metadata.birth_date : "");
       setGender(typeof profile.gender === "string" ? profile.gender : "Kadın");
       setHeight(profile.height_cm ? String(profile.height_cm) : "");
       setWeight(profile.weight_kg ? String(profile.weight_kg) : "");
       setGym(profile.environment === "Salon" ? "Salon" : "Evde");
       setEquipmentText(typeof profile.equipment_text === "string" ? profile.equipment_text : "");
       setGoalText(typeof profile.goal_text === "string" ? profile.goal_text : "");
+      setRequestedExercises(typeof profile.requested_exercises === "string" ? profile.requested_exercises : "");
+      const nextAvatarPath = typeof profile.avatar_path === "string" ? profile.avatar_path : null;
+      setAvatarPath(nextAvatarPath);
+      const nextAvatarUrl = await signedAvatarUrl(supabase, nextAvatarPath);
+      if (cancelled) return;
+      setAvatarUrl(nextAvatarUrl);
+      setAccountStatus(profile.account_status === "frozen" ? "frozen" : "active");
       const savedHistory = Array.isArray(profile.history_answers) ? profile.history_answers.map(String).slice(0, 10) : [];
       if (savedHistory.length) setHistory([...savedHistory, ...Array(10).fill("")].slice(0, 10));
       if (savedHistory.length === 10) setStep(5);
@@ -735,11 +711,12 @@ export default function Home() {
 
   useEffect(() => {
     if (!authUser) return;
+    const userId = authUser.id;
     let cancelled = false;
     async function loadCustomPlan() {
       const supabase = createClient();
       if (!supabase) return;
-      const { data } = await supabase.from("workout_plans").select("workouts").eq("user_id", authUser.id).maybeSingle();
+      const { data } = await supabase.from("workout_plans").select("workouts").eq("user_id", userId).maybeSingle();
       if (cancelled || !Array.isArray(data?.workouts) || !data.workouts.length) return;
       setAiWorkouts(data.workouts.filter((item): item is AiWorkout => Boolean(item && typeof item === "object" && typeof (item as AiWorkout).name === "string" && typeof (item as AiWorkout).sets === "string")));
     }
@@ -983,6 +960,7 @@ export default function Home() {
         const { error: fallbackSessionError } = await supabase.from("workout_sessions").insert(baseRecord);
         if (fallbackSessionError) return;
       }
+      window.dispatchEvent(new Event("fit-ai-activity-recorded"));
       const completedDate = istanbulDateKey(new Date(record.completedAt));
       const { data: scheduledDay } = await supabase.from("workout_schedule").select("id, scheduled_time, original_date").eq("user_id", user.id).eq("scheduled_date", completedDate).maybeSingle();
       await supabase.from("workout_schedule").upsert({ id: scheduledDay?.id || crypto.randomUUID(), user_id: user.id, scheduled_date: completedDate, scheduled_time: scheduledDay?.scheduled_time || istanbulTimeKey(new Date(record.completedAt)), status: "completed", original_date: scheduledDay?.original_date || null, completed_session_id: record.id, updated_at: new Date().toISOString() }, { onConflict: "user_id,scheduled_date" });
@@ -1055,19 +1033,19 @@ export default function Home() {
       if (supabase) {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-          await supabase.from("profiles").upsert({
-            id: user.id,
-            display_name: name || "Sporcu",
-            age: Number(age) || null,
+          await saveProfileWithHistory(supabase, {
+            displayName: name || "Sporcu",
+            birthDate,
             gender,
-            height_cm: Number(height) || null,
-            weight_kg: Number(weight) || null,
-            environment: gym,
-            equipment_text: equipmentText,
-            goal_text: goalText,
-            history_answers: history,
-            photo_url: null,
-          }, { onConflict: "id" });
+            heightCm: Number(height) || null,
+            weightKg: Number(weight) || null,
+            environment: gym === "Salon" ? "Salon" : "Evde",
+            equipmentText,
+            goalText,
+            requestedExercises,
+            avatarPath,
+          });
+          await supabase.from("profiles").update({ history_answers: history, updated_at: new Date().toISOString() }).eq("id", user.id);
         }
       }
     } catch {
@@ -1080,7 +1058,7 @@ export default function Home() {
       const controller = new AbortController();
       const timeout = window.setTimeout(() => controller.abort(), 45_000);
       const trainingHistory = sessionHistory.slice(0, 8).map((session) => ({ completedAt: session.completedAt, completedExercises: session.completedExercises, totalExercises: session.totalExercises, difficulty: session.difficulty, fatigue: session.fatigue, painAreas: session.painAreas, feedbackNote: session.feedbackNote }));
-      const aiResponse = await fetch("/api/generate-plan", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, age, gender, height, weight, environment: gym, equipment: equipmentText, goal: goalText, requestedExercises, history, trainingHistory, adaptation, exerciseCatalog, photoDataUrl }), signal: controller.signal }).finally(() => window.clearTimeout(timeout));
+      const aiResponse = await fetch("/api/generate-plan", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, birthDate, age, gender, height, weight, environment: gym, equipment: equipmentText, goal: goalText, requestedExercises, history, trainingHistory, adaptation, exerciseCatalog, photoDataUrl }), signal: controller.signal }).finally(() => window.clearTimeout(timeout));
       if (aiResponse.ok) {
         const aiPlan = await aiResponse.json() as { workouts?: Array<{ id: string; name: string; english: string; area: string; sets: number; reps: string; restSeconds: number; instructions?: string }>; rationale?: string; safetyNote?: string; analysis?: AiPlanAnalysis; weeklySchedule?: AiScheduleDay[]; progression?: string[]; profileFingerprint?: string };
         const normalizedWorkouts = aiPlan.workouts?.length ? normalizeAiWorkouts(aiPlan.workouts) : [];
@@ -1142,6 +1120,7 @@ export default function Home() {
 
   function handleSignedIn(user: User) {
     setAuthUser(user);
+    setAccountStatus("loading");
     setAuthStatus("authenticated");
   }
 
@@ -1152,7 +1131,7 @@ export default function Home() {
     setAuthStatus("anonymous");
     setStep(1);
     setName("");
-    setAge("");
+    setBirthDate("");
     setHeight("");
     setWeight("");
     setGender("Kadın");
@@ -1168,18 +1147,51 @@ export default function Home() {
     setPendingExerciseLogs([]);
     setAiWorkouts([]);
     setProfileEditing(false);
+    setAvatarPath(null);
+    setAvatarUrl(null);
+    setAccountStatus("active");
+  }
+
+  function applySavedProfile(profile: EditableProfile, nextAvatarUrl: string | null) {
+    setName(profile.displayName);
+    setBirthDate(profile.birthDate);
+    setGender(profile.gender);
+    setHeight(profile.heightCm === null ? "" : String(profile.heightCm));
+    setWeight(profile.weightKg === null ? "" : String(profile.weightKg));
+    setGoalText(profile.goalText);
+    setGym(profile.environment);
+    setEquipmentText(profile.equipmentText);
+    setRequestedExercises(profile.requestedExercises);
+    setAvatarPath(profile.avatarPath);
+    setAvatarUrl(nextAvatarUrl);
+  }
+
+  function clearDeletedAccount() {
+    setAuthUser(null);
+    setAuthStatus("anonymous");
+    setAccountStatus("active");
+    setStep(1);
   }
 
   if (authStatus !== "authenticated" || !authUser) {
-    return <AuthScreen status={authStatus === "authenticated" ? "loading" : authStatus} onSignedIn={handleSignedIn} />;
+    return <><MobileRuntime /><AuthScreen status={authStatus === "authenticated" ? "loading" : authStatus} onSignedIn={handleSignedIn} /></>;
+  }
+
+  if (accountStatus === "loading") {
+    return <main className="auth-shell auth-loading"><div className="auth-loading-mark">↗</div><strong>Profilin hazırlanıyor</strong><span>Hesap durumun ve kişisel verilerin kontrol ediliyor…</span></main>;
+  }
+
+  if (accountStatus === "frozen") {
+    return <FrozenAccountScreen user={authUser} onReactivated={() => setAccountStatus("active")} onSignOut={handleSignOut} />;
   }
 
   return (
     <main className="app-shell">
+      <MobileRuntime />
       {step === 5 && <nav className="topbar">
         <div className="brand"><span className="brand-mark">↗</span><span>form<span className="brand-dot">.</span>ai</span></div>
 <div className="top-links"><button type="button" aria-pressed={activeView === "plan"} className={activeView === "plan" ? "active" : ""} onClick={() => setActiveView("plan")}>Antrenmanım</button><button type="button" aria-pressed={activeView === "nutrition"} className={activeView === "nutrition" ? "active" : ""} onClick={() => setActiveView("nutrition")}>Kalori takibi</button><button type="button" aria-pressed={activeView === "progress"} className={activeView === "progress" ? "active" : ""} onClick={() => setActiveView("progress")}>İlerlemem</button><button type="button" aria-pressed={activeView === "calendar"} className={activeView === "calendar" ? "active" : ""} onClick={() => setActiveView("calendar")}>Takvim</button><button type="button" aria-pressed={activeView === "library"} className={activeView === "library" ? "active" : ""} onClick={() => setActiveView("library")}>Hareket kütüphanesi</button></div>
-        <div className="top-actions"><ThemeToggle /><button type="button" className="profile-mini" aria-expanded={profileEditing} onClick={() => step === 5 && setProfileEditing((editing) => !editing)}><span className="mini-avatar">{name ? name.charAt(0).toUpperCase() : "E"}</span><span>Profilim</span><span className="chevron">⌄</span></button></div>
+        <div className="top-actions"><ThemeToggle /><button type="button" className="profile-mini" aria-expanded={profileEditing} onClick={() => step === 5 && setProfileEditing((editing) => !editing)}><span className="mini-avatar">{avatarUrl ? <Image src={avatarUrl} alt="" width={30} height={30} unoptimized /> : name ? name.charAt(0).toUpperCase() : "E"}</span><span>Profilim</span><span className="chevron">⌄</span></button></div>
       </nav>}
       {step < 5 && <ThemeToggle className="onboarding-theme-toggle" />}
 
@@ -1192,12 +1204,12 @@ export default function Home() {
             <div className="eyebrow">Sana özel başlangıç</div><h1>Vücudunu tanı,<br /><em>gücünü keşfet.</em></h1><p className="lead">Birkaç bilgiyle sana uygun, sürdürülebilir bir antrenman planı oluşturalım.</p>
             <div className="form-grid">
               <label className="wide">Adın<input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nasıl hitap edelim?" /></label>
-              <label>Yaşın<input type="number" value={age} onChange={(e) => setAge(e.target.value)} placeholder="24" /></label>
+              <label>Doğum tarihin<input type="date" min="1905-01-01" max={new Date().toISOString().slice(0, 10)} value={birthDate} onChange={(e) => setBirthDate(e.target.value)} /><small>{age ? `${age} yaş · otomatik hesaplandı` : "Yaşın bu tarihten otomatik hesaplanır"}</small></label>
               <label>Cinsiyet<div className="segmented"><button type="button" aria-pressed={gender === "Kadın"} className={gender === "Kadın" ? "selected" : ""} onClick={() => setGender("Kadın")}>Kadın</button><button type="button" aria-pressed={gender === "Erkek"} className={gender === "Erkek" ? "selected" : ""} onClick={() => setGender("Erkek")}>Erkek</button></div></label>
               <label>Boyun (cm)<input type="number" value={height} onChange={(e) => setHeight(e.target.value)} placeholder="168" /></label>
               <label>Kilon (kg)<input type="number" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="62" /></label>
             </div>
-            <button className="primary-btn" type="button" onClick={() => setStep(2)}>Devam et <span>→</span></button>
+            <button className="primary-btn" type="button" disabled={!name.trim() || !isValidBirthDate(birthDate) || !height || !weight} onClick={() => setStep(2)}>Devam et <span>→</span></button>
           </div>}
 
           {step === 2 && <div className="step-content equipment-step">
@@ -1224,7 +1236,7 @@ export default function Home() {
         </section>
       ) : (
         <section className="dashboard">
-          {profileEditing && <div className="profile-editor"><div><div className="eyebrow">PROFİLİ GÜNCELLE</div><h2>Spor ortamını ve ekipmanlarını değiştir</h2><p>Kaydettiğinde AI, yeni profil verilerinle programı yeniden oluşturur.</p><div className="profile-account"><span>DOĞRULANMIŞ HESAP</span><strong>{authUser.email}</strong><small>E-posta doğrulandı</small><button type="button" onClick={() => void handleSignOut()}>Oturumu kapat</button></div></div><div className="profile-editor-fields"><div className="choice-cards"><button type="button" aria-pressed={gym === "Evde"} className={gym === "Evde" ? "choice selected" : "choice"} onClick={() => setGym("Evde")}><span>⌂</span><strong>Evde</strong><small>Ekipmansız veya ev ekipmanı</small></button><button type="button" aria-pressed={gym === "Salon"} className={gym === "Salon" ? "choice selected" : "choice"} onClick={() => setGym("Salon")}><span>▦</span><strong>Spor salonunda</strong><small>Salon makineleri ve ağırlıklar</small></button></div><label className="textarea-label">EKİPMANLARIN<textarea value={equipmentText} onChange={(event) => setEquipmentText(event.target.value)} placeholder="Örn. dambıl, direnç bandı, sehpa" /></label><label className="textarea-label">İSTEDİĞİN HAREKETLER<textarea value={requestedExercises} onChange={(event) => setRequestedExercises(event.target.value)} placeholder="Örn. Yerde Dambıl Göğüs Presi" /></label><button className="primary-btn" type="button" onClick={() => { setProfileEditing(false); void createPlan(); }} disabled={saving}>{saving ? "AI yeniden tarıyor…" : "Profili kaydet ve programı yenile →"}</button></div></div>}
+          {profileEditing && <ProfileManager user={authUser} profile={{ displayName: name, birthDate, gender, heightCm: Number(height) || null, weightKg: Number(weight) || null, goalText, environment: gym === "Salon" ? "Salon" : "Evde", equipmentText, requestedExercises, avatarPath }} avatarUrl={avatarUrl} onSaved={applySavedProfile} onFrozen={() => { setProfileEditing(false); setAccountStatus("frozen"); }} onDeleted={clearDeletedAccount} onSignOut={handleSignOut} />}
 <WorkoutCalendar active={activeView === "calendar"} userId={authUser?.id} onStartWorkout={() => setActiveView("plan")} />{activeView === "calendar" ? null : activeView === "progress" ? <ProgressView name={name} sessions={sessionHistory} referenceTime={progressReferenceTime} energyMetrics={energyMetrics} userId={authUser?.id} goalText={goalText || planGoal} /> : activeView === "nutrition" ? <CalorieTracker userId={authUser?.id} bmr={energyMetrics?.bmr} tdee={energyMetrics?.tdee} weightKg={Number(weight) || undefined} activityFactor={energyMetrics?.activityFactor} workoutDays={inferWorkoutDays(history[1] || history[3])} profileGoal={goalText || planGoal} /> : activeView === "library" ? <LibraryView onOpenWorkout={(exercise) => { setActiveView("plan"); openWorkout(0, [exercise]); }} onAddWorkout={(exercise) => setAiWorkouts((current) => current.some((item) => item.id === exercise.id) ? current : [...current, exercise])} /> : <>
           {activeWorkout !== null && currentWorkout && currentGuide && currentPrescription ? <div className="workout-player">
             <button className="back-btn" type="button" onClick={() => { setIsRunning(false); setActiveWorkout(null); }}>← Plana dön</button>
@@ -1240,8 +1252,9 @@ export default function Home() {
             <div className="player-actions"><button className="start-btn" type="button" onClick={() => workoutPhase === "done" ? activeWorkout < playerQueue.length - 1 ? goToWorkout(activeWorkout + 1) : void finishWorkout() : setIsRunning((running) => !running)}>{workoutPhase === "done" ? activeWorkout < playerQueue.length - 1 ? "Sonraki harekete geç" : "Antrenmanı kaydet" : isRunning ? "Duraklat" : workoutPhase === "rest" ? "Dinlenmeyi başlat" : "Seti başlat"} <span>→</span></button></div>
             <button className="finish-btn" type="button" onClick={() => void finishWorkout()}>✓ Antrenmanı bitir ve kaydet</button>
           </div> : <>
-          <div className="dashboard-head"><div><div className="eyebrow">BUGÜNÜN PLANI · 01</div><h1>{name || "Ece"}, <em>hazır mısın?</em></h1><p>Verilerine göre ilk program taslağını hazırladık. İlerledikçe daha da kişiselleştireceğiz.</p></div><div className="streak-card"><span>✦</span><strong>4</strong><small>günlük seri</small></div></div>
+          <div className="dashboard-head"><div><div className="eyebrow">BUGÜNÜN PLANI · 01</div><h1>{name || "Ece"}, <em>hazır mısın?</em></h1><p>Verilerine göre ilk program taslağını hazırladık. İlerledikçe daha da kişiselleştireceğiz.</p></div><ActivityStreak userId={authUser.id} /></div>
           <div className="stats-row"><div><span>Vücut kitle indeksi</span><strong>{bmi}</strong><small>İlk ölçüm</small></div><div><span>Hedef</span><strong>{goalText ? "Kişisel" : "Güçlenme"}</strong><small>Profiline göre</small></div><div><span>Ortam</span><strong>{gym}</strong><small>{equipmentText || "Ekipmansız"}</small></div></div>
+          <ActivityLogger userId={authUser.id} />
           <div className="wellness-row"><div className="wellness-card calorie-card"><div><span>BUGÜNÜN ANTRENMAN ENERJİSİ</span><strong>{displayedSessionCalories} <small>kcal</small></strong><p>Hareket türü, yoğunluk, süre ve kilona göre MET tabanlı tahmin.</p></div><div className="calorie-ring"><i>{displayedSessionCalories}</i></div><div className="calorie-note"><span>TAKİP</span><strong>Antrenman içi</strong><small>Aktif set ve dinlenme ayrı hesaplanır</small></div></div></div>
           {energyMetrics && <div className="energy-dashboard"><article><span>BAZAL ENERJİ · BMR</span><strong>{energyMetrics.bmr} <small>kcal/gün</small></strong><p>Vücudunun dinlenme halindeki yaklaşık enerji ihtiyacı.</p></article><article><span>GÜNLÜK TOPLAM · TDEE</span><strong>{energyMetrics.tdee} <small>kcal/gün</small></strong><p>{energyMetrics.activityLabel} düzeyine göre bakım tahmini.</p></article><div><strong>Yaklaşık değer</strong><p>Beslenme hedefi veya tıbbi ölçüm değildir. İlerleme raporunda gerçekleşen antrenman süresi ayrıca hesaplanır.</p></div></div>}
           <div className="plan-explanation"><div><div className="eyebrow">PLANIN NEDEN BÖYLE?</div><h2>{planLevel} · {planGoal}</h2><p>{aiRationale || "Programın; seçtiğin ortam, ekipmanların, spor geçmişin ve yazdığın hedef birlikte değerlendirilerek oluşturuldu. İlerledikçe set, tekrar ve hareket varyasyonları güncellenecek."}</p>{aiSafetyNote && <div className="ai-safety"><strong>Güvenlik notu</strong><span>{aiSafetyNote}</span></div>}{aiError && <div className="ai-error">{aiError}</div>}</div><AiScanFigure compact status={aiStatus} stage={aiStage} /></div>

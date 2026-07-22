@@ -2,14 +2,20 @@ create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   display_name text,
   age smallint,
+  birth_date date,
   gender text,
   height_cm numeric(5,2),
   weight_kg numeric(5,2),
   environment text,
   equipment_text text,
+  requested_exercises text not null default '',
   goal_text text,
   history_answers jsonb not null default '[]'::jsonb,
   photo_url text,
+  avatar_path text,
+  account_status text not null default 'active' check (account_status in ('active', 'frozen', 'deletion_pending')),
+  frozen_at timestamptz,
+  deletion_requested_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -18,6 +24,9 @@ alter table public.profiles enable row level security;
 create policy "Users can read own profile" on public.profiles for select using (auth.uid() = id);
 create policy "Users can insert own profile" on public.profiles for insert with check (auth.uid() = id);
 create policy "Users can update own profile" on public.profiles for update using (auth.uid() = id);
+
+-- Profil yaşam döngüsü, tarihçe, özellik bayrakları ve özel avatar deposu için
+-- db/migrations/20260723_profile_lifecycle.sql dosyası uygulanmalıdır.
 
 create table if not exists public.workout_sessions (
   id uuid primary key,
@@ -239,10 +248,17 @@ create table if not exists public.food_entries (
   protein_g numeric(7,2) not null default 0 check (protein_g >= 0),
   carbs_g numeric(7,2) not null default 0 check (carbs_g >= 0),
   fat_g numeric(7,2) not null default 0 check (fat_g >= 0),
+  fiber_g numeric(7,2) not null default 0 check (fiber_g >= 0),
+  grams numeric(8,2) check (grams > 0),
+  micros jsonb not null default '{}'::jsonb,
   source text not null check (source in ('Barkod', 'Fotoğraf', 'Manuel')),
   barcode text,
   created_at timestamptz not null default now()
 );
+
+alter table public.food_entries add column if not exists fiber_g numeric(7,2) not null default 0 check (fiber_g >= 0);
+alter table public.food_entries add column if not exists grams numeric(8,2) check (grams > 0);
+alter table public.food_entries add column if not exists micros jsonb not null default '{}'::jsonb;
 
 create index if not exists food_entries_user_consumed_idx
   on public.food_entries (user_id, consumed_at desc);
@@ -251,3 +267,76 @@ alter table public.food_entries enable row level security;
 create policy "Users can read own food entries" on public.food_entries for select using (auth.uid() = user_id);
 create policy "Users can insert own food entries" on public.food_entries for insert with check (auth.uid() = user_id);
 create policy "Users can delete own food entries" on public.food_entries for delete using (auth.uid() = user_id);
+
+-- Daily activity streaks are updated only by the server-side RPCs/trigger in
+-- db/migrations/20260722_activity_streaks.sql. Direct writes stay unavailable
+-- to clients so duplicate same-day records cannot increase a streak.
+create table if not exists public.user_streaks (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  current_streak integer not null default 1 check (current_streak >= 1),
+  last_activity_date date not null,
+  timezone text not null default 'UTC',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.activity_logs (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  activity_type text not null check (activity_type in ('workout', 'walk', 'sport')),
+  occurred_at timestamptz not null default now(),
+  local_date date not null,
+  created_at timestamptz not null default now(),
+  unique (user_id, activity_type, local_date)
+);
+
+create index if not exists activity_logs_user_local_date_idx on public.activity_logs (user_id, local_date desc);
+
+alter table public.user_streaks enable row level security;
+alter table public.activity_logs enable row level security;
+create policy "Users can read own streak" on public.user_streaks for select using (auth.uid() = user_id);
+create policy "Users can read own activities" on public.activity_logs for select using (auth.uid() = user_id);
+
+-- Detailed walking and sport journal entries are stored separately from the
+-- daily streak ledger. This allows multiple activities per day without ever
+-- increasing the streak more than once.
+create table if not exists public.sport_activity_entries (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  activity_type text not null check (activity_type in ('walk', 'sport')),
+  sport_key text not null check (char_length(sport_key) between 2 and 40),
+  sport_name text not null check (char_length(sport_name) between 2 and 80),
+  occurred_at timestamptz not null default now(),
+  local_date date not null,
+  duration_minutes integer not null check (duration_minutes between 1 and 1440),
+  intensity text not null check (intensity in ('hafif', 'orta', 'yuksek')),
+  distance_km numeric(8,2) check (distance_km is null or distance_km >= 0),
+  estimated_calories integer check (estimated_calories is null or estimated_calories >= 0),
+  steps integer check (steps is null or steps >= 0),
+  notes text check (notes is null or char_length(notes) <= 500),
+  details jsonb not null default '{}'::jsonb,
+  source text not null default 'manual' check (source in ('manual', 'gps', 'strava', 'wearable')),
+  provider text,
+  external_activity_id text,
+  route_reference text,
+  metadata jsonb not null default '{}'::jsonb,
+  schema_version integer not null default 1 check (schema_version >= 1),
+  created_at timestamptz not null default now()
+);
+
+alter table public.sport_activity_entries add column if not exists estimated_calories integer check (estimated_calories is null or estimated_calories >= 0);
+alter table public.sport_activity_entries add column if not exists steps integer check (steps is null or steps >= 0);
+alter table public.sport_activity_entries add column if not exists source text not null default 'manual' check (source in ('manual', 'gps', 'strava', 'wearable'));
+alter table public.sport_activity_entries add column if not exists provider text;
+alter table public.sport_activity_entries add column if not exists external_activity_id text;
+alter table public.sport_activity_entries add column if not exists route_reference text;
+alter table public.sport_activity_entries add column if not exists metadata jsonb not null default '{}'::jsonb;
+alter table public.sport_activity_entries add column if not exists schema_version integer not null default 1 check (schema_version >= 1);
+
+create index if not exists sport_activity_entries_user_date_idx on public.sport_activity_entries (user_id, local_date desc, occurred_at desc);
+create unique index if not exists sport_activity_entries_external_idx on public.sport_activity_entries (user_id, provider, external_activity_id) where provider is not null and external_activity_id is not null;
+alter table public.sport_activity_entries enable row level security;
+create policy "Users can read own sport activities" on public.sport_activity_entries for select using (auth.uid() = user_id);
+create policy "Users can insert own sport activities" on public.sport_activity_entries for insert with check (auth.uid() = user_id);
+create policy "Users can update own sport activities" on public.sport_activity_entries for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "Users can delete own sport activities" on public.sport_activity_entries for delete using (auth.uid() = user_id);

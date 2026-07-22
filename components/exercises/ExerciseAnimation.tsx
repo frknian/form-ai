@@ -51,41 +51,22 @@ export function ExerciseAnimation({ images, name, intervalMs = 750, compact = fa
 
   const visibleFrameIndex = usableImages.length ? frameIndex % usableImages.length : 0;
   const activeImage = usableImages[visibleFrameIndex];
-  const running = shouldCycleFrames(usableImages.length, isVisible, pageVisible, reducedMotion);
-
-  return <div ref={rootRef} className={`db-exercise-animation ${compact ? "compact" : "large"}`} aria-label={`${name} hareket simülasyonu`}>
-    {running ? (
-      usableImages.map((image, index) => (
-        <Image
-          key={image}
-          src={image}
-          alt={`${name} hareketinin ${index + 1}. aşaması`}
-          width={compact ? 180 : 720}
-          height={compact ? 130 : 460}
-          unoptimized
-          style={{
-            position: index === 0 ? "relative" : "absolute",
-            top: 0,
-            left: 0,
-            opacity: index === visibleFrameIndex ? 1 : 0,
-            pointerEvents: index === visibleFrameIndex ? "auto" : "none",
-          }}
-          onError={() => setFailedImages((current) => [...new Set([...current, image])])}
-        />
-      ))
-    ) : activeImage ? (
+  return <div ref={rootRef} className={`db-exercise-animation ${compact ? "compact" : "large"}`} aria-label={`${name} hareket görseli`}>
+    {activeImage ? (
       <Image
+        key={activeImage}
         src={activeImage}
         alt={`${name} hareketinin ${visibleFrameIndex + 1}. aşaması`}
         width={compact ? 180 : 720}
         height={compact ? 130 : 460}
         loading="lazy"
+        sizes={compact ? "(max-width: 700px) 100vw, (max-width: 980px) 50vw, 33vw" : "(max-width: 700px) 100vw, 720px"}
         unoptimized
         style={{
           position: "relative",
           opacity: 1,
         }}
-        onError={() => setFailedImages((current) => [...new Set([...current, activeImage])])}
+        onError={() => { setFailedImages((current) => [...new Set([...current, activeImage])]); setFrameIndex(0); }}
       />
     ) : (
       <div className="exercise-image-fallback" role="img" aria-label={`${name} için görsel bulunamadı`}>

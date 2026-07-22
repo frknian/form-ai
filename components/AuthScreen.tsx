@@ -3,12 +3,14 @@
 import { FormEvent, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
+import { authCallbackUrl, isNativeApp, openNativeBrowser } from "@/lib/mobile";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { isValidBirthDate } from "@/lib/profile";
 
 type AuthMode = "signup" | "login";
 
 function callbackUrl() {
-  return `${window.location.origin}/auth/callback`;
+  return authCallbackUrl();
 }
 
 function friendlyAuthError(message: string) {
@@ -26,6 +28,7 @@ export function AuthScreen({ status, onSignedIn }: { status: "loading" | "anonym
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordAgain, setPasswordAgain] = useState("");
+  const [birthDate, setBirthDate] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -47,6 +50,10 @@ export function AuthScreen({ status, onSignedIn }: { status: "loading" | "anonym
       setError("Şifreler birbiriyle eşleşmiyor.");
       return;
     }
+    if (mode === "signup" && !isValidBirthDate(birthDate)) {
+      setError("Geçerli bir doğum tarihi gir.");
+      return;
+    }
     if (password.length < 8) {
       setError("Şifren en az 8 karakter olmalı.");
       return;
@@ -64,7 +71,7 @@ export function AuthScreen({ status, onSignedIn }: { status: "loading" | "anonym
         const { data, error: signUpError } = await supabase.auth.signUp({
           email: email.trim(),
           password,
-          options: { emailRedirectTo: callbackUrl() },
+          options: { emailRedirectTo: callbackUrl(), data: { birth_date: birthDate } },
         });
         if (signUpError) throw signUpError;
         if (data.session?.user) {
@@ -93,12 +100,16 @@ export function AuthScreen({ status, onSignedIn }: { status: "loading" | "anonym
       return;
     }
     setBusy(true);
-    const { error: googleError } = await supabase.auth.signInWithOAuth({
+    const native = isNativeApp();
+    const { data, error: googleError } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: callbackUrl(), queryParams: { access_type: "offline", prompt: "consent" } },
+      options: { redirectTo: callbackUrl(), skipBrowserRedirect: native, queryParams: { access_type: "offline", prompt: "consent" } },
     });
     if (googleError) {
       setError(friendlyAuthError(googleError.message));
+      setBusy(false);
+    } else if (native && data.url) {
+      await openNativeBrowser(data.url);
       setBusy(false);
     }
   }
@@ -142,6 +153,7 @@ export function AuthScreen({ status, onSignedIn }: { status: "loading" | "anonym
             <div className="auth-divider"><span>veya e-posta ile</span></div>
             <form className="auth-form" onSubmit={handleEmailAuth}>
               <label>E-posta adresin<input type="email" name="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="ornek@gmail.com" /></label>
+              {mode === "signup" && <label>Doğum tarihin<input type="date" name="birth-date" autoComplete="bday" min="1905-01-01" max={new Date().toISOString().slice(0, 10)} required value={birthDate} onChange={(event) => setBirthDate(event.target.value)} /><small>Yaşın bu tarihten otomatik hesaplanır ve her yıl güncellenir.</small></label>}
               <label>Şifren<input type="password" name="password" autoComplete={mode === "signup" ? "new-password" : "current-password"} minLength={8} required value={password} onChange={(event) => setPassword(event.target.value)} placeholder="En az 8 karakter" /></label>
               {mode === "signup" && <label>Şifreni tekrar yaz<input type="password" name="password-confirmation" autoComplete="new-password" minLength={8} required value={passwordAgain} onChange={(event) => setPasswordAgain(event.target.value)} placeholder="Şifreni doğrula" /></label>}
               {error && <div className="auth-message error" role="alert">{error}</div>}

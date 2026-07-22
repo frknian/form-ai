@@ -27,16 +27,30 @@ test("server-renders the secure form.ai account entry", async () => {
   assert.doesNotMatch(html, /Your site is taking shape|Building your site|codex-preview/i);
 });
 
+test("keeps adaptive plan, meal entry and training-place controls dark", async () => {
+  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  assert.match(styles, /\.dark \.adaptive-card,/);
+  assert.match(styles, /\.dark \.adaptive-icon \{ background:#303a23/);
+  assert.match(styles, /\.dark \.entry-workspace \{ background:var\(--surface-soft\)/);
+  assert.match(styles, /\.dark \.entry-workspace select,/);
+  assert.match(styles, /\.dark \.choice\.selected \{ background:#303a23/);
+});
+
 test("keeps email verification and Google authentication wired into profile creation", async () => {
-  const [page, authScreen, callback] = await Promise.all([
+  const [page, profileManager, authScreen, callback, mobileRuntime, mobileConfig, androidManifest, iosInfo] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../components/ProfileManager.tsx", import.meta.url), "utf8"),
     readFile(new URL("../components/AuthScreen.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/auth/callback/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../lib/mobile.ts", import.meta.url), "utf8"),
+    readFile(new URL("../capacitor.config.ts", import.meta.url), "utf8"),
+    readFile(new URL("../android/app/src/main/AndroidManifest.xml", import.meta.url), "utf8"),
+    readFile(new URL("../ios/App/App/Info.plist", import.meta.url), "utf8"),
   ]);
 
   assert.match(page, /onAuthStateChange/);
   assert.match(page, /auth\.signOut/);
-  assert.match(page, /DOĞRULANMIŞ HESAP/);
+  assert.match(profileManager, /DOĞRULANMIŞ HESAP/);
   assert.match(authScreen, /auth\.signUp/);
   assert.match(authScreen, /emailRedirectTo/);
   assert.match(authScreen, /auth\.resend/);
@@ -47,6 +61,18 @@ test("keeps email verification and Google authentication wired into profile crea
   assert.match(authScreen, /status === "unavailable" &&/);
   assert.doesNotMatch(authScreen, /status === "unavailable" \? <div[^]*?\: <>/);
   assert.match(callback, /exchangeCodeForSession/);
+  assert.match(page, /MobileRuntime/);
+  assert.match(authScreen, /skipBrowserRedirect: native/);
+  assert.match(authScreen, /openNativeBrowser/);
+  assert.match(mobileRuntime, /com\.fitai\.app:\/\/auth\/callback/);
+  assert.match(mobileRuntime, /exchangeCodeForSession/);
+  assert.match(mobileRuntime, /LocalNotifications\.schedule/);
+  assert.match(mobileRuntime, /Camera\.getPhoto/);
+  assert.match(mobileConfig, /appId: "com\.fitai\.app"/);
+  assert.doesNotMatch(mobileConfig, /GEMINI_API_KEY|SUPABASE_ANON_KEY/);
+  assert.match(androidManifest, /android:scheme="com\.fitai\.app"/);
+  assert.match(iosInfo, /<string>com\.fitai\.app<\/string>/);
+  assert.match(iosInfo, /NSCameraUsageDescription/);
 });
 
 test("keeps the AI plan and movement library wired into the product", async () => {
@@ -72,11 +98,8 @@ test("keeps the AI plan and movement library wired into the product", async () =
   assert.match(page, /ExerciseLibrary/);
   assert.match(page, /ExerciseAnimation/);
   assert.match(page, /floor-press/);
-  assert.match(page, /type MotionPose = "start" \| "mid" \| "finish"/);
-  assert.match(page, /CANLI HAREKET REHBERİ/);
-  assert.match(page, /motion-live-stage/);
-  assert.match(page, /Yavaş oynat/);
-  assert.match(page, /motion-muscle/);
+  assert.match(page, /trustedExerciseMedia/);
+  assert.doesNotMatch(page, /MotionFigureAnimation/);
   assert.match(page, /"leg-machine"/);
   assert.match(page, /return "curl"/);
   assert.match(page, /return "triceps"/);
@@ -145,6 +168,10 @@ test("keeps the AI plan and movement library wired into the product", async () =
   assert.match(supabaseSchema, /create table if not exists public\.reminder_preferences/i);
   assert.match(supabaseSchema, /create table if not exists public\.weekly_ai_reviews/i);
   assert.match(supabaseSchema, /create table if not exists public\.nutrition_goals/i);
+  assert.match(supabaseSchema, /create table if not exists public\.user_streaks/i);
+  assert.match(supabaseSchema, /create table if not exists public\.activity_logs/i);
+  assert.match(page, /ActivityStreak/);
+  assert.match(page, /ActivityLogger/);
   assert.match(supabaseSchema, /Users can read own nutrition goals/i);
   assert.match(supabaseSchema, /Users can update own nutrition goals/i);
   assert.match(supabaseSchema, /Users can read own weekly AI reviews/i);

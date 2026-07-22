@@ -13,11 +13,23 @@
     "test": "npm run build && node --test tests/*.test.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "data:import-exercises": "node scripts/import-free-exercise-db.mjs",
-    "db:generate": "drizzle-kit generate"
+    "data:sync-plan-media": "node scripts/sync-plan-exercise-media.mjs",
+    "db:generate": "drizzle-kit generate",
+    "mobile:sync": "cap sync",
+    "mobile:android": "cap open android",
+    "mobile:ios": "cap open ios",
+    "mobile:doctor": "cap doctor"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.95",
     "@ai-sdk/react": "^3.0.232",
+    "@capacitor/app": "^8.1.1",
+    "@capacitor/browser": "^8.0.4",
+    "@capacitor/camera": "^8.2.1",
+    "@capacitor/core": "^8.4.2",
+    "@capacitor/haptics": "^8.0.2",
+    "@capacitor/local-notifications": "^8.2.1",
+    "@capacitor/network": "^8.0.1",
     "@streamdown/cjk": "^1.0.3",
     "@streamdown/code": "^1.1.1",
     "@streamdown/math": "^1.0.2",
@@ -40,6 +52,9 @@
     "use-stick-to-bottom": "^1.1.6"
   },
   "devDependencies": {
+    "@capacitor/android": "^8.4.2",
+    "@capacitor/cli": "^8.4.2",
+    "@capacitor/ios": "^8.4.2",
     "@cloudflare/vite-plugin": "1.37.1",
     "@tailwindcss/postcss": "4.2.1",
     "@types/node": "22.19.19",
