@@ -3,7 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { createActivityRepository, summarizeActivities, type ActivityEntry } from "@/lib/activity-service";
-import { activityIntensityOptions, coreActivityCatalog, sportCatalog, sportByKey, validActivityDuration, type SportDefinition, type SportMetricKey } from "@/lib/sports";
+import { activityIntensityOptions, coreActivityCatalog, estimateActivityCalories, sportCatalog, sportByKey, validActivityDuration, type SportDefinition, type SportMetricKey } from "@/lib/sports";
 import { localDateKey, userTimeZone, type ActivityType } from "@/lib/streak";
 
 type LoggerMode = "closed" | "guide" | "form";
@@ -23,12 +23,13 @@ function formatActivityDate(value: string) {
   return new Intl.DateTimeFormat("tr-TR", { day: "numeric", month: "short", weekday: "short" }).format(new Date(`${value}T12:00:00`));
 }
 
-export function ActivityLogger({ userId }: { userId?: string }) {
+export function ActivityLogger({ userId, weightKg = 70 }: { userId?: string; weightKg?: number }) {
   const [mode, setMode] = useState<LoggerMode>("closed");
   const [activityKey, setActivityKey] = useState("");
   const [duration, setDuration] = useState("30");
   const [distance, setDistance] = useState("");
-  const [calories, setCalories] = useState("");
+  const [manualCalories, setManualCalories] = useState("");
+  const [caloriesManual, setCaloriesManual] = useState(false);
   const [steps, setSteps] = useState("");
   const [intensity, setIntensity] = useState<(typeof activityIntensityOptions)[number]>("Orta");
   const [metrics, setMetrics] = useState<MetricValues>({});
@@ -39,6 +40,8 @@ export function ActivityLogger({ userId }: { userId?: string }) {
   const [message, setMessage] = useState("");
   const selectedActivity = activityByKey(activityKey);
   const dailySummaries = summarizeActivities(history);
+  const automaticCalories = selectedActivity ? estimateActivityCalories(selectedActivity.key, Number(duration), weightKg, intensity) : 0;
+  const calories = caloriesManual ? manualCalories : automaticCalories ? String(automaticCalories) : "";
 
   useEffect(() => {
     if (!userId) return undefined;
@@ -63,7 +66,8 @@ export function ActivityLogger({ userId }: { userId?: string }) {
     setMode(nextMode);
     setDuration("30");
     setDistance("");
-    setCalories("");
+    setManualCalories("");
+    setCaloriesManual(false);
     setSteps("");
     setIntensity("Orta");
     setMetrics({});
@@ -130,7 +134,7 @@ export function ActivityLogger({ userId }: { userId?: string }) {
 
     {mode === "guide" && <div className="sport-guide"><div className="sport-guide-heading"><strong>SPOR SEÇİM KILAVUZU</strong><span>Yaptığın aktiviteye en yakın seçeneği aç.</span></div><div className="sport-guide-grid">{sportCatalog.map((sport) => <button type="button" key={sport.key} onClick={() => selectActivity(sport.key)}><span>{sport.icon}</span><div><strong>{sport.name}</strong><small>{sport.guide}</small></div><b>→</b></button>)}</div></div>}
 
-    {mode === "form" && selectedActivity && <form className="activity-form" onSubmit={saveActivity}><button type="button" className="sport-guide-back" onClick={() => resetForm(coreActivityCatalog.some((activity) => activity.key === selectedActivity.key) ? "closed" : "guide")}>← Aktivite seçimine dön</button><div className="activity-form-title"><span>{selectedActivity.icon}</span><div><small>{selectedActivity.name.toLocaleUpperCase("tr-TR")} KAYDI</small><strong>{selectedActivity.guide}</strong></div></div><div className="activity-form-grid activity-core-fields"><label>AKTİVİTE TÜRÜ<input value={selectedActivity.name} readOnly /></label><label>SÜRE (DK)<input required min="1" max="1440" inputMode="numeric" type="number" value={duration} onChange={(event) => setDuration(event.target.value)} /></label><label>MESAFE (KM)<input min="0" step="0.01" inputMode="decimal" type="number" value={distance} onChange={(event) => setDistance(event.target.value)} placeholder="İsteğe bağlı" /></label><label>TAHMİNİ KALORİ<input min="0" inputMode="numeric" type="number" value={calories} onChange={(event) => setCalories(event.target.value)} placeholder="kcal" /></label><label>ADIM <small>İSTEĞE BAĞLI</small><input min="0" inputMode="numeric" type="number" value={steps} onChange={(event) => setSteps(event.target.value)} placeholder="0" /></label><label>YOĞUNLUK<select value={intensity} onChange={(event) => setIntensity(event.target.value as typeof intensity)}>{activityIntensityOptions.map((option) => <option key={option}>{option}</option>)}</select></label>{selectedActivity.metrics.filter((metric) => metric.key !== "distanceKm").map((metric) => <label key={metric.key}>{metric.label.toLocaleUpperCase("tr-TR")} ({metric.unit})<input min="0" step={metric.step || "1"} inputMode="decimal" type="number" value={metrics[metric.key] || ""} onChange={(event) => setMetric(metric.key, event.target.value)} placeholder="İsteğe bağlı" /></label>)}</div><label className="activity-notes">KISA NOT<textarea maxLength={500} value={notes} onChange={(event) => setNotes(event.target.value)} placeholder={`${selectedActivity.name} kaydına eklemek istediğin not…`} /></label><button className="activity-save" disabled={saving} type="submit">{saving ? "Kaydediliyor…" : `${selectedActivity.name} kaydını ekle →`}</button></form>}
+    {mode === "form" && selectedActivity && <form className="activity-form" onSubmit={saveActivity}><button type="button" className="sport-guide-back" onClick={() => resetForm(coreActivityCatalog.some((activity) => activity.key === selectedActivity.key) ? "closed" : "guide")}>← Aktivite seçimine dön</button><div className="activity-form-title"><span>{selectedActivity.icon}</span><div><small>{selectedActivity.name.toLocaleUpperCase("tr-TR")} KAYDI</small><strong>{selectedActivity.guide}</strong></div></div><div className="activity-form-grid activity-core-fields"><label>AKTİVİTE TÜRÜ<input value={selectedActivity.name} readOnly /></label><label>SÜRE (DK)<input required min="1" max="1440" inputMode="numeric" type="number" value={duration} onChange={(event) => { setDuration(event.target.value); setCaloriesManual(false); }} /></label><label>MESAFE (KM)<input min="0" step="0.01" inputMode="decimal" type="number" value={distance} onChange={(event) => setDistance(event.target.value)} placeholder="İsteğe bağlı" /></label><label>TAHMİNİ KALORİ <small>{caloriesManual ? "MANUEL" : "OTOMATİK"}</small><input min="0" inputMode="numeric" type="number" value={calories} onChange={(event) => { setManualCalories(event.target.value); setCaloriesManual(true); }} placeholder="kcal" /></label><label>ADIM <small>İSTEĞE BAĞLI</small><input min="0" inputMode="numeric" type="number" value={steps} onChange={(event) => setSteps(event.target.value)} placeholder="0" /></label><label>YOĞUNLUK<select value={intensity} onChange={(event) => { setIntensity(event.target.value as typeof intensity); setCaloriesManual(false); }}>{activityIntensityOptions.map((option) => <option key={option}>{option}</option>)}</select></label>{selectedActivity.metrics.filter((metric) => metric.key !== "distanceKm").map((metric) => <label key={metric.key}>{metric.label.toLocaleUpperCase("tr-TR")} ({metric.unit})<input min="0" step={metric.step || "1"} inputMode="decimal" type="number" value={metrics[metric.key] || ""} onChange={(event) => setMetric(metric.key, event.target.value)} placeholder="İsteğe bağlı" /></label>)}</div><p className="activity-calorie-note">Kalori; profilindeki kilo, süre ve yoğunluğa göre MET yöntemiyle tahmin edilir. İstersen değeri değiştirebilirsin.</p><label className="activity-notes">KISA NOT<textarea maxLength={500} value={notes} onChange={(event) => setNotes(event.target.value)} placeholder={`${selectedActivity.name} kaydına eklemek istediğin not…`} /></label><button className="activity-save" disabled={saving} type="submit">{saving ? "Kaydediliyor…" : `${selectedActivity.name} kaydını ekle →`}</button></form>}
 
     {message && <p className="activity-logger-message" role="status">{message}</p>}
 

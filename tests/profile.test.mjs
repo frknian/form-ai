@@ -34,6 +34,7 @@ test("profil yaşam döngüsü özel depolama, RLS ve güçlü silme doğrulamas
   assert.match(component, /HESABIMI SİL/);
   assert.match(component, /Hesabı dondur/);
   assert.match(component, /profile-avatars/);
+  assert.doesNotMatch(component, /DEĞİŞİKLİK GEÇMİŞİ|her doğum gününde otomatik güncellenir/);
   assert.match(route, /auth\.admin\.deleteUser/);
   assert.match(route, /SUPABASE_SECRET_KEY/);
   assert.match(migration, /birthday_premium_day', false/);

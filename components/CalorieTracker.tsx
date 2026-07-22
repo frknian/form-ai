@@ -71,6 +71,10 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
   const [barcode, setBarcode] = useState("");
   const [isScanning, setIsScanning] = useState(false);
   const [message, setMessage] = useState("");
+  const [mealAdvice, setMealAdvice] = useState("");
+  const [mealAdviceLoading, setMealAdviceLoading] = useState(false);
+  const [mealAdviceSource, setMealAdviceSource] = useState<"gemini" | "fallback">("fallback");
+  const [adviceRevision, setAdviceRevision] = useState(0);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [dateOffset, setDateOffset] = useState(0);
   const [storageReady, setStorageReady] = useState(false);
@@ -95,6 +99,10 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
     if (!storageReady) return;
     localStorage.setItem("fit-ai-calorie-entries", JSON.stringify(entries));
   }, [entries, storageReady]);
+
+  useEffect(() => () => {
+    if (photoPreview?.startsWith("blob:")) URL.revokeObjectURL(photoPreview);
+  }, [photoPreview]);
 
   useEffect(() => {
     if (!userId) return;
@@ -191,6 +199,31 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
   const totals = useMemo(() => dailyEntries.reduce((total, entry) => ({ calories: total.calories + entry.calories, protein: total.protein + entry.protein, carbs: total.carbs + entry.carbs, fat: total.fat + entry.fat }), { calories: 0, protein: 0, carbs: 0, fat: 0 }), [dailyEntries]);
   const remaining = Math.max(0, nutritionGoal.calorieTarget - totals.calories);
   const progress = Math.min(100, Math.round((totals.calories / Math.max(1, nutritionGoal.calorieTarget)) * 100));
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const timer = window.setTimeout(async () => {
+      setMealAdviceLoading(true);
+      try {
+        const response = await fetch("/api/nutrition/advice", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ calorieTarget: nutritionGoal.calorieTarget, proteinTarget: nutritionGoal.proteinGrams, carbsTarget: nutritionGoal.carbsGrams, fatTarget: nutritionGoal.fatGrams, totals, meals: dailyEntries.map(({ name, meal: mealName, calories, protein, carbs, fat }) => ({ name, meal: mealName, calories, protein, carbs, fat })) }),
+          signal: controller.signal,
+        });
+        const result = await response.json().catch(() => ({})) as { advice?: string; source?: "gemini" | "fallback" };
+        if (!controller.signal.aborted && result.advice) {
+          setMealAdvice(result.advice);
+          setMealAdviceSource(result.source === "gemini" ? "gemini" : "fallback");
+        }
+      } catch {
+        if (!controller.signal.aborted) setMealAdvice("Sonraki öğünde eksik kalan makroları tamamlayacak sade bir protein, sebze veya meyve ve ölçülü karbonhidrat seçebilirsin.");
+      } finally {
+        if (!controller.signal.aborted) setMealAdviceLoading(false);
+      }
+    }, adviceRevision ? 0 : 650);
+    return () => { controller.abort(); window.clearTimeout(timer); };
+  }, [adviceRevision, dailyEntries, nutritionGoal.calorieTarget, nutritionGoal.carbsGrams, nutritionGoal.fatGrams, nutritionGoal.proteinGrams, selectedDate, totals]);
 
   async function addEntry(entry: Omit<FoodEntry, "id" | "time" | "consumedAt">, productBarcode?: string) {
     const now = new Date();
@@ -303,6 +336,10 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
       <div className="calorie-progress" style={{ "--progress": `${progress}%` } as React.CSSProperties}><div><small>BUGÜN ALINAN</small><strong>{totals.calories}<em> kcal</em></strong><span>Hedefinin %{progress}&apos;i</span></div></div>
       <div className="calorie-hero-copy"><span>GÜNLÜK HEDEF</span><strong>{nutritionGoal.calorieTarget} kcal</strong><p>{remaining ? `${remaining} kcal hakkın kaldı. Dengeli bir sonraki öğün planlayabilirsin.` : "Günlük hedefe ulaştın. Bugünkü açlığını ve antrenmanını dikkate al."}</p><div className="macro-row"><span><i className="protein" />Protein <b>{totals.protein}/{nutritionGoal.proteinGrams}g</b></span><span><i className="carbs" />Karbonhidrat <b>{totals.carbs}/{nutritionGoal.carbsGrams}g</b></span><span><i className="fat" />Yağ <b>{totals.fat}/{nutritionGoal.fatGrams}g</b></span></div></div>
       <div className="calorie-remaining"><span>KALAN</span><strong>{remaining}</strong><small>kcal</small></div>
+    </section>
+
+    <section className="meal-ai-advice" aria-labelledby="meal-ai-advice-title">
+      <div className="meal-ai-icon" aria-hidden="true">✦</div><div><span>AI ÖĞÜN TAVSİYESİ</span><h2 id="meal-ai-advice-title">Bir sonraki öğünde neye odaklanmalı?</h2><p>{mealAdviceLoading ? "Günlük hedeflerin ve öğünlerin birlikte değerlendiriliyor…" : mealAdvice || "Öğün özeti hazırlanıyor…"}</p><small>{mealAdviceSource === "gemini" ? "Kişisel hedef ve bugünkü kayıtlara göre hazırlandı." : "Güvenli beslenme kurallarıyla hazırlandı."} Tıbbi beslenme tavsiyesi değildir.</small></div><button type="button" disabled={mealAdviceLoading} onClick={() => setAdviceRevision((value) => value + 1)}>{mealAdviceLoading ? "Hazırlanıyor" : "Yenile"}</button>
     </section>
 
     <section className="food-entry-panel">

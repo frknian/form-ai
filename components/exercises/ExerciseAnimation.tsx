@@ -9,9 +9,10 @@ type ExerciseAnimationProps = {
   name: string;
   intervalMs?: number;
   compact?: boolean;
+  autoplay?: boolean;
 };
 
-export function ExerciseAnimation({ images, name, intervalMs = 750, compact = false }: ExerciseAnimationProps) {
+export function ExerciseAnimation({ images, name, intervalMs = 750, compact = false, autoplay = true }: ExerciseAnimationProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const safeImages = useMemo(() => images.filter((image) => /^\/exercise-images\/[a-zA-Z0-9_-]+\/[a-zA-Z0-9_.-]+$/.test(image)), [images]);
   const [frameIndex, setFrameIndex] = useState(0);
@@ -44,10 +45,10 @@ export function ExerciseAnimation({ images, name, intervalMs = 750, compact = fa
   const usableImages = safeImages.filter((image) => !failedImages.includes(image));
 
   useEffect(() => {
-    if (!shouldCycleFrames(usableImages.length, isVisible, pageVisible, reducedMotion)) return;
+    if (!autoplay || !shouldCycleFrames(usableImages.length, isVisible, pageVisible, reducedMotion)) return;
     const timer = window.setInterval(() => setFrameIndex((current) => nextFrameIndex(current, usableImages.length)), Math.min(2000, Math.max(600, intervalMs)));
     return () => window.clearInterval(timer);
-  }, [intervalMs, isVisible, pageVisible, reducedMotion, usableImages.length]);
+  }, [autoplay, intervalMs, isVisible, pageVisible, reducedMotion, usableImages.length]);
 
   const visibleFrameIndex = usableImages.length ? frameIndex % usableImages.length : 0;
   const activeImage = usableImages[visibleFrameIndex];
@@ -73,6 +74,6 @@ export function ExerciseAnimation({ images, name, intervalMs = 750, compact = fa
         <span>↗</span><strong>Egzersiz görseli bulunamadı</strong>
       </div>
     )}
-    {usableImages.length > 1 && <div className="frame-dots" aria-hidden="true">{usableImages.map((image, index) => <i className={index === visibleFrameIndex ? "active" : ""} key={image} />)}</div>}
+    {autoplay && usableImages.length > 1 && <div className="frame-dots" aria-hidden="true">{usableImages.map((image, index) => <i className={index === visibleFrameIndex ? "active" : ""} key={image} />)}</div>}
   </div>;
 }

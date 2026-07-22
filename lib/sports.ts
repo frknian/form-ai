@@ -34,6 +34,34 @@ export const sportCatalog: SportDefinition[] = [
 ];
 
 export const activityIntensityOptions = ["Hafif", "Orta", "Yüksek"] as const;
+export type ActivityIntensity = (typeof activityIntensityOptions)[number];
+
+const activityMetValues: Record<string, Record<ActivityIntensity, number>> = {
+  walking: { Hafif: 2.8, Orta: 4.3, Yüksek: 5.5 },
+  running: { Hafif: 6, Orta: 8.3, Yüksek: 11 },
+  cycling: { Hafif: 4, Orta: 6.8, Yüksek: 10 },
+  swimming: { Hafif: 4.8, Orta: 7, Yüksek: 9.8 },
+  football: { Hafif: 5, Orta: 7, Yüksek: 9 },
+  basketball: { Hafif: 4.5, Orta: 6.5, Yüksek: 8 },
+  volleyball: { Hafif: 3, Orta: 4.5, Yüksek: 6 },
+  tennis: { Hafif: 5, Orta: 7.3, Yüksek: 9 },
+  yoga: { Hafif: 2.3, Orta: 3, Yüksek: 4 },
+  pilates: { Hafif: 2.5, Orta: 3.5, Yüksek: 4.5 },
+  boxing: { Hafif: 5.5, Orta: 8, Yüksek: 11 },
+  dance: { Hafif: 3.5, Orta: 5.5, Yüksek: 7.5 },
+  hiking: { Hafif: 4, Orta: 6, Yüksek: 8 },
+  rowing: { Hafif: 4.8, Orta: 7, Yüksek: 9 },
+  skiing: { Hafif: 4.3, Orta: 6.8, Yüksek: 9 },
+  "table-tennis": { Hafif: 3, Orta: 4, Yüksek: 5.5 },
+};
+
+export function estimateActivityCalories(activityKey: string, durationMinutes: number, weightKg: number, intensity: ActivityIntensity) {
+  const duration = Math.max(0, Math.min(1440, Number(durationMinutes) || 0));
+  const weight = Math.max(20, Math.min(500, Number(weightKg) || 0));
+  const met = activityMetValues[activityKey]?.[intensity] ?? 4;
+  if (!duration || !weight) return 0;
+  return Math.round((met * 3.5 * weight * duration) / 200);
+}
 
 export const coreActivityCatalog: SportDefinition[] = [
   { key: "walking", name: "Yürüyüş", icon: "YÜ", guide: "Günlük veya tempolu yürüyüş", metrics: [] },

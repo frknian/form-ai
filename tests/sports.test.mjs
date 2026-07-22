@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
-import { coreActivityCatalog, sportCatalog, sportByKey, validActivityDuration } from "../lib/sports.ts";
+import { coreActivityCatalog, estimateActivityCalories, sportCatalog, sportByKey, validActivityDuration } from "../lib/sports.ts";
 
 test("spor kılavuzu en yaygın 15 benzersiz sporu içerir", () => {
   assert.equal(sportCatalog.length, 15);
@@ -23,6 +23,13 @@ test("ana aktivite kayıtları yalnız mevcut dört kapsamı sunar", () => {
   assert.deepEqual(coreActivityCatalog.map((activity) => activity.key), ["walking", "running", "cycling", "swimming"]);
 });
 
+test("aktivite kalorisi kilo, süre ve yoğunluğa göre otomatik hesaplanır", () => {
+  assert.equal(estimateActivityCalories("walking", 30, 70, "Orta"), 158);
+  assert.ok(estimateActivityCalories("running", 30, 70, "Yüksek") > estimateActivityCalories("running", 30, 70, "Hafif"));
+  assert.ok(estimateActivityCalories("cycling", 45, 90, "Orta") > estimateActivityCalories("cycling", 45, 60, "Orta"));
+  assert.equal(estimateActivityCalories("walking", 0, 70, "Orta"), 0);
+});
+
 test("aktivite günlükleri geçmişe ve seri özetine güvenli biçimde bağlanır", async () => {
   const [component, service, streak, migration] = await Promise.all([
     readFile(new URL("../components/ActivityLogger.tsx", import.meta.url), "utf8"),
@@ -33,6 +40,7 @@ test("aktivite günlükleri geçmişe ve seri özetine güvenli biçimde bağlan
   assert.match(component, /createActivityRepository/);
   assert.match(component, /record_streak_activity/);
   assert.match(component, /TAHMİNİ KALORİ/);
+  assert.match(component, /estimateActivityCalories/);
   assert.match(component, /Aktivite geçmişin/);
   assert.match(component, /SPOR SEÇİM KILAVUZU/);
   assert.doesNotMatch(component, /GPS|Strava|akıllı saat|harita|yakında/i);

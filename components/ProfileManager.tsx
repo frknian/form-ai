@@ -4,8 +4,9 @@ import Image from "next/image";
 import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
-import { calculateAge, isValidBirthDate, profileHistoryLabel, type EditableProfile, type ProfileHistoryEntry } from "@/lib/profile";
-import { loadProfileHistory, saveProfileWithHistory, signedAvatarUrl } from "@/lib/profile-service";
+import { calculateAge, isValidBirthDate, type EditableProfile } from "@/lib/profile";
+import { saveProfileWithHistory, signedAvatarUrl } from "@/lib/profile-service";
+import { TrainingPlaceSwitch } from "@/components/TrainingPlaceSwitch";
 
 type ProfileManagerProps = {
   user: User;
@@ -23,16 +24,10 @@ function numberOrNull(value: string) {
   return Number.isFinite(number) && number > 0 ? number : null;
 }
 
-function historyDate(value: string) {
-  return new Intl.DateTimeFormat("tr-TR", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(value));
-}
-
 export function ProfileManager({ user, profile, avatarUrl, onSaved, onFrozen, onDeleted, onSignOut }: ProfileManagerProps) {
   const [draft, setDraft] = useState(profile);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const [history, setHistory] = useState<ProfileHistoryEntry[]>([]);
-  const [historyLoading, setHistoryLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -42,24 +37,6 @@ export function ProfileManager({ user, profile, avatarUrl, onSaved, onFrozen, on
   const deleteEmailRef = useRef<HTMLInputElement>(null);
   const age = useMemo(() => calculateAge(draft.birthDate), [draft.birthDate]);
   const shownAvatar = avatarPreview || avatarUrl;
-
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      const client = createClient();
-      if (!client) return;
-      try {
-        const rows = await loadProfileHistory(client, user.id);
-        if (!cancelled) setHistory(rows);
-      } catch {
-        if (!cancelled) setMessage("Profil geçmişi şu anda yüklenemedi.");
-      } finally {
-        if (!cancelled) setHistoryLoading(false);
-      }
-    }
-    void load();
-    return () => { cancelled = true; };
-  }, [user.id]);
 
   useEffect(() => () => {
     if (avatarPreview) URL.revokeObjectURL(avatarPreview);
@@ -121,13 +98,11 @@ export function ProfileManager({ user, profile, avatarUrl, onSaved, onFrozen, on
       await saveProfileWithHistory(client, nextProfile);
       if (uploadedPath && draft.avatarPath) await client.storage.from("profile-avatars").remove([draft.avatarPath]);
       const nextAvatarUrl = await signedAvatarUrl(client, nextAvatarPath);
-      const nextHistory = await loadProfileHistory(client, user.id);
       setDraft(nextProfile);
       setAvatarFile(null);
       setAvatarPreview(null);
-      setHistory(nextHistory);
       onSaved(nextProfile, nextAvatarUrl);
-      setMessage("Profilin ve değişiklik geçmişin kaydedildi.");
+      setMessage("Profilin kaydedildi.");
     } catch {
       if (uploadedPath) await client.storage.from("profile-avatars").remove([uploadedPath]);
       setMessage("Profil kaydedilemedi. Veritabanı migration’ını ve bağlantıyı kontrol et.");
@@ -177,19 +152,17 @@ export function ProfileManager({ user, profile, avatarUrl, onSaved, onFrozen, on
 
   return <section className="profile-editor profile-manager" aria-labelledby="profile-manager-title">
     <div className="profile-manager-intro">
-      <div className="eyebrow">PROFİLİM</div><h2 id="profile-manager-title">Bilgilerin seninle güncellensin.</h2><p>Boy, kilo, hedef ve kişisel bilgi değişikliklerin tarihçeli tutulur. Profil fotoğrafın, vücut analizi fotoğrafından ayrıdır.</p>
-      <div className="profile-avatar-card"><div className="profile-avatar-preview">{shownAvatar ? <Image src={shownAvatar} alt="Profil fotoğrafı" fill sizes="96px" unoptimized /> : <span>{draft.displayName.charAt(0).toLocaleUpperCase("tr-TR") || "S"}</span>}</div><div><strong>Profil fotoğrafı</strong><small>JPG, PNG veya WebP · en fazla 5 MB</small><label className="profile-avatar-button">Fotoğrafı {shownAvatar ? "değiştir" : "yükle"}<input type="file" accept="image/jpeg,image/png,image/webp" onChange={chooseAvatar} /></label></div></div>
+      <div className="eyebrow">PROFİLİM</div><h2 id="profile-manager-title">Bilgilerini güncel tut.</h2><p>Boy, kilo, hedef ve antrenman ortamını buradan değiştirebilirsin. Profil fotoğrafın, vücut analizi fotoğrafından ayrıdır.</p>
+      <div className="profile-avatar-card"><div className="profile-avatar-preview">{shownAvatar ? <Image className="profile-avatar-image" src={shownAvatar} alt="Profil fotoğrafı" width={76} height={76} unoptimized /> : <span>{draft.displayName.charAt(0).toLocaleUpperCase("tr-TR") || "S"}</span>}</div><div><strong>Profil fotoğrafı</strong><small>JPG, PNG veya WebP · en fazla 5 MB</small><label className="profile-avatar-button">Fotoğrafı {shownAvatar ? "değiştir" : "yükle"}<input type="file" accept="image/jpeg,image/png,image/webp" onChange={chooseAvatar} /></label></div></div>
       <div className="profile-account"><span>DOĞRULANMIŞ HESAP</span><strong>{user.email}</strong><small>E-posta doğrulandı</small><button type="button" onClick={() => void onSignOut()}>Oturumu kapat</button></div>
     </div>
 
     <form className="profile-editor-fields" onSubmit={save}>
-      <div className="profile-personal-grid"><label>ADIN<input required value={draft.displayName} onChange={(event) => update("displayName", event.target.value)} /></label><label>DOĞUM TARİHİN<input required type="date" min="1905-01-01" max={new Date().toISOString().slice(0, 10)} value={draft.birthDate} onChange={(event) => update("birthDate", event.target.value)} /><small>{age === null ? "Yaş otomatik hesaplanır" : `${age} yaş · her doğum gününde otomatik güncellenir`}</small></label><label>CİNSİYET<select value={draft.gender} onChange={(event) => update("gender", event.target.value)}><option>Kadın</option><option>Erkek</option><option>Belirtmek istemiyorum</option></select></label><label>BOY (CM)<input required type="number" min="80" max="250" step="0.1" value={draft.heightCm ?? ""} onChange={(event) => update("heightCm", numberOrNull(event.target.value))} /></label><label>KİLO (KG)<input required type="number" min="20" max="500" step="0.1" value={draft.weightKg ?? ""} onChange={(event) => update("weightKg", numberOrNull(event.target.value))} /></label></div>
-      <div className="choice-cards"><button type="button" aria-pressed={draft.environment === "Evde"} className={draft.environment === "Evde" ? "choice selected" : "choice"} onClick={() => update("environment", "Evde")}><span>⌂</span><strong>Evde</strong><small>Ev ortamı ve ekipmanları</small></button><button type="button" aria-pressed={draft.environment === "Salon"} className={draft.environment === "Salon" ? "choice selected" : "choice"} onClick={() => update("environment", "Salon")}><span>▦</span><strong>Spor salonunda</strong><small>Salon ekipmanları</small></button></div>
+      <div className="profile-personal-grid"><label>ADIN<input required value={draft.displayName} onChange={(event) => update("displayName", event.target.value)} /></label><label>DOĞUM TARİHİN<input required type="date" min="1905-01-01" max={new Date().toISOString().slice(0, 10)} value={draft.birthDate} onChange={(event) => update("birthDate", event.target.value)} /><small>{age === null ? "Yaş otomatik hesaplanır" : `${age} yaş`}</small></label><label>CİNSİYET<select value={draft.gender} onChange={(event) => update("gender", event.target.value)}><option>Kadın</option><option>Erkek</option><option>Belirtmek istemiyorum</option></select></label><label>BOY (CM)<input required type="number" min="80" max="250" step="0.1" value={draft.heightCm ?? ""} onChange={(event) => update("heightCm", numberOrNull(event.target.value))} /></label><label>KİLO (KG)<input required type="number" min="20" max="500" step="0.1" value={draft.weightKg ?? ""} onChange={(event) => update("weightKg", numberOrNull(event.target.value))} /></label></div>
+      <TrainingPlaceSwitch value={draft.environment} onChange={(environment) => update("environment", environment)} />
       <label className="textarea-label">HEDEFİN<textarea maxLength={1000} value={draft.goalText} onChange={(event) => update("goalText", event.target.value)} /></label><label className="textarea-label">EKİPMANLARIN<textarea maxLength={1000} value={draft.equipmentText} onChange={(event) => update("equipmentText", event.target.value)} /></label><label className="textarea-label">İSTEDİĞİN HAREKETLER<textarea maxLength={1000} value={draft.requestedExercises} onChange={(event) => update("requestedExercises", event.target.value)} /></label>
       <button className="primary-btn" disabled={saving} type="submit">{saving ? "Kaydediliyor…" : "Profil değişikliklerini kaydet →"}</button>{message && <p className="profile-save-message" role="status">{message}</p>}
     </form>
-
-    <div className="profile-history"><div><span>DEĞİŞİKLİK GEÇMİŞİ</span><strong>Profil zaman çizelgesi</strong></div>{historyLoading ? <p>Geçmiş yükleniyor…</p> : history.length === 0 ? <p>Henüz kayıtlı bir profil değişikliği yok.</p> : <ol>{history.map((entry) => <li key={entry.id}><time>{historyDate(entry.changedAt)}</time><span>{entry.changedFields.map(profileHistoryLabel).join(" · ") || "Profil oluşturuldu"}</span>{entry.snapshot.weightKg && <small>{entry.snapshot.weightKg} kg</small>}</li>)}</ol>}</div>
 
     <div className="account-danger-zone"><div><span>HESAP YÖNETİMİ</span><strong>Verilerin üzerinde kontrol sende.</strong><p>Dondurma geri alınabilir ve verilerini korur. Silme işlemi tüm hesap verilerini kalıcı olarak kaldırır.</p></div><div><button type="button" disabled={saving} onClick={() => void freezeAccount()}>Hesabı dondur</button><button className="danger" type="button" disabled={saving} onClick={() => setDeleteOpen(true)}>Hesabı sil</button></div></div>
 

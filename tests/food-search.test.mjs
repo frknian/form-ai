@@ -6,6 +6,9 @@ test("Türkçe besin araması karakter farklarına dayanıklıdır", () => {
   assert.equal(normalizeFoodSearchText("Yoğurtlu Çorba"), "yogurtlu corba");
   assert.ok(searchLocalFoods("yogurt").some((food) => food.name.includes("Yoğurt")));
   assert.ok(searchLocalFoods("tavuk").some((food) => food.name.includes("Tavuk")));
+  assert.ok(searchLocalFoods("makarna").some((food) => food.name.includes("Makarna") || food.name.includes("makarna")));
+  assert.ok(searchLocalFoods("menemen").some((food) => food.name === "Menemen"));
+  assert.ok(searchLocalFoods("ekmek").length >= 2);
 });
 
 test("porsiyon değişiminde makro, lif ve mikro değerleri orantılı günceller", () => {

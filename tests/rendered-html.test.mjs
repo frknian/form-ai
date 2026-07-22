@@ -34,6 +34,8 @@ test("keeps adaptive plan, meal entry and training-place controls dark", async (
   assert.match(styles, /\.dark \.entry-workspace \{ background:var\(--surface-soft\)/);
   assert.match(styles, /\.dark \.entry-workspace select,/);
   assert.match(styles, /\.dark \.choice\.selected \{ background:#303a23/);
+  assert.match(styles, /\.dark \.training-place-switch/);
+  assert.match(styles, /\.dark \.meal-ai-advice/);
 });
 
 test("keeps email verification and Google authentication wired into profile creation", async () => {
@@ -172,6 +174,8 @@ test("keeps the AI plan and movement library wired into the product", async () =
   assert.match(supabaseSchema, /create table if not exists public\.activity_logs/i);
   assert.match(page, /ActivityStreak/);
   assert.match(page, /ActivityLogger/);
+  assert.match(page, /activeView === "profile"/);
+  assert.match(page, /autoplay=\{false\}/);
   assert.match(supabaseSchema, /Users can read own nutrition goals/i);
   assert.match(supabaseSchema, /Users can update own nutrition goals/i);
   assert.match(supabaseSchema, /Users can read own weekly AI reviews/i);

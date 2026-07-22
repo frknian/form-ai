@@ -19,6 +19,7 @@ import { WorkoutSetLogger } from "@/components/WorkoutSetLogger";
 import { MobileRuntime } from "@/components/MobileRuntime";
 import { PlanEditor } from "@/components/PlanEditor";
 import { FrozenAccountScreen, ProfileManager } from "@/components/ProfileManager";
+import { TrainingPlaceSwitch } from "@/components/TrainingPlaceSwitch";
 import { getExerciseById, getExercisesForAI } from "@/lib/exercise-service";
 import { trustedExerciseMedia } from "@/lib/trusted-exercise-media";
 import { translateExerciseLabel, turkishExerciseInstructions } from "@/lib/exercise-translations";
@@ -326,9 +327,9 @@ function localizeMotionFocus(value: string) {
   return value.replace(/triceps/gi, "arka kol").replace(/biceps/gi, "biseps").replace(/core/gi, "merkez bölge");
 }
 
-function ExerciseAnimation({ exercise, compact = false }: { exercise: { name: string; english: string; tone: string; images?: string[] }; compact?: boolean }) {
+function ExerciseAnimation({ exercise, compact = false, autoplay = true }: { exercise: { name: string; english: string; tone: string; images?: string[] }; compact?: boolean; autoplay?: boolean }) {
   const images = exercise.images?.length ? exercise.images : trustedExerciseMedia(exercise.name, exercise.english);
-  return <ExerciseFrameAnimation images={images} name={exercise.name} compact={compact} />;
+  return <ExerciseFrameAnimation images={images} name={exercise.name} compact={compact} autoplay={autoplay} />;
 }
 
 function workoutPrescription(workout: AiWorkout) {
@@ -578,10 +579,9 @@ export default function Home() {
   const [aiProgression, setAiProgression] = useState<string[]>([]);
   const [aiFingerprint, setAiFingerprint] = useState("");
   const [aiStage, setAiStage] = useState<AiStage>("profile");
-  const [activeView, setActiveView] = useState<"plan" | "progress" | "library" | "nutrition" | "calendar">("plan");
+  const [activeView, setActiveView] = useState<"plan" | "progress" | "library" | "nutrition" | "calendar" | "profile">("plan");
   const [aiStatus, setAiStatus] = useState<"idle" | "scanning" | "complete" | "fallback">("idle");
   const [aiError, setAiError] = useState("");
-  const [profileEditing, setProfileEditing] = useState(false);
   const [avatarPath, setAvatarPath] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [accountStatus, setAccountStatus] = useState<AccountStatus | "loading">("loading");
@@ -1146,7 +1146,7 @@ export default function Home() {
     requestedPerformanceKeys.current.clear();
     setPendingExerciseLogs([]);
     setAiWorkouts([]);
-    setProfileEditing(false);
+    setActiveView("plan");
     setAvatarPath(null);
     setAvatarUrl(null);
     setAccountStatus("active");
@@ -1191,7 +1191,7 @@ export default function Home() {
       {step === 5 && <nav className="topbar">
         <div className="brand"><span className="brand-mark">↗</span><span>form<span className="brand-dot">.</span>ai</span></div>
 <div className="top-links"><button type="button" aria-pressed={activeView === "plan"} className={activeView === "plan" ? "active" : ""} onClick={() => setActiveView("plan")}>Antrenmanım</button><button type="button" aria-pressed={activeView === "nutrition"} className={activeView === "nutrition" ? "active" : ""} onClick={() => setActiveView("nutrition")}>Kalori takibi</button><button type="button" aria-pressed={activeView === "progress"} className={activeView === "progress" ? "active" : ""} onClick={() => setActiveView("progress")}>İlerlemem</button><button type="button" aria-pressed={activeView === "calendar"} className={activeView === "calendar" ? "active" : ""} onClick={() => setActiveView("calendar")}>Takvim</button><button type="button" aria-pressed={activeView === "library"} className={activeView === "library" ? "active" : ""} onClick={() => setActiveView("library")}>Hareket kütüphanesi</button></div>
-        <div className="top-actions"><ThemeToggle /><button type="button" className="profile-mini" aria-expanded={profileEditing} onClick={() => step === 5 && setProfileEditing((editing) => !editing)}><span className="mini-avatar">{avatarUrl ? <Image src={avatarUrl} alt="" width={30} height={30} unoptimized /> : name ? name.charAt(0).toUpperCase() : "E"}</span><span>Profilim</span><span className="chevron">⌄</span></button></div>
+        <div className="top-actions"><ThemeToggle /><button type="button" className={activeView === "profile" ? "profile-mini active" : "profile-mini"} aria-pressed={activeView === "profile"} onClick={() => step === 5 && setActiveView("profile")}><span className="mini-avatar">{avatarUrl ? <Image src={avatarUrl} alt="" width={30} height={30} unoptimized /> : name ? name.charAt(0).toUpperCase() : "E"}</span><span>Profilim</span></button></div>
       </nav>}
       {step < 5 && <ThemeToggle className="onboarding-theme-toggle" />}
 
@@ -1214,7 +1214,7 @@ export default function Home() {
 
           {step === 2 && <div className="step-content equipment-step">
             <div className="eyebrow">Planını şekillendirelim</div><h1>Nerede<br /><em>hareket ediyorsun?</em></h1><p className="lead">Ortamını ve elindeki ekipmanları kendi cümlelerinle anlat.</p>
-            <div className="choice-cards"><button type="button" aria-pressed={gym === "Evde"} className={gym === "Evde" ? "choice selected" : "choice"} onClick={() => setGym("Evde")}><span>⌂</span><strong>Evde</strong><small>Kendi alanımda</small></button><button type="button" aria-pressed={gym === "Salon"} className={gym === "Salon" ? "choice selected" : "choice"} onClick={() => setGym("Salon")}><span>▦</span><strong>Spor salonunda</strong><small>Tüm ekipmanlara erişim</small></button></div>
+            <TrainingPlaceSwitch value={gym === "Salon" ? "Salon" : "Evde"} onChange={setGym} label="Nerede antrenman yapacaksın?" />
             <label className="textarea-label">EKİPMANLARIN <small>İsteğe bağlı</small><textarea value={equipmentText} onChange={(e) => setEquipmentText(e.target.value)} placeholder="Örn. 2 adet 5 kg dambıl, yoga matı ve direnç bandı" /></label>
             <label className="textarea-label">HEDEFİN <small>Programı daha kişisel yapar</small><textarea value={goalText} onChange={(e) => setGoalText(e.target.value)} placeholder="Örn. Daha güçlü olmak ve 30 dakikada tamamlanan programlar yapmak istiyorum." /></label>
             <label className="textarea-label">ÖZELLİKLE İSTEDİĞİN HAREKETLER <small>İsteğe bağlı</small><textarea value={requestedExercises} onChange={(e) => setRequestedExercises(e.target.value)} placeholder="Örn. Yerde Dambıl Göğüs Presi, Goblet Squat" /></label>
@@ -1236,8 +1236,7 @@ export default function Home() {
         </section>
       ) : (
         <section className="dashboard">
-          {profileEditing && <ProfileManager user={authUser} profile={{ displayName: name, birthDate, gender, heightCm: Number(height) || null, weightKg: Number(weight) || null, goalText, environment: gym === "Salon" ? "Salon" : "Evde", equipmentText, requestedExercises, avatarPath }} avatarUrl={avatarUrl} onSaved={applySavedProfile} onFrozen={() => { setProfileEditing(false); setAccountStatus("frozen"); }} onDeleted={clearDeletedAccount} onSignOut={handleSignOut} />}
-<WorkoutCalendar active={activeView === "calendar"} userId={authUser?.id} onStartWorkout={() => setActiveView("plan")} />{activeView === "calendar" ? null : activeView === "progress" ? <ProgressView name={name} sessions={sessionHistory} referenceTime={progressReferenceTime} energyMetrics={energyMetrics} userId={authUser?.id} goalText={goalText || planGoal} /> : activeView === "nutrition" ? <CalorieTracker userId={authUser?.id} bmr={energyMetrics?.bmr} tdee={energyMetrics?.tdee} weightKg={Number(weight) || undefined} activityFactor={energyMetrics?.activityFactor} workoutDays={inferWorkoutDays(history[1] || history[3])} profileGoal={goalText || planGoal} /> : activeView === "library" ? <LibraryView onOpenWorkout={(exercise) => { setActiveView("plan"); openWorkout(0, [exercise]); }} onAddWorkout={(exercise) => setAiWorkouts((current) => current.some((item) => item.id === exercise.id) ? current : [...current, exercise])} /> : <>
+<WorkoutCalendar active={activeView === "calendar"} userId={authUser?.id} onStartWorkout={() => setActiveView("plan")} />{activeView === "calendar" ? null : activeView === "profile" ? <ProfileManager user={authUser} profile={{ displayName: name, birthDate, gender, heightCm: Number(height) || null, weightKg: Number(weight) || null, goalText, environment: gym === "Salon" ? "Salon" : "Evde", equipmentText, requestedExercises, avatarPath }} avatarUrl={avatarUrl} onSaved={applySavedProfile} onFrozen={() => setAccountStatus("frozen")} onDeleted={clearDeletedAccount} onSignOut={handleSignOut} /> : activeView === "progress" ? <ProgressView name={name} sessions={sessionHistory} referenceTime={progressReferenceTime} energyMetrics={energyMetrics} userId={authUser?.id} goalText={goalText || planGoal} /> : activeView === "nutrition" ? <CalorieTracker userId={authUser?.id} bmr={energyMetrics?.bmr} tdee={energyMetrics?.tdee} weightKg={Number(weight) || undefined} activityFactor={energyMetrics?.activityFactor} workoutDays={inferWorkoutDays(history[1] || history[3])} profileGoal={goalText || planGoal} /> : activeView === "library" ? <LibraryView onOpenWorkout={(exercise) => { setActiveView("plan"); openWorkout(0, [exercise]); }} onAddWorkout={(exercise) => setAiWorkouts((current) => current.some((item) => item.id === exercise.id) ? current : [...current, exercise])} /> : <>
           {activeWorkout !== null && currentWorkout && currentGuide && currentPrescription ? <div className="workout-player">
             <button className="back-btn" type="button" onClick={() => { setIsRunning(false); setActiveWorkout(null); }}>← Plana dön</button>
             <div className="workout-session-progress" aria-label="Antrenman ilerlemesi">{playerQueue.map((exercise, index) => <span key={`${exercise.name}-${index}`} className={completedExercises.includes(index) ? "complete" : skippedExercises.includes(index) ? "skipped" : index === activeWorkout ? "active" : ""} />)}</div>
@@ -1254,14 +1253,14 @@ export default function Home() {
           </div> : <>
           <div className="dashboard-head"><div><div className="eyebrow">BUGÜNÜN PLANI · 01</div><h1>{name || "Ece"}, <em>hazır mısın?</em></h1><p>Verilerine göre ilk program taslağını hazırladık. İlerledikçe daha da kişiselleştireceğiz.</p></div><ActivityStreak userId={authUser.id} /></div>
           <div className="stats-row"><div><span>Vücut kitle indeksi</span><strong>{bmi}</strong><small>İlk ölçüm</small></div><div><span>Hedef</span><strong>{goalText ? "Kişisel" : "Güçlenme"}</strong><small>Profiline göre</small></div><div><span>Ortam</span><strong>{gym}</strong><small>{equipmentText || "Ekipmansız"}</small></div></div>
-          <ActivityLogger userId={authUser.id} />
+          <ActivityLogger userId={authUser.id} weightKg={Number(weight) || 70} />
           <div className="wellness-row"><div className="wellness-card calorie-card"><div><span>BUGÜNÜN ANTRENMAN ENERJİSİ</span><strong>{displayedSessionCalories} <small>kcal</small></strong><p>Hareket türü, yoğunluk, süre ve kilona göre MET tabanlı tahmin.</p></div><div className="calorie-ring"><i>{displayedSessionCalories}</i></div><div className="calorie-note"><span>TAKİP</span><strong>Antrenman içi</strong><small>Aktif set ve dinlenme ayrı hesaplanır</small></div></div></div>
           {energyMetrics && <div className="energy-dashboard"><article><span>BAZAL ENERJİ · BMR</span><strong>{energyMetrics.bmr} <small>kcal/gün</small></strong><p>Vücudunun dinlenme halindeki yaklaşık enerji ihtiyacı.</p></article><article><span>GÜNLÜK TOPLAM · TDEE</span><strong>{energyMetrics.tdee} <small>kcal/gün</small></strong><p>{energyMetrics.activityLabel} düzeyine göre bakım tahmini.</p></article><div><strong>Yaklaşık değer</strong><p>Beslenme hedefi veya tıbbi ölçüm değildir. İlerleme raporunda gerçekleşen antrenman süresi ayrıca hesaplanır.</p></div></div>}
           <div className="plan-explanation"><div><div className="eyebrow">PLANIN NEDEN BÖYLE?</div><h2>{planLevel} · {planGoal}</h2><p>{aiRationale || "Programın; seçtiğin ortam, ekipmanların, spor geçmişin ve yazdığın hedef birlikte değerlendirilerek oluşturuldu. İlerledikçe set, tekrar ve hareket varyasyonları güncellenecek."}</p>{aiSafetyNote && <div className="ai-safety"><strong>Güvenlik notu</strong><span>{aiSafetyNote}</span></div>}{aiError && <div className="ai-error">{aiError}</div>}</div><AiScanFigure compact status={aiStatus} stage={aiStage} /></div>
           <AdaptivePlanCard adaptation={adaptation} sessionCount={sessionHistory.length} />
           {aiAnalysis && <AiPlanInsights analysis={aiAnalysis} schedule={aiSchedule} progression={aiProgression} fingerprint={aiFingerprint} />}
           <ReadyPrograms onApply={applyReadyProgram} />
-          <div className="workout-layout"><div className="workout-main"><div className="section-title"><div><div className="eyebrow">BUGÜN</div><h2>Full body · {planLevel}</h2></div></div><PlanEditor workouts={aiWorkouts.length ? aiWorkouts : localPlan} exerciseOptions={planExerciseOptions} onSave={saveCustomPlan} onReset={resetCustomPlan} /><div className="workout-list">{workouts.map((workout, index) => { const guide = getMotionGuide(workout); return <article className="workout-card" key={workout.name}><ExerciseAnimation exercise={workout} compact /><div className="exercise-info"><div className="exercise-labels"><div className="pill">{workout.level}</div><span>{guide.action}</span></div><h3>{workout.name} <small>{workout.english}</small></h3><p>{workout.sets} · {workout.rest}</p><details className="how-to"><summary>3 adımda nasıl yapılır?</summary><ol className="mini-steps"><li>{guide.start}</li><li>{workout.instructions}</li><li>{guide.finish}</li></ol></details></div><button className="play-btn" type="button" aria-label={`${workout.name} hareket akışını ve sayacını aç`} onClick={() => openWorkout(index)}><span>▶</span><small>Aç</small></button></article>; })}</div><button className="start-btn" type="button" onClick={() => openWorkout(0)}>Antrenmana başla <span>→</span></button></div><aside className="coach-card"><div className="coach-top"><span className="spark">✦</span><span>FORM AI</span></div><h2>Bugün senden<br /><em>tek bir şey</em> istiyor:</h2><p>Hareketi mükemmel yapmak değil, devam etmek.</p><div className="coach-line" /><small>İyi antrenmanlar, {name || "Ece"}.</small></aside></div></>}
+          <div className="workout-layout"><div className="workout-main"><div className="section-title"><div><div className="eyebrow">BUGÜN</div><h2>Full body · {planLevel}</h2></div></div><PlanEditor workouts={aiWorkouts.length ? aiWorkouts : localPlan} exerciseOptions={planExerciseOptions} onSave={saveCustomPlan} onReset={resetCustomPlan} /><div className="workout-list">{workouts.map((workout, index) => { const guide = getMotionGuide(workout); return <article className="workout-card" key={workout.name}><ExerciseAnimation exercise={workout} compact autoplay={false} /><div className="exercise-info"><div className="exercise-labels"><div className="pill">{workout.level}</div><span>{guide.action}</span></div><h3>{workout.name} <small>{workout.english}</small></h3><p>{workout.sets} · {workout.rest}</p><details className="how-to"><summary>3 adımda nasıl yapılır?</summary><ol className="mini-steps"><li>{guide.start}</li><li>{workout.instructions}</li><li>{guide.finish}</li></ol></details></div><button className="play-btn" type="button" aria-label={`${workout.name} hareket akışını ve sayacını aç`} onClick={() => openWorkout(index)}><span>▶</span><small>Aç</small></button></article>; })}</div><button className="start-btn" type="button" onClick={() => openWorkout(0)}>Antrenmana başla <span>→</span></button></div><aside className="coach-card"><div className="coach-top"><span className="spark">✦</span><span>FORM AI</span></div><h2>Bugün senden<br /><em>tek bir şey</em> istiyor:</h2><p>Hareketi mükemmel yapmak değil, devam etmek.</p><div className="coach-line" /><small>İyi antrenmanlar, {name || "Ece"}.</small></aside></div></>}
           </>}
         </section>
       )}
