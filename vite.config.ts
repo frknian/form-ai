@@ -36,7 +36,7 @@ const localBindingConfig = {
 const cssStubPlugin = () => ({
   name: "rsc-css-stub",
   enforce: "pre" as const,
-  resolveId(id: string, importer: string | undefined, options: any) {
+  resolveId(id: string, importer: string | undefined, options: { ssr?: boolean }) {
     if (options?.ssr && id.endsWith(".css")) {
       return `\0rsc-css-stub:${id}`;
     }

@@ -9,9 +9,19 @@ import { adaptPrescription, summarizeTrainingAdaptation, type TrainingAdaptation
 import { ExerciseAnimation as ExerciseFrameAnimation } from "@/components/exercises/ExerciseAnimation";
 import { ExerciseLibrary } from "@/components/exercises/ExerciseLibrary";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { CalorieTracker } from "@/components/CalorieTracker";
+import { BodyMeasurements } from "@/components/BodyMeasurements";
+import { WorkoutCalendar } from "@/components/WorkoutCalendar";
+import { WeeklyAiReview } from "@/components/WeeklyAiReview";
+import { WorkoutSetLogger } from "@/components/WorkoutSetLogger";
+import { PlanEditor } from "@/components/PlanEditor";
 import { getExerciseById, getExercisesForAI } from "@/lib/exercise-service";
 import { translateExerciseLabel, turkishExerciseInstructions } from "@/lib/exercise-translations";
 import { extractSessionMinutes } from "@/lib/training-profile";
+import { buildCompletedExerciseLog, createWorkoutSetDrafts, exerciseLogKey, type CompletedExerciseLog, type PreviousExercisePerformance, type WorkoutSetDraft } from "@/lib/workout-log";
+import { istanbulDateKey, istanbulTimeKey } from "@/lib/workout-calendar";
+import { inferWorkoutDays } from "@/lib/nutrition-goals";
+import type { EditableWorkout } from "@/lib/plan-editor";
 import type { Exercise } from "@/types/exercise";
 
 const AiCoachChat = lazy(() => import("@/components/AiCoachChat").then((module) => ({ default: module.AiCoachChat })));
@@ -244,7 +254,7 @@ function createPersonalPlan(gym: string, equipmentText: string, history: string[
   return chosen.map((item) => ({ ...item, level: item.area, sets: `${sets} set · ${item.name === "Plank" || item.name === "Dead Bug" ? "30 sn" : `${reps} tekrar`}`, rest: `${rest} sn dinlenme`, seconds: item.name === "Plank" || item.name === "Dead Bug" ? 30 : 45 }));
 }
 
-type AiWorkout = { id?: string; name: string; english: string; area: string; sets: string; rest: string; seconds: number; tone: string; icon: string; level: string; instructions: string; images?: string[]; equipment?: string | null; secondaryMuscles?: string[]; category?: string };
+type AiWorkout = { id?: string; name: string; english: string; area: string; sets: string; rest: string; seconds: number; tone: string; icon: string; level: string; instructions: string; images?: string[]; equipment?: string | null; secondaryMuscles?: string[]; category?: string; bodyweight?: boolean };
 type MotionPattern = "floor-press" | "pushup" | "press" | "overhead" | "row" | "pulldown" | "squat" | "lunge" | "hinge" | "bridge" | "plank" | "core" | "cardio" | "mobility" | "curl" | "triceps" | "raise" | "fly" | "calf" | "leg-machine";
 type MotionPose = "start" | "mid" | "finish";
 type WorkoutPhase = "work" | "rest" | "done";
@@ -413,7 +423,7 @@ function databaseExerciseAsWorkout(exercise: Exercise): AiWorkout {
   const muscle = exercise.primaryMuscles[0] || "full body";
   const area = muscle === "chest" ? "Göğüs" : ["lats", "middle back"].includes(muscle) ? "Sırt" : muscle === "shoulders" ? "Omuz" : ["biceps", "triceps", "forearms"].includes(muscle) ? "Kol" : muscle === "abdominals" ? "Core" : ["glutes"].includes(muscle) ? "Kalça" : "Bacak";
   const tone = area === "Bacak" || area === "Kalça" ? "orange" : area === "Göğüs" || area === "Core" ? "blue" : "purple";
-  return { id: exercise.id, name: exercise.name, english: exercise.name, area, level: translateExerciseLabel(exercise.level), sets: "3 set · 10 tekrar", rest: "60 sn dinlenme", seconds: 45, tone, icon: "↗", instructions: turkishExerciseInstructions(exercise).join(" "), images: exercise.images, equipment: exercise.equipment, secondaryMuscles: exercise.secondaryMuscles, category: exercise.category };
+  return { id: exercise.id, name: exercise.name, english: exercise.name, area, level: translateExerciseLabel(exercise.level), sets: "3 set · 10 tekrar", rest: "60 sn dinlenme", seconds: 45, tone, icon: "↗", instructions: turkishExerciseInstructions(exercise).join(" "), images: exercise.images, equipment: exercise.equipment, secondaryMuscles: exercise.secondaryMuscles, category: exercise.category, bodyweight: !exercise.equipment || ["body only", "none"].includes(exercise.equipment.toLowerCase()) };
 }
 
 function calculateEnergyMetrics(gender: string, ageValue: string, heightValue: string, weightValue: string, movementLevel: string): EnergyMetrics | null {
@@ -464,6 +474,13 @@ function findLibraryExercise(exercise: { name: string; english: string }) {
     const candidateValues = [exerciseKey({ name: candidate.name, english: "" }), exerciseKey({ name: candidate.english, english: "" })];
     return candidateValues.includes(value) || candidateValues.some((candidateValue) => candidateValue.length > 5 && (candidateValue.includes(value) || value.includes(candidateValue)));
   }));
+}
+
+function isBodyweightWorkout(exercise: AiWorkout) {
+  if (typeof exercise.bodyweight === "boolean") return exercise.bodyweight;
+  const databaseExercise = exercise.id ? getExerciseById(exercise.id) : null;
+  if (databaseExercise) return !databaseExercise.equipment || ["body only", "none"].includes(databaseExercise.equipment.toLowerCase());
+  return findLibraryExercise(exercise)?.bodyweight ?? false;
 }
 
 function profileGoal(goalText: string, history: string[]) {
@@ -531,7 +548,7 @@ function AdaptivePlanCard({ adaptation, sessionCount }: { adaptation: TrainingAd
   return <section className={`adaptive-card ${adaptation.direction}`}><div className="adaptive-icon">↗</div><div><div className="eyebrow">ZAMANLA UYARLANAN PROGRAM</div><h2>{adaptation.title}</h2><p>{adaptation.summary}</p><div className="adaptive-change"><strong>Sonraki plan</strong><span>{changeText}</span></div>{adaptation.painAreas.length > 0 && <div className="adaptive-pain">Korunan bölgeler: {adaptation.painAreas.join(" · ")}</div>}<ul>{adaptation.reasons.slice(0, 3).map((reason) => <li key={reason}>{reason}</li>)}</ul></div><span className="adaptive-count">{sessionCount}<small>kayıt</small></span></section>;
 }
 
-function ProgressView({ name, sessions, referenceTime, energyMetrics }: { name: string; sessions: WorkoutSessionRecord[]; referenceTime: number; energyMetrics: EnergyMetrics | null }) {
+function ProgressView({ name, sessions, referenceTime, energyMetrics, userId, goalText }: { name: string; sessions: WorkoutSessionRecord[]; referenceTime: number; energyMetrics: EnergyMetrics | null; userId?: string; goalText: string }) {
   const weekAgo = referenceTime - 7 * 24 * 60 * 60 * 1000;
   const weeklySessions = sessions.filter((session) => new Date(session.completedAt).getTime() >= weekAgo);
   const totalSeconds = sessions.reduce((total, session) => total + session.durationSeconds, 0);
@@ -545,7 +562,7 @@ function ProgressView({ name, sessions, referenceTime, energyMetrics }: { name: 
   const completionRate = exerciseTotal ? Math.round((completedTotal / exerciseTotal) * 100) : 0;
   const weekBuckets = [3, 2, 1, 0].map((weeksAgo) => { const end = referenceTime - weeksAgo * 7 * 24 * 60 * 60 * 1000; const start = end - 7 * 24 * 60 * 60 * 1000; return sessions.filter((session) => { const time = new Date(session.completedAt).getTime(); return time > start && time <= end; }).length; });
   const maxWeek = Math.max(1, ...weekBuckets);
-  return <div className="subview"><div className="eyebrow">İLERLEMEM</div><h1>{name || "Sporcu"}, <em>ritmini gör.</em></h1><p className="lead">Tamamladığın antrenmanlar, süreler ve tahmini enerji verileri burada birikir.</p><div className="progress-cards"><div><span>BU HAFTA</span><strong>{weeklySessions.length}</strong><small>tamamlanan antrenman</small></div><div><span>TOPLAM SÜRE</span><strong>{Math.round(totalSeconds / 60)} dk</strong><small>{sessions.length ? "tüm kayıtlar" : "ilk antrenmanı bekliyor"}</small></div><div><span>YAKILAN ENERJİ</span><strong>{totalCalories} kcal</strong><small>MET tabanlı tahmin</small></div></div><section className="monthly-report"><div><div className="eyebrow">AYLIK RAPOR</div><h2>{new Intl.DateTimeFormat("tr-TR", { month: "long" }).format(referenceDate)} özeti</h2><p>Kalori ve enerji değerleri tahminidir; tıbbi ölçüm veya beslenme hedefi değildir.</p><div className="monthly-numbers"><span><strong>{monthlySessions.length}</strong>antrenman</span><span><strong>{monthlyMinutes}</strong>dakika</span><span><strong>{monthlyCalories}</strong>kcal</span><span><strong>%{completionRate}</strong>tamamlama</span></div></div><div className="month-bars" aria-label="Son dört haftadaki antrenman sayısı">{weekBuckets.map((count, index) => <div key={index}><span style={{ height: `${Math.max(8, (count / maxWeek) * 100)}%` }} /><small>{index + 1}. hf</small><b>{count}</b></div>)}</div></section>{energyMetrics && <div className="energy-reference"><div><span>BAZAL ENERJİ (BMR)</span><strong>{energyMetrics.bmr} kcal</strong><small>Dinlenme enerjisi tahmini</small></div><div><span>GÜNLÜK TOPLAM (TDEE)</span><strong>{energyMetrics.tdee} kcal</strong><small>{energyMetrics.activityLabel} katsayısı</small></div><p>Bu değerler Mifflin–St Jeor denklemi ve testteki hareket düzeyine göre yaklaşık hesaplanır.</p></div>}<div className="progress-panel"><div className="section-title"><div><div className="eyebrow">İLERLEME GÜNLÜĞÜ</div><h2>{sessions.length ? "Son antrenmanların" : "İlk kaydını oluşturalım"}</h2></div><span className="progress-status">{sessions.length ? `${sessions.length} kayıt` : "Hazır"}</span></div>{sessions.length ? <div className="session-list">{sessions.slice(0, 6).map((session) => <article key={session.id}><div><strong>{session.exerciseNames.slice(0, 3).join(" · ") || "Kişisel antrenman"}</strong><small>{new Intl.DateTimeFormat("tr-TR", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }).format(new Date(session.completedAt))}</small>{session.difficulty && <div className="session-feedback"><span>{session.difficulty}</span><span>Yorgunluk {session.fatigue || 3}/5</span>{session.painAreas?.filter((area) => area !== "Yok").map((area) => <span className="pain" key={area}>{area}</span>)}</div>}</div><div><b>{Math.max(1, Math.round(session.durationSeconds / 60))} dk</b><span>{session.calories} kcal · {session.completedExercises}/{session.totalExercises} hareket</span></div></article>)}</div> : <div className="empty-progress"><span>✦</span><p>İlk antrenmanını bitirdiğinde süre, kalori ve tamamlanan hareketler burada görünecek.</p></div>}</div></div>;
+return <div className="subview"><div className="eyebrow">İLERLEMEM</div><h1>{name || "Sporcu"}, <em>ritmini gör.</em></h1><p className="lead">Tamamladığın antrenmanlar, süreler, vücut ölçümlerin ve tahmini enerji verileri burada birikir.</p><div className="progress-cards"><div><span>BU HAFTA</span><strong>{weeklySessions.length}</strong><small>tamamlanan antrenman</small></div><div><span>TOPLAM SÜRE</span><strong>{Math.round(totalSeconds / 60)} dk</strong><small>{sessions.length ? "tüm kayıtlar" : "ilk antrenmanı bekliyor"}</small></div><div><span>YAKILAN ENERJİ</span><strong>{totalCalories} kcal</strong><small>MET tabanlı tahmin</small></div></div><WeeklyAiReview userId={userId} goalText={goalText} referenceTime={referenceTime} /><BodyMeasurements userId={userId} referenceTime={referenceTime} /><section className="monthly-report"><div><div className="eyebrow">AYLIK RAPOR</div><h2>{new Intl.DateTimeFormat("tr-TR", { month: "long" }).format(referenceDate)} özeti</h2><p>Kalori ve enerji değerleri tahminidir; tıbbi ölçüm veya beslenme hedefi değildir.</p><div className="monthly-numbers"><span><strong>{monthlySessions.length}</strong>antrenman</span><span><strong>{monthlyMinutes}</strong>dakika</span><span><strong>{monthlyCalories}</strong>kcal</span><span><strong>%{completionRate}</strong>tamamlama</span></div></div><div className="month-bars" aria-label="Son dört haftadaki antrenman sayısı">{weekBuckets.map((count, index) => <div key={index}><span style={{ height: `${Math.max(8, (count / maxWeek) * 100)}%` }} /><small>{index + 1}. hf</small><b>{count}</b></div>)}</div></section>{energyMetrics && <div className="energy-reference"><div><span>BAZAL ENERJİ (BMR)</span><strong>{energyMetrics.bmr} kcal</strong><small>Dinlenme enerjisi tahmini</small></div><div><span>GÜNLÜK TOPLAM (TDEE)</span><strong>{energyMetrics.tdee} kcal</strong><small>{energyMetrics.activityLabel} katsayısı</small></div><p>Bu değerler Mifflin–St Jeor denklemi ve testteki hareket düzeyine göre yaklaşık hesaplanır.</p></div>}<div className="progress-panel"><div className="section-title"><div><div className="eyebrow">İLERLEME GÜNLÜĞÜ</div><h2>{sessions.length ? "Son antrenmanların" : "İlk kaydını oluşturalım"}</h2></div><span className="progress-status">{sessions.length ? `${sessions.length} kayıt` : "Hazır"}</span></div>{sessions.length ? <div className="session-list">{sessions.slice(0, 6).map((session) => <article key={session.id}><div><strong>{session.exerciseNames.slice(0, 3).join(" · ") || "Kişisel antrenman"}</strong><small>{new Intl.DateTimeFormat("tr-TR", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }).format(new Date(session.completedAt))}</small>{session.difficulty && <div className="session-feedback"><span>{session.difficulty}</span><span>Yorgunluk {session.fatigue || 3}/5</span>{session.painAreas?.filter((area) => area !== "Yok").map((area) => <span className="pain" key={area}>{area}</span>)}</div>}</div><div><b>{Math.max(1, Math.round(session.durationSeconds / 60))} dk</b><span>{session.calories} kcal · {session.completedExercises}/{session.totalExercises} hareket</span></div></article>)}</div> : <div className="empty-progress"><span>✦</span><p>İlk antrenmanını bitirdiğinde süre, kalori ve tamamlanan hareketler burada görünecek.</p></div>}</div></div>;
 }
 
 function LibraryView({ onOpenWorkout, onAddWorkout }: { onOpenWorkout: (exercise: AiWorkout) => void; onAddWorkout: (exercise: AiWorkout) => void }) {
@@ -586,12 +603,16 @@ export default function Home() {
   const [isRunning, setIsRunning] = useState(false);
   const [workoutPhase, setWorkoutPhase] = useState<WorkoutPhase>("work");
   const [currentSet, setCurrentSet] = useState(1);
+  const [exerciseSetDrafts, setExerciseSetDrafts] = useState<Record<number, WorkoutSetDraft[]>>({});
+  const [previousPerformances, setPreviousPerformances] = useState<Record<string, PreviousExercisePerformance | null>>({});
+  const requestedPerformanceKeys = useRef(new Set<string>());
   const [completedExercises, setCompletedExercises] = useState<number[]>([]);
   const [skippedExercises, setSkippedExercises] = useState<number[]>([]);
   const [sessionSeconds, setSessionSeconds] = useState(0);
   const [sessionCalories, setSessionCalories] = useState(0);
   const [sessionHistory, setSessionHistory] = useState<WorkoutSessionRecord[]>([]);
   const [pendingSession, setPendingSession] = useState<WorkoutSessionRecord | null>(null);
+  const [pendingExerciseLogs, setPendingExerciseLogs] = useState<CompletedExerciseLog[]>([]);
   const [feedbackDifficulty, setFeedbackDifficulty] = useState<WorkoutDifficulty>("Uygun");
   const [feedbackFatigue, setFeedbackFatigue] = useState(3);
   const [feedbackPainAreas, setFeedbackPainAreas] = useState<string[]>(["Yok"]);
@@ -605,7 +626,7 @@ export default function Home() {
   const [aiProgression, setAiProgression] = useState<string[]>([]);
   const [aiFingerprint, setAiFingerprint] = useState("");
   const [aiStage, setAiStage] = useState<AiStage>("profile");
-  const [activeView, setActiveView] = useState<"plan" | "progress" | "library">("plan");
+  const [activeView, setActiveView] = useState<"plan" | "progress" | "library" | "nutrition" | "calendar">("plan");
   const [aiStatus, setAiStatus] = useState<"idle" | "scanning" | "complete" | "fallback">("idle");
   const [aiError, setAiError] = useState("");
   const [profileEditing, setProfileEditing] = useState(false);
@@ -613,9 +634,14 @@ export default function Home() {
   const localPlan = useMemo(() => createPersonalPlan(gym, equipmentText, history, goalText, requestedExercises), [gym, equipmentText, history, goalText, requestedExercises]);
   const adaptation = useMemo(() => summarizeTrainingAdaptation(sessionHistory), [sessionHistory]);
   const workouts = useMemo(() => adaptWorkoutsToHistory(aiWorkouts.length ? aiWorkouts : localPlan, adaptation, localPlan), [adaptation, aiWorkouts, localPlan]);
+  const planExerciseOptions = useMemo(() => exerciseLibrary.filter((exercise) => isExerciseSafeForProfile(exercise, gym, equipmentText, history)).map((exercise) => ({ ...exercise, level: exercise.area, sets: `3 set · ${exercise.name === "Plank" || exercise.name === "Dead Bug" ? "30 sn" : "10 tekrar"}`, rest: "60 sn dinlenme", seconds: exercise.name === "Plank" || exercise.name === "Dead Bug" ? 30 : 45 })), [equipmentText, gym, history]);
   const currentWorkout = activeWorkout === null ? null : playerQueue[activeWorkout] || null;
   const currentGuide = currentWorkout ? getMotionGuide(currentWorkout) : null;
   const currentPrescription = currentWorkout ? workoutPrescription(currentWorkout) : null;
+  const currentWorkoutKey = currentWorkout ? exerciseLogKey(currentWorkout.name) : "";
+  const currentSetDrafts = activeWorkout === null ? [] : exerciseSetDrafts[activeWorkout] || [];
+  const currentPreviousPerformance = currentWorkoutKey ? previousPerformances[currentWorkoutKey] : null;
+  const currentIsBodyweight = currentWorkout ? isBodyweightWorkout(currentWorkout) : false;
   const energyMetrics = useMemo(() => calculateEnergyMetrics(gender, age, height, weight, history[7]), [age, gender, height, history, weight]);
   const displayedSessionCalories = Math.round(sessionCalories);
   const planLevel = history[2] || "Yeni başlıyorum";
@@ -708,6 +734,20 @@ export default function Home() {
   }, [authUser]);
 
   useEffect(() => {
+    if (!authUser) return;
+    let cancelled = false;
+    async function loadCustomPlan() {
+      const supabase = createClient();
+      if (!supabase) return;
+      const { data } = await supabase.from("workout_plans").select("workouts").eq("user_id", authUser.id).maybeSingle();
+      if (cancelled || !Array.isArray(data?.workouts) || !data.workouts.length) return;
+      setAiWorkouts(data.workouts.filter((item): item is AiWorkout => Boolean(item && typeof item === "object" && typeof (item as AiWorkout).name === "string" && typeof (item as AiWorkout).sets === "string")));
+    }
+    void loadCustomPlan();
+    return () => { cancelled = true; };
+  }, [authUser]);
+
+  useEffect(() => {
     let cancelled = false;
     async function loadWorkoutHistory() {
       try {
@@ -725,6 +765,70 @@ export default function Home() {
   }, [authUser]);
 
   useEffect(() => {
+    const requestedKeys = requestedPerformanceKeys.current;
+    if (!authUser || !currentWorkout || !currentWorkoutKey || requestedKeys.has(currentWorkoutKey)) return;
+    requestedKeys.add(currentWorkoutKey);
+    const userId = authUser.id;
+    const exerciseName = currentWorkout.name;
+    let cancelled = false;
+    let settled = false;
+
+    function finishLoading(performance: PreviousExercisePerformance | null) {
+      if (cancelled) return;
+      settled = true;
+      setPreviousPerformances((current) => ({ ...current, [currentWorkoutKey]: performance }));
+    }
+
+    async function loadPreviousPerformance() {
+      const supabase = createClient();
+      if (!supabase) {
+        finishLoading(null);
+        return;
+      }
+      const { data: exerciseLog, error: exerciseError } = await supabase
+        .from("workout_exercise_logs")
+        .select("id, exercise_name, completed_at, is_bodyweight")
+        .eq("user_id", userId)
+        .eq("exercise_key", currentWorkoutKey)
+        .order("completed_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (cancelled) return;
+      if (exerciseError || !exerciseLog) {
+        finishLoading(null);
+        return;
+      }
+      const { data: setRows } = await supabase
+        .from("workout_set_logs")
+        .select("set_number, weight_kg, reps, duration_seconds, rpe, note")
+        .eq("user_id", userId)
+        .eq("exercise_log_id", exerciseLog.id)
+        .order("set_number", { ascending: true });
+      if (cancelled) return;
+      finishLoading({
+        exerciseLogId: String(exerciseLog.id),
+        exerciseName: typeof exerciseLog.exercise_name === "string" ? exerciseLog.exercise_name : exerciseName,
+        completedAt: String(exerciseLog.completed_at),
+        isBodyweight: Boolean(exerciseLog.is_bodyweight),
+        sets: (setRows || []).map((set) => ({
+          setNumber: Number(set.set_number),
+          weightKg: set.weight_kg === null ? null : Number(set.weight_kg),
+          reps: set.reps === null ? null : Number(set.reps),
+          durationSeconds: set.duration_seconds === null ? null : Number(set.duration_seconds),
+          rpe: set.rpe === null ? null : Number(set.rpe),
+          note: typeof set.note === "string" && set.note ? set.note : null,
+        })),
+      });
+    }
+
+    void loadPreviousPerformance();
+    return () => {
+      cancelled = true;
+      if (!settled) requestedKeys.delete(currentWorkoutKey);
+    };
+  }, [authUser, currentWorkout, currentWorkoutKey]);
+
+  useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [activeView, activeWorkout, questionIndex, step]);
 
@@ -734,6 +838,12 @@ export default function Home() {
       setTimer((current) => {
         if (current > 1) return current - 1;
         const prescription = workoutPrescription(currentWorkout);
+        if (workoutPhase === "work" && activeWorkout !== null) {
+          setExerciseSetDrafts((drafts) => ({
+            ...drafts,
+            [activeWorkout]: (drafts[activeWorkout] || []).map((set) => set.setNumber === currentSet ? { ...set, completed: true } : set),
+          }));
+        }
         if (workoutPhase === "work" && currentSet < prescription.totalSets) {
           setWorkoutPhase("rest");
           return prescription.restSeconds;
@@ -765,6 +875,10 @@ export default function Home() {
     const nextWorkout = queue[index];
     if (!nextWorkout) return;
     setPlayerQueue(queue);
+    setExerciseSetDrafts(Object.fromEntries(queue.map((exercise, exerciseIndex) => {
+      const prescription = workoutPrescription(exercise);
+      return [exerciseIndex, createWorkoutSetDrafts(prescription.totalSets, prescription.target)];
+    })));
     setActiveWorkout(index);
     setTimer(workoutPrescription(nextWorkout).workSeconds);
     setIsRunning(false);
@@ -774,6 +888,13 @@ export default function Home() {
     setSkippedExercises([]);
     setSessionSeconds(0);
     setSessionCalories(0);
+  }
+
+  function updateExerciseSetDraft(exerciseIndex: number, setNumber: number, patch: Partial<Omit<WorkoutSetDraft, "setNumber">>) {
+    setExerciseSetDrafts((current) => ({
+      ...current,
+      [exerciseIndex]: (current[exerciseIndex] || []).map((set) => set.setNumber === setNumber ? { ...set, ...patch } : set),
+    }));
   }
 
   function goToWorkout(index: number) {
@@ -796,6 +917,7 @@ export default function Home() {
       setTimer(prescription.workSeconds);
       return;
     }
+    updateExerciseSetDraft(activeWorkout, currentSet, { completed: true });
     if (currentSet < prescription.totalSets) {
       setWorkoutPhase("rest");
       setTimer(prescription.restSeconds);
@@ -822,11 +944,19 @@ export default function Home() {
     setIsRunning(false);
     const completed = activeWorkout !== null && workoutPhase === "done" && !skippedExercises.includes(activeWorkout) && !completedExercises.includes(activeWorkout) ? [...completedExercises, activeWorkout] : completedExercises;
     const record: WorkoutSessionRecord = { id: crypto.randomUUID(), completedAt: new Date().toISOString(), durationSeconds: Math.max(1, sessionSeconds), calories: Math.max(1, Math.round(sessionCalories)), completedExercises: completed.length, totalExercises: playerQueue.length, exerciseNames: playerQueue.map((exercise) => exercise.name) };
+    const exerciseLogs = playerQueue.map((exercise, exerciseIndex) => skippedExercises.includes(exerciseIndex) ? null : buildCompletedExerciseLog({
+      exerciseId: exercise.id,
+      exerciseName: exercise.name,
+      exerciseOrder: exerciseIndex + 1,
+      isBodyweight: isBodyweightWorkout(exercise),
+      drafts: exerciseSetDrafts[exerciseIndex] || [],
+    })).filter((log): log is CompletedExerciseLog => Boolean(log));
     setActiveWorkout(null);
     setFeedbackDifficulty("Uygun");
     setFeedbackFatigue(3);
     setFeedbackPainAreas(["Yok"]);
     setFeedbackNote("");
+    setPendingExerciseLogs(exerciseLogs);
     setPendingSession(record);
   }
 
@@ -837,8 +967,10 @@ export default function Home() {
   async function saveWorkoutFeedback() {
     if (!pendingSession) return;
     const record: WorkoutSessionRecord = { ...pendingSession, difficulty: feedbackDifficulty, fatigue: feedbackFatigue, painAreas: feedbackPainAreas.length ? feedbackPainAreas : ["Yok"], feedbackNote: feedbackNote.trim() || undefined };
+    const exerciseLogs = pendingExerciseLogs;
     setSessionHistory((current) => [record, ...current]);
     setPendingSession(null);
+    setPendingExerciseLogs([]);
     setActiveView("progress");
     try {
       const supabase = createClient();
@@ -846,8 +978,63 @@ export default function Home() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       const baseRecord = { id: record.id, user_id: user.id, completed_at: record.completedAt, duration_seconds: record.durationSeconds, calories: record.calories, completed_exercises: record.completedExercises, total_exercises: record.totalExercises, exercise_names: record.exerciseNames };
-      const { error } = await supabase.from("workout_sessions").insert({ ...baseRecord, difficulty: record.difficulty, fatigue: record.fatigue, pain_areas: record.painAreas, feedback_note: record.feedbackNote || null });
-      if (error) await supabase.from("workout_sessions").insert(baseRecord);
+      const { error: sessionError } = await supabase.from("workout_sessions").insert({ ...baseRecord, difficulty: record.difficulty, fatigue: record.fatigue, pain_areas: record.painAreas, feedback_note: record.feedbackNote || null });
+      if (sessionError) {
+        const { error: fallbackSessionError } = await supabase.from("workout_sessions").insert(baseRecord);
+        if (fallbackSessionError) return;
+      }
+      const completedDate = istanbulDateKey(new Date(record.completedAt));
+      const { data: scheduledDay } = await supabase.from("workout_schedule").select("id, scheduled_time, original_date").eq("user_id", user.id).eq("scheduled_date", completedDate).maybeSingle();
+      await supabase.from("workout_schedule").upsert({ id: scheduledDay?.id || crypto.randomUUID(), user_id: user.id, scheduled_date: completedDate, scheduled_time: scheduledDay?.scheduled_time || istanbulTimeKey(new Date(record.completedAt)), status: "completed", original_date: scheduledDay?.original_date || null, completed_session_id: record.id, updated_at: new Date().toISOString() }, { onConflict: "user_id,scheduled_date" });
+      if (!exerciseLogs.length) return;
+
+      const exerciseRows = exerciseLogs.map((log) => ({
+        id: crypto.randomUUID(),
+        session_id: record.id,
+        user_id: user.id,
+        exercise_id: log.exerciseId,
+        exercise_name: log.exerciseName,
+        exercise_key: log.exerciseKey,
+        exercise_order: log.exerciseOrder,
+        is_bodyweight: log.isBodyweight,
+        completed_at: record.completedAt,
+      }));
+      const { error: exerciseLogError } = await supabase.from("workout_exercise_logs").insert(exerciseRows);
+      if (exerciseLogError) return;
+
+      const exerciseRowByOrder = new Map(exerciseRows.map((row) => [row.exercise_order, row]));
+      const setRows = exerciseLogs.flatMap((log) => {
+        const exerciseRow = exerciseRowByOrder.get(log.exerciseOrder);
+        if (!exerciseRow) return [];
+        return log.sets.map((set) => ({
+          id: crypto.randomUUID(),
+          session_id: record.id,
+          exercise_log_id: exerciseRow.id,
+          user_id: user.id,
+          set_number: set.setNumber,
+          weight_kg: set.weightKg,
+          reps: set.reps,
+          duration_seconds: set.durationSeconds,
+          rpe: set.rpe,
+          note: set.note,
+        }));
+      });
+      const { error: setLogError } = setRows.length ? await supabase.from("workout_set_logs").insert(setRows) : { error: null };
+      if (setLogError) {
+        await supabase.from("workout_exercise_logs").delete().in("id", exerciseRows.map((row) => row.id));
+        return;
+      }
+
+      setPreviousPerformances((current) => {
+        const next = { ...current };
+        exerciseLogs.forEach((log) => {
+          const exerciseRow = exerciseRowByOrder.get(log.exerciseOrder);
+          if (!exerciseRow) return;
+          next[log.exerciseKey] = { exerciseLogId: exerciseRow.id, exerciseName: log.exerciseName, completedAt: record.completedAt, isBodyweight: log.isBodyweight, sets: log.sets };
+          requestedPerformanceKeys.current.add(log.exerciseKey);
+        });
+        return next;
+      });
     } catch {
       // Bağlantı yoksa kayıt bu oturumun ilerleme ekranında kalır.
     }
@@ -939,6 +1126,20 @@ export default function Home() {
     setActiveView("plan");
   }
 
+  async function saveCustomPlan(plan: EditableWorkout[]) {
+    setAiWorkouts(plan);
+    const supabase = createClient();
+    if (!supabase || !authUser) return;
+    await supabase.from("workout_plans").upsert({ user_id: authUser.id, workouts: plan, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
+  }
+
+  async function resetCustomPlan() {
+    setAiWorkouts([]);
+    const supabase = createClient();
+    if (!supabase || !authUser) return;
+    await supabase.from("workout_plans").delete().eq("user_id", authUser.id);
+  }
+
   function handleSignedIn(user: User) {
     setAuthUser(user);
     setAuthStatus("authenticated");
@@ -961,6 +1162,10 @@ export default function Home() {
     setRequestedExercises("");
     setHistory(Array(10).fill(""));
     setSessionHistory([]);
+    setExerciseSetDrafts({});
+    setPreviousPerformances({});
+    requestedPerformanceKeys.current.clear();
+    setPendingExerciseLogs([]);
     setAiWorkouts([]);
     setProfileEditing(false);
   }
@@ -973,7 +1178,7 @@ export default function Home() {
     <main className="app-shell">
       {step === 5 && <nav className="topbar">
         <div className="brand"><span className="brand-mark">↗</span><span>form<span className="brand-dot">.</span>ai</span></div>
-        <div className="top-links"><button type="button" aria-pressed={activeView === "plan"} className={activeView === "plan" ? "active" : ""} onClick={() => setActiveView("plan")}>Antrenmanım</button><button type="button" aria-pressed={activeView === "progress"} className={activeView === "progress" ? "active" : ""} onClick={() => setActiveView("progress")}>İlerlemem</button><button type="button" aria-pressed={activeView === "library"} className={activeView === "library" ? "active" : ""} onClick={() => setActiveView("library")}>Hareket kütüphanesi</button></div>
+<div className="top-links"><button type="button" aria-pressed={activeView === "plan"} className={activeView === "plan" ? "active" : ""} onClick={() => setActiveView("plan")}>Antrenmanım</button><button type="button" aria-pressed={activeView === "nutrition"} className={activeView === "nutrition" ? "active" : ""} onClick={() => setActiveView("nutrition")}>Kalori takibi</button><button type="button" aria-pressed={activeView === "progress"} className={activeView === "progress" ? "active" : ""} onClick={() => setActiveView("progress")}>İlerlemem</button><button type="button" aria-pressed={activeView === "calendar"} className={activeView === "calendar" ? "active" : ""} onClick={() => setActiveView("calendar")}>Takvim</button><button type="button" aria-pressed={activeView === "library"} className={activeView === "library" ? "active" : ""} onClick={() => setActiveView("library")}>Hareket kütüphanesi</button></div>
         <div className="top-actions"><ThemeToggle /><button type="button" className="profile-mini" aria-expanded={profileEditing} onClick={() => step === 5 && setProfileEditing((editing) => !editing)}><span className="mini-avatar">{name ? name.charAt(0).toUpperCase() : "E"}</span><span>Profilim</span><span className="chevron">⌄</span></button></div>
       </nav>}
       {step < 5 && <ThemeToggle className="onboarding-theme-toggle" />}
@@ -1020,7 +1225,7 @@ export default function Home() {
       ) : (
         <section className="dashboard">
           {profileEditing && <div className="profile-editor"><div><div className="eyebrow">PROFİLİ GÜNCELLE</div><h2>Spor ortamını ve ekipmanlarını değiştir</h2><p>Kaydettiğinde AI, yeni profil verilerinle programı yeniden oluşturur.</p><div className="profile-account"><span>DOĞRULANMIŞ HESAP</span><strong>{authUser.email}</strong><small>E-posta doğrulandı</small><button type="button" onClick={() => void handleSignOut()}>Oturumu kapat</button></div></div><div className="profile-editor-fields"><div className="choice-cards"><button type="button" aria-pressed={gym === "Evde"} className={gym === "Evde" ? "choice selected" : "choice"} onClick={() => setGym("Evde")}><span>⌂</span><strong>Evde</strong><small>Ekipmansız veya ev ekipmanı</small></button><button type="button" aria-pressed={gym === "Salon"} className={gym === "Salon" ? "choice selected" : "choice"} onClick={() => setGym("Salon")}><span>▦</span><strong>Spor salonunda</strong><small>Salon makineleri ve ağırlıklar</small></button></div><label className="textarea-label">EKİPMANLARIN<textarea value={equipmentText} onChange={(event) => setEquipmentText(event.target.value)} placeholder="Örn. dambıl, direnç bandı, sehpa" /></label><label className="textarea-label">İSTEDİĞİN HAREKETLER<textarea value={requestedExercises} onChange={(event) => setRequestedExercises(event.target.value)} placeholder="Örn. Yerde Dambıl Göğüs Presi" /></label><button className="primary-btn" type="button" onClick={() => { setProfileEditing(false); void createPlan(); }} disabled={saving}>{saving ? "AI yeniden tarıyor…" : "Profili kaydet ve programı yenile →"}</button></div></div>}
-          {activeView === "progress" ? <ProgressView name={name} sessions={sessionHistory} referenceTime={progressReferenceTime} energyMetrics={energyMetrics} /> : activeView === "library" ? <LibraryView onOpenWorkout={(exercise) => { setActiveView("plan"); openWorkout(0, [exercise]); }} onAddWorkout={(exercise) => setAiWorkouts((current) => current.some((item) => item.id === exercise.id) ? current : [...current, exercise])} /> : <>
+<WorkoutCalendar active={activeView === "calendar"} userId={authUser?.id} onStartWorkout={() => setActiveView("plan")} />{activeView === "calendar" ? null : activeView === "progress" ? <ProgressView name={name} sessions={sessionHistory} referenceTime={progressReferenceTime} energyMetrics={energyMetrics} userId={authUser?.id} goalText={goalText || planGoal} /> : activeView === "nutrition" ? <CalorieTracker userId={authUser?.id} bmr={energyMetrics?.bmr} tdee={energyMetrics?.tdee} weightKg={Number(weight) || undefined} activityFactor={energyMetrics?.activityFactor} workoutDays={inferWorkoutDays(history[1] || history[3])} profileGoal={goalText || planGoal} /> : activeView === "library" ? <LibraryView onOpenWorkout={(exercise) => { setActiveView("plan"); openWorkout(0, [exercise]); }} onAddWorkout={(exercise) => setAiWorkouts((current) => current.some((item) => item.id === exercise.id) ? current : [...current, exercise])} /> : <>
           {activeWorkout !== null && currentWorkout && currentGuide && currentPrescription ? <div className="workout-player">
             <button className="back-btn" type="button" onClick={() => { setIsRunning(false); setActiveWorkout(null); }}>← Plana dön</button>
             <div className="workout-session-progress" aria-label="Antrenman ilerlemesi">{playerQueue.map((exercise, index) => <span key={`${exercise.name}-${index}`} className={completedExercises.includes(index) ? "complete" : skippedExercises.includes(index) ? "skipped" : index === activeWorkout ? "active" : ""} />)}</div>
@@ -1030,6 +1235,7 @@ export default function Home() {
             <div className="form-cues"><div><span>NEFES</span><strong>{currentGuide.breathe}</strong></div><div className="warning"><span>SIK HATA</span><strong>{currentGuide.mistake}</strong></div></div>
             <div className={`timer-card phase-${workoutPhase}`}><span>{isRunning ? workoutPhase === "rest" ? "DİNLENME SÜRÜYOR" : "AKTİF SET" : workoutPhase === "done" ? "HAREKET TAMAM" : workoutPhase === "rest" ? "DİNLENMEYE HAZIR" : "HAZIR"}</span><strong>{formatClock(timer)}</strong><small>{workoutPhase === "rest" ? `Sonraki: set ${Math.min(currentSet + 1, currentPrescription.totalSets)}` : `${currentPrescription.target} · yaklaşık ${displayedSessionCalories} kcal`}</small></div>
             <div className="set-tracker"><div><span>SETLER</span><strong>{currentSet} / {currentPrescription.totalSets}</strong></div><div className="set-dots">{Array.from({ length: currentPrescription.totalSets }, (_, index) => <i key={index} className={index + 1 < currentSet || workoutPhase === "done" ? "complete" : index + 1 === currentSet ? "active" : ""} />)}</div><small>{currentWorkout.rest}</small></div>
+            <WorkoutSetLogger exerciseName={currentWorkout.name} activeSet={currentSet} isBodyweight={currentIsBodyweight} sets={currentSetDrafts} previous={currentPreviousPerformance} loadingPrevious={Boolean(currentWorkoutKey) && !(currentWorkoutKey in previousPerformances)} onChange={(setNumber, patch) => activeWorkout !== null && updateExerciseSetDraft(activeWorkout, setNumber, patch)} />
             <div className="player-tools"><button type="button" onClick={() => activeWorkout > 0 && goToWorkout(activeWorkout - 1)} disabled={activeWorkout === 0}>← Önceki</button>{workoutPhase !== "done" && <button type="button" onClick={completeCurrentPhase}>{workoutPhase === "rest" ? "Dinlenmeyi atla" : "Seti tamamla"}</button>}<button type="button" onClick={skipExercise}>Hareketi atla →</button></div>
             <div className="player-actions"><button className="start-btn" type="button" onClick={() => workoutPhase === "done" ? activeWorkout < playerQueue.length - 1 ? goToWorkout(activeWorkout + 1) : void finishWorkout() : setIsRunning((running) => !running)}>{workoutPhase === "done" ? activeWorkout < playerQueue.length - 1 ? "Sonraki harekete geç" : "Antrenmanı kaydet" : isRunning ? "Duraklat" : workoutPhase === "rest" ? "Dinlenmeyi başlat" : "Seti başlat"} <span>→</span></button></div>
             <button className="finish-btn" type="button" onClick={() => void finishWorkout()}>✓ Antrenmanı bitir ve kaydet</button>
@@ -1042,7 +1248,7 @@ export default function Home() {
           <AdaptivePlanCard adaptation={adaptation} sessionCount={sessionHistory.length} />
           {aiAnalysis && <AiPlanInsights analysis={aiAnalysis} schedule={aiSchedule} progression={aiProgression} fingerprint={aiFingerprint} />}
           <ReadyPrograms onApply={applyReadyProgram} />
-          <div className="workout-layout"><div className="workout-main"><div className="section-title"><div><div className="eyebrow">BUGÜN</div><h2>Full body · {planLevel}</h2></div><button className="outline-btn" type="button">⋮</button></div><div className="workout-list">{workouts.map((workout, index) => { const guide = getMotionGuide(workout); return <article className="workout-card" key={workout.name}><ExerciseAnimation exercise={workout} compact /><div className="exercise-info"><div className="exercise-labels"><div className="pill">{workout.level}</div><span>{guide.action}</span></div><h3>{workout.name} <small>{workout.english}</small></h3><p>{workout.sets} · {workout.rest}</p><details className="how-to"><summary>3 adımda nasıl yapılır?</summary><ol className="mini-steps"><li>{guide.start}</li><li>{workout.instructions}</li><li>{guide.finish}</li></ol></details></div><button className="play-btn" type="button" aria-label={`${workout.name} hareket akışını ve sayacını aç`} onClick={() => openWorkout(index)}><span>▶</span><small>Aç</small></button></article>; })}</div><button className="start-btn" type="button" onClick={() => openWorkout(0)}>Antrenmana başla <span>→</span></button></div><aside className="coach-card"><div className="coach-top"><span className="spark">✦</span><span>FORM AI</span></div><h2>Bugün senden<br /><em>tek bir şey</em> istiyor:</h2><p>Hareketi mükemmel yapmak değil, devam etmek.</p><div className="coach-line" /><small>İyi antrenmanlar, {name || "Ece"}.</small></aside></div></>}
+          <div className="workout-layout"><div className="workout-main"><div className="section-title"><div><div className="eyebrow">BUGÜN</div><h2>Full body · {planLevel}</h2></div></div><PlanEditor workouts={aiWorkouts.length ? aiWorkouts : localPlan} exerciseOptions={planExerciseOptions} onSave={saveCustomPlan} onReset={resetCustomPlan} /><div className="workout-list">{workouts.map((workout, index) => { const guide = getMotionGuide(workout); return <article className="workout-card" key={workout.name}><ExerciseAnimation exercise={workout} compact /><div className="exercise-info"><div className="exercise-labels"><div className="pill">{workout.level}</div><span>{guide.action}</span></div><h3>{workout.name} <small>{workout.english}</small></h3><p>{workout.sets} · {workout.rest}</p><details className="how-to"><summary>3 adımda nasıl yapılır?</summary><ol className="mini-steps"><li>{guide.start}</li><li>{workout.instructions}</li><li>{guide.finish}</li></ol></details></div><button className="play-btn" type="button" aria-label={`${workout.name} hareket akışını ve sayacını aç`} onClick={() => openWorkout(index)}><span>▶</span><small>Aç</small></button></article>; })}</div><button className="start-btn" type="button" onClick={() => openWorkout(0)}>Antrenmana başla <span>→</span></button></div><aside className="coach-card"><div className="coach-top"><span className="spark">✦</span><span>FORM AI</span></div><h2>Bugün senden<br /><em>tek bir şey</em> istiyor:</h2><p>Hareketi mükemmel yapmak değil, devam etmek.</p><div className="coach-line" /><small>İyi antrenmanlar, {name || "Ece"}.</small></aside></div></>}
           </>}
         </section>
       )}

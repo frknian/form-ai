@@ -50,9 +50,10 @@ test("keeps email verification and Google authentication wired into profile crea
 });
 
 test("keeps the AI plan and movement library wired into the product", async () => {
-  const [page, route, layout, supabaseSchema] = await Promise.all([
+  const [page, route, weeklyRoute, layout, supabaseSchema] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/api/generate-plan/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/weekly-review/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
     readFile(new URL("../db/supabase-schema.sql", import.meta.url), "utf8"),
   ]);
@@ -86,6 +87,18 @@ test("keeps the AI plan and movement library wired into the product", async () =
   assert.match(page, /Dinlenmeyi atla/);
   assert.match(page, /Antrenmanı bitir ve kaydet/);
   assert.match(page, /workout_sessions/);
+  assert.match(page, /WorkoutSetLogger/);
+  assert.match(page, /PlanEditor/);
+  assert.match(page, /workout_plans/);
+  assert.match(page, /workout_exercise_logs/);
+  assert.match(page, /workout_set_logs/);
+  assert.match(page, /BodyMeasurements/);
+  assert.match(page, /WorkoutCalendar/);
+  assert.match(page, /WeeklyAiReview/);
+  assert.match(page, /CalorieTracker/);
+  assert.match(page, /inferWorkoutDays/);
+  assert.match(page, /activeView === "calendar"/);
+  assert.match(page, /istanbulDateKey/);
   assert.match(page, /ZAMANLA UYARLANAN PROGRAM/);
   assert.match(page, /Kaydet ve programımı uyarla/);
   assert.match(page, /summarizeTrainingAdaptation/);
@@ -109,6 +122,12 @@ test("keeps the AI plan and movement library wired into the product", async () =
   assert.match(route, /photoDataUrl/);
   assert.match(route, /katalogdaki id ve name alanlarını birebir kullan/);
   assert.match(route, /ÖNCEKİ ANTRENMANLAR VE KULLANICI GERİ BİLDİRİMLERİ/);
+  assert.match(weeklyRoute, /Output\.object/);
+  assert.match(weeklyRoute, /jsonSchema<WeeklyReview>/);
+  assert.match(weeklyRoute, /validateWeeklySummary/);
+  assert.match(weeklyRoute, /enforceWeeklySafety/);
+  assert.match(weeklyRoute, /JSON\.stringify\(safeSummary\)/);
+  assert.doesNotMatch(weeklyRoute, /payload\.(email|name|userId)/);
   assert.match(layout, /form\.ai — Sana özel antrenman/);
   assert.match(layout, /generateMetadata/);
   assert.match(layout, /og\.png/);
@@ -117,6 +136,26 @@ test("keeps the AI plan and movement library wired into the product", async () =
   assert.doesNotMatch(page, /knowledge-sources|fitnessSources/);
   assert.doesNotMatch(route, /knowledge-sources|fitnessSources/);
   assert.match(supabaseSchema, /create table if not exists public\.workout_sessions/i);
+  assert.match(supabaseSchema, /create table if not exists public\.workout_plans/i);
+  assert.match(supabaseSchema, /Users can update own workout plans/i);
+  assert.match(supabaseSchema, /create table if not exists public\.workout_exercise_logs/i);
+  assert.match(supabaseSchema, /create table if not exists public\.workout_set_logs/i);
+  assert.match(supabaseSchema, /create table if not exists public\.body_measurements/i);
+  assert.match(supabaseSchema, /create table if not exists public\.workout_schedule/i);
+  assert.match(supabaseSchema, /create table if not exists public\.reminder_preferences/i);
+  assert.match(supabaseSchema, /create table if not exists public\.weekly_ai_reviews/i);
+  assert.match(supabaseSchema, /create table if not exists public\.nutrition_goals/i);
+  assert.match(supabaseSchema, /Users can read own nutrition goals/i);
+  assert.match(supabaseSchema, /Users can update own nutrition goals/i);
+  assert.match(supabaseSchema, /Users can read own weekly AI reviews/i);
+  assert.match(supabaseSchema, /Users can read own workout schedule/i);
+  assert.match(supabaseSchema, /Users can update own reminder preferences/i);
+  assert.match(supabaseSchema, /Users can read own body measurements/i);
+  assert.match(supabaseSchema, /Users can update own body measurements/i);
+  assert.match(supabaseSchema, /Users can delete own body measurements/i);
+  assert.match(supabaseSchema, /Users can read own workout exercise logs/i);
+  assert.match(supabaseSchema, /Users can insert own workout set logs/i);
+  assert.match(supabaseSchema, /rpe smallint check \(rpe between 1 and 10\)/i);
   assert.match(supabaseSchema, /Users can read own workout sessions/i);
   assert.match(supabaseSchema, /difficulty text/i);
   assert.match(supabaseSchema, /pain_areas jsonb/i);
