@@ -80,6 +80,7 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
   const [storageReady, setStorageReady] = useState(false);
   const cameraInput = useRef<HTMLInputElement>(null);
   const barcodeVideo = useRef<HTMLVideoElement>(null);
+  const productSearchCache = useRef(new Map<string, { results: FoodSearchResult[]; notice: string }>());
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -145,15 +146,27 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
     if (activeMethod !== "manual" || foodName.trim().length < 2 || selectedProduct?.name === foodName) {
       return;
     }
+    const query = foodName.trim();
+    const cacheKey = query.toLocaleLowerCase("tr-TR");
+    const cached = productSearchCache.current.get(cacheKey);
+    if (cached) {
+      queueMicrotask(() => {
+        setSearchResults(cached.results);
+        setSearchNotice(cached.notice);
+        setSearchState(cached.results.length ? "ready" : "empty");
+      });
+      return;
+    }
     const controller = new AbortController();
     const timer = window.setTimeout(async () => {
       setSearchState("loading");
       setSearchNotice("");
       try {
-        const response = await fetch(`/api/nutrition/search?q=${encodeURIComponent(foodName.trim())}`, { signal: controller.signal });
+        const response = await fetch(`/api/nutrition/search?q=${encodeURIComponent(query)}`, { signal: controller.signal });
         const result = await response.json().catch(() => ({})) as { results?: FoodSearchResult[]; error?: string; notice?: string };
         if (controller.signal.aborted) return;
         const results = Array.isArray(result.results) ? result.results : [];
+        if (response.ok) productSearchCache.current.set(cacheKey, { results, notice: result.notice || "" });
         setSearchResults(results);
         setSearchNotice(result.notice || result.error || "");
         setSearchState(response.ok ? (results.length ? "ready" : "empty") : "error");
@@ -163,7 +176,7 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
         setSearchNotice("Ürün araması şu an tamamlanamadı. Besinini kendi değerlerinle ekleyebilirsin.");
         setSearchState("error");
       }
-    }, 320);
+    }, 650);
     return () => { controller.abort(); window.clearTimeout(timer); };
   }, [activeMethod, foodName, selectedProduct?.name]);
 

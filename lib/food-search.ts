@@ -25,6 +25,15 @@ export type FoodSearchResult = {
   source: "Open Food Facts" | "FİT.AI temel besin listesi";
 };
 
+export type OpenFoodFactsSearchHit = {
+  code?: string;
+  product_name?: string;
+  product_name_tr?: string;
+  brands?: string[] | string;
+  serving_size?: string;
+  nutriments?: Record<string, unknown>;
+};
+
 const emptyMicros = (): FoodMicronutrients => ({});
 
 export const emptyFoodNutrition = (): FoodNutrition => ({ calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0, micros: emptyMicros() });
@@ -32,6 +41,64 @@ export const emptyFoodNutrition = (): FoodNutrition => ({ calories: 0, protein: 
 function rounded(value: number, digits = 1) {
   const multiplier = 10 ** digits;
   return Math.round(Math.max(0, Number.isFinite(value) ? value : 0) * multiplier) / multiplier;
+}
+
+function numeric(value: unknown) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
+}
+
+function micronutrientMilligrams(nutrients: Record<string, unknown>, name: string) {
+  const amount = numeric(nutrients[`${name}_100g`]);
+  const unit = String(nutrients[`${name}_unit`] || "g").toLowerCase();
+  if (!amount) return 0;
+  if (unit === "mg") return amount;
+  if (unit === "µg" || unit === "ug") return amount / 1_000;
+  return amount * 1_000;
+}
+
+function parseServingGrams(value: string | undefined) {
+  const match = value?.replace(",", ".").match(/(\d+(?:\.\d+)?)\s*g\b/i);
+  const grams = match ? Number(match[1]) : 100;
+  return Number.isFinite(grams) && grams > 0 && grams <= 2_000 ? grams : 100;
+}
+
+export function openFoodFactsHitToFood(hit: OpenFoodFactsSearchHit): FoodSearchResult | null {
+  const nutrients = hit.nutriments || {};
+  const name = hit.product_name_tr || hit.product_name;
+  const calories = Math.round(numeric(nutrients["energy-kcal_100g"]));
+  if (!name || !calories) return null;
+
+  const micros: FoodMicronutrients = {};
+  const sodium = micronutrientMilligrams(nutrients, "sodium");
+  const calcium = micronutrientMilligrams(nutrients, "calcium");
+  const iron = micronutrientMilligrams(nutrients, "iron");
+  const potassium = micronutrientMilligrams(nutrients, "potassium");
+  const vitaminC = micronutrientMilligrams(nutrients, "vitamin-c");
+  if (sodium) micros.sodiumMg = rounded(sodium);
+  if (calcium) micros.calciumMg = rounded(calcium);
+  if (iron) micros.ironMg = rounded(iron);
+  if (potassium) micros.potassiumMg = rounded(potassium);
+  if (vitaminC) micros.vitaminCMg = rounded(vitaminC);
+
+  const brands = Array.isArray(hit.brands) ? hit.brands : hit.brands?.split(",");
+  const brand = brands?.map((item) => item.trim()).filter(Boolean).join(", ");
+  return {
+    id: `off-${hit.code || normalizeFoodSearchText(name)}`,
+    name,
+    brand: brand || undefined,
+    barcode: hit.code || undefined,
+    servingGrams: parseServingGrams(hit.serving_size),
+    nutritionPer100g: {
+      calories,
+      protein: rounded(numeric(nutrients.proteins_100g)),
+      carbs: rounded(numeric(nutrients.carbohydrates_100g)),
+      fat: rounded(numeric(nutrients.fat_100g)),
+      fiber: rounded(numeric(nutrients.fiber_100g)),
+      micros,
+    },
+    source: "Open Food Facts",
+  };
 }
 
 export function scaleFoodNutrition(nutrition: FoodNutrition, grams: number): FoodNutrition {
@@ -106,6 +173,20 @@ const staples: FoodSearchResult[] = [
   { id: "tr-walnut", name: "Ceviz", servingGrams: 30, nutritionPer100g: { calories: 654, protein: 15, carbs: 14, fat: 65, fiber: 6.7, micros: { calciumMg: 98, potassiumMg: 441 } }, source: "FİT.AI temel besin listesi" },
   { id: "tr-tuna", name: "Ton balığı, süzülmüş", servingGrams: 120, nutritionPer100g: { calories: 132, protein: 29, carbs: 0, fat: 1.3, fiber: 0, micros: { sodiumMg: 300, potassiumMg: 237 } }, source: "FİT.AI temel besin listesi" },
   { id: "tr-cacik", name: "Cacık", servingGrams: 200, nutritionPer100g: { calories: 50, protein: 2.6, carbs: 4, fat: 2.7, fiber: 0.4, micros: { calciumMg: 95, potassiumMg: 150 } }, source: "FİT.AI temel besin listesi" },
+  { id: "snack-snickers", name: "Snickers", brand: "Mars", servingGrams: 50, nutritionPer100g: { calories: 510, protein: 9.5, carbs: 54, fat: 28, fiber: 2.5, micros: { sodiumMg: 176 } }, source: "FİT.AI temel besin listesi" },
+  { id: "snack-mars", name: "Mars çikolata bar", brand: "Mars", servingGrams: 51, nutritionPer100g: { calories: 449, protein: 4.3, carbs: 70, fat: 17, fiber: 1.2, micros: { sodiumMg: 170 } }, source: "FİT.AI temel besin listesi" },
+  { id: "snack-twix", name: "Twix çikolata bar", brand: "Mars", servingGrams: 50, nutritionPer100g: { calories: 493, protein: 4.9, carbs: 65, fat: 24, fiber: 1.5, micros: { sodiumMg: 210 } }, source: "FİT.AI temel besin listesi" },
+  { id: "snack-kitkat", name: "KitKat sütlü çikolatalı gofret", brand: "Nestlé", servingGrams: 41.5, nutritionPer100g: { calories: 518, protein: 6.5, carbs: 64, fat: 26, fiber: 2.3, micros: { sodiumMg: 125 } }, source: "FİT.AI temel besin listesi" },
+  { id: "snack-kinder-bueno", name: "Kinder Bueno", brand: "Ferrero", servingGrams: 43, nutritionPer100g: { calories: 572, protein: 8.6, carbs: 49.5, fat: 37.3, fiber: 3, micros: { sodiumMg: 107 } }, source: "FİT.AI temel besin listesi" },
+  { id: "snack-ulker-wafer", name: "Ülker Çikolatalı Gofret", brand: "Ülker", servingGrams: 36, nutritionPer100g: { calories: 544, protein: 6.7, carbs: 61, fat: 30, fiber: 2.5, micros: { sodiumMg: 130 } }, source: "FİT.AI temel besin listesi" },
+  { id: "snack-eti-browni", name: "Eti Browni Intense", brand: "Eti", servingGrams: 50, nutritionPer100g: { calories: 430, protein: 5.5, carbs: 55, fat: 21, fiber: 3.2, micros: { sodiumMg: 210 } }, source: "FİT.AI temel besin listesi" },
+  { id: "snack-biskrem", name: "Biskrem kakaolu bisküvi", brand: "Ülker", servingGrams: 50, nutritionPer100g: { calories: 480, protein: 6.5, carbs: 66, fat: 21, fiber: 2.6, micros: { sodiumMg: 280 } }, source: "FİT.AI temel besin listesi" },
+  { id: "snack-oreo", name: "Oreo kakaolu bisküvi", brand: "Oreo", servingGrams: 44, nutritionPer100g: { calories: 474, protein: 5, carbs: 70, fat: 20, fiber: 2.5, micros: { sodiumMg: 460 } }, source: "FİT.AI temel besin listesi" },
+  { id: "snack-lays", name: "Lay's klasik patates cipsi", brand: "Lay's", servingGrams: 30, nutritionPer100g: { calories: 536, protein: 6.5, carbs: 53, fat: 34, fiber: 4.5, micros: { sodiumMg: 520, potassiumMg: 1200 } }, source: "FİT.AI temel besin listesi" },
+  { id: "snack-doritos", name: "Doritos nacho mısır cipsi", brand: "Doritos", servingGrams: 30, nutritionPer100g: { calories: 500, protein: 7, carbs: 57, fat: 27, fiber: 4.5, micros: { sodiumMg: 650 } }, source: "FİT.AI temel besin listesi" },
+  { id: "snack-cheetos", name: "Cheetos peynir aromalı mısır çerezi", brand: "Cheetos", servingGrams: 30, nutritionPer100g: { calories: 535, protein: 6, carbs: 55, fat: 32, fiber: 2.5, micros: { sodiumMg: 700 } }, source: "FİT.AI temel besin listesi" },
+  { id: "snack-haribo", name: "Haribo ayıcık jelibon", brand: "Haribo", servingGrams: 30, nutritionPer100g: { calories: 343, protein: 6.9, carbs: 77, fat: 0.5, fiber: 0, micros: { sodiumMg: 10 } }, source: "FİT.AI temel besin listesi" },
+  { id: "snack-protein-bar", name: "Protein bar, çikolatalı", servingGrams: 50, nutritionPer100g: { calories: 380, protein: 30, carbs: 36, fat: 12, fiber: 8, micros: { sodiumMg: 280, calciumMg: 140 } }, source: "FİT.AI temel besin listesi" },
 ];
 
 export function searchLocalFoods(query: string, limit = 6) {
@@ -113,7 +194,7 @@ export function searchLocalFoods(query: string, limit = 6) {
   if (normalizedQuery.length < 2) return [];
   const terms = normalizedQuery.split(" ");
   return staples.filter((food) => {
-    const searchable = normalizeFoodSearchText(food.name);
+    const searchable = normalizeFoodSearchText(`${food.name} ${food.brand || ""}`);
     return terms.every((term) => {
       const alternatives = term.endsWith("k") ? [term, `${term.slice(0, -1)}g`] : [term];
       return alternatives.some((candidate) => searchable.includes(candidate));
