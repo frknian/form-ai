@@ -802,10 +802,11 @@ button,input { font:inherit; } button { cursor:pointer; }
 .auth-message.success strong { font-size:11px; }
 .auth-message.success button { justify-self:start; margin-top:3px; padding:0; border:0; background:transparent; color:#53651d; font-size:10px; font-weight:800; text-decoration:underline; }
 .auth-privacy { margin-top:17px; text-align:center; font-size:9px; }
-.auth-loading { align-content:center; gap:9px; color:var(--muted-text); text-align:center; }
+.auth-loading { color:var(--muted-text); text-align:center; }
+.auth-status-card { display:grid; justify-items:center; width:min(480px,100%); gap:10px; padding:28px; border:1px solid var(--line); border-radius:16px; background:var(--surface); box-shadow:0 20px 60px rgba(29,29,27,.08); }
 .auth-loading-mark { display:grid; place-items:center; width:52px; height:52px; margin:0 auto 8px; border-radius:50%; background:var(--lime); color:#22221f; font-size:23px; }
-.auth-loading strong { color:var(--ink); font-size:16px; }
-.auth-loading span { max-width:430px; font-size:11px; line-height:1.5; }
+.auth-status-card h1 { margin:0; color:var(--ink); font-size:20px; letter-spacing:-.5px; }
+.auth-status-card p { max-width:430px; margin:0; font-size:12px; line-height:1.6; }
 .auth-loading a { margin-top:8px; color:#718728; font-size:11px; font-weight:700; }
 .profile-account { display:grid; gap:5px; margin-top:20px; padding-top:17px; border-top:1px solid #d8e5b1; }
 .profile-account span { color:#77852e; font-size:9px; font-weight:800; letter-spacing:1px; }
@@ -824,10 +825,13 @@ button,input { font:inherit; } button { cursor:pointer; }
 .dark .auth-message.error { border-color:#664330; background:#30231e; color:#f0b99c; }
 .dark .auth-message.success { border-color:#46502c; background:#20231a; color:#c4dd76; }
 .dark .auth-message.success button { color:#c4dd76; }
+.dark .auth-status-card { box-shadow:0 20px 60px rgba(0,0,0,.22); }
 .dark .profile-account { border-color:#46502c; }
 
 @media (max-width:820px) {
   .auth-shell { display:block; padding:18px; }
+  .auth-loading { display:grid; place-items:center; }
+  .auth-status-card { padding:24px 20px; }
   .auth-theme-toggle { position:fixed; top:14px; right:18px; }
   .auth-layout { min-height:0; grid-template-columns:1fr; border-radius:14px; }
   .auth-story { min-height:260px; padding:30px 25px; }

@@ -56,6 +56,7 @@ test("keeps email verification and Google authentication wired into profile crea
   assert.match(authScreen, /auth\.signUp/);
   assert.match(authScreen, /emailRedirectTo/);
   assert.match(authScreen, /auth\.resend/);
+  assert.match(authScreen, /isVerifiedAuthUser/);
   assert.match(authScreen, /signInWithPassword/);
   assert.match(authScreen, /signInWithOAuth/);
   assert.match(authScreen, /provider: "google"/);
@@ -63,6 +64,9 @@ test("keeps email verification and Google authentication wired into profile crea
   assert.match(authScreen, /status === "unavailable" &&/);
   assert.doesNotMatch(authScreen, /status === "unavailable" \? <div[^]*?\: <>/);
   assert.match(callback, /exchangeCodeForSession/);
+  assert.match(callback, /hasVerifiedSession/);
+  assert.match(callback, /E-posta doğrulandı/);
+  assert.match(page, /isVerifiedAuthUser/);
   assert.match(page, /MobileRuntime/);
   assert.match(authScreen, /skipBrowserRedirect: native/);
   assert.match(authScreen, /openNativeBrowser/);

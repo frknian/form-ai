@@ -30,6 +30,7 @@ import { inferWorkoutDays } from "@/lib/nutrition-goals";
 import type { EditableWorkout } from "@/lib/plan-editor";
 import type { Exercise } from "@/types/exercise";
 import { calculateAge, isValidBirthDate, type AccountStatus, type EditableProfile } from "@/lib/profile";
+import { isVerifiedAuthUser } from "@/lib/auth";
 import { saveProfileWithHistory, signedAvatarUrl } from "@/lib/profile-service";
 
 const AiCoachChat = lazy(() => import("@/components/AiCoachChat").then((module) => ({ default: module.AiCoachChat })));
@@ -652,17 +653,24 @@ export default function Home() {
     }
 
     let cancelled = false;
-    void supabase.auth.getUser().then(({ data }) => {
+    void supabase.auth.getUser().then(async ({ data }) => {
       if (cancelled) return;
-      setAuthUser(data.user);
-      setAccountStatus(data.user ? "loading" : "active");
-      setAuthStatus(data.user ? "authenticated" : "anonymous");
+      const verifiedUser = isVerifiedAuthUser(data.user) ? data.user : null;
+      if (data.user && !verifiedUser) await supabase.auth.signOut({ scope: "local" });
+      if (cancelled) return;
+      setAuthUser(verifiedUser);
+      setAccountStatus(verifiedUser ? "loading" : "active");
+      setAuthStatus(verifiedUser ? "authenticated" : "anonymous");
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (cancelled) return;
-      setAuthUser(session?.user ?? null);
-      setAccountStatus(session?.user ? "loading" : "active");
-      setAuthStatus(session?.user ? "authenticated" : "anonymous");
+      const verifiedUser = isVerifiedAuthUser(session?.user) ? session.user : null;
+      setAuthUser(verifiedUser);
+      setAccountStatus(verifiedUser ? "loading" : "active");
+      setAuthStatus(verifiedUser ? "authenticated" : "anonymous");
+      if (session?.user && !verifiedUser) {
+        window.setTimeout(() => void supabase.auth.signOut({ scope: "local" }), 0);
+      }
     });
     return () => {
       cancelled = true;
@@ -1119,6 +1127,12 @@ export default function Home() {
   }
 
   function handleSignedIn(user: User) {
+    if (!isVerifiedAuthUser(user)) {
+      setAuthUser(null);
+      setAccountStatus("active");
+      setAuthStatus("anonymous");
+      return;
+    }
     setAuthUser(user);
     setAccountStatus("loading");
     setAuthStatus("authenticated");
@@ -1178,7 +1192,7 @@ export default function Home() {
   }
 
   if (accountStatus === "loading") {
-    return <main className="auth-shell auth-loading"><div className="auth-loading-mark">↗</div><strong>Profilin hazırlanıyor</strong><span>Hesap durumun ve kişisel verilerin kontrol ediliyor…</span></main>;
+    return <main className="auth-shell auth-loading"><section className="auth-status-card"><div className="auth-loading-mark">↗</div><h1>Profilin hazırlanıyor</h1><p>Hesap durumun ve kişisel verilerin kontrol ediliyor…</p></section></main>;
   }
 
   if (accountStatus === "frozen") {

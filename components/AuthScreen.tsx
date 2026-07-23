@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import type { User } from "@supabase/supabase-js";
+import { isVerifiedAuthUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/client";
 import { authCallbackUrl, isNativeApp, openNativeBrowser } from "@/lib/mobile";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -75,14 +76,22 @@ export function AuthScreen({ status, onSignedIn }: { status: "loading" | "anonym
         });
         if (signUpError) throw signUpError;
         if (data.session?.user) {
-          onSignedIn(data.session.user);
-          return;
+          if (isVerifiedAuthUser(data.session.user)) {
+            onSignedIn(data.session.user);
+            return;
+          }
+          await supabase.auth.signOut({ scope: "local" });
         }
         setNotice("Doğrulama bağlantısını e-posta adresine gönderdik. Gelen kutunu ve spam klasörünü kontrol et.");
       } else {
         const { data, error: signInError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
         if (signInError) throw signInError;
-        if (data.user) onSignedIn(data.user);
+        if (!isVerifiedAuthUser(data.user)) {
+          await supabase.auth.signOut({ scope: "local" });
+          setError("Önce e-posta adresine gönderdiğimiz bağlantıyı doğrula.");
+          return;
+        }
+        onSignedIn(data.user);
       }
     } catch (authError) {
       setError(friendlyAuthError(authError instanceof Error ? authError.message : ""));
@@ -128,7 +137,7 @@ export function AuthScreen({ status, onSignedIn }: { status: "loading" | "anonym
   }
 
   if (status === "loading") {
-    return <main className="auth-shell auth-loading"><div className="auth-loading-mark">↗</div><strong>Güvenli hesabın hazırlanıyor</strong><span>Oturum bilgilerin kontrol ediliyor…</span></main>;
+    return <main className="auth-shell auth-loading"><section className="auth-status-card"><div className="auth-loading-mark">↗</div><h1>Güvenli hesabın hazırlanıyor</h1><p>Oturum bilgilerin kontrol ediliyor…</p></section></main>;
   }
 
   return (
