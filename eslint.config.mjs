@@ -10,6 +10,7 @@ const eslintConfig = defineConfig([
     // Default ignores of eslint-config-next:
     ".next/**",
     ".vercel/**",
+    "android/app/build/**",
     "dist/**",
     "out/**",
     "build/**",

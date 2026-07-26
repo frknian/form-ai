@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useEffectEvent, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { createActivityRepository, summarizeActivities, type ActivityEntry } from "@/lib/activity-service";
 import { activityIntensityOptions, coreActivityCatalog, estimateActivityCalories, sportCatalog, sportByKey, validActivityDuration, type SportDefinition, type SportMetricKey } from "@/lib/sports";
@@ -96,6 +96,9 @@ export function ActivityLogger({ userId, weightKg = 70 }: { userId?: string; wei
   const dailySummaries = summarizeActivities(history);
   const automaticCalories = selectedActivity ? estimateActivityCalories(selectedActivity.key, Number(duration), weightKg, intensity) : 0;
   const calories = caloriesManual ? manualCalories : automaticCalories ? String(automaticCalories) : "";
+  const reportHistoryLoadError = useEffectEvent(() => {
+    setMessage(t.activityLogger.errorHistory);
+  });
 
   useEffect(() => {
     if (!userId) return undefined;
@@ -107,7 +110,7 @@ export function ActivityLogger({ userId, weightKg = 70 }: { userId?: string; wei
         const entries = await createActivityRepository(client, userId as string).list();
         if (!cancelled) setHistory(entries);
       } catch {
-        if (!cancelled) setMessage(t.activityLogger.errorHistory);
+        if (!cancelled) reportHistoryLoadError();
       } finally {
         if (!cancelled) setHistoryLoading(false);
       }

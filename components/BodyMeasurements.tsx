@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useEffectEvent, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
   chartDomain,
@@ -124,6 +124,9 @@ export function BodyMeasurements({ userId, referenceTime }: BodyMeasurementsProp
   const [error, setError] = useState("");
   const weightUnit = useWeightUnit();
   const toWeightDisplay = (kg: number) => kgToUnit(kg, weightUnit);
+  const reportMeasurementLoadError = useEffectEvent(() => {
+    setError(t.measurements.errorLoad);
+  });
 
   useEffect(() => {
     if (!userId) return;
@@ -134,7 +137,7 @@ export function BodyMeasurements({ userId, referenceTime }: BodyMeasurementsProp
       const { data, error: loadError } = await supabase.from("body_measurements").select("*").eq("user_id", userId).order("measured_at", { ascending: true });
       if (cancelled) return;
       setLoading(false);
-      if (loadError) { setError(t.measurements.errorLoad); return; }
+      if (loadError) { reportMeasurementLoadError(); return; }
       setRecords((data || []).map((row) => rowToMeasurement(row as Record<string, unknown>)));
     }
     void loadMeasurements();
