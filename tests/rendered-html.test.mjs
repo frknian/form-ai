@@ -52,15 +52,16 @@ test("keeps email verification and Google authentication wired into profile crea
 
   assert.match(page, /onAuthStateChange/);
   assert.match(page, /auth\.signOut/);
-  assert.match(profileManager, /DOĞRULANMIŞ HESAP/);
+  assert.match(profileManager, /t\.profileManager\.verifiedAccount/);
   assert.match(authScreen, /auth\.signUp/);
-  assert.match(authScreen, /emailRedirectTo/);
+  assert.match(authScreen, /verifyOtp/);
+  assert.match(authScreen, /type: "signup"/);
   assert.match(authScreen, /auth\.resend/);
   assert.match(authScreen, /isVerifiedAuthUser/);
   assert.match(authScreen, /signInWithPassword/);
   assert.match(authScreen, /signInWithOAuth/);
   assert.match(authScreen, /provider: "google"/);
-  assert.match(authScreen, /E-posta adresin/);
+  assert.match(authScreen, /t\.auth\.emailLabel/);
   assert.match(authScreen, /status === "unavailable" &&/);
   assert.doesNotMatch(authScreen, /status === "unavailable" \? <div[^]*?\: <>/);
   assert.match(callback, /exchangeCodeForSession/);
@@ -75,7 +76,7 @@ test("keeps email verification and Google authentication wired into profile crea
   assert.match(mobileRuntime, /LocalNotifications\.schedule/);
   assert.match(mobileRuntime, /Camera\.getPhoto/);
   assert.match(mobileConfig, /appId: "com\.fitai\.app"/);
-  assert.doesNotMatch(mobileConfig, /GEMINI_API_KEY|SUPABASE_ANON_KEY/);
+  assert.doesNotMatch(mobileConfig, /AI_API_KEY|SUPABASE_ANON_KEY/);
   assert.match(androidManifest, /android:scheme="com\.fitai\.app"/);
   assert.match(iosInfo, /<string>com\.fitai\.app<\/string>/);
   assert.match(iosInfo, /NSCameraUsageDescription/);
@@ -90,9 +91,9 @@ test("keeps the AI plan and movement library wired into the product", async () =
     readFile(new URL("../db/supabase-schema.sql", import.meta.url), "utf8"),
   ]);
 
-  assert.match(page, /HAZIR PROGRAMLAR/i);
-  assert.match(page, /AI verileri taradı/);
-  assert.match(page, /nasıl yapılır/i);
+  assert.match(page, /t\.readyPrograms\.eyebrow/);
+  assert.match(page, /t\.aiScan\.completeTitle/);
+  assert.match(page, /t\.dashboard\.howTo/);
   assert.match(page, /Yerde Dambıl Göğüs Presi/);
   assert.ok((page.match(/^  \["/gm) ?? []).length >= 100, "exercise library should contain 100+ additional movements");
   assert.match(page, /toggleInjury/);
@@ -111,10 +112,10 @@ test("keeps the AI plan and movement library wired into the product", async () =
   assert.match(page, /return "triceps"/);
   assert.match(page, /return "raise"/);
   assert.match(page, /return "fly"/);
-  assert.match(page, /NEFES/);
-  assert.match(page, /SIK HATA/);
-  assert.match(page, /Dinlenmeyi atla/);
-  assert.match(page, /Antrenmanı bitir ve kaydet/);
+  assert.match(page, /t\.workoutPlayer\.breatheLabel/);
+  assert.match(page, /t\.workoutPlayer\.mistakeLabel/);
+  assert.match(page, /t\.workoutPlayer\.skipRest/);
+  assert.match(page, /t\.workoutPlayer\.finishAndSave/);
   assert.match(page, /workout_sessions/);
   assert.match(page, /WorkoutSetLogger/);
   assert.match(page, /PlanEditor/);
@@ -127,20 +128,19 @@ test("keeps the AI plan and movement library wired into the product", async () =
   assert.match(page, /CalorieTracker/);
   assert.match(page, /inferWorkoutDays/);
   assert.match(page, /activeView === "calendar"/);
-  assert.match(page, /istanbulDateKey/);
-  assert.match(page, /ZAMANLA UYARLANAN PROGRAM/);
-  assert.match(page, /Kaydet ve programımı uyarla/);
+  assert.match(page, /localDateKey/);
+  assert.match(page, /t\.insights\.adaptiveEyebrow/);
+  assert.match(page, /t\.feedback\.save/);
   assert.match(page, /summarizeTrainingAdaptation/);
   assert.match(page, /trainingHistory/);
   assert.match(page, /calculateEnergyMetrics/);
   assert.match(page, /workoutMet/);
-  assert.match(page, /AI KİŞİSELLEŞTİRME RAPORU/);
-  assert.match(page, /AYLIK RAPOR/);
-  assert.match(page, /BAZAL ENERJİ/);
-  assert.match(page, /GÜNLÜK TOPLAM/);
+  assert.match(page, /t\.insights\.eyebrow/);
+  assert.match(page, /t\.progress\.monthlyReportEyebrow/);
+  assert.match(page, /t\.progress\.bmrRef/);
+  assert.match(page, /t\.progress\.tdeeRef/);
   assert.match(page, /setAiWorkouts\(\[\]\)/);
-  assert.match(route, /gemini-3\.5-flash/);
-  assert.match(route, /gemini-3\.1-flash-lite/);
+  assert.match(route, /generateAiObject/);
   assert.match(route, /KULLANICI VERİLERİ/);
   assert.match(route, /HAM KULLANICI VERİLERİ/);
   assert.match(route, /10 TEST CEVABININ ANALİZİ/);
@@ -151,7 +151,7 @@ test("keeps the AI plan and movement library wired into the product", async () =
   assert.match(route, /photoDataUrl/);
   assert.match(route, /katalogdaki id ve name alanlarını birebir kullan/);
   assert.match(route, /ÖNCEKİ ANTRENMANLAR VE KULLANICI GERİ BİLDİRİMLERİ/);
-  assert.match(weeklyRoute, /Output\.object/);
+  assert.match(weeklyRoute, /generateAiObject/);
   assert.match(weeklyRoute, /jsonSchema<WeeklyReview>/);
   assert.match(weeklyRoute, /validateWeeklySummary/);
   assert.match(weeklyRoute, /enforceWeeklySafety/);
@@ -194,4 +194,25 @@ test("keeps the AI plan and movement library wired into the product", async () =
   assert.match(supabaseSchema, /Users can read own workout sessions/i);
   assert.match(supabaseSchema, /difficulty text/i);
   assert.match(supabaseSchema, /pain_areas jsonb/i);
+});
+
+test("Android manifesti kamera, galeri ve bildirim izinlerini tanımlar", async () => {
+  const manifest = await readFile(new URL("../android/app/src/main/AndroidManifest.xml", import.meta.url), "utf8");
+  // Bu izinler olmadan barkod tarayıcının getUserMedia çağrısı ve targetSdk 33+
+  // üzerinde antrenman hatırlatmaları sessizce çalışmaz.
+  assert.match(manifest, /android\.permission\.CAMERA/);
+  assert.match(manifest, /android\.permission\.POST_NOTIFICATIONS/);
+  assert.match(manifest, /android\.permission\.READ_MEDIA_IMAGES/);
+  // Kamerası olmayan cihazlarda kurulum engellenmemeli.
+  assert.match(manifest, /uses-feature[^>]*android\.hardware\.camera[^>]*required="false"/);
+});
+
+test("veritabanı kurulum sırası belgelenmiştir", async () => {
+  const readme = await readFile(new URL("../README.md", import.meta.url), "utf8");
+  const schema = await readFile(new URL("../db/supabase-schema.sql", import.meta.url), "utf8");
+  // profile_history yalnızca migration'da tanımlı; yalnız temel şemayı çalıştıran
+  // biri eksik veritabanı elde eder, bu yüzden sıra README'de yazmalı.
+  assert.doesNotMatch(schema, /create table if not exists public\.profile_history/);
+  assert.match(readme, /## Veritabanı kurulumu/);
+  assert.match(readme, /db\/migrations/);
 });

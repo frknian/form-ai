@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { access, readFile } from "node:fs/promises";
 import test from "node:test";
 
-import { filterExercises, getAllExercises, getExerciseById, getExercisesByEquipment, getExercisesByLevel, getExercisesByMuscle, getExercisesForAI, searchExercises } from "../lib/exercise-service.ts";
+import { filterExercises, getAllExercises, getExerciseById, getExerciseFilterOptions, getExercisesByEquipment, getExercisesByLevel, getExercisesByMuscle, getExercisesForAI, searchExercises } from "../lib/exercise-service.ts";
 import { nextFrameIndex, shouldCycleFrames } from "../lib/exercise-animation.ts";
 import { trustedExerciseMedia } from "../lib/trusted-exercise-media.ts";
 
@@ -81,7 +81,7 @@ test("uygulama kataloğundaki tüm hareketler iki yerel animasyon karesine sahip
   for (const match of core.matchAll(/\{\s*name:\s*"([^"]+)",\s*english:\s*"([^"]+)"/g)) exercises.push([match[1], match[2]]);
   for (const match of additional.matchAll(/^\s*\["([^"]+)",\s*"([^"]+)"/gm)) exercises.push([match[1], match[2]]);
 
-  assert.equal(exercises.length, 152);
+  assert.equal(exercises.length, 181);
   for (const [name, english] of exercises) {
     const images = trustedExerciseMedia(name);
     assert.equal(images.length, 2, `${name} için iki hareket karesi bulunmalı`);
@@ -112,4 +112,20 @@ test("hareket medyası mobil ve koyu tema için güvenli görünüm kurallarına
   assert.match(styles, /\.dark \.db-exercise-animation \{ background/);
   assert.match(styles, /\.dark \.db-exercise-animation img \{ mix-blend-mode:normal/);
   assert.match(styles, /\.workout-card > \.db-exercise-animation\.compact \{ flex:0 0 128px/);
+});
+
+test("kas grubu seçilince yalnızca verisi olan filtre seçenekleri kalır", () => {
+  const all = getExerciseFilterOptions();
+  const chest = getExerciseFilterOptions({ muscle: "chest" });
+  // Kas grubu daraltıldığında seçenek listesi de daralmalı.
+  assert.ok(chest.equipment.length < all.equipment.length);
+  // Sunulan hiçbir seçenek boş sonuç vermemeli.
+  for (const muscle of ["chest", "abdominals", "calves", "quadriceps"]) {
+    const options = getExerciseFilterOptions({ muscle });
+    for (const equipment of options.equipment) assert.ok(filterExercises({ muscle, equipment }).length > 0, `${muscle} + ${equipment} boş döndü`);
+    for (const level of options.levels) assert.ok(filterExercises({ muscle, level }).length > 0, `${muscle} + ${level} boş döndü`);
+    for (const category of options.categories) assert.ok(filterExercises({ muscle, category }).length > 0, `${muscle} + ${category} boş döndü`);
+  }
+  // Seçili kasın kendisi kendi listesinden düşmemeli.
+  assert.ok(chest.muscles.includes("chest"));
 });

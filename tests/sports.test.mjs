@@ -39,10 +39,10 @@ test("aktivite günlükleri geçmişe ve seri özetine güvenli biçimde bağlan
   ]);
   assert.match(component, /createActivityRepository/);
   assert.match(component, /record_streak_activity/);
-  assert.match(component, /TAHMİNİ KALORİ/);
+  assert.match(component, /t\.activityLogger\.estimatedCalorie/);
   assert.match(component, /estimateActivityCalories/);
-  assert.match(component, /Aktivite geçmişin/);
-  assert.match(component, /SPOR SEÇİM KILAVUZU/);
+  assert.match(component, /t\.activityLogger\.historyTitle/);
+  assert.match(component, /t\.activityLogger\.guideTitle/);
   assert.doesNotMatch(component, /GPS|Strava|akıllı saat|harita|yakında/i);
   assert.match(service, /interface ActivityRepository/);
   assert.match(service, /externalActivityId/);
@@ -52,4 +52,38 @@ test("aktivite günlükleri geçmişe ve seri özetine güvenli biçimde bağlan
   assert.match(migration, /auth\.uid\(\) = user_id/);
   assert.match(migration, /estimated_calories/);
   assert.match(migration, /external_activity_id/);
+});
+
+test("hareket kılavuzu alan ile tutarlıdır ve Türkçe küçültmeden etkilenmez", async () => {
+  const src = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
+  const body = src.slice(src.indexOf("function getMotionPattern"), src.indexOf("function getMotionGuide"));
+  const pat = eval(`(${body.replace('function getMotionPattern(exercise: { name: string; english: string }): MotionPattern {', "function(exercise){").trimEnd()})`);
+
+  // Türkçe küçültme büyük "I"yı noktasız "ı"ya çevirir; kalıp eşleştirmesi
+  // bundan etkilenirse "Inchworm" gibi adlar yanlış kılavuza düşer.
+  assert.doesNotMatch(body, /toLocaleLowerCase\("tr-TR"\)/);
+  assert.equal(pat({ name: "Inchworm", english: "Inchworm" }), "cardio");
+  assert.equal(pat({ name: "Eğimli Şınav", english: "Incline Push-up" }), "pushup");
+
+  // Kas adı taşıyan esnemeler kuvvet kılavuzuna düşmemeli.
+  assert.equal(pat({ name: "Triceps Esnetme", english: "Overhead Triceps Stretch" }), "mobility");
+  assert.equal(pat({ name: "Baldır Duvar Esnetme", english: "Wall Calf Stretch" }), "mobility");
+  assert.equal(pat({ name: "Kürek Çekme", english: "Rowing Machine" }), "cardio");
+
+  const blok = src.slice(src.indexOf("const additionalExerciseDefinitions"), src.indexOf("function buildExerciseInstruction"));
+  const defs = [...blok.matchAll(/^  \["([^"]+)", "([^"]+)", "([^"]+)"/gm)].map((m) => ({ name: m[1], english: m[2], area: m[3] }));
+  const core = [...src.matchAll(/\{ name: "([^"]+)", english: "([^"]+)", area: "([^"]+)"/g)].map((m) => ({ name: m[1], english: m[2], area: m[3] }));
+  const hepsi = [...core, ...defs];
+  assert.ok(hepsi.length >= 170, `katalog küçülmüş: ${hepsi.length}`);
+  assert.equal(new Set(hepsi.map((e) => e.name)).size, hepsi.length, "yinelenen hareket adı");
+
+  for (const e of hepsi) {
+    if (e.area === "Esneklik") assert.equal(pat(e), "mobility", `${e.name} esneklik ama ${pat(e)} kılavuzu aldı`);
+    if (e.area === "Kondisyon") assert.ok(["cardio", "plank", "squat", "lunge"].includes(pat(e)), `${e.name} kondisyon ama ${pat(e)} kılavuzu aldı`);
+  }
+
+  // Her alanda anlamlı çeşitlilik olsun.
+  const sayim = {};
+  for (const e of hepsi) sayim[e.area] = (sayim[e.area] || 0) + 1;
+  for (const [alan, adet] of Object.entries(sayim)) assert.ok(adet >= 10, `${alan} yalnızca ${adet} hareket içeriyor`);
 });

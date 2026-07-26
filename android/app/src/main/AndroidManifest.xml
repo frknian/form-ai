@@ -45,4 +45,15 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Barkod tarayıcı (WebView getUserMedia) ve öğün fotoğrafı çekimi -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Fotoğraf arşivinden öğün görseli seçme -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <!-- Antrenman hatırlatmaları (Android 13+ zorunlu; olmadan bildirimler sessizce hiç görünmez) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- Kamerası olmayan cihazlarda da kurulabilsin -->
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
 </manifest>

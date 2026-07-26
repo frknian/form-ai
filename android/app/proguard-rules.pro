@@ -19,3 +19,15 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# --- Capacitor ---
+# Eklentiler @CapacitorPlugin anotasyonuyla bulunup reflection ile örneklenir;
+# köprü de @JavascriptInterface metotlarını ada göre çağırır. Kod küçültme
+# açılacaksa bu sınıflar ve metotlar korunmalıdır.
+-keep @com.getcapacitor.annotation.CapacitorPlugin public class * { *; }
+-keep public class * extends com.getcapacitor.Plugin { *; }
+-keepclassmembers class * { @com.getcapacitor.PluginMethod public *; }
+-keepclassmembers class * { @android.webkit.JavascriptInterface <methods>; }
+-keep class com.getcapacitor.** { *; }
+-keep class org.apache.cordova.** { *; }
+-keepattributes *Annotation*, JavascriptInterface, Signature, InnerClasses, EnclosingMethod

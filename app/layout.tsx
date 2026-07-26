@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import "./globals.css";
 
-const themeScript = `(function(){try{var t=localStorage.getItem('form-ai-theme');if(t!=='light'&&t!=='dark'){t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}document.documentElement.classList.toggle('dark',t==='dark')}catch(e){}})()`;
+// Tema ve dil, ilk boyamadan önce senkron olarak uygulanır; aksi halde
+// CSS text-transform:uppercase, <html lang> Türkçe kalırsa İngilizce
+// metinlerde "i" harfini yanlış büyük harfe çevirir (ör. "WİTH").
+const themeScript = `(function(){try{var t=localStorage.getItem('form-ai-theme');if(t!=='light'&&t!=='dark'){t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}document.documentElement.classList.toggle('dark',t==='dark')}catch(e){}try{var l=localStorage.getItem('fitai:locale');if(l!=='en'&&l!=='tr'){l=(navigator.language||'tr').toLowerCase().indexOf('en')===0?'en':'tr'}document.documentElement.lang=l}catch(e){}})()`;
 
 export const viewport = { themeColor: "#0C79D8" };
 

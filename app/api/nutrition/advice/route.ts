@@ -1,5 +1,7 @@
 import { localNutritionAdvice, type NutritionAdviceInput } from "@/lib/nutrition-advice";
-import { coachModelCandidates } from "@/lib/ai-coach";
+import { authenticateRequest } from "@/lib/api-auth";
+import { rateLimit, tooManyRequests } from "@/lib/rate-limit";
+import { generateAiText, hasAiProvider } from "@/lib/ai-provider";
 
 export const runtime = "edge";
 
@@ -30,27 +32,25 @@ function sanitizeInput(value: unknown): NutritionAdviceInput | null {
 }
 
 export async function POST(request: Request) {
-  const input = sanitizeInput(await request.json().catch(() => null));
-  if (!input || !input.calorieTarget) return Response.json({ error: "Beslenme özeti geçersiz" }, { status: 400 });
-  const fallback = localNutritionAdvice(input);
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey || !input.meals.length) return Response.json({ advice: fallback, source: "fallback" });
+  const auth = await authenticateRequest(request);
+  if ("error" in auth) return auth.error;
+  const rateLimitResult = rateLimit(`nutrition-advice:${auth.user.id}`, 15, 60000);
+  if (!rateLimitResult.ok) return tooManyRequests(rateLimitResult.retryAfterSeconds);
 
-  const prompt = `Aşağıdaki anonim günlük beslenme özetine göre Türkçe, tıbbi olmayan ve tek paragraf halinde en fazla 65 kelimelik bir sonraki öğün önerisi yaz. Kesin sağlık iddiası üretme. Eksik makrolara odaklan ve 2-4 yaygın besin örneği ver. Kalori hedefini aşmayı teşvik etme.\n${JSON.stringify(input)}`;
-  for (const model of coachModelCandidates(process.env.GEMINI_MODEL)) {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10_000);
-    try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }] }], generationConfig: { temperature: 0.3, maxOutputTokens: 180 } }), signal: controller.signal });
-      if (!response.ok) continue;
-      const result = await response.json() as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
-      const advice = result.candidates?.[0]?.content?.parts?.map((part) => part.text || "").join(" ").trim();
-      if (advice) return Response.json({ advice, source: "gemini" });
-    } catch {
-      // Yedek modele geçilir.
-    } finally {
-      clearTimeout(timeout);
-    }
+  const body = await request.json().catch(() => null) as { locale?: unknown } | null;
+  const locale = body && body.locale === "en" ? "en" : "tr";
+  const input = sanitizeInput(body);
+  if (!input || !input.calorieTarget) return Response.json({ error: "Beslenme özeti geçersiz" }, { status: 400 });
+  const fallback = localNutritionAdvice(input, locale);
+  if (!hasAiProvider() || !input.meals.length) return Response.json({ advice: fallback, source: "fallback" });
+
+  const languageInstruction = locale === "en" ? "in English" : "Türkçe";
+  const prompt = `Aşağıdaki anonim günlük beslenme özetine göre ${languageInstruction}, tıbbi olmayan ve tek paragraf halinde en fazla 65 kelimelik bir sonraki öğün önerisi yaz. Kesin sağlık iddiası üretme. Eksik makrolara odaklan ve 2-4 yaygın besin örneği ver. Kalori hedefini aşmayı teşvik etme.\n${JSON.stringify(input)}`;
+  try {
+    const advice = await generateAiText({ prompt, temperature: 0.3, maxOutputTokens: 180, abortSignal: AbortSignal.timeout(15_000) });
+    if (advice.trim()) return Response.json({ advice: advice.trim(), source: "ai" });
+  } catch {
+    // Yerel yedeğe düşülür.
   }
   return Response.json({ advice: fallback, source: "fallback" });
 }

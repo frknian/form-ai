@@ -4,13 +4,13 @@ export function userTimeZone() {
   try { return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"; } catch { return "UTC"; }
 }
 
-export function localDateKey(date = new Date(), timeZone = userTimeZone()) {
+export function localDateKey(date: Date | number = new Date(), timeZone = userTimeZone()) {
   const parts = new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(date);
   const value = (part: string) => parts.find((item) => item.type === part)?.value || "";
   return `${value("year")}-${value("month")}-${value("day")}`;
 }
 
-export function localClock(date = new Date(), timeZone = userTimeZone()) {
+export function localClock(date: Date | number = new Date(), timeZone = userTimeZone()) {
   const parts = new Intl.DateTimeFormat("en-GB", { timeZone, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(date);
   const value = (part: string) => Number(parts.find((item) => item.type === part)?.value || 0);
   return { hour: value("hour"), minute: value("minute") };

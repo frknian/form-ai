@@ -31,8 +31,8 @@ test("profil yaşam döngüsü özel depolama, RLS ve güçlü silme doğrulamas
     readFile(new URL("../components/AuthScreen.tsx", import.meta.url), "utf8"),
   ]);
   assert.match(auth, /birth_date/);
-  assert.match(component, /HESABIMI SİL/);
-  assert.match(component, /Hesabı dondur/);
+  assert.match(component, /deleteConfirmPhrase/);
+  assert.match(component, /t\.profileManager\.freezeAccount/);
   assert.match(component, /profile-avatars/);
   assert.doesNotMatch(component, /DEĞİŞİKLİK GEÇMİŞİ|her doğum gününde otomatik güncellenir/);
   assert.match(route, /auth\.admin\.deleteUser/);

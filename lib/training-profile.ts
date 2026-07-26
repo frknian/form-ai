@@ -9,3 +9,14 @@ export function extractSessionMinutes(value: unknown, fallback = 30) {
   const plausible = [...normalized.matchAll(/\d{1,3}/g)].map((match) => Number(match[0])).find((number) => number >= 10 && number <= 180);
   return plausible ?? fallback;
 }
+
+// Tamamlanan antrenman sayısına göre 4 kademeli ilerleme bloğu. Yeni başlayan
+// kullanıcı en düşük hacimle başlar; her blokta yalnızca TEK bir değişken artar
+// (önce tekrar, sonra set, en son dinlenme kısalır). Aynı anda hem set hem tekrar
+// artırmak yeni başlayanlarda aşırı yüklenme riski taşıdığı için kaçınıldı.
+export function planProgressionBlock(completedSessions: number) {
+  if (completedSessions >= 12) return 3;
+  if (completedSessions >= 7) return 2;
+  if (completedSessions >= 3) return 1;
+  return 0;
+}

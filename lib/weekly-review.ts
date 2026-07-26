@@ -1,4 +1,7 @@
-import { istanbulDateKey, istanbulWeek } from "./workout-calendar.ts";
+import { localWeek } from "./workout-calendar.ts";
+import { localDateKey } from "./streak.ts";
+import { translatePainArea, type Dictionary } from "./i18n/translate.ts";
+import type { Locale } from "./i18n/locale.ts";
 
 export interface WeeklyReviewSummary {
   weekStart: string;
@@ -99,7 +102,7 @@ export function validateWeeklyReview(value: unknown): WeeklyReview | null {
 }
 
 export function weeklyReviewWeekStart(reference: Date | number = new Date()) {
-  return istanbulWeek(reference)[0] || istanbulDateKey(reference);
+  return localWeek(reference)[0] || localDateKey(reference);
 }
 
 export function weeklyGoalCategory(value: string): WeeklyReviewSummary["goalCategory"] {
@@ -120,54 +123,58 @@ export function weeklySafetyRisk(summary: WeeklyReviewSummary) {
   return summary.painAreas.length > 0 || (summary.averageFatigue !== null && summary.averageFatigue >= 4);
 }
 
-function signed(value: number, unit: string) {
-  return `${value > 0 ? "+" : ""}${value.toLocaleString("tr-TR", { maximumFractionDigits: 1 })} ${unit}`;
+function signed(value: number, unit: string, locale: Locale) {
+  return `${value > 0 ? "+" : ""}${value.toLocaleString(locale === "en" ? "en-US" : "tr-TR", { maximumFractionDigits: 1 })} ${unit}`;
 }
 
-export function localWeeklyReview(summary: WeeklyReviewSummary): WeeklyReview {
+function translatedPainAreas(painAreas: string[], t: Dictionary) {
+  return painAreas.map((area) => translatePainArea(t, area)).join(t.common.andSeparator);
+}
+
+export function localWeeklyReview(summary: WeeklyReviewSummary, t: Dictionary, locale: Locale = "tr"): WeeklyReview {
   const risk = weeklySafetyRisk(summary);
   const positives: string[] = [];
   const cautions: string[] = [];
-  if (summary.completionRate >= 85) positives.push(`Planlanan hareketlerin %${summary.completionRate}'ini tamamladın; süreklilik açısından güçlü bir hafta.`);
-  else if (summary.sessionCount > 0) positives.push(`${summary.sessionCount} antrenmanda toplam ${summary.totalMinutes} dakika hareket ettin.`);
-  if (summary.nutritionLoggedDays >= 3) positives.push(`Beslenme günlüğünü ${summary.nutritionLoggedDays} farklı günde kullanarak değerlendirme için düzenli veri oluşturdun.`);
-  if (summary.weightChangeKg !== null) positives.push(`Kilo ölçümündeki haftalık değişim ${signed(summary.weightChangeKg, "kg")}; tek haftalık dalgalanmadan çok uzun dönem eğilimini izle.`);
-  if (summary.completionRate < 70) cautions.push("Tamamlama oranı düşük kaldı; gelecek hafta süreyi veya antrenman hacmini günlük programına daha uygun tut.");
-  if (summary.averageFatigue !== null && summary.averageFatigue >= 4) cautions.push(`Ortalama yorgunluk ${summary.averageFatigue.toLocaleString("tr-TR", { maximumFractionDigits: 1 })}/5 seviyesinde; yük artışı için uygun bir sinyal değil.`);
-  if (summary.painAreas.length) cautions.push(`${summary.painAreas.join(" ve ")} bölgesinde ağrı bildirildi; ağrıyı zorlayarak ilerlemeye çalışma.`);
-  if (summary.nutritionLoggedDays < 2) cautions.push("Beslenme kaydı az olduğu için enerji ve protein eğilimi hakkında güvenilir yorum yapılamıyor.");
-  if (!cautions.length) cautions.push("Belirgin bir risk sinyali görünmüyor; yine de uyku, form kalitesi ve toparlanmayı izlemeye devam et.");
+  if (summary.completionRate >= 85) positives.push(t.weeklyReview.positiveCompletionHigh(summary.completionRate));
+  else if (summary.sessionCount > 0) positives.push(t.weeklyReview.positiveSessionCount(summary.sessionCount, summary.totalMinutes));
+  if (summary.nutritionLoggedDays >= 3) positives.push(t.weeklyReview.positiveNutritionLogged(summary.nutritionLoggedDays));
+  if (summary.weightChangeKg !== null) positives.push(t.weeklyReview.positiveWeightChange(signed(summary.weightChangeKg, "kg", locale)));
+  if (summary.completionRate < 70) cautions.push(t.weeklyReview.cautionLowCompletion);
+  if (summary.averageFatigue !== null && summary.averageFatigue >= 4) cautions.push(t.weeklyReview.cautionHighFatigue(summary.averageFatigue.toLocaleString(locale === "en" ? "en-US" : "tr-TR", { maximumFractionDigits: 1 })));
+  if (summary.painAreas.length) cautions.push(t.weeklyReview.cautionPainAreas(translatedPainAreas(summary.painAreas, t)));
+  if (summary.nutritionLoggedDays < 2) cautions.push(t.weeklyReview.cautionLowNutritionLog);
+  if (!cautions.length) cautions.push(t.weeklyReview.cautionNoRiskSignal);
   const recommendations = risk ? [
-    "Gelecek hafta ağırlık, set veya tekrar artırma; aynı düzeyi daha rahat ve temiz formla tamamlamayı hedefle.",
-    "En az bir dinlenme veya düşük yoğunluklu hareket günü planla.",
-    "Ağrı keskinleşir, sürer veya günlük yaşamını etkilerse antrenmanı durdurup uygun bir sağlık uzmanına danış.",
+    t.weeklyReview.recommendationRiskNoIncrease,
+    t.weeklyReview.recommendationRestDay,
+    t.weeklyReview.recommendationSeekHelp,
   ] : [
-    summary.completionRate >= 85 ? "Mevcut planı bir hafta daha koru; yalnızca son setler belirgin biçimde kolay kalırsa küçük bir ilerleme düşün." : "Gelecek haftanın antrenmanlarını takvimde gerçekçi gün ve saatlere yerleştir.",
-    "Her antrenmandan sonra zorluk, yorgunluk ve ağrı geri bildirimini eksiksiz gir.",
-    summary.nutritionLoggedDays < 3 ? "En az üç gün beslenme kaydı ekleyerek haftalık eğilimi daha görünür hale getir." : "Beslenme kayıt düzenini koru; tek bir güne değil haftalık ortalamaya odaklan.",
+    summary.completionRate >= 85 ? t.weeklyReview.recommendationKeepPlan : t.weeklyReview.recommendationSchedulePlan,
+    t.weeklyReview.recommendationLogFeedback,
+    summary.nutritionLoggedDays < 3 ? t.weeklyReview.recommendationLogNutrition : t.weeklyReview.recommendationKeepNutritionLog,
   ];
   return {
-    headline: risk ? "Bu hafta toparlanma öncelikli" : "Haftanın ritmi görünür hale geldi",
-    summary: `${summary.sessionCount} antrenman, ${summary.totalMinutes} dakika ve %${summary.completionRate} hareket tamamlama oranı kaydedildi. Bu değerlendirme son 7 günün uygulama verilerine dayanır.`,
-    positives: positives.length ? positives.slice(0, 4) : ["Bu hafta kayıt oluşturarak ilerlemeni karşılaştırılabilir hale getirdin."],
+    headline: risk ? t.weeklyReview.headlineRisk : t.weeklyReview.headlineNormal,
+    summary: t.weeklyReview.summaryText(summary.sessionCount, summary.totalMinutes, summary.completionRate),
+    positives: positives.length ? positives.slice(0, 4) : [t.weeklyReview.defaultPositive],
     cautions: cautions.slice(0, 4),
     recommendations: recommendations.slice(0, 4),
-    safetyNote: "Bu değerlendirme tıbbi teşhis değildir. Keskin veya süren ağrı, göğüs ağrısı, baş dönmesi ya da yaralanma belirtisinde antrenmanı durdur ve uygun bir sağlık uzmanına başvur.",
+    safetyNote: t.weeklyReview.safetyNoteText,
   };
 }
 
-export function enforceWeeklySafety(review: WeeklyReview, summary: WeeklyReviewSummary) {
+export function enforceWeeklySafety(review: WeeklyReview, summary: WeeklyReviewSummary, t: Dictionary) {
   if (!weeklySafetyRisk(summary)) return review;
-  const increasePattern = /yük|ağırl|set|tekrar|hacim|yoğunluk/i;
-  const unsafePattern = /artır|yükselt|ekle|çoğalt/i;
+  const increasePattern = /yük|ağırl|set|tekrar|hacim|yoğunluk|weight|reps?|sets?|volume|intensity|load/i;
+  const unsafePattern = /artır|yükselt|ekle|çoğalt|increase|add|raise|boost/i;
   const safeRecommendations = review.recommendations.filter((item) => !(increasePattern.test(item) && unsafePattern.test(item)));
-  const recovery = "Ağırlık, set veya tekrar artırma; aynı düzeyi koruyup dinlenme ve temiz formu önceliklendir.";
-  const painText = summary.painAreas.length ? `${summary.painAreas.join(" ve ")} bölgesindeki ağrı geri bildirimini zorlamadan takip et.` : "Yüksek yorgunluk sürerse ek dinlenme günü planla.";
+  const recovery = t.weeklyReview.safetyRecoveryRecommendation;
+  const painText = summary.painAreas.length ? t.weeklyReview.safetyPainFollowUp(translatedPainAreas(summary.painAreas, t)) : t.weeklyReview.safetyFatigueFollowUp;
   return {
     ...review,
-    headline: "Bu hafta toparlanma öncelikli",
+    headline: t.weeklyReview.headlineRisk,
     cautions: [...new Set([painText, ...review.cautions])].slice(0, 4),
-    recommendations: [...new Set([recovery, ...safeRecommendations, "En az bir dinlenme veya düşük yoğunluklu gün planla."])].slice(0, 4),
+    recommendations: [...new Set([recovery, ...safeRecommendations, t.weeklyReview.safetyMinimalRestDay])].slice(0, 4),
   };
 }
 

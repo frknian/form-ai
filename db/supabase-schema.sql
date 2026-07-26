@@ -153,7 +153,7 @@ create table if not exists public.reminder_preferences (
   preferred_time time not null default '19:00',
   reminder_minutes_before smallint not null default 30 check (reminder_minutes_before in (10, 30, 60, 120)),
   browser_notifications boolean not null default false,
-  timezone text not null default 'Europe/Istanbul' check (timezone = 'Europe/Istanbul'),
+  timezone text not null default 'UTC',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   check (cardinality(workout_days) between 1 and 7),
@@ -165,6 +165,21 @@ create policy "Users can read own reminder preferences" on public.reminder_prefe
 create policy "Users can insert own reminder preferences" on public.reminder_preferences for insert with check (auth.uid() = user_id);
 create policy "Users can update own reminder preferences" on public.reminder_preferences for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy "Users can delete own reminder preferences" on public.reminder_preferences for delete using (auth.uid() = user_id);
+
+-- Konum bazlı saat dilimi: geçersiz/boş değer sessizce UTC'ye düşer (bkz. db/migrations/20260724_reminder_timezone.sql).
+create or replace function public.normalize_reminder_timezone()
+returns trigger language plpgsql as $$
+begin
+  if new.timezone is null or trim(new.timezone) = '' or not exists (select 1 from pg_timezone_names where name = new.timezone) then
+    new.timezone := 'UTC';
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists reminder_preferences_normalize_timezone on public.reminder_preferences;
+create trigger reminder_preferences_normalize_timezone
+  before insert or update on public.reminder_preferences
+  for each row execute function public.normalize_reminder_timezone();
 
 create table if not exists public.body_measurements (
   id uuid primary key,

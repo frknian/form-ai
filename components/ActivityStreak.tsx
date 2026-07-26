@@ -3,10 +3,12 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { userTimeZone } from "@/lib/streak";
+import { useTranslations } from "@/lib/i18n/translate";
 
 type StreakRow = { current_streak?: number; last_activity_date?: string; timezone?: string };
 
 export function ActivityStreak({ userId }: { userId?: string }) {
+  const t = useTranslations();
   const [streak, setStreak] = useState(1);
   const [lastActivity, setLastActivity] = useState<string | null>(null);
 
@@ -32,5 +34,5 @@ export function ActivityStreak({ userId }: { userId?: string }) {
     return () => { cancelled = true; window.removeEventListener("fit-ai-activity-recorded", refresh); };
   }, [userId]);
 
-  return <section className="activity-streak" aria-labelledby="activity-streak-title"><div><span>✦</span><div><small>AKTİF SERİ</small><strong id="activity-streak-title">{streak} gün</strong><p>{lastActivity ? "Aynı gün içindeki ek kayıtlar seriyi artırmaz." : "Bugünle başlayan serin hazır."}</p></div></div></section>;
+  return <section className="activity-streak" aria-labelledby="activity-streak-title"><div><span>✦</span><div><small>{t.streak.label}</small><strong id="activity-streak-title">{t.streak.days(streak)}</strong><p>{lastActivity ? t.streak.sameDayNote : t.streak.freshNote}</p></div></div></section>;
 }

@@ -1,3 +1,5 @@
+import type { Dictionary } from "./i18n/translate.ts";
+
 export type NutritionGoalType = "lose" | "maintain" | "gain";
 
 export interface NutritionGoal {
@@ -32,18 +34,14 @@ export interface WeightTrend {
   days: number;
 }
 
-const goalLabels: Record<NutritionGoalType, string> = {
-  lose: "Kilo verme",
-  maintain: "Kilo koruma",
-  gain: "Kas kazanımı",
-};
-
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
 
-export function nutritionGoalLabel(goalType: NutritionGoalType) {
-  return goalLabels[goalType];
+export function nutritionGoalLabel(goalType: NutritionGoalType, t: Dictionary) {
+  if (goalType === "lose") return t.nutritionGoals.goalLose;
+  if (goalType === "gain") return t.nutritionGoals.goalGain;
+  return t.nutritionGoals.goalMaintain;
 }
 
 export function inferNutritionGoal(goalText: string): NutritionGoalType {
@@ -127,24 +125,24 @@ export function sanitizeNutritionGoal(value: unknown): NutritionGoal | null {
   return { goalType: item.goalType as NutritionGoalType, calorieTarget: calorieTarget!, proteinGrams: proteinGrams!, carbsGrams: carbsGrams!, fatGrams: fatGrams!, bmr: bmr!, tdee: tdee!, calorieAdjustment: calorieAdjustment!, activityFactor: clamp(activityFactor, 1.1, 2.2), workoutDays: workoutDays!, isManual: Boolean(item.isManual) };
 }
 
-export function nutritionGoalWarning(goal: NutritionGoal) {
+export function nutritionGoalWarning(goal: NutritionGoal, t: Dictionary) {
   const adjustmentPercent = goal.tdee ? goal.calorieAdjustment / goal.tdee : 0;
-  if (goal.calorieTarget < goal.bmr) return "Kalori hedefi tahmini bazal enerji ihtiyacının altında. Bu kadar düşük bir hedefi uygulamadan önce diyetisyen veya hekim desteği al.";
-  if (adjustmentPercent <= -0.25 || goal.calorieAdjustment <= -750) return "Seçilen kalori açığı oldukça yüksek. Daha küçük ve sürdürülebilir bir açık belirlemek daha güvenli olabilir.";
-  if (adjustmentPercent >= 0.15 || goal.calorieAdjustment >= 500) return "Seçilen kalori fazlası hızlı kilo artışına yol açabilir. Daha küçük bir fazla ile ilerlemeyi düşün.";
+  if (goal.calorieTarget < goal.bmr) return t.nutritionGoals.warningBelowBmr;
+  if (adjustmentPercent <= -0.25 || goal.calorieAdjustment <= -750) return t.nutritionGoals.warningDeficitHigh;
+  if (adjustmentPercent >= 0.15 || goal.calorieAdjustment >= 500) return t.nutritionGoals.warningSurplusHigh;
   return null;
 }
 
-export function nextMealSuggestion(totals: NutritionTotals, goal: NutritionGoal) {
+export function nextMealSuggestion(totals: NutritionTotals, goal: NutritionGoal, t: Dictionary) {
   const calorieRatio = totals.calories / Math.max(1, goal.calorieTarget);
   const proteinRatio = totals.protein / Math.max(1, goal.proteinGrams);
   const carbsRatio = totals.carbs / Math.max(1, goal.carbsGrams);
   const fatRatio = totals.fat / Math.max(1, goal.fatGrams);
-  if (calorieRatio >= 1.05) return "Kalori hedefini aştın. Sonraki öğünde açlık durumuna göre sebze, su ve daha hafif protein kaynaklarına odaklan.";
-  if (proteinRatio < Math.min(carbsRatio, fatRatio) && proteinRatio < 0.85) return "Protein hedefin geride. Sonraki öğünde yoğurt, yumurta, baklagil, balık veya yağsız et gibi bir protein kaynağı ekle.";
-  if (carbsRatio < 0.7 && goal.workoutDays >= 3) return "Karbonhidrat hedefin geride. Antrenman enerjisi için yulaf, bulgur, tam tahıl, meyve veya patates gibi bir kaynak seç.";
-  if (fatRatio < 0.65) return "Yağ hedefin geride. Porsiyonu kontrollü tutarak zeytinyağı, avokado veya kuruyemiş gibi bir kaynak ekleyebilirsin.";
-  return "Makroların dengeli ilerliyor. Sonraki öğünde sebze çeşitliliği, yeterli su ve porsiyon kontrolüne odaklan.";
+  if (calorieRatio >= 1.05) return t.nutritionGoals.mealOverTarget;
+  if (proteinRatio < Math.min(carbsRatio, fatRatio) && proteinRatio < 0.85) return t.nutritionGoals.mealProteinBehind;
+  if (carbsRatio < 0.7 && goal.workoutDays >= 3) return t.nutritionGoals.mealCarbsBehind;
+  if (fatRatio < 0.65) return t.nutritionGoals.mealFatBehind;
+  return t.nutritionGoals.mealBalanced;
 }
 
 export function calculateWeeklyWeightTrend(measurements: WeightMeasurement[]): WeightTrend | null {
@@ -160,19 +158,19 @@ export function calculateWeeklyWeightTrend(measurements: WeightMeasurement[]): W
   return { weeklyKg: Number(weeklyKg.toFixed(2)), weeklyPercent: Number((weeklyKg / valid[0].weightKg * 100).toFixed(2)), days };
 }
 
-export function weightTrendAdvice(trend: WeightTrend | null, goalType: NutritionGoalType) {
-  if (!trend) return "Haftalık eğilimi görebilmek için en az 5 gün arayla iki kilo ölçümü ekle.";
+export function weightTrendAdvice(trend: WeightTrend | null, goalType: NutritionGoalType, t: Dictionary) {
+  if (!trend) return t.nutritionGoals.trendNeedTwo;
   const rate = trend.weeklyPercent;
   if (goalType === "lose") {
-    if (rate < -1) return "Kilo düşüşü haftada %1'in üzerinde görünüyor. Hedef fazla agresif olabilir; kalori açığını küçültmeyi değerlendir.";
-    if (rate >= 0) return "Bu dönemde kilo düşüşü görünmüyor. Tek haftaya göre keskin değişiklik yapmadan kayıt düzenini ve porsiyonları gözden geçir.";
-    return "Haftalık kilo değişimi makul aralıkta görünüyor. Günlük dalgalanmalar yerine birkaç haftalık eğilimi izlemeyi sürdür.";
+    if (rate < -1) return t.nutritionGoals.trendLoseTooFast;
+    if (rate >= 0) return t.nutritionGoals.trendLoseNone;
+    return t.nutritionGoals.trendLoseOk;
   }
   if (goalType === "gain") {
-    if (rate > 0.75) return "Haftalık artış hızlı görünüyor. Kalori fazlasını küçültmek daha kontrollü ilerlemeye yardımcı olabilir.";
-    if (rate <= 0) return "Kilo artışı görünmüyor. Antrenman performansı ve birkaç haftalık ortalama da sabitse küçük bir kalori artışı düşünülebilir.";
-    return "Haftalık artış kontrollü görünüyor. Güç performansı ve bel ölçümüyle birlikte takip etmeyi sürdür.";
+    if (rate > 0.75) return t.nutritionGoals.trendGainTooFast;
+    if (rate <= 0) return t.nutritionGoals.trendGainNone;
+    return t.nutritionGoals.trendGainOk;
   }
-  if (Math.abs(rate) > 0.5) return "Koruma hedefinde haftalık değişim belirgin. Öğün düzenini ve ortalama kalori alımını gözden geçir.";
-  return "Kilon koruma hedefiyle uyumlu, dar bir aralıkta ilerliyor.";
+  if (Math.abs(rate) > 0.5) return t.nutritionGoals.trendMaintainOff;
+  return t.nutritionGoals.trendMaintainOk;
 }

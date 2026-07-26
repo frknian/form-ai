@@ -1,8 +1,13 @@
 import { filterExercises } from "@/lib/exercise-service";
+import { clientKey, rateLimit, tooManyRequests } from "@/lib/rate-limit";
 
 const safeParam = (value: string | null) => (value || "").trim().slice(0, 100);
 
 export function GET(request: Request) {
+  // Herkese açık katalog: kimlik gerektirmez, ancak toplu kazımaya karşı sınırlandırılır.
+  const rateLimitResult = rateLimit(`exercises:${clientKey(request)}`, 120, 60_000);
+  if (!rateLimitResult.ok) return tooManyRequests(rateLimitResult.retryAfterSeconds);
+
   const { searchParams } = new URL(request.url);
   const page = Math.max(1, Math.min(1000, Number.parseInt(searchParams.get("page") || "1", 10) || 1));
   const limit = Math.max(1, Math.min(48, Number.parseInt(searchParams.get("limit") || "24", 10) || 24));

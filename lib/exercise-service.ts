@@ -64,12 +64,17 @@ export function getExercisesForAI(filters: ExerciseFilters = {}): AIExerciseCont
   return filterExercises(filters).map(({ id, name, level, equipment, primaryMuscles, secondaryMuscles, category }) => ({ id, name, level, equipment: equipment || undefined, primaryMuscles, secondaryMuscles, category }));
 }
 
-export function getExerciseFilterOptions() {
+// Her seçenek listesi, kendi boyutu dışındaki aktif filtrelere göre daraltılır.
+// Böylece bir kas grubu seçildiğinde o kasta hareketi bulunmayan ekipman, seviye
+// ve kategori seçenekleri listede kalmaz; kullanıcı boş sonuç veren bir filtre
+// kombinasyonunu seçemez.
+export function getExerciseFilterOptions(filters: ExerciseFilters = {}) {
   const unique = (values: string[]) => [...new Set(values.filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  const excluding = (dimension: keyof ExerciseFilters) => filterExercises({ ...filters, [dimension]: undefined });
   return {
-    muscles: unique(exercises.flatMap((exercise) => [...exercise.primaryMuscles, ...exercise.secondaryMuscles])),
-    equipment: unique(exercises.map((exercise) => exercise.equipment || "none")),
-    levels: unique(exercises.map((exercise) => exercise.level)),
-    categories: unique(exercises.map((exercise) => exercise.category)),
+    muscles: unique(excluding("muscle").flatMap((exercise) => [...exercise.primaryMuscles, ...exercise.secondaryMuscles])),
+    equipment: unique(excluding("equipment").map((exercise) => exercise.equipment || "none")),
+    levels: unique(excluding("level").map((exercise) => exercise.level)),
+    categories: unique(excluding("category").map((exercise) => exercise.category)),
   };
 }

@@ -1,3 +1,5 @@
+import { authenticateRequest } from "@/lib/api-auth";
+import { rateLimit, tooManyRequests } from "@/lib/rate-limit";
 export const runtime = "edge";
 
 type OpenFoodFactsProduct = {
@@ -12,6 +14,11 @@ type OpenFoodFactsProduct = {
 };
 
 export async function GET(request: Request) {
+  const auth = await authenticateRequest(request);
+  if ("error" in auth) return auth.error;
+  const rateLimitResult = rateLimit(`food-barcode:${auth.user.id}`, 40, 60000);
+  if (!rateLimitResult.ok) return tooManyRequests(rateLimitResult.retryAfterSeconds);
+
   const code = new URL(request.url).searchParams.get("code")?.replace(/\D/g, "") || "";
   if (code.length < 8 || code.length > 14) return Response.json({ error: "Geçerli bir barkod girin." }, { status: 400 });
   try {

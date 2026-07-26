@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { calculateNutritionGoal, calculateWeeklyWeightTrend, inferNutritionGoal, inferWorkoutDays, nextMealSuggestion, nutritionGoalWarning, weightTrendAdvice } from "../lib/nutrition-goals.ts";
+import { tr } from "../lib/i18n/dictionaries/tr.ts";
 
 const base = { bmr: 1700, tdee: 2400, weightKg: 75, activityFactor: 1.375, workoutDays: 4 };
 
@@ -26,14 +27,14 @@ test("infers goal and weekly training frequency from profile answers", () => {
 
 test("warns about aggressive manual calorie targets", () => {
   const goal = calculateNutritionGoal({ ...base, goalType: "lose" });
-  assert.equal(nutritionGoalWarning(goal), null);
-  assert.match(nutritionGoalWarning({ ...goal, calorieTarget: 1500, calorieAdjustment: -900 }) ?? "", /yüksek|altında/i);
+  assert.equal(nutritionGoalWarning(goal, tr), null);
+  assert.match(nutritionGoalWarning({ ...goal, calorieTarget: 1500, calorieAdjustment: -900 }, tr) ?? "", /yüksek|altında/i);
 });
 
 test("creates a simple next meal focus from remaining macros", () => {
   const goal = calculateNutritionGoal({ ...base, goalType: "maintain" });
-  assert.match(nextMealSuggestion({ calories: 900, protein: 20, carbs: 150, fat: 45 }, goal), /Protein/i);
-  assert.match(nextMealSuggestion({ calories: 2600, protein: 130, carbs: 300, fat: 90 }, goal), /aştın/i);
+  assert.match(nextMealSuggestion({ calories: 900, protein: 20, carbs: 150, fat: 45 }, goal, tr), /Protein/i);
+  assert.match(nextMealSuggestion({ calories: 2600, protein: 130, carbs: 300, fat: 90 }, goal, tr), /aştın/i);
 });
 
 test("tracks weekly weight change and flags overly fast loss", () => {
@@ -43,6 +44,6 @@ test("tracks weekly weight change and flags overly fast loss", () => {
   ]);
   assert.ok(trend);
   assert.ok((trend?.weeklyPercent ?? 0) < -1);
-  assert.match(weightTrendAdvice(trend, "lose"), /agresif/i);
-  assert.match(weightTrendAdvice(null, "gain"), /iki kilo ölçümü/i);
+  assert.match(weightTrendAdvice(trend, "lose", tr), /agresif/i);
+  assert.match(weightTrendAdvice(null, "gain", tr), /iki kilo ölçümü/i);
 });

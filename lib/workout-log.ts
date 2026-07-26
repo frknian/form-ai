@@ -1,3 +1,6 @@
+import type { Dictionary } from "./i18n/translate.ts";
+import { formatWeight, type WeightUnit } from "./units.ts";
+
 export type WorkoutSetDraft = {
   setNumber: number;
   weightKg: string;
@@ -99,33 +102,34 @@ export function buildCompletedExerciseLog(input: {
   };
 }
 
-export function progressionSuggestion(previous: PreviousExercisePerformance | null) {
-  if (!previous?.sets.length) return "İlk kaydını tamamladığında burada küçük ve güvenli bir ilerleme önerisi göreceksin.";
+export function progressionSuggestion(previous: PreviousExercisePerformance | null, t: Dictionary, unit: WeightUnit = "kg") {
+  const copy = t.setLogger;
+  if (!previous?.sets.length) return copy.progressionFirstTime;
 
   const rpeValues = previous.sets.map((set) => set.rpe).filter((value): value is number => value !== null);
   const averageRpe = rpeValues.length ? rpeValues.reduce((total, value) => total + value, 0) / rpeValues.length : null;
   const topWeight = Math.max(0, ...previous.sets.map((set) => set.weightKg || 0));
   const topReps = Math.max(0, ...previous.sets.map((set) => set.reps || 0));
   const topDuration = Math.max(0, ...previous.sets.map((set) => set.durationSeconds || 0));
-  const safety = "Formun bozulursa veya ağrı hissedersen artış yapma.";
+  const safety = copy.progressionSafety;
 
   if (averageRpe === null) {
-    return `Önceki yük veya tekrarını koru ve bu kez RPE gir; sonraki öneri daha isabetli olur. ${safety}`;
+    return copy.progressionNoRpe(safety);
   }
   if (averageRpe >= 9) {
-    return `Son kayıt RPE ${averageRpe.toFixed(1)} ile oldukça zordu. Yükü artırma; aynı düzeyi daha kontrollü tamamla. ${safety}`;
+    return copy.progressionVeryHardRpe(averageRpe.toFixed(1), safety);
   }
   if (averageRpe > 7) {
-    return `Son kayıt RPE ${averageRpe.toFixed(1)} ile dengeliydi. Aynı yük ve tekrarları bir kez daha koru. ${safety}`;
+    return copy.progressionBalancedRpe(averageRpe.toFixed(1), safety);
   }
   if (topWeight > 0) {
-    return `Son kayıt kontrollüydü. Aynı tekrar aralığında en fazla ${(topWeight + 2.5).toLocaleString("tr-TR")} kg deneyebilirsin. ${safety}`;
+    return copy.progressionWeight(formatWeight(topWeight + 2.5, unit), safety);
   }
   if (topDuration > 0) {
-    return `Son kayıt kontrollüydü. Süreyi ${topDuration + 5} saniyeye çıkarabilirsin. ${safety}`;
+    return copy.progressionDuration(topDuration + 5, safety);
   }
   if (topReps > 0) {
-    return `Son kayıt kontrollüydü. Set başına ${topReps + 1}–${topReps + 2} tekrar deneyebilirsin. ${safety}`;
+    return copy.progressionReps(topReps + 1, topReps + 2, safety);
   }
-  return `Aynı hareketi benzer RPE ile yeniden tamamla; ölçülebilir tekrar veya süre eklediğinde ilerleme önerisi oluşacak. ${safety}`;
+  return copy.progressionRepeat(safety);
 }

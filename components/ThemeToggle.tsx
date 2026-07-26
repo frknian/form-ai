@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useSyncExternalStore } from "react";
+import { useTranslations } from "@/lib/i18n/translate";
 
 type Theme = "light" | "dark";
 
@@ -25,6 +26,7 @@ function subscribe(onChange: () => void) {
 
 export function ThemeToggle({ className = "" }: { className?: string }) {
   const theme = useSyncExternalStore(subscribe, preferredTheme, () => "light");
+  const t = useTranslations();
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
@@ -38,5 +40,5 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
   }
 
   const dark = theme === "dark";
-  return <button type="button" className={`theme-toggle ${className}`.trim()} aria-label={dark ? "Açık temaya geç" : "Koyu temaya geç"} aria-pressed={dark} onClick={toggleTheme}><span aria-hidden="true">{dark ? "☀" : "☾"}</span><small>{dark ? "Açık" : "Koyu"}</small></button>;
+  return <button type="button" className={`theme-toggle ${className}`.trim()} aria-label={dark ? t.common.themeToLight : t.common.themeToDark} aria-pressed={dark} onClick={toggleTheme}><span aria-hidden="true">{dark ? "☀" : "☾"}</span><small>{dark ? t.common.themeLightShort : t.common.themeDarkShort}</small></button>;
 }

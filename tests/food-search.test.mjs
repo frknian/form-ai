@@ -55,6 +55,32 @@ test("porsiyon değişiminde makro, lif ve mikro değerleri orantılı güncelle
 
 test("uzak ve yerel ürün sonuçlarını tekrar etmeden birleştirir", () => {
   const local = searchLocalFoods("yulaf");
+  assert.ok(local.length >= 1);
+  // Aynı ürünün uzak kaynaktan gelen kopyası sonucu büyütmemeli. Katalog
+  // büyüdükçe local uzunluğu değişebileceği için sabit sayı yerine
+  // "birleştirme sonrası artış olmadı" kontrolü yapılıyor.
   const duplicate = { ...local[0], id: "remote-yulaf", source: "Open Food Facts" };
-  assert.equal(mergeFoodResults(local, [duplicate]).length, 1);
+  assert.equal(mergeFoodResults(local, [duplicate]).length, local.length);
+});
+
+test("yerel besin kataloğu tüm ana kategorileri kapsar ve tutarlıdır", () => {
+  const kategoriler = {
+    "Türk yemeği": ["lahmacun", "mantı", "iskender", "menemen", "kısır"],
+    "Avrupa yemeği": ["pizza", "lazanya", "risotto", "kruvasan", "schnitzel"],
+    "Atıştırmalık": ["cips", "çikolata", "kraker", "leblebi", "fındık"],
+    "İçecek": ["kola", "ayran", "latte", "bira", "portakal suyu"],
+    "Tatlı": ["baklava", "künefe", "sütlaç", "tiramisu", "dondurma"],
+  };
+  for (const [kategori, sorgular] of Object.entries(kategoriler)) {
+    for (const sorgu of sorgular) assert.ok(searchLocalFoods(sorgu, 3).length > 0, `${kategori}: "${sorgu}" bulunamadı`);
+  }
+  // Makro tutarlılığı: protein*4 + karb*4 + yağ*9 kaloriye yakın olmalı.
+  for (const sorgu of ["baklava", "pizza", "kola", "lahmacun", "tiramisu", "hamburger"]) {
+    for (const food of searchLocalFoods(sorgu, 3)) {
+      const { calories, protein, carbs, fat } = food.nutritionPer100g;
+      const hesaplanan = protein * 4 + carbs * 4 + fat * 9;
+      if (calories === 0) continue;
+      assert.ok(Math.abs(hesaplanan - calories) <= Math.max(35, calories * 0.25), `${food.name}: ${calories} kcal beyan, ${Math.round(hesaplanan)} kcal makro`);
+    }
+  }
 });

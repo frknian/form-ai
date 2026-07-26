@@ -5,11 +5,14 @@ import {
   searchLocalFoods,
   type OpenFoodFactsSearchHit,
 } from "@/lib/food-search";
+import { authenticateRequest } from "@/lib/api-auth";
+import { rateLimit, tooManyRequests } from "@/lib/rate-limit";
 
 export const runtime = "edge";
 
+// Uç nokta kimlik doğrulaması gerektirdiği için paylaşımlı (CDN) önbelleğe alınmaz.
 const responseHeaders = {
-  "Cache-Control": "public, max-age=300, s-maxage=3600, stale-while-revalidate=86400",
+  "Cache-Control": "private, max-age=300",
 };
 
 function isExactLocalMatch(query: string, name: string, brand?: string) {
@@ -19,6 +22,11 @@ function isExactLocalMatch(query: string, name: string, brand?: string) {
 }
 
 export async function GET(request: Request) {
+  const auth = await authenticateRequest(request);
+  if ("error" in auth) return auth.error;
+  const rateLimitResult = rateLimit(`food-search:${auth.user.id}`, 40, 60000);
+  if (!rateLimitResult.ok) return tooManyRequests(rateLimitResult.retryAfterSeconds);
+
   const query = new URL(request.url).searchParams.get("q")?.trim() || "";
   if (query.length < 2) return Response.json({ error: "En az iki karakterle arama yapın." }, { status: 400 });
   if (query.length > 80) return Response.json({ error: "Arama metni çok uzun." }, { status: 400 });

@@ -1,4 +1,8 @@
+import { jsonSchema } from "ai";
 import { extractSessionMinutes } from "../../../lib/training-profile.ts";
+import { authenticateRequest } from "../../../lib/api-auth.ts";
+import { rateLimit, tooManyRequests } from "../../../lib/rate-limit.ts";
+import { generateAiObject, hasAiProvider, aiModelId, parseImageDataUrl } from "../../../lib/ai-provider.ts";
 
 const plannerRules = [
   "Yaş, cinsiyet, boy, kilo, hedef metni, ortam, ekipman, istenen hareketler ve 10 test cevabının her birini değerlendir.",
@@ -13,7 +17,27 @@ const plannerRules = [
   "En az iki kolay, düşük yorgunluklu ve yüzde 90 üzeri tamamlanan kayıt olmadan otomatik yük artışı yapma.",
 ];
 
-const responseSchema = {
+type GeneratedPlan = {
+  title: string;
+  profileSummary: string;
+  rationale: string;
+  safetyNote: string;
+  analysis: {
+    experienceLevel: string;
+    weeklyFrequency: string;
+    sessionMinutes: number;
+    primaryGoal: string;
+    intensity: string;
+    equipmentMode: string;
+    focusAreas: string[];
+    adaptations: string[];
+  };
+  weeklySchedule: Array<{ day: string; focus: string; durationMinutes: number }>;
+  progression: string[];
+  workouts: Array<{ id: string; name: string; english: string; area: string; sets: number; reps: string; restSeconds: number; instructions: string }>;
+};
+
+const responseSchema = jsonSchema<GeneratedPlan>({
   type: "object",
   properties: {
     title: { type: "string" },
@@ -62,7 +86,7 @@ const responseSchema = {
     },
   },
   required: ["title", "profileSummary", "rationale", "safetyNote", "analysis", "weeklySchedule", "progression", "workouts"],
-};
+});
 
 function text(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
@@ -87,8 +111,12 @@ export function profileSignals(payload: Record<string, unknown>) {
 }
 
 export async function POST(request: Request) {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return Response.json({ error: "GEMINI_API_KEY tanımlı değil" }, { status: 503 });
+  const auth = await authenticateRequest(request);
+  if ("error" in auth) return auth.error;
+  const rateLimitResult = rateLimit(`generate-plan:${auth.user.id}`, 5, 300000);
+  if (!rateLimitResult.ok) return tooManyRequests(rateLimitResult.retryAfterSeconds);
+
+  if (!hasAiProvider()) return Response.json({ error: "AI_API_KEY tanımlı değil" }, { status: 503 });
 
   let payload: Record<string, unknown>;
   try {
@@ -98,9 +126,11 @@ export async function POST(request: Request) {
   }
   const photoDataUrl = typeof payload.photoDataUrl === "string" ? payload.photoDataUrl : null;
   const exerciseCatalog = Array.isArray(payload.exerciseCatalog) ? payload.exerciseCatalog : [];
+  const locale = payload.locale === "en" ? "en" : "tr";
   const profile = { ...payload };
   delete profile.photoDataUrl;
   delete profile.exerciseCatalog;
+  delete profile.locale;
   const signals = profileSignals(payload);
   const trainingHistory = Array.isArray(payload.trainingHistory) ? payload.trainingHistory.slice(0, 8) : [];
   const adaptation = payload.adaptation && typeof payload.adaptation === "object" ? payload.adaptation : null;
@@ -140,60 +170,30 @@ ${JSON.stringify(exerciseCatalog)}
 GÜVENLİK VE KALİTE KURALLARI:
 ${plannerRules.join("\n")}
 
-Tam olarak ${signals.exerciseCount} farklı hareket seç. Her workout için katalogdaki id ve name alanlarını birebir kullan; katalogda bulunmayan bir kimlik veya hareket üretme. Kullanıcının özellikle istediği hareket güvenli ve ekipmanla uyumluysa programa al. Geçmiş kayıt varsa set, tekrar, dinlenme ve hareket değişimini bu kayıtlara dayandır. analysis.adaptations alanında bu profile ve geçmişe özel en az üç somut uyarlamayı; hangi geri bildirimin hangi değişime yol açtığını açıklayarak yaz. weeklySchedule alanında ${signals.weeklyDays} antrenman günü oluştur. progression alanında 1–4. haftalar için dört kısa ilerleme adımı yaz. Dış site, bağlantı veya medya URL'si üretme.`;
+Tam olarak ${signals.exerciseCount} farklı hareket seç. Her workout için katalogdaki id ve name alanlarını birebir kullan; katalogda bulunmayan bir kimlik veya hareket üretme. Kullanıcının özellikle istediği hareket güvenli ve ekipmanla uyumluysa programa al. Geçmiş kayıt varsa set, tekrar, dinlenme ve hareket değişimini bu kayıtlara dayandır. analysis.adaptations alanında bu profile ve geçmişe özel en az üç somut uyarlamayı; hangi geri bildirimin hangi değişime yol açtığını açıklayarak yaz. weeklySchedule alanında ${signals.weeklyDays} antrenman günü oluştur. progression alanında 1–4. haftalar için dört kısa ilerleme adımı yaz. Dış site, bağlantı veya medya URL'si üretme.
 
-  const parts: Array<Record<string, unknown>> = [{ text: prompt }];
-  if (photoDataUrl?.startsWith("data:image/")) {
-    const match = photoDataUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
-    if (match) parts.push({ inline_data: { mime_type: match[1], data: match[2] } });
+ÇIKTI DİLİ: ${locale === "en" ? "title, profileSummary, rationale, safetyNote, analysis içindeki tüm metin alanları, weeklySchedule.focus, progression ve workouts[].area/instructions dahil olmak üzere TÜM serbest metinleri İNGİLİZCE yaz. workouts[].id ve workouts[].name alanlarını katalogdaki gibi DEĞİŞTİRMEDEN bırak." : "Tüm metinleri Türkçe yaz."}`;
+
+  const image = photoDataUrl ? parseImageDataUrl(photoDataUrl) ?? undefined : undefined;
+
+  try {
+    const result = await generateAiObject({
+      prompt,
+      image,
+      schema: responseSchema,
+      temperature: 0.35,
+      maxOutputTokens: 3_000,
+      abortSignal: AbortSignal.timeout(30_000),
+    });
+    if (result.workouts.length < 3) {
+      return Response.json({ error: "Model yeterli hareket üretmedi" }, { status: 502 });
+    }
+    return Response.json({ ...result, profileFingerprint: signals.fingerprint, model: aiModelId() });
+  } catch (error) {
+    console.error("AI plan generation error", error);
+    return Response.json({
+      error: "Program üretimi başarısız",
+      detail: process.env.NODE_ENV === "development" ? String(error) : undefined,
+    }, { status: 502 });
   }
-
-  const preferredModel = process.env.GEMINI_MODEL || "gemini-3.5-flash";
-  const models = [...new Set([preferredModel, "gemini-3.5-flash", "gemini-3.1-flash-lite"])];
-  let lastStatus = 0;
-  let lastDetail = "";
-  for (const model of models) {
-    let response: Response;
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 12_000);
-    try {
-      response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contents: [{ role: "user", parts }], generationConfig: { responseMimeType: "application/json", responseSchema, temperature: 0.35 } }),
-        signal: controller.signal,
-      });
-    } catch {
-      lastDetail = controller.signal.aborted ? "Gemini yanıt süresi aşıldı" : "Gemini ağına erişilemedi";
-      continue;
-    } finally {
-      clearTimeout(timeout);
-    }
-    if (!response.ok) {
-      lastStatus = response.status;
-      lastDetail = (await response.text()).slice(0, 500);
-      console.error("Gemini response error", model, response.status, lastDetail);
-      if (![404, 429, 500, 503].includes(response.status)) break;
-      continue;
-    }
-    const geminiPayload = await response.json() as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
-    const generatedText = geminiPayload.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!generatedText) {
-      lastDetail = "Gemini boş yanıt döndürdü";
-      continue;
-    }
-    try {
-      const result = JSON.parse(generatedText) as Record<string, unknown>;
-      const workouts = Array.isArray(result.workouts) ? result.workouts : [];
-      if (workouts.length < 3) {
-        lastDetail = "Gemini yeterli hareket üretmedi";
-        continue;
-      }
-      return Response.json({ ...result, profileFingerprint: signals.fingerprint, model });
-    } catch {
-      lastDetail = "Gemini yanıtı JSON formatında değil";
-    }
-  }
-
-  return Response.json({ error: lastDetail || "Gemini program üretimi başarısız", detail: process.env.NODE_ENV === "development" ? `Durum: ${lastStatus} ${lastDetail}` : undefined }, { status: 502 });
 }
