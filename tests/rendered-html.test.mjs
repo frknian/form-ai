@@ -2,17 +2,29 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-async function render() {
+async function dispatch(request) {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
   workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
   const { default: worker } = await import(workerUrl.href);
 
   return worker.fetch(
-    new Request("http://localhost/", { headers: { accept: "text/html" } }),
+    request,
     { ASSETS: { fetch: async () => new Response("Not found", { status: 404 }) } },
     { waitUntil() {}, passThroughOnException() {} },
   );
 }
+
+async function render() {
+  return dispatch(new Request("http://localhost/", { headers: { accept: "text/html" } }));
+}
+
+test("rejects unknown Supabase projects before loading the app router", async () => {
+  const response = await dispatch(new Request("http://localhost/api/supabase-proxy/auth/v1/settings"));
+  assert.equal(response.status, 403);
+  assert.match(response.headers.get("content-type") ?? "", /^application\/json\b/i);
+  assert.equal(response.headers.get("cache-control"), "no-store");
+  assert.deepEqual(await response.json(), { error: "Unknown Supabase project." });
+});
 
 test("server-renders the secure form.ai account entry", async () => {
   const response = await render();

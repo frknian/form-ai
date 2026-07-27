@@ -1,7 +1,7 @@
 /** Cloudflare Worker entry point for the vinext-starter template. */
 import { handleImageOptimization, DEFAULT_DEVICE_SIZES, DEFAULT_IMAGE_SIZES } from "vinext/server/image-optimization";
-import handler from "vinext/server/app-router-entry";
 import { withSecurityHeaders } from "../lib/security-headers";
+import { handleSupabaseProxy } from "./supabase-proxy";
 
 interface Env {
   ASSETS: Fetcher;
@@ -20,6 +20,17 @@ interface ExecutionContext {
   passThroughOnException(): void;
 }
 
+type AppRouterHandler = {
+  fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response>;
+};
+
+let appRouterHandler: Promise<AppRouterHandler> | null = null;
+
+function getAppRouterHandler() {
+  appRouterHandler ??= import("vinext/server/app-router-entry").then((module) => module.default);
+  return appRouterHandler;
+}
+
 // Image security config. SVG sources with .svg extension auto-skip the
 // optimization endpoint on the client side (served directly, no proxy).
 // To route SVGs through the optimizer (with security headers), set
@@ -29,6 +40,11 @@ interface ExecutionContext {
 const worker = {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
+
+    // Supabase auth/data trafiğini Vinext ve React route motorunu başlatmadan geçir.
+    // Bu yol Cloudflare ücretsiz Worker CPU limitinin altında kalacak kadar hafiftir.
+    const supabaseResponse = await handleSupabaseProxy(request);
+    if (supabaseResponse) return withSecurityHeaders(supabaseResponse, { noStore: true });
 
     if (url.pathname === "/_vinext/image") {
       const allowedWidths = [...DEFAULT_DEVICE_SIZES, ...DEFAULT_IMAGE_SIZES];
@@ -42,6 +58,7 @@ const worker = {
     }
 
     // API yanıtları kimlik doğrulamalı olduğu için hiçbir katmanda önbelleğe alınmaz.
+    const handler = await getAppRouterHandler();
     return withSecurityHeaders(await handler.fetch(request, env, ctx), { noStore: url.pathname.startsWith("/api/") });
   },
 };
