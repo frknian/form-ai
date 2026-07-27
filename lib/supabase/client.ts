@@ -1,6 +1,14 @@
 import { createBrowserClient } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+function normalizeSupabaseUrl(configuredUrl: string) {
+  // Supabase project URL must be the origin only. Deployment dashboards are
+  // sometimes configured with the OAuth callback URL by mistake; stripping
+  // its path prevents malformed routes such as
+  // /auth/v1/callback/auth/v1/token.
+  return new URL(configuredUrl).origin;
+}
+
 async function proxiedRequest(source: Request, configuredUrl: string) {
   const target = new URL(source.url);
   const proxyUrl = new URL(`/api/supabase-proxy${target.pathname}${target.search}`, window.location.origin);
@@ -65,9 +73,10 @@ function sendAuthProxyRequest(url: URL, init: RequestInit): Promise<Response> {
 }
 
 async function resilientSupabaseFetch(input: RequestInfo | URL, init?: RequestInit) {
-  const configuredUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  if (typeof window === "undefined" || !configuredUrl) return fetch(input, init);
+  const rawConfiguredUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (typeof window === "undefined" || !rawConfiguredUrl) return fetch(input, init);
 
+  const configuredUrl = normalizeSupabaseUrl(rawConfiguredUrl);
   const request = new Request(input, init);
   const configuredOrigin = new URL(configuredUrl).origin;
   const target = new URL(request.url);
@@ -97,8 +106,9 @@ async function resilientSupabaseFetch(input: RequestInfo | URL, init?: RequestIn
 }
 
 export function createClient(): SupabaseClient | null {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const configuredUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) return null;
+  if (!configuredUrl || !key) return null;
+  const url = normalizeSupabaseUrl(configuredUrl);
   return createBrowserClient(url, key, { global: { fetch: resilientSupabaseFetch } });
 }
