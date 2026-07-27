@@ -1,13 +1,25 @@
 import { createBrowserClient } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-function proxiedRequest(source: Request, configuredUrl: string) {
+async function proxiedRequest(source: Request, configuredUrl: string) {
   const target = new URL(source.url);
   const proxyUrl = new URL(`/api/supabase-proxy${target.pathname}${target.search}`, window.location.origin);
   const projectRef = new URL(configuredUrl).hostname.split(".")[0];
-  const request = new Request(proxyUrl, source);
-  request.headers.set("x-supabase-project-ref", projectRef);
-  return request;
+  const headers = new Headers(source.headers);
+  headers.set("x-supabase-project-ref", projectRef);
+
+  // Safari does not support uploading a ReadableStream request body. Buffering
+  // keeps the fallback compatible across Safari, Chromium and WebViews.
+  const body = source.method === "GET" || source.method === "HEAD"
+    ? undefined
+    : await source.arrayBuffer();
+
+  return new Request(proxyUrl, {
+    method: source.method,
+    headers,
+    body,
+    credentials: source.credentials,
+  });
 }
 
 function isUnexpectedAuthResponse(response: Response, pathname: string) {
@@ -29,12 +41,12 @@ async function resilientSupabaseFetch(input: RequestInfo | URL, init?: RequestIn
   try {
     return await fetch(request);
   } catch {
-    const firstProxyResponse = await fetch(proxiedRequest(firstProxySource, configuredUrl));
+    const firstProxyResponse = await fetch(await proxiedRequest(firstProxySource, configuredUrl));
     if (!isUnexpectedAuthResponse(firstProxyResponse, target.pathname)) return firstProxyResponse;
 
     // Cloudflare ücretsiz Worker bazen JSON yerine geçici HTML hata sayfası üretebilir.
     // Supabase istemcisine HTML vermek yerine aynı isteği tek kez temiz gövdeyle yineleriz.
-    const retryProxyResponse = await fetch(proxiedRequest(retryProxySource, configuredUrl));
+    const retryProxyResponse = await fetch(await proxiedRequest(retryProxySource, configuredUrl));
     if (!isUnexpectedAuthResponse(retryProxyResponse, target.pathname)) return retryProxyResponse;
     throw new Error("Kimlik doğrulama servisi geçici olarak yanıt veremedi. Lütfen tekrar dene.");
   }

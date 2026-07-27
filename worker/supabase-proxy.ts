@@ -44,10 +44,16 @@ export async function handleSupabaseProxy(request: Request): Promise<Response | 
 
   try {
     const target = new URL(`/${pathname}${incomingUrl.search}`, `https://${SUPABASE_PROJECT_REF}.supabase.co`);
+    // Buffer the incoming body instead of forwarding its ReadableStream.
+    // Cloudflare and Safari-backed clients do not consistently support
+    // streaming uploads for this proxy hop.
+    const body = request.method === "GET" || request.method === "HEAD"
+      ? undefined
+      : await request.arrayBuffer();
     const upstream = await fetch(target, {
       method: request.method,
       headers,
-      body: request.method === "GET" || request.method === "HEAD" ? null : request.body,
+      body,
       redirect: "manual",
     });
     const responseHeaders = new Headers();

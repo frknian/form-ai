@@ -26,6 +26,17 @@ test("rejects unknown Supabase projects before loading the app router", async ()
   assert.deepEqual(await response.json(), { error: "Unknown Supabase project." });
 });
 
+test("buffers Supabase proxy bodies for Safari and Cloudflare compatibility", async () => {
+  const [browserClient, workerProxy] = await Promise.all([
+    readFile(new URL("../lib/supabase/client.ts", import.meta.url), "utf8"),
+    readFile(new URL("../worker/supabase-proxy.ts", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(browserClient, /await source\.arrayBuffer\(\)/);
+  assert.match(workerProxy, /await request\.arrayBuffer\(\)/);
+  assert.doesNotMatch(workerProxy, /body:\s*request\.body/);
+});
+
 test("server-renders the secure form.ai account entry", async () => {
   const response = await render();
   assert.equal(response.status, 200);
