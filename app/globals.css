@@ -10,7 +10,7 @@ body { margin:0; background:var(--paper); color:var(--ink); font-family:Arial, H
 .native-app body { padding-top:env(safe-area-inset-top); padding-right:env(safe-area-inset-right); padding-bottom:env(safe-area-inset-bottom); padding-left:env(safe-area-inset-left); overscroll-behavior-y:none; -webkit-tap-highlight-color:transparent; }
 .native-app button,.native-app a { touch-action:manipulation; }.mobile-offline { position:fixed; z-index:120; left:max(12px,env(safe-area-inset-left)); right:max(12px,env(safe-area-inset-right)); bottom:max(12px,env(safe-area-inset-bottom)); display:flex; align-items:center; gap:10px; padding:11px 14px; border:1px solid #72513c; border-radius:10px; background:#30231e; color:#fff0e8; box-shadow:0 14px 34px rgba(0,0,0,.25); }.mobile-offline span { font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:.8px; }.mobile-offline p { margin:0; color:#dabcae; font-size:9px; }
 button,input { font:inherit; } button { cursor:pointer; }
-.app-shell { min-height:100vh; display:flex; flex-direction:column; }
+.app-shell { min-height:100vh; display:flex; flex-direction:column; overflow-x:clip; }
 .topbar { height:76px; padding:0 5.5vw; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; background:#f8f8f3; }
 .brand { font-weight:800; font-size:23px; letter-spacing:-1.5px; display:flex; align-items:center; gap:8px; }.brand-mark { background:var(--lime); border-radius:50%; width:28px; height:28px; display:grid; place-items:center; font-size:15px; }.brand-dot { color:#b4d642; }.top-links { display:flex; gap:32px; color:#888; font-size:13px; }.top-links .active { color:var(--ink); font-weight:700; }.profile-mini { display:flex; gap:9px; align-items:center; font-size:13px; }.mini-avatar { width:30px; height:30px; border-radius:50%; background:#f2c7a9; display:grid; place-items:center; font-size:12px; overflow:hidden; }.mini-avatar img { width:100%;height:100%;object-fit:cover; }.chevron { color:#999; margin-left:2px; }
 .onboarding-wrap { width:min(1020px,90%); margin:58px auto 0; position:relative; }.progress-row { display:flex; justify-content:space-between; font-size:10px; letter-spacing:1.6px; color:#a0a09c; }.progress-label { color:#555; font-weight:700; }.progress-track { height:3px; background:#e3e3dd; margin-top:13px; }.progress-track span { display:block; height:100%; background:var(--ink); transition:width .3s ease; }.step-content { width:590px; padding:72px 0 75px; }.eyebrow { font-size:10px; font-weight:700; letter-spacing:2px; color:#8a8a83; margin-bottom:18px; }.step-content h1,.dashboard h1 { font-size:58px; line-height:.99; letter-spacing:-3.5px; margin:0 0 22px; font-weight:800; }.step-content em,.dashboard em,.coach-card em { font-family:Georgia, serif; font-weight:400; }.lead { color:var(--muted-text); line-height:1.55; font-size:16px; max-width:470px; margin:0 0 38px; }.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px 14px; }.form-grid label { color:#777; font-size:11px; font-weight:700; }.form-grid .wide { grid-column:1/-1; }.form-grid input { display:block; margin-top:8px; width:100%; border:1px solid var(--line); border-radius:7px; background:#fbfbf7; padding:14px; color:var(--ink); outline:none; }.form-grid input:focus { border-color:#aaa; }.segmented { display:flex; gap:4px; margin-top:8px; }.segmented button { flex:1; border:1px solid var(--line); background:#fbfbf7; border-radius:7px; padding:13px 6px; color:#777; font-size:12px; }.segmented .selected { background:#252522; color:white; border-color:#252522; }
@@ -430,18 +430,34 @@ button,input { font:inherit; } button { cursor:pointer; }
 }
 
 @media (max-width:700px) {
-  .topbar { height:auto; min-height:112px; padding:8px 20px 6px; display:grid; grid-template-columns:1fr auto; grid-template-rows:48px 44px; column-gap:10px; }
-  .brand { grid-column:1; grid-row:1; }
-  .profile-mini { grid-column:2; grid-row:1; min-width:44px; justify-content:flex-end; padding:0; }
-  .top-links { grid-column:1/-1; grid-row:2; width:100%; max-width:none; height:44px; gap:2px; overflow:visible; justify-content:space-between; }
-  .top-links button { flex:1; padding:0 5px; white-space:nowrap; font-size:10px; }
+  .topbar { position:sticky; z-index:80; top:0; height:auto; min-height:112px; padding:8px max(16px,env(safe-area-inset-right)) 6px max(16px,env(safe-area-inset-left)); display:grid; grid-template-columns:minmax(0,1fr) auto; grid-template-rows:48px 48px; column-gap:8px; background:var(--surface-soft); box-shadow:0 8px 22px rgba(29,29,27,.08); }
+  .brand { grid-column:1; grid-row:1; min-width:0; }
+  .top-actions { grid-column:2; grid-row:1; min-width:0; }
+  .profile-mini { min-width:40px; justify-content:center; padding:0; }
+  .top-links { grid-column:1/-1; grid-row:2; width:100%; max-width:none; height:48px; display:flex; align-items:center; justify-content:flex-start; gap:7px; overflow-x:auto; overflow-y:hidden; padding:2px 18px 4px 0; scroll-padding-inline:0 18px; scroll-snap-type:x proximity; overscroll-behavior-inline:contain; -webkit-overflow-scrolling:touch; scrollbar-width:none; touch-action:pan-x; }
+  .top-links::-webkit-scrollbar { display:none; }
+  .top-links button { flex:0 0 auto; min-height:38px; padding:0 13px; border-radius:999px; white-space:nowrap; font-size:11px; scroll-snap-align:center; transition:background-color .2s ease,color .2s ease; }
+  .top-links button.active { background:var(--ink); color:var(--paper); box-shadow:0 5px 14px rgba(29,29,27,.12); }
   .stats-row { grid-template-columns:repeat(3,minmax(0,1fr)); }
   .stats-row > div { min-width:0; padding-inline:8px; }
   .stats-row strong { overflow-wrap:anywhere; }
-  .onboarding-wrap,.dashboard { margin-top:26px; }
+  .onboarding-wrap,.dashboard { width:calc(100% - 32px); margin-top:22px; }
+  .dashboard > * { min-width:0; }
   .ready-card button { padding-inline:14px; }
   .calorie-card { display:grid; grid-template-columns:minmax(0,1fr) 74px; gap:14px; width:100%; }
   .calorie-note { min-width:0; width:auto; }
+}
+
+@media (max-width:420px) {
+  .topbar { padding-right:max(12px,env(safe-area-inset-right)); padding-left:max(12px,env(safe-area-inset-left)); }
+  .brand { font-size:20px; }
+  .brand-mark { width:26px; height:26px; }
+  .top-actions { gap:4px; }
+  .stats-row { grid-template-columns:1fr; }
+  .stats-row > div { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:4px 10px; padding:12px 0; border-right:0; border-bottom:1px solid var(--line); }
+  .stats-row > div:last-child { border-bottom:0; }
+  .stats-row strong { margin:0; text-align:right; }
+  .stats-row small { grid-column:1/-1; }
 }
 
 /* Üç aşamalı, eklem ve kas vurgulu hareket anlatımı. */
@@ -1103,3 +1119,8 @@ input,select,textarea { color-scheme:inherit; }
 .calorie-remaining.over { border-left-color:#d9a25e; }
 .calorie-remaining.over span,.calorie-remaining.over strong { color:#c2802f; }
 .dark .calorie-progress.over > div > span,.dark .calorie-remaining.over span,.dark .calorie-remaining.over strong { color:#e8bd82; }
+
+@media (max-width:700px) {
+  .dark .topbar { box-shadow:0 8px 22px rgba(0,0,0,.24); }
+  .dark .top-links button.active { background:var(--lime); color:#1d1d1b; }
+}

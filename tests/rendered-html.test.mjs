@@ -244,6 +244,21 @@ test("Android manifesti kamera, galeri ve bildirim izinlerini tanımlar", async 
   assert.match(manifest, /uses-feature[^>]*android\.hardware\.camera[^>]*required="false"/);
 });
 
+test("mobil üst menü yatay kayar ve seçili bölümü görünür tutar", async () => {
+  const [page, styles] = await Promise.all([
+    readFile(new URL("../components/FitAiApp.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(page, /const topLinksRef = useRef<HTMLDivElement>\(null\)/);
+  assert.match(page, /ref=\{topLinksRef\}/);
+  assert.match(page, /activeLink\.scrollIntoView\(\{ behavior, block: "nearest", inline: "center" \}\)/);
+  assert.match(styles, /scroll-snap-type:x proximity/);
+  assert.match(styles, /overscroll-behavior-inline:contain/);
+  assert.match(styles, /\.top-links::\-webkit-scrollbar \{ display:none; \}/);
+  assert.match(styles, /@media \(max-width:420px\) \{[^]*?\.stats-row \{ grid-template-columns:1fr; \}/);
+});
+
 test("veritabanı kurulum sırası belgelenmiştir", async () => {
   const readme = await readFile(new URL("../README.md", import.meta.url), "utf8");
   const schema = await readFile(new URL("../db/supabase-schema.sql", import.meta.url), "utf8");

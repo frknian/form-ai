@@ -700,6 +700,7 @@ export default function Home() {
   const [aiFingerprint, setAiFingerprint] = useState("");
   const [aiStage, setAiStage] = useState<AiStage>("profile");
   const [activeView, setActiveView] = useState<"plan" | "workout" | "progress" | "library" | "nutrition" | "calendar" | "profile">("plan");
+  const topLinksRef = useRef<HTMLDivElement>(null);
   const [, setAiStatus] = useState<"idle" | "scanning" | "complete" | "fallback">("idle");
   const [activityOpen, setActivityOpen] = useState(false);
   const weightUnit = useWeightUnit();
@@ -938,6 +939,21 @@ export default function Home() {
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [activeView, activeWorkout, questionIndex, step]);
+
+  useEffect(() => {
+    const links = topLinksRef.current;
+    if (!links || !window.matchMedia("(max-width: 700px)").matches) return;
+
+    const activeLink = links.querySelector<HTMLButtonElement>("button.active");
+    if (!activeLink) return;
+
+    const frame = window.requestAnimationFrame(() => {
+      const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+      activeLink.scrollIntoView({ behavior, block: "nearest", inline: "center" });
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [activeView, step]);
 
   useEffect(() => {
     if (!isRunning || !currentWorkout) return;
@@ -1327,7 +1343,7 @@ export default function Home() {
       <MobileRuntime />
       {step === 5 && <nav className="topbar">
         <div className="brand"><span className="brand-mark">↗</span><span>form<span className="brand-dot">.</span>ai</span></div>
-<div className="top-links"><button type="button" aria-pressed={activeView === "plan"} className={activeView === "plan" ? "active" : ""} onClick={() => setActiveView("plan")}>{t.nav.home}</button><button type="button" aria-pressed={activeView === "workout"} className={activeView === "workout" ? "active" : ""} onClick={() => setActiveView("workout")}>{t.nav.workout}</button><button type="button" aria-pressed={activeView === "nutrition"} className={activeView === "nutrition" ? "active" : ""} onClick={() => setActiveView("nutrition")}>{t.nav.nutrition}</button><button type="button" aria-pressed={activeView === "progress"} className={activeView === "progress" ? "active" : ""} onClick={() => setActiveView("progress")}>{t.nav.progress}</button><button type="button" aria-pressed={activeView === "calendar"} className={activeView === "calendar" ? "active" : ""} onClick={() => setActiveView("calendar")}>{t.nav.calendar}</button><button type="button" aria-pressed={activeView === "library"} className={activeView === "library" ? "active" : ""} onClick={() => setActiveView("library")}>{t.nav.library}</button></div>
+        <div className="top-links" ref={topLinksRef}><button type="button" aria-pressed={activeView === "plan"} className={activeView === "plan" ? "active" : ""} onClick={() => setActiveView("plan")}>{t.nav.home}</button><button type="button" aria-pressed={activeView === "workout"} className={activeView === "workout" ? "active" : ""} onClick={() => setActiveView("workout")}>{t.nav.workout}</button><button type="button" aria-pressed={activeView === "nutrition"} className={activeView === "nutrition" ? "active" : ""} onClick={() => setActiveView("nutrition")}>{t.nav.nutrition}</button><button type="button" aria-pressed={activeView === "progress"} className={activeView === "progress" ? "active" : ""} onClick={() => setActiveView("progress")}>{t.nav.progress}</button><button type="button" aria-pressed={activeView === "calendar"} className={activeView === "calendar" ? "active" : ""} onClick={() => setActiveView("calendar")}>{t.nav.calendar}</button><button type="button" aria-pressed={activeView === "library"} className={activeView === "library" ? "active" : ""} onClick={() => setActiveView("library")}>{t.nav.library}</button></div>
         <div className="top-actions"><LanguageToggle /><ThemeToggle /><button type="button" className={activeView === "profile" ? "profile-mini active" : "profile-mini"} aria-pressed={activeView === "profile"} onClick={() => step === 5 && setActiveView("profile")}><span className="mini-avatar">{avatarUrl ? <Image src={avatarUrl} alt="" width={30} height={30} unoptimized /> : name ? name.charAt(0).toUpperCase() : "E"}</span><span>{t.nav.profile}</span></button></div>
       </nav>}
       {step < 5 && <div className="toggle-row onboarding-toggle-row"><LanguageToggle /><ThemeToggle /></div>}
