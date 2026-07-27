@@ -55,7 +55,7 @@ test("aktivite günlükleri geçmişe ve seri özetine güvenli biçimde bağlan
 });
 
 test("hareket kılavuzu alan ile tutarlıdır ve Türkçe küçültmeden etkilenmez", async () => {
-  const src = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
+  const src = await readFile(new URL("../components/FitAiApp.tsx", import.meta.url), "utf8");
   const body = src.slice(src.indexOf("function getMotionPattern"), src.indexOf("function getMotionGuide"));
   const pat = eval(`(${body.replace('function getMotionPattern(exercise: { name: string; english: string }): MotionPattern {', "function(exercise){").trimEnd()})`);
 

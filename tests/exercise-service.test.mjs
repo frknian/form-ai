@@ -74,7 +74,7 @@ test("crunch ve reverse crunch için lisanslı yerel gerçek hareket karelerini 
 });
 
 test("uygulama kataloğundaki tüm hareketler iki yerel animasyon karesine sahiptir", async () => {
-  const page = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
+  const page = await readFile(new URL("../components/FitAiApp.tsx", import.meta.url), "utf8");
   const core = page.slice(page.indexOf("const coreExerciseLibrary"), page.indexOf("const additionalExerciseDefinitions"));
   const additional = page.slice(page.indexOf("const additionalExerciseDefinitions"), page.indexOf("const additionalExerciseLibrary"));
   const exercises = [];

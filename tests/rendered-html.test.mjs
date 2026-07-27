@@ -40,7 +40,7 @@ test("keeps adaptive plan, meal entry and training-place controls dark", async (
 
 test("keeps email verification and Google authentication wired into profile creation", async () => {
   const [page, profileManager, authScreen, callback, mobileRuntime, mobileConfig, androidManifest, iosInfo] = await Promise.all([
-    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../components/FitAiApp.tsx", import.meta.url), "utf8"),
     readFile(new URL("../components/ProfileManager.tsx", import.meta.url), "utf8"),
     readFile(new URL("../components/AuthScreen.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/auth/callback/page.tsx", import.meta.url), "utf8"),
@@ -84,7 +84,7 @@ test("keeps email verification and Google authentication wired into profile crea
 
 test("keeps the AI plan and movement library wired into the product", async () => {
   const [page, route, weeklyRoute, layout, supabaseSchema] = await Promise.all([
-    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../components/FitAiApp.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/api/generate-plan/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/api/weekly-review/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
