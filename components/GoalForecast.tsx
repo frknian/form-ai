@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { forecastGoal, type WeightPoint } from "@/lib/goal-forecast";
+import { forecastGoal, type CalorieEntry, type WeightPoint } from "@/lib/goal-forecast";
 import { setStoredTargetWeightKg, useTargetWeightKg, useWeightUnit } from "@/lib/preferences";
 import { formatWeight, kgToInputValue, parseWeightInputToKg, weightUnitLabel } from "@/lib/units";
 import { useTranslations } from "@/lib/i18n/translate";
@@ -19,7 +19,9 @@ export function GoalForecast({ userId, currentWeightKg }: { userId?: string; cur
   const unit = useWeightUnit();
   const targetWeightKg = useTargetWeightKg();
   const [measurements, setMeasurements] = useState<WeightPoint[]>([]);
-  const [calorieAdjustment, setCalorieAdjustment] = useState<number | null>(null);
+  const [energy, setEnergy] = useState<{ bmr: number | null; tdee: number | null; calorieTarget: number | null }>({ bmr: null, tdee: null, calorieTarget: null });
+  const [activityEntries, setActivityEntries] = useState<CalorieEntry[]>([]);
+  const [intakeEntries, setIntakeEntries] = useState<CalorieEntry[]>([]);
   const [draft, setDraft] = useState("");
   const [editing, setEditing] = useState(false);
 
@@ -28,18 +30,38 @@ export function GoalForecast({ userId, currentWeightKg }: { userId?: string; cur
     const supabase = createClient();
     if (!supabase) return;
     let cancelled = false;
+    // Enerji penceresi 28 gün; biraz pay bırakıp 40 günü çekiyoruz.
+    const since = new Date(Date.now() - 40 * 86_400_000).toISOString();
     void (async () => {
-      const [measurementResult, goalResult] = await Promise.all([
+      const [measurementResult, goalResult, workoutResult, sportResult, foodResult] = await Promise.all([
         supabase.from("body_measurements").select("measured_at, weight_kg").eq("user_id", userId).order("measured_at", { ascending: true }),
-        supabase.from("nutrition_goals").select("calorie_adjustment").eq("user_id", userId).maybeSingle(),
+        supabase.from("nutrition_goals").select("bmr, tdee, calorie_target").eq("user_id", userId).maybeSingle(),
+        supabase.from("workout_sessions").select("completed_at, calories").eq("user_id", userId).gte("completed_at", since),
+        supabase.from("sport_activity_entries").select("occurred_at, estimated_calories").eq("user_id", userId).gte("occurred_at", since),
+        supabase.from("food_entries").select("consumed_at, calories").eq("user_id", userId).gte("consumed_at", since),
       ]);
       if (cancelled) return;
-      const points = (measurementResult.data || [])
+
+      setMeasurements((measurementResult.data || [])
         .map((row) => ({ dateIso: String(row.measured_at), weightKg: Number(row.weight_kg) }))
-        .filter((point) => Number.isFinite(point.weightKg) && point.weightKg > 0);
-      setMeasurements(points);
-      const adjustment = Number(goalResult.data?.calorie_adjustment);
-      setCalorieAdjustment(Number.isFinite(adjustment) ? adjustment : null);
+        .filter((point) => Number.isFinite(point.weightKg) && point.weightKg > 0));
+
+      const numberOrNull = (value: unknown) => (Number.isFinite(Number(value)) && Number(value) > 0 ? Number(value) : null);
+      setEnergy({
+        bmr: numberOrNull(goalResult.data?.bmr),
+        tdee: numberOrNull(goalResult.data?.tdee),
+        calorieTarget: numberOrNull(goalResult.data?.calorie_target),
+      });
+
+      // Antrenman ve spor aktiviteleri birlikte "gün içindeki hareket" harcamasıdır.
+      const toEntries = (rows: Record<string, unknown>[] | null, dateKey: string, calorieKey: string) => (rows || [])
+        .map((row) => ({ dateIso: String(row[dateKey]), calories: Number(row[calorieKey]) }))
+        .filter((entry) => Number.isFinite(entry.calories) && entry.calories > 0);
+      setActivityEntries([
+        ...toEntries(workoutResult.data, "completed_at", "calories"),
+        ...toEntries(sportResult.data, "occurred_at", "estimated_calories"),
+      ]);
+      setIntakeEntries(toEntries(foodResult.data, "consumed_at", "calories"));
     })();
     return () => { cancelled = true; };
   }, [userId]);
@@ -47,7 +69,14 @@ export function GoalForecast({ userId, currentWeightKg }: { userId?: string; cur
   // Ölçümlerdeki en güncel kilo, profildeki değerden daha taze olabilir.
   const latestMeasured = measurements.length ? measurements[measurements.length - 1].weightKg : null;
   const effectiveWeightKg = latestMeasured ?? (Number.isFinite(Number(currentWeightKg)) ? Number(currentWeightKg) : null);
-  const forecast = forecastGoal({ currentWeightKg: effectiveWeightKg, targetWeightKg, measurements, calorieAdjustmentPerDay: calorieAdjustment });
+  const forecast = forecastGoal({
+    currentWeightKg: effectiveWeightKg,
+    targetWeightKg,
+    measurements,
+    activityEntries,
+    intakeEntries,
+    ...energy,
+  });
 
   function saveTarget() {
     const parsed = parseWeightInputToKg(draft, unit);
@@ -108,7 +137,23 @@ export function GoalForecast({ userId, currentWeightKg }: { userId?: string; cur
           <small>{t.goalForecast.rateLabel}</small>
         </div>
       </div>
-      <small className="goal-forecast-source">{forecast.source === "measured" ? t.goalForecast.sourceMeasured : t.goalForecast.sourcePlan}</small>
+
+      {/* Tahminin nereden çıktığı: günlük yakım, alım ve aradaki fark. */}
+      {forecast.energy && <div className="goal-forecast-energy">
+        <strong>{forecast.energy.balanceKcal < 0
+          ? t.goalForecast.balanceDeficit(Math.round(Math.abs(forecast.energy.balanceKcal)))
+          : t.goalForecast.balanceSurplus(Math.round(forecast.energy.balanceKcal))}</strong>
+        <div className="goal-forecast-energy-row">
+          <span>{t.goalForecast.burnLabel(Math.round(forecast.energy.expenditureKcal))}</span>
+          <span>{t.goalForecast.intakeLabel(Math.round(forecast.energy.intakeKcal))}</span>
+        </div>
+        {forecast.energy.expenditureBasis === "logged" && forecast.energy.activityKcal >= 1 && <small>{t.goalForecast.activityNote(Math.round(forecast.energy.activityKcal))}</small>}
+        <small>{forecast.energy.intakeBasis === "logged" ? t.goalForecast.basisLoggedIntake : t.goalForecast.basisTargetIntake}</small>
+      </div>}
+
+      <small className="goal-forecast-source">{forecast.source === "measured" ? t.goalForecast.sourceMeasured : t.goalForecast.sourceEnergy}</small>
+      {/* Plan ile gerçeğin ayrıştığını görebilmesi için ölçüm hızı da gösterilir. */}
+      {forecast.source === "energy" && forecast.measuredWeeklyRateKg !== null && <small className="goal-forecast-source">{t.goalForecast.measuredCheck(`${forecast.measuredWeeklyRateKg < 0 ? "−" : "+"}${formatWeight(Math.abs(forecast.measuredWeeklyRateKg), unit, { decimals: 2, withUnit: true })}`)}</small>}
       {forecast.beyondHorizon && <p className="goal-forecast-note goal-forecast-warn">{t.goalForecast.beyondHorizon}</p>}
       {forecast.aggressive && <p className="goal-forecast-note goal-forecast-warn">{t.goalForecast.aggressive}</p>}
     </>}
