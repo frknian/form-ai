@@ -24,12 +24,13 @@ test("profil tarihçesi alanları Türkçe ve anlaşılır etiketlenir", () => {
 });
 
 test("profil yaşam döngüsü özel depolama, RLS ve güçlü silme doğrulaması içerir", async () => {
-  const [component, route, progressResetRoute, migration, auth] = await Promise.all([
+  const [component, route, progressResetRoute, migration, auth, schema] = await Promise.all([
     readFile(new URL("../components/ProfileManager.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/api/account/delete/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/api/account/reset-progress/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../db/migrations/20260723_profile_lifecycle.sql", import.meta.url), "utf8"),
     readFile(new URL("../components/AuthScreen.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../db/supabase-schema.sql", import.meta.url), "utf8"),
   ]);
   assert.match(auth, /birth_date/);
   assert.match(component, /deleteConfirmPhrase/);
@@ -45,6 +46,16 @@ test("profil yaşam döngüsü özel depolama, RLS ve güçlü silme doğrulamas
   for (const table of ["food_entries", "sport_activity_entries", "activity_logs", "user_streaks", "workout_sessions"]) {
     assert.match(progressResetRoute, new RegExp(table));
   }
+  // Takvim satırı workout_sessions'a "on delete cascade" ile bağlı olduğu için,
+  // seanslar önce silinseydi tamamlanmış günün takvim kaydı da yok olurdu; oysa
+  // sıfırlamanın sözü takvimi korumak. Bağın çözülmesi silme döngüsünden ÖNCE olmalı.
+  const scheduleRelease = progressResetRoute.indexOf('.from("workout_schedule")');
+  const deletionLoop = progressResetRoute.indexOf("for (const table of PROGRESS_TABLES)");
+  assert.ok(scheduleRelease !== -1, "takvim bağı çözülmeden ilerleme sıfırlanamaz");
+  assert.ok(scheduleRelease < deletionLoop, "takvim bağı silme döngüsünden önce çözülmeli");
+  assert.match(progressResetRoute, /completed_session_id: null/);
+  assert.match(schema, /completed_session_id, user_id\) references public\.workout_sessions\(id, user_id\) on delete cascade/);
+
   assert.match(migration, /birthday_premium_day', false/);
   assert.match(migration, /profile_history/);
   assert.match(migration, /account_is_active/);

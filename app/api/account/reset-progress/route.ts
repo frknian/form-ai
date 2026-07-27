@@ -39,6 +39,21 @@ export async function POST(request: Request) {
   if (userError || !user) return Response.json({ error: "Oturum doğrulanamadı." }, { status: 401 });
 
   const admin = createClient(url, secretKey, { auth: { persistSession: false, autoRefreshToken: false } });
+
+  // workout_schedule.completed_session_id, workout_sessions'a "on delete cascade"
+  // ile bağlıdır (bkz. db/supabase-schema.sql). Seanslar önce silinirse tamamlanmış
+  // güne ait TAKVİM SATIRI da silinir; oysa sıfırlama takvimi korumalı. Bu yüzden
+  // seansları silmeden önce bağı çözüp günü yeniden "planlandı" durumuna alıyoruz.
+  const { error: scheduleError } = await admin
+    .from("workout_schedule")
+    .update({ completed_session_id: null, status: "planned" })
+    .eq("user_id", user.id)
+    .not("completed_session_id", "is", null);
+  if (scheduleError) {
+    console.error("[progress-reset] schedule release failed", { userId: user.id, code: scheduleError.code });
+    return Response.json({ error: "İlerleme verileri sıfırlanamadı. Lütfen tekrar dene." }, { status: 500 });
+  }
+
   for (const table of PROGRESS_TABLES) {
     const { error } = await admin.from(table).delete().eq("user_id", user.id);
     if (error) {

@@ -1,198 +1,224 @@
+<div align="center">
+
+<img src="store-assets/play-icon-512.png" alt="form.ai" width="112" height="112">
+
 # form.ai
 
-Açık kaynak bir yapay zeka modeliyle (varsayılan: Moonshot AI'nin Kimi K3'ü, OpenAI-uyumlu herhangi bir sağlayıcı üzerinden değiştirilebilir) çalışan, kullanıcının profiline ve antrenman geri bildirimlerine göre zamanla uyarlanan fitness uygulaması. Next.js 16, React 19, strict TypeScript ve Vinext/Cloudflare çalışma ortamını kullanır.
+### Sana göre değişen yapay zeka antrenörün
 
-## Özellikler
+Planını sen yazma. form.ai profilini, ekipmanını ve her antrenmandan sonra
+verdiğin geri bildirimi okuyup programını kendisi ayarlar.
 
-- **Kişisel onboarding ve AI plan üretimi**: Profil, spor geçmişi testi ve hedeflere göre yapay zeka ile antrenman planı; ortam (ev/salon) ve evdeki ekipmana uygun hareketler önceliklendirilir.
-- **Zamanla uyarlanan program**: Antrenman sonrası zorluk/yorgunluk/ağrı geri bildirimiyle set, tekrar ve dinlenme otomatik uyarlanır.
-- **Antrenman oynatıcı ve set kaydı**: Set/tekrar/dinlenme sayaçları, ağırlık · tekrar · RPE kaydı ve önceki performansa göre güvenli ilerleme önerisi.
-- **Kişisel rekorlar (tahmini 1RM)**: Ağırlıklı set kayıtlarından Epley formülüyle hareket bazında en yüksek tahmini 1RM İlerlemem ekranında listelenir.
-- **Aktivite günlüğü**: Koşu, yürüyüş, bisiklet, yüzme ve diğer sporlar için açılır pencerede kayıt ve geçmiş; günlük seri (streak) takibi.
-- **Kalori/beslenme takibi, vücut ölçümleri ve takvim**: Barkod, katalog araması, Kimi K3 ile doğal dil/fotoğraf ayrıştırma, doğrulanmış kaynaklardan porsiyon hesabı, kalori-makro hedefleri, ölçüm trend grafikleri ve antrenman takvimi/hatırlatıcıları.
-- **kg/lb birim tercihi**: Profil kilosu, set kaydı, kişisel rekorlar ve vücut ölçümleri seçilen birimde gösterilir (tercih yerel olarak saklanır).
-- **Veri dışa aktarma**: Profilden tüm hesap verileri tek bir JSON dosyası olarak indirilebilir.
-- **Güvenli hesap**: E-posta doğrulaması ve şifre sıfırlama 6 haneli OTP koduyla; Google ile giriş; hesabı dondurma/silme.
-- **AI koç sohbeti**, dark/light tema ve Capacitor ile mobil (iOS/Android) desteği.
+**Türkçe** · [English](#formai--your-ai-trainer-that-adapts-to-you)
 
-## Geliştirme
+<img src="store-assets/feature-graphic-1024x500.png" alt="form.ai" width="100%">
 
-Node.js `>=22.13.0` gereklidir.
+</div>
 
-```bash
-npm install
-npm run dev
-npm test
-npm run lint
-```
+---
 
-`npm test` üretim derlemesini oluşturur ve Node test paketini çalıştırır.
+## Nedir?
 
-## Ortam değişkenleri
+Çoğu fitness uygulaması sana sabit bir program verir ve gerisini sana bırakır.
+form.ai tersini yapar: ilk gün seni tanır, sonra **her antrenmandan sonra
+dinler**. Hareket zor geldiyse yükü düşürür, kolay geldiyse artırır, ağrı
+bildirdiğin bölgeyi programdan çıkarır.
 
-`.env.example` dosyasını `.env` olarak kopyalayıp doldurun:
+Yanında bir de beslenme tarafı var — yediğini fotoğrafını çekerek, barkodunu
+okutarak veya sadece yazarak ekleyebilirsin.
 
-- `AI_API_KEY`, `AI_BASE_URL`, `AI_MODEL` — AI plan üretimi, sohbet, öğün fotoğrafı analizi ve haftalık değerlendirme. OpenAI-uyumlu herhangi bir sağlayıcıyla çalışır (OpenRouter, Together, Fireworks, kendi vLLM/Ollama sunucunuz). Anahtar yoksa uygulama her yerde güvenli bir yerel yedeğe düşer.
-- Görsel girdi (öğün fotoğrafı, plan fotoğrafı) gerektiği için `AI_MODEL` görsel destekli bir model olmalı; varsayılan `kimi-k3`, Moonshot AI'nin kendi API'si (`https://api.moonshot.ai/v1`) üzerinden native görsel destekler. OpenRouter/Together/Fireworks gibi başka bir sağlayıcıya geçmek için `.env.example`'daki örneğe bakın.
-- `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` — hesap ve veri katmanı. Tanımlı değilse giriş ekranı "yapılandırılmamış" durumunu gösterir.
-- `SUPABASE_SECRET_KEY` — yalnız sunucu tarafındaki hesap silme işlemi için; `NEXT_PUBLIC_` öneki eklemeyin.
-- `USDA_FDC_API_KEY` — isteğe bağlı USDA FoodData Central arama yedeği; yalnız sunucuda kullanılır.
-- `AI_VISION_ENABLED` — Kimi K3 dağıtımında görsel girdi kapalıysa `false`; fotoğraf akışı kullanıcıyı güvenli biçimde yazarak eklemeye yönlendirir.
-- `CAPACITOR_SERVER_URL` — Capacitor geliştirmesinde yerel sunucu adresi.
+## Öne çıkanlar
 
-## Veritabanı kurulumu
+### Sana özel program, tek seferlik değil
+Yaşın, boyun, kilon, hedefin, nerede çalıştığın (ev/salon) ve elindeki ekipmana
+göre bir plan üretilir. Sonra bu plan sabit kalmaz: her seansın ardından
+sorduğu "nasıldı?" sorusunun cevabına göre set, tekrar ve dinlenme süreleri
+kendiliğinden ayarlanır.
 
-Şema iki parçadır ve **sırayla** çalıştırılmalıdır. Yalnız `db/supabase-schema.sql` çalıştırmak
-eksik bir veritabanı bırakır: `profile_history` ve `feature_flags` tabloları yalnızca
-migration dosyalarında tanımlıdır, dolayısıyla profil değişiklik geçmişi ve veri dışa aktarma
-çalışmaz.
+### Antrenman oynatıcı
+Set ve dinlenme sayaçları, ağırlık · tekrar · zorluk kaydı. Bir önceki
+performansına bakıp güvenli bir sonraki adım önerir — ağrı veya yüksek
+yorgunluk bildirdiysen **yükü artırmayı reddeder**.
 
-Supabase SQL Editor'de sırasıyla:
+### 106 hareket, hepsi animasyonlu
+Her hareketin nasıl yapıldığını gösteren yerel animasyon kareleri, kas grubu ve
+ekipman filtreleri, Türkçe hareket ve kas adları.
 
-1. `db/supabase-schema.sql` — temel tablolar, RLS politikaları ve indeksler.
-2. `db/migrations/*.sql` — **dosya adına göre artan sırada** hepsi. Migration'lar
-   `create table if not exists` / `add column if not exists` / `drop policy if exists`
-   kalıplarını kullandığı için tekrar çalıştırmak güvenlidir.
+### Kalori takibi, üç yoldan
+- **Fotoğraf** — tabağının fotoğrafını çek, yapay zeka yemeği tanısın, gramajı
+  ve makroları tahmin etsin
+- **Barkod** — ambalajı okut; barkod tamamen **cihazında** çözülür
+- **Yazarak** — "bir kase mercimek çorbası" yaz, gerisini o hesaplasın
 
-```bash
-ls db/migrations/*.sql | sort
-```
+Ayrıca 309 kayıtlık yerleşik besin kataloğu: Türk mutfağı, Avrupa mutfağı,
+fast food, atıştırmalık, içecek ve tatlılar.
 
-Yeni bir migration eklerken tarih önekli adlandırmayı koruyun ve ifadeleri idempotent yazın.
+### İlerlemeni gör
+Vücut ölçümleri ve trend grafikleri, tahmini 1RM ile kişisel rekorlar, günlük
+seri takibi, koşu/yürüyüş/bisiklet/yüzme gibi aktivite kayıtları ve haftalık
+yapay zeka değerlendirmesi.
 
-## Kimlik doğrulama (Supabase)
+### AI koç sohbeti
+Programın, hareketlerin veya beslenmen hakkında soru sor. Koç senin profilini
+ve planını bilerek cevaplar.
 
-E-posta doğrulaması ve şifre sıfırlama, tıklanabilir bağlantı yerine **6 haneli OTP kodu** ile çalışır. Bunun nedeni, e-posta güvenlik tarayıcılarının tek kullanımlık doğrulama bağlantısını kullanıcı tıklamadan tüketip "bağlantının süresi doldu" hatasına yol açmasıdır; kod tıklanabilir olmadığı için bu sorun oluşmaz.
+### Ayrıntılar
+Açık ve koyu tema · kg/lb birim tercihi · antrenman takvimi ve hatırlatıcılar ·
+Türkçe ve İngilizce · tüm verilerini tek JSON dosyası olarak indirme
 
-Yayın ortamında Supabase panelinde:
+## Sürümler
 
-- **Authentication → Email Templates → Confirm signup**: `{{ .ConfirmationURL }}` yerine yalnızca `{{ .Token }}` kullanın.
-- **Authentication → Email Templates → Reset Password**: aynı şekilde `{{ .Token }}` kullanın.
-- **Authentication → URL Configuration**: Site URL olarak üretim alan adını, Redirect URLs listesine `/auth/callback` adresini ekleyin (Google OAuth ve doğrulama dönüşü için).
+| | Ücretsiz | Premium |
+|---|---|---|
+| Antrenman planı, oynatıcı, hareket kütüphanesi | ✔ | ✔ |
+| Kalori takibi, barkod, besin kataloğu | ✔ | ✔ |
+| Ölçümler, rekorlar, seri, takvim | ✔ | ✔ |
+| AI koç sohbeti | günde 5 soru | günde 15 soru |
+| Fotoğrafla besin ekleme | günde 5 fotoğraf | günde 10 fotoğraf |
 
-## Dağıtım
+Barkod okuma ve katalog araması yapay zeka kullanmaz — **sınırsızdır**.
 
-Veri katmanı Supabase'dir. Uygulama Nitro tabanlı hatla yayınlanır:
+## Gizliliğin
 
-```bash
-npm run build:vercel   # NITRO_PRESET=vercel · çıktı: .vercel/output
-```
+- **Barkod cihazından çıkmaz.** Tarama tamamen yerel; hiçbir görüntü sunucuya gidilmez.
+- **Öğün fotoğrafların saklanmaz.** Yalnızca analiz sonucu (ad, gramaj, makrolar) kaydedilir.
+- **Konum toplanmaz.** Uygulamada GPS izni yok.
+- **Reklam yok.** Projede hiçbir reklam SDK'sı bulunmaz, verilerin reklam için kullanılmaz.
+- **Hesabın senin.** Uygulama içinden dondurabilir, tüm verini indirebilir, ilerlemeni
+  sıfırlayabilir veya hesabını kalıcı olarak silebilirsin.
 
-- **Vercel**: `vercel.json` bu komutu ve `.vercel/output` dizinini kullanır.
-- **Dokploy (veya başka bir Node barındırma)**: aynı Nitro yapılandırmasıyla farklı bir preset seçilebilir, ör. `NITRO_PRESET=node-server vite build`.
+Ayrıntılar: [Gizlilik Politikası](store-assets/GIZLILIK-POLITIKASI.md)
 
-Güvenlik başlıkları `nitro.config.ts` içindeki route kurallarıyla eklenir; bu nedenle her iki Nitro presetinde de geçerlidir. Derleme sonrası `.vercel/output/config.json` içinde başlıkların bulunduğu doğrulanabilir.
+## Platformlar
 
-`npm run build` / `npm start` komutları workerd tabanlı yerel çalıştırma hattını kullanır; o hatta başlıklar `worker/index.ts` üzerinden eklenir.
+Web tarayıcısı · Android · iOS
 
-## Android yayını (Google Play)
+> Uygulama henüz Google Play ve App Store'da yayında değil.
 
-### 1. Yükleme anahtarı
+## Sağlık uyarısı
 
-Anahtar deposu **repoya girmez** ve kaybedilirse aynı uygulamaya bir daha
-güncelleme yayınlanamaz — güvenli bir yerde yedekleyin.
+form.ai tıbbi bir cihaz değildir. Ürettiği plan, kalori hedefi ve
+değerlendirmeler tıbbi teşhis, tedavi veya beslenme reçetesi yerine geçmez.
+Hamilelik, emzirme, yeme bozukluğu öyküsü, diyabet, kalp veya böbrek
+rahatsızlığı gibi durumlarda uygulamayı kullanmadan önce bir sağlık uzmanına
+danışın. Antrenman sırasında keskin ağrı, göğüs ağrısı veya baş dönmesi
+yaşarsanız durun ve hekime başvurun.
 
-```bash
-keytool -genkeypair -v -keystore fitai-upload.jks -keyalg RSA -keysize 2048 \
-        -validity 10000 -alias fitai-upload
-```
+<br>
 
-`android/keystore.properties.example` dosyasını `keystore.properties` olarak
-kopyalayıp doldurun (`.gitignore`'dadır). CI için alternatif olarak
-`FITAI_KEYSTORE_FILE`, `FITAI_KEYSTORE_PASSWORD`, `FITAI_KEY_ALIAS`,
-`FITAI_KEY_PASSWORD` ortam değişkenleri kullanılabilir. İmzalama
-yapılandırılmadan `bundleRelease` bilinçli olarak durur.
+---
 
-### 2. Üretim adresi
+<div align="center">
 
-Capacitor kabuğu WebView'i `capacitor.config.ts` içindeki adrese yönlendirir ve
-bu adres **pakete gömülür**. Yayın derlemelerinde açıkça verilmesi zorunludur:
+<img src="store-assets/play-icon-512.png" alt="form.ai" width="112" height="112">
 
-```bash
-CAPACITOR_RELEASE=1 CAPACITOR_SERVER_URL=https://app.alanadiniz.com npx cap sync android
-```
+# form.ai — your AI trainer that adapts to you
 
-### 3. Paket üretimi
+Stop writing your own program. form.ai reads your profile, your equipment and
+the feedback you give after every session, then adjusts the plan itself.
 
-```bash
-export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
-cd android && ./gradlew bundleRelease
-# çıktı: android/app/build/outputs/bundle/release/app-release.aab
-```
+[Türkçe](#formai) · **English**
 
-Play yalnızca `.aab` kabul eder. Her yüklemede `android/app/build.gradle`
-içindeki `versionCode` artırılmalıdır.
+</div>
 
-### 4. Görsel varlıklar
+---
 
-```bash
-node scripts/generate-android-assets.mjs
-```
+## What is it?
 
-Launcher ikonları, splash ve mağaza görselleri marka renklerinden (`#d9f76b` /
-`#1d1d1b`) yeniden üretilir. Mağaza varlıkları `store-assets/` altındadır.
+Most fitness apps hand you a fixed program and leave the rest to you. form.ai
+does the opposite: it gets to know you on day one, then **listens after every
+workout**. Too hard, and it backs the load off. Too easy, and it pushes. Report
+pain somewhere, and it routes around that area.
 
-### 5. Play Console
+There's a nutrition side too — log what you eat by photographing it, scanning
+the barcode, or simply typing it out.
 
-Gizlilik politikası taslağı ve veri güvenliği formu cevapları için
-`store-assets/GIZLILIK-POLITIKASI.md` ve `store-assets/PLAY-CONSOLE-NOTLARI.md`.
+## Highlights
 
-## Güvenlik (OWASP Top 10)
+### A program built for you, and rebuilt as you go
+Your age, height, weight, goal, training place (home/gym) and available
+equipment shape the initial plan. It doesn't stay fixed: the "how did that
+feel?" question after each session drives automatic changes to sets, reps and
+rest.
 
-- **A01 – Erişim kontrolü**: AI ve beslenme uç noktalarının tamamı Supabase erişim jetonu ister (`lib/api-auth.ts`); jeton doğrulanır ve e-posta doğrulaması aranır. Tüm veritabanı tabloları RLS ile korunur. Hesap silme ayrıca onay ifadesi ve e-posta eşleşmesi gerektirir.
-- **A02 – Kriptografik hatalar**: Gizli anahtarlar (`SUPABASE_SECRET_KEY`, `AI_API_KEY`) yalnızca sunucuda kullanılır; istemci paketine hiçbir gizli değer girmez. HSTS zorunludur.
-- **A03 – Enjeksiyon**: Veritabanı erişimi parametreli Supabase istemcisi üzerindendir. Kullanıcı girdisi uzunluk ve tip olarak sınırlandırılır; barkod yalnızca rakama indirgenir. Uygulamada `innerHTML` ile kullanıcı içeriği basılmaz.
-- **A04 – Güvensiz tasarım**: Tüm uç noktalarda hız sınırı vardır (`lib/rate-limit.ts`) — plan üretimi 5/5dk, sohbet 20/dk, beslenme 15–40/dk. Sayaç örnek belleğinde tutulur; çok örnekli dağıtımda üst sınır örnek başınadır.
-- **A05 – Hatalı yapılandırma**: CSP, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, HSTS ve COOP tüm yanıtlara eklenir. Başlık tanımı tek kaynaktadır (`lib/security-headers.ts`) ve her dağıtım hattında uygulanır: Nitro (Vercel/Dokploy) için `nitro.config.ts` route kuralları, workerd hattı için `worker/index.ts`. API yanıtları `no-store`; `X-Powered-By` kapalıdır.
-- **A06 – Güncel olmayan bileşenler**: `npm audit` ile izlenir; `undici`, `postcss` ve `sharp` için yamalı sürümler `package.json > overrides` ile zorlanır.
-- **A07 – Kimlik doğrulama hataları**: Doğrulama ve şifre sıfırlama tek kullanımlık OTP koduyla; şifre en az 8 karakter; doğrulanmamış hesap uygulamaya alınmaz.
-- **A08 – Veri bütünlüğü**: AI yanıtları şema ile doğrulanır ve her egzersiz kimliği yerel katalogda kontrol edilir; doğrulanamayan içerik kullanıcıya gösterilmez.
-- **A10 – SSRF**: Dış çağrılar yalnızca sabit alan adlarına (`AI_BASE_URL`, Open Food Facts) yapılır; kullanıcı girdisi URL ana bilgisayarını belirleyemez.
+### Workout player
+Set and rest timers, weight · reps · effort logging. It reads your last
+performance to suggest a safe next step — and **refuses to raise the load** if
+you reported pain or high fatigue.
 
-Bilinen kabul edilen risk: `shadcn` CLI aracından gelen 3 orta seviye uyarı, yalnızca geliştirme aracını etkiler ve çalışma zamanı paketine girmez; düzeltmesi büyük sürüm düşürme gerektirdiği için uygulanmamıştır.
+### 106 exercises, all animated
+Local animation frames showing how each move is performed, filters by muscle
+group and equipment, exercise and muscle names in both languages.
 
-## Egzersiz veri tabanı
+### Calorie tracking, three ways
+- **Photo** — snap your plate, let the AI identify the meal and estimate
+  portion size and macros
+- **Barcode** — scan the package; barcodes are decoded entirely **on your device**
+- **Text** — type "a bowl of lentil soup" and let it do the math
 
-Exercise data source:
-https://github.com/yuhonas/free-exercise-db
+Plus a built-in catalog of 309 foods: Turkish and European dishes, fast food,
+snacks, drinks and desserts.
 
-Uygulama, `free-exercise-db` veri setinden öncelikli kas gruplarını kapsayan seçilmiş bir alt küme kullanır. Kaynak veri kullanıcı arayüzüne doğrudan verilmez; `lib/exercise-service.ts` içindeki normalize katmanı kimlik, metin, dizi ve yerel görsel yollarını doğrular.
+### Watch yourself progress
+Body measurements with trend charts, personal records via estimated 1RM, daily
+streaks, activity logging for running, walking, cycling and swimming, and a
+weekly AI review.
 
-- Normalize veri: `data/exercises.json`
-- Kaynak lisansı: `data/FREE_EXERCISE_DB_LICENSE.md`
-- Yerel görseller: `public/exercise-images/<exercise-id>/`
-- TypeScript modeli: `types/exercise.ts`
-- İçe aktarma aracı: `scripts/import-free-exercise-db.mjs`
-- Liste API'si: `GET /api/exercises`
-- Detay API'si: `GET /api/exercises/:id`
+### AI coach chat
+Ask about your program, a specific movement, or your nutrition. The coach
+answers knowing your profile and your plan.
 
-Liste API'si `search`, `muscle`, `equipment`, `level`, `category`, `page` ve `limit` parametrelerini destekler. `limit` en fazla 48 olabilir.
+### Details
+Light and dark themes · kg/lb preference · workout calendar and reminders ·
+Turkish and English · export all your data as a single JSON file
 
-### Veri setini güncelleme
+## Plans
 
-```bash
-npm run data:import-exercises
-```
+| | Free | Premium |
+|---|---|---|
+| Training plan, player, exercise library | ✔ | ✔ |
+| Calorie tracking, barcode, food catalog | ✔ | ✔ |
+| Measurements, records, streaks, calendar | ✔ | ✔ |
+| AI coach chat | 5 questions/day | 15 questions/day |
+| Add food by photo | 5 photos/day | 10 photos/day |
 
-Bu komut kaynak JSON'u ve lisansı indirir, hedef kas gruplarından deterministik bir alt küme seçer, ilk iki hareket karesini yerel statik klasöre kopyalar ve normalize JSON'u yeniden üretir. Değişiklikten sonra `npm test` ve `npm run lint` çalıştırılmalıdır.
+Barcode scanning and catalog search use no AI — they are **unlimited**.
 
-### Yeni egzersiz ekleme
+## Your privacy
 
-Kalıcı bir kaynak egzersiz eklemek için `scripts/import-free-exercise-db.mjs` içindeki kas/kota seçimini güncelleyin ve içe aktarma komutunu çalıştırın. Elle ekleme gerekiyorsa kayıt `Exercise` tipine uymalı, kimliği yalnızca harf/rakam/alt çizgi/tire içermeli ve görseller `/exercise-images/<id>/<dosya>` altında bulunmalıdır.
+- **Barcodes never leave your device.** Scanning is fully local; no image is sent anywhere.
+- **Meal photos aren't stored.** Only the result (name, grams, macros) is saved.
+- **No location collected.** The app requests no GPS permission.
+- **No ads.** There is no ad SDK in the project, and your data is never used for advertising.
+- **The account is yours.** Freeze it, export everything, reset your progress, or
+  delete it permanently — all from inside the app.
 
-## Hareket simülasyonu
+Details: [Privacy Policy](store-assets/GIZLILIK-POLITIKASI.md) (Turkish)
 
-Görsel tabanlı hareket simülasyonları (`components/exercises/ExerciseAnimation.tsx`) ve CSS tabanlı anatomik çizimler (`app/page.tsx` altındaki `MotionFigureAnimation`) performans odaklı çalışır:
+## Platforms
 
-- **Seçici Yükleme ve Ön-Render (Pre-rendering)**: Hareket simülasyonu aktifken tüm kareler DOM üzerinde mutlak konumlandırma (absolute positioning) ile üst üste yerleştirilir ve görünürlükleri `opacity` ile yönetilir. Bu sayede tarayıcı kareleri önceden indirip decode eder, kare geçişlerindeki titreme (flicker) ve sayfa kaymaları (layout shift) önlenir.
-- **Kaynak Tasarrufu**: Kart ekran dışında (viewport dışı) veya sekme arka plandayken yalnızca aktif/kapak karesi render edilerek gereksiz görsel indirmeleri ve bellek tüketimi engellenir.
-- **Akıllı Duraklatma**: Animasyon döngüleri (`setInterval`) yalnızca ilgili kart viewport sınırları içindeyken (Intersection Observer ile izlenir) ve tarayıcı sekmesi aktifken çalışır. Kullanıcı `prefers-reduced-motion` tercihine sahipse döngüler tamamen devre dışı bırakılır.
-- **Temizlik**: Bileşenler unmount edildiğinde tüm zamanlayıcılar (interval) ve gözlemciler (observer) bellek sızıntısını önlemek için temizlenir.
+Web browser · Android · iOS
 
-## AI kataloğu
+> Not yet published on Google Play or the App Store.
 
-`getExercisesForAI(filters)` yalnızca kimlik, ad, seviye, ekipman, kaslar ve kategori alanlarını döndürür. Görsel yolları ve uzun talimatlar modele gönderilmez. AI yanıtındaki her egzersiz kimliği yerel veri tabanında doğrulanır; bulunmayan kimlikler kullanıcıya gösterilmez.
+## Health notice
 
-## Lisans
+form.ai is not a medical device. The plans, calorie targets and reviews it
+produces are not a substitute for medical diagnosis, treatment or a prescribed
+diet. If you are pregnant or breastfeeding, have a history of eating disorders,
+or live with diabetes, heart or kidney conditions, consult a health
+professional before using it. Stop and seek medical help if you experience
+sharp pain, chest pain or dizziness while training.
 
-`free-exercise-db` Unlicense ile kamu malı olarak yayımlanmıştır. Kaynaktan alınan lisans metni `data/FREE_EXERCISE_DB_LICENSE.md` içinde korunur. Veri ve görseller “olduğu gibi” sunulur; uygulamanın kendi kod lisansı bundan bağımsızdır.
+<br>
+
+---
+
+<div align="center">
+
+**Geliştirici misin?** Kurulum, mimari ve dağıtım için → [docs/GELISTIRME.md](docs/GELISTIRME.md)<br>
+**Building on this?** Setup, architecture and deployment → [docs/GELISTIRME.md](docs/GELISTIRME.md)
+
+<sub>Hareket verisi <a href="https://github.com/yuhonas/free-exercise-db">free-exercise-db</a> (Unlicense) kaynağından türetilmiştir.</sub>
+
+</div>

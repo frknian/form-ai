@@ -263,11 +263,15 @@ test("mobil üst menü yatay kayar ve seçili bölümü görünür tutar", async
 });
 
 test("veritabanı kurulum sırası belgelenmiştir", async () => {
+  // README uygulama tanıtımıdır; kurulum/geliştirme belgeleri docs/GELISTIRME.md'dedir.
+  const guide = await readFile(new URL("../docs/GELISTIRME.md", import.meta.url), "utf8");
   const readme = await readFile(new URL("../README.md", import.meta.url), "utf8");
   const schema = await readFile(new URL("../db/supabase-schema.sql", import.meta.url), "utf8");
   // profile_history yalnızca migration'da tanımlı; yalnız temel şemayı çalıştıran
-  // biri eksik veritabanı elde eder, bu yüzden sıra README'de yazmalı.
+  // biri eksik veritabanı elde eder, bu yüzden sıra belgede yazmalı.
   assert.doesNotMatch(schema, /create table if not exists public\.profile_history/);
-  assert.match(readme, /## Veritabanı kurulumu/);
-  assert.match(readme, /db\/migrations/);
+  assert.match(guide, /## Veritabanı kurulumu/);
+  assert.match(guide, /db\/migrations/);
+  // Tanıtım sayfasından rehbere ulaşılabilmeli, yoksa belge fiilen kaybolur.
+  assert.match(readme, /docs\/GELISTIRME\.md/);
 });
