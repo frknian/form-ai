@@ -13,8 +13,50 @@ import { isValidBirthDate } from "@/lib/profile";
 type AuthMode = "signup" | "login" | "reset";
 type AuthStep = "form" | "verify";
 
+type GoogleCredentialResponse = { credential?: string };
+type GooglePromptMomentNotification = { isNotDisplayed: () => boolean; isSkippedMoment: () => boolean };
+type GoogleIdentityApi = {
+  accounts: {
+    id: {
+      initialize: (options: { client_id: string; nonce: string; use_fedcm_for_prompt: boolean; callback: (response: GoogleCredentialResponse) => void }) => void;
+      prompt: (listener?: (notification: GooglePromptMomentNotification) => void) => void;
+    };
+  };
+};
+
+declare global {
+  interface Window {
+    google?: GoogleIdentityApi;
+  }
+}
+
 function callbackUrl() {
   return authCallbackUrl();
+}
+
+function loadGoogleIdentity(): Promise<GoogleIdentityApi> {
+  if (window.google) return Promise.resolve(window.google);
+  return new Promise((resolve, reject) => {
+    const existing = document.getElementById("google-identity-services") as HTMLScriptElement | null;
+    const script = existing || document.createElement("script");
+    const complete = () => window.google ? resolve(window.google) : reject(new Error("Google giriş hizmeti başlatılamadı."));
+    script.addEventListener("load", complete, { once: true });
+    script.addEventListener("error", () => reject(new Error("Google giriş hizmeti yüklenemedi.")), { once: true });
+    if (!existing) {
+      script.id = "google-identity-services";
+      script.src = "https://accounts.google.com/gsi/client";
+      script.async = true;
+      document.head.appendChild(script);
+    }
+  });
+}
+
+async function createGoogleNonce() {
+  const bytes = crypto.getRandomValues(new Uint8Array(32));
+  const nonce = btoa(String.fromCharCode(...bytes));
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(nonce));
+  const hashedNonce = [...new Uint8Array(digest)].map((value) => value.toString(16).padStart(2, "0")).join("");
+  return { nonce, hashedNonce };
 }
 
 // Google'ın marka kılavuzundaki dört renkli "G" işareti; CSP harici kaynak
@@ -173,6 +215,49 @@ export function AuthScreen({ status, onSignedIn }: { status: "loading" | "anonym
     }
     setBusy(true);
     const native = isNativeApp();
+    const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    if (!native && googleClientId) {
+      try {
+        const google = await loadGoogleIdentity();
+        const { nonce, hashedNonce } = await createGoogleNonce();
+        await new Promise<void>((resolve, reject) => {
+          let completed = false;
+          google.accounts.id.initialize({
+            client_id: googleClientId,
+            nonce: hashedNonce,
+            use_fedcm_for_prompt: true,
+            callback: async (response) => {
+              if (!response.credential) {
+                reject(new Error("Google kimlik bilgisi alınamadı."));
+                return;
+              }
+              const { data, error: tokenError } = await supabase.auth.signInWithIdToken({ provider: "google", token: response.credential, nonce });
+              if (tokenError) {
+                reject(tokenError);
+                return;
+              }
+              if (!isVerifiedAuthUser(data.user)) {
+                reject(new Error("Google hesabının e-posta doğrulaması alınamadı."));
+                return;
+              }
+              completed = true;
+              onSignedIn(data.user);
+              resolve();
+            },
+          });
+          google.accounts.id.prompt((notification) => {
+            if (!completed && (notification.isNotDisplayed() || notification.isSkippedMoment())) {
+              reject(new Error("Google giriş penceresi gösterilemedi."));
+            }
+          });
+        });
+      } catch (authError) {
+        setError(friendlyAuthError(authError instanceof Error ? authError.message : "", t.auth));
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
     const { data, error: googleError } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: callbackUrl(), skipBrowserRedirect: native, queryParams: { access_type: "offline", prompt: "consent" } },
