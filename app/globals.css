@@ -811,7 +811,14 @@ button,input { font:inherit; } button { cursor:pointer; }
 .google-auth-button:focus-visible { outline:2px solid #4285F4; outline-offset:2px; }
 .google-auth-button:disabled { opacity:.55; cursor:not-allowed; }
 .google-mark { flex:0 0 18px; }
+.google-identity-button { position:relative; display:grid; width:100%; min-height:44px; place-items:center; overflow:hidden; border:1px solid var(--line); border-radius:10px; background:#fff; color:#777; font-size:11px; }
+.google-identity-button > div { width:100%; min-height:42px; }
+.google-identity-button iframe { width:100% !important; }
+.google-identity-button > span { position:absolute; inset:0; display:grid; place-items:center; pointer-events:none; }
+.google-identity-button.ready { border-color:transparent; }
+.google-identity-button.ready > span { display:none; }
 .dark .google-auth-button { border-color:#3d4043; background:#1f2023; color:#e3e3e3; }
+.dark .google-identity-button { border-color:#3d4043; background:#1f2023; color:#aaa; }
 .dark .google-auth-button:hover:not(:disabled) { background:#282a2d; border-color:#5f6368; box-shadow:0 1px 3px rgba(0,0,0,.4); }
 .auth-divider { display:flex; align-items:center; gap:12px; margin:19px 0; color:#aaa; font-size:9px; text-transform:uppercase; letter-spacing:1px; }
 .auth-divider::before,.auth-divider::after { content:""; flex:1; height:1px; background:var(--line); }

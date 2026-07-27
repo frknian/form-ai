@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useEffectEvent, useRef, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { isVerifiedAuthUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/client";
@@ -14,12 +14,11 @@ type AuthMode = "signup" | "login" | "reset";
 type AuthStep = "form" | "verify";
 
 type GoogleCredentialResponse = { credential?: string };
-type GooglePromptMomentNotification = { isNotDisplayed: () => boolean; isSkippedMoment: () => boolean };
 type GoogleIdentityApi = {
   accounts: {
     id: {
       initialize: (options: { client_id: string; nonce: string; use_fedcm_for_prompt: boolean; callback: (response: GoogleCredentialResponse) => void }) => void;
-      prompt: (listener?: (notification: GooglePromptMomentNotification) => void) => void;
+      renderButton: (parent: HTMLElement, options: { type: "standard"; theme: "outline"; size: "large"; text: "continue_with"; shape: "rectangular"; width: number }) => void;
     };
   };
 };
@@ -99,9 +98,88 @@ export function AuthScreen({ status, onSignedIn }: { status: "loading" | "anonym
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [googleButtonReady, setGoogleButtonReady] = useState(false);
+  const googleButtonRef = useRef<HTMLDivElement>(null);
+  const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+  const usesGoogleIdentityButton = !isNativeApp() && Boolean(googleClientId);
+
+  const completeGoogleSignIn = useEffectEvent(async (response: GoogleCredentialResponse, nonce: string) => {
+    if (!response.credential) {
+      setError(friendlyAuthError("Google kimlik bilgisi alınamadı.", t.auth));
+      return;
+    }
+    const supabase = createClient();
+    if (!supabase) {
+      setError(t.auth.errorServiceUnavailable);
+      return;
+    }
+    setBusy(true);
+    setError("");
+    try {
+      const { data, error: tokenError } = await supabase.auth.signInWithIdToken({
+        provider: "google",
+        token: response.credential,
+        nonce,
+      });
+      if (tokenError) throw tokenError;
+      if (!isVerifiedAuthUser(data.user)) throw new Error("Google hesabının e-posta doğrulaması alınamadı.");
+      onSignedIn(data.user);
+    } catch (authError) {
+      setError(friendlyAuthError(authError instanceof Error ? authError.message : "", t.auth));
+    } finally {
+      setBusy(false);
+    }
+  });
+
+  const reportGoogleSetupError = useEffectEvent((authError: unknown) => {
+    setGoogleButtonReady(false);
+    setError(friendlyAuthError(authError instanceof Error ? authError.message : "", t.auth));
+  });
+
+  useEffect(() => {
+    if (!usesGoogleIdentityButton || !googleClientId || status === "unavailable" || mode === "reset") {
+      return;
+    }
+    let active = true;
+    const container = googleButtonRef.current;
+    if (!container) return;
+    container.replaceChildren();
+
+    void Promise.all([loadGoogleIdentity(), createGoogleNonce()])
+      .then(([google, { nonce, hashedNonce }]) => {
+        if (!active) return;
+        google.accounts.id.initialize({
+          client_id: googleClientId,
+          nonce: hashedNonce,
+          use_fedcm_for_prompt: true,
+          callback: (response) => {
+            if (active) void completeGoogleSignIn(response, nonce);
+          },
+        });
+        google.accounts.id.renderButton(container, {
+          type: "standard",
+          theme: "outline",
+          size: "large",
+          text: "continue_with",
+          shape: "rectangular",
+          width: Math.max(240, Math.round(container.getBoundingClientRect().width)),
+        });
+        setGoogleButtonReady(true);
+      })
+      .catch((authError) => {
+        if (!active) return;
+        reportGoogleSetupError(authError);
+      });
+
+    return () => {
+      active = false;
+      container.replaceChildren();
+    };
+  }, [googleClientId, mode, status, usesGoogleIdentityButton]);
 
   function changeMode(nextMode: AuthMode) {
     setMode(nextMode);
+    setGoogleButtonReady(false);
     setStep("form");
     setError("");
     setNotice("");
@@ -221,49 +299,6 @@ export function AuthScreen({ status, onSignedIn }: { status: "loading" | "anonym
     }
     setBusy(true);
     const native = isNativeApp();
-    const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-    if (!native && googleClientId) {
-      try {
-        const google = await loadGoogleIdentity();
-        const { nonce, hashedNonce } = await createGoogleNonce();
-        await new Promise<void>((resolve, reject) => {
-          let completed = false;
-          google.accounts.id.initialize({
-            client_id: googleClientId,
-            nonce: hashedNonce,
-            use_fedcm_for_prompt: true,
-            callback: async (response) => {
-              if (!response.credential) {
-                reject(new Error("Google kimlik bilgisi alınamadı."));
-                return;
-              }
-              const { data, error: tokenError } = await supabase.auth.signInWithIdToken({ provider: "google", token: response.credential, nonce });
-              if (tokenError) {
-                reject(tokenError);
-                return;
-              }
-              if (!isVerifiedAuthUser(data.user)) {
-                reject(new Error("Google hesabının e-posta doğrulaması alınamadı."));
-                return;
-              }
-              completed = true;
-              onSignedIn(data.user);
-              resolve();
-            },
-          });
-          google.accounts.id.prompt((notification) => {
-            if (!completed && (notification.isNotDisplayed() || notification.isSkippedMoment())) {
-              reject(new Error("Google giriş penceresi gösterilemedi."));
-            }
-          });
-        });
-      } catch (authError) {
-        setError(friendlyAuthError(authError instanceof Error ? authError.message : "", t.auth));
-      } finally {
-        setBusy(false);
-      }
-      return;
-    }
     const { data, error: googleError } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: callbackUrl(), skipBrowserRedirect: native, queryParams: { access_type: "offline", prompt: "consent" } },
@@ -372,7 +407,14 @@ export function AuthScreen({ status, onSignedIn }: { status: "loading" | "anonym
           {step === "form" ? (
             <>
               {mode !== "reset" && <>
-                <button type="button" className="google-auth-button" onClick={() => void handleGoogleSignIn()} disabled={busy || status === "unavailable"}><GoogleMark /> {t.auth.googleButton}</button>
+                {usesGoogleIdentityButton ? (
+                  <div className={`google-identity-button${googleButtonReady ? " ready" : ""}`} aria-label={t.auth.googleButton}>
+                    <div ref={googleButtonRef} />
+                    {!googleButtonReady && <span>{t.auth.submitBusy}</span>}
+                  </div>
+                ) : (
+                  <button type="button" className="google-auth-button" onClick={() => void handleGoogleSignIn()} disabled={busy || status === "unavailable"}><GoogleMark /> {t.auth.googleButton}</button>
+                )}
                 <div className="auth-divider"><span>{t.auth.dividerText}</span></div>
               </>}
               <form className="auth-form" onSubmit={handleEmailAuth}>
