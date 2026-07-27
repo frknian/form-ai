@@ -73,12 +73,18 @@ function GoogleMark() {
 function friendlyAuthError(message: string, copy: Dictionary["auth"]) {
   const normalized = message.toLocaleLowerCase("en-US");
   if (normalized.includes("invalid login credentials")) return copy.errorInvalidCredentials;
+  if (normalized.includes("email_address_invalid") || normalized.includes("invalid email") || normalized.includes("unable to validate email")) return copy.errorInvalidEmail;
   if (normalized.includes("email not confirmed")) return copy.errorEmailNotConfirmed;
   if (normalized.includes("token has expired") || normalized.includes("otp_expired") || normalized.includes("invalid token") || normalized.includes("token is invalid")) return copy.errorTokenExpired;
   if (normalized.includes("user already registered") || normalized.includes("already been registered")) return copy.errorAlreadyRegistered;
+  if (normalized.includes("weak_password") || normalized.includes("password is known to be weak") || normalized.includes("password should contain")) return copy.errorWeakPassword;
   if (normalized.includes("password should be")) return copy.errorPasswordTooShort;
+  if (normalized.includes("error sending confirmation email") || normalized.includes("email_send_failed") || normalized.includes("smtp")) return copy.errorEmailDelivery;
+  if (normalized.includes("signup_disabled") || normalized.includes("signups not allowed") || normalized.includes("signup is disabled")) return copy.errorSignupDisabled;
+  if (normalized.includes("database error saving new user") || normalized.includes("unexpected_failure")) return copy.errorSignupDatabase;
   if (normalized.includes("rate limit")) return copy.errorRateLimit;
-  return copy.errorGeneric;
+  const safeDetail = message.replace(/\s+/g, " ").trim().slice(0, 160);
+  return safeDetail ? copy.errorGenericWithDetail(safeDetail) : copy.errorGeneric;
 }
 
 export function AuthScreen({ status, onSignedIn }: { status: "loading" | "anonymous" | "unavailable"; onSignedIn: (user: User) => void }) {
