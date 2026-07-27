@@ -1,5 +1,5 @@
 import { jsonSchema } from "ai";
-import { extractSessionMinutes } from "../../../lib/training-profile.ts";
+import { extractSessionMinutes, extractWeeklyDays } from "../../../lib/training-profile.ts";
 import { authenticateRequest } from "../../../lib/api-auth.ts";
 import { rateLimit, tooManyRequests } from "../../../lib/rate-limit.ts";
 import { generateAiObject, hasAiProvider, aiModelId, parseImageDataUrl } from "../../../lib/ai-provider.ts";
@@ -99,7 +99,7 @@ export function profileSignals(payload: Record<string, unknown>) {
   const goal = `${history[4] || ""} ${text(payload.goal)}`.toLocaleLowerCase("tr-TR");
   const primaryGoal = goal.includes("kilo") || goal.includes("yağ") ? "Kilo verme" : goal.includes("kas") ? "Kas geliştirme" : goal.includes("kondisyon") ? "Kondisyon" : "Güçlenme";
   const frequencyText = history[1] || "1–2 gün";
-  const weeklyDays = frequencyText.includes("5+") ? 5 : frequencyText.includes("3–4") ? 3 : frequencyText.includes("0") ? 2 : 2;
+  const weeklyDays = extractWeeklyDays(frequencyText);
   const beginner = /yeni|hayır|0 gün/i.test(`${experience} ${history[0] || ""}`);
   const intensity = beginner || history[7] === "Düşük" ? "Düşük-orta" : primaryGoal === "Kondisyon" ? "Orta-yüksek" : "Orta";
   const exerciseCount = sessionMinutes <= 15 ? 3 : sessionMinutes >= 60 ? 6 : sessionMinutes >= 45 ? 5 : 4;

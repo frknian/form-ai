@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
+import { ChangeEvent, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import Image from "next/image";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
@@ -23,12 +23,13 @@ import { WeeklyAiReview } from "@/components/WeeklyAiReview";
 import { WorkoutSetLogger } from "@/components/WorkoutSetLogger";
 import { MobileRuntime } from "@/components/MobileRuntime";
 import { PlanEditor } from "@/components/PlanEditor";
+import { GoalForecast } from "@/components/GoalForecast";
 import { FrozenAccountScreen, ProfileManager } from "@/components/ProfileManager";
 import { TrainingPlaceSwitch } from "@/components/TrainingPlaceSwitch";
 import { getExerciseById, getExercisesForAI } from "@/lib/exercise-service";
 import { trustedExerciseMedia } from "@/lib/trusted-exercise-media";
 import { translateExerciseLabel, turkishExerciseInstructions } from "@/lib/exercise-translations";
-import { extractSessionMinutes, planProgressionBlock } from "@/lib/training-profile";
+import { extractSessionMinutes, extractWeeklyDays, planProgressionBlock } from "@/lib/training-profile";
 import { buildCompletedExerciseLog, createWorkoutSetDrafts, exerciseLogKey, type CompletedExerciseLog, type PreviousExercisePerformance, type WorkoutSetDraft } from "@/lib/workout-log";
 import { localTimeKey } from "@/lib/workout-calendar";
 import { localDateKey } from "@/lib/streak";
@@ -256,7 +257,15 @@ const additionalExerciseLibrary = additionalExerciseDefinitions.map(([name, engl
 
 const exerciseLibrary = [...coreExerciseLibrary, ...additionalExerciseLibrary];
 
-function createPersonalPlan(gym: string, equipmentText: string, history: string[], goalText: string, requestedExercises = "", completedSessions = 0) {
+/** Bugünün gün numarası; planın her gün yenilenmesi için döndürme anahtarı. */
+export function planDayIndex(now = new Date()) {
+  return Math.floor(now.getTime() / 86_400_000);
+}
+
+/** Gün numarası oturum içinde değişmez; useSyncExternalStore için boş abonelik. */
+const subscribeToNothing = () => () => {};
+
+function createPersonalPlan(gym: string, equipmentText: string, history: string[], goalText: string, requestedExercises = "", completedSessions = 0, dayIndex = 0) {
   const profileText = `${equipmentText} ${goalText} ${requestedExercises} ${history.join(" ")}`.toLowerCase();
   const goal = profileText.includes("kilo") || profileText.includes("yağ") ? "kilo" : profileText.includes("kas") ? "kas" : profileText.includes("kondisyon") ? "kondisyon" : "güç";
   const isBeginner = history[2] === "Yeni başlıyorum" || !history[2];
@@ -264,6 +273,7 @@ function createPersonalPlan(gym: string, equipmentText: string, history: string[
   const equipment = equipmentText.toLowerCase();
   const durationText = history[3] || goalText.match(/(15|30|45|60)/)?.[1] || "30";
   const duration = extractSessionMinutes(durationText);
+  const weeklyDays = extractWeeklyDays(history[1]);
   const pain = history[6]?.toLowerCase() || "";
   const matchesEquipment = (item: typeof exerciseLibrary[number]) => wantsGym || item.bodyweight || item.requires.some((requirement) => equipment.includes(requirement));
   const avoidKneeLoad = pain.includes("diz");
@@ -277,9 +287,20 @@ function createPersonalPlan(gym: string, equipmentText: string, history: string[
   // hareketleri güvenli oldukları sürece plana öncelikli olarak dahil et.
   const ownsHomeEquipment = !wantsGym && equipment.trim().length > 0;
   const equipmentItems = ownsHomeEquipment ? exerciseLibrary.filter((item) => !item.bodyweight && safeForPain(item) && item.requires.some((requirement) => equipment.includes(requirement))) : [];
-  const score = (name: string) => [...name].reduce((total, character) => total + character.charCodeAt(0), seed) % 997;
-  const priority = (item: typeof exerciseLibrary[number]) => requestedItems.includes(item) ? 0 : equipmentItems.includes(item) ? 1 : 2;
-  const chosen = [...requestedItems, ...equipmentItems, ...goalItems, ...fallback].filter((item, index, list) => list.findIndex((candidate) => candidate.name === item.name) === index).sort((a, b) => priority(a) - priority(b) || score(a.name) - score(b.name)).slice(0, duration <= 15 ? 3 : duration >= 60 ? 6 : 5);
+  // Gün numarası skora karışır: kullanıcının özellikle istediği ve ekipmanına
+  // özel hareketler (öncelik 0/1) sabit kalırken, kalan slotlar her gün dönerek
+  // programı tekdüzelikten çıkarır.
+  const score = (name: string) => [...name].reduce((total, character) => total + character.charCodeAt(0), seed + dayIndex * 131) % 997;
+  // Hazır programlardaki hareketler en sona itilir; aksi halde kişisel plan ile
+  // "hemen başla" şablonları neredeyse aynı listeyi gösteriyordu.
+  const priority = (item: typeof exerciseLibrary[number]) => requestedItems.includes(item) ? 0 : equipmentItems.includes(item) ? 1 : READY_PROGRAM_NAMES.has(item.name) ? 3 : 2;
+  // Hareket sayısı süreye göre belirlenir, haftalık sıklıkla dengelenir: haftada
+  // 5+ gün çalışan biri seans başına daha az hareketle toplam hacmi yayar, haftada
+  // 1-2 gün çalışan biri ise daha dolu seanslara ihtiyaç duyar.
+  const baseCount = duration <= 15 ? 3 : duration >= 60 ? 6 : 5;
+  const frequencyAdjustment = weeklyDays >= 5 ? -1 : weeklyDays <= 2 ? 1 : 0;
+  const exerciseCount = Math.min(7, Math.max(3, baseCount + frequencyAdjustment));
+  const chosen = [...requestedItems, ...equipmentItems, ...goalItems, ...fallback].filter((item, index, list) => list.findIndex((candidate) => candidate.name === item.name) === index).sort((a, b) => priority(a) - priority(b) || score(a.name) - score(b.name)).slice(0, exerciseCount);
   const block = planProgressionBlock(completedSessions);
   const baseSets = isBeginner ? (duration <= 15 ? 2 : 3) : duration >= 60 ? 4 : 3;
   const baseReps = goal === "kondisyon" || goal === "kilo" ? (isBeginner ? 10 : 14) : isBeginner ? 10 : 8;
@@ -623,11 +644,17 @@ function LibraryView({ onOpenWorkout, onAddWorkout }: { onOpenWorkout: (exercise
   return <ExerciseLibrary onOpenWorkout={(exercise) => onOpenWorkout(databaseExerciseAsWorkout(exercise))} onAddWorkout={(exercise) => onAddWorkout(databaseExerciseAsWorkout(exercise))} />;
 }
 
+// Hazır programlar sabit, herkese aynı gelen "hemen başla" şablonlarıdır ve
+// üçü de 5 hareketten oluşur. Kişisel plan bunlardan farklı olmalı: aynı
+// hareketleri seçerse iki seçenek birbirinin kopyası gibi görünür. Bu yüzden
+// createPersonalPlan aşağıdaki isimleri son sıraya iter (bkz. READY_PROGRAM_NAMES).
 const readyPrograms = [
-  { id: "equipmentFree" as const, title: "Ekipmansız başlangıç", detail: "15 dk · Evde", names: ["Şınav", "Glute Bridge", "Dead Bug"] },
-  { id: "dumbbell" as const, title: "Dumbbell ile güç", detail: "30 dk · Evde", names: ["Goblet Squat", "Dambıl Row", "Dambıl Omuz Press", "Plank"] },
-  { id: "gym" as const, title: "Salon full body", detail: "45 dk · Spor salonu", names: ["Leg Press", "Lat Pulldown", "Dambıl Omuz Press", "Reverse Lunge", "Plank"] },
+  { id: "equipmentFree" as const, title: "Ekipmansız başlangıç", detail: "15 dk · Evde", names: ["Şınav", "Glute Bridge", "Dead Bug", "Reverse Lunge", "Plank"] },
+  { id: "dumbbell" as const, title: "Dambıl ile güç", detail: "30 dk · Evde", names: ["Goblet Squat", "Dambıl Row", "Dambıl Omuz Press", "Yerde Dambıl Göğüs Presi", "Plank"] },
+  { id: "gym" as const, title: "Salon full body", detail: "45 dk · Spor salonu", names: ["Leg Press", "Lat Pulldown", "Dambıl Omuz Press", "Bulgarian Split Squat", "Plank"] },
 ];
+
+const READY_PROGRAM_NAMES = new Set(readyPrograms.flatMap((program) => program.names));
 
 function readyProgramCopy(t: Dictionary, id: (typeof readyPrograms)[number]["id"]) {
   if (id === "equipmentFree") return { title: t.readyPrograms.equipmentFreeTitle, detail: t.readyPrograms.equipmentFreeDetail, tab: t.readyPrograms.equipmentFreeTab };
@@ -709,7 +736,13 @@ export default function Home() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [accountStatus, setAccountStatus] = useState<AccountStatus | "loading">("loading");
 
-  const localPlan = useMemo(() => createPersonalPlan(gym, equipmentText, history, goalText, requestedExercises, sessionHistory.length), [gym, equipmentText, history, goalText, requestedExercises, sessionHistory.length]);
+  // Sunucu anlık görüntüsü 0, istemcininki gerçek gün numarasıdır: doğrudan
+  // Date.now() okunsaydı sunucu ile istemci farklı plan üretip hydration
+  // uyuşmazlığı çıkarırdı. Gün içinde değişmediği için abone olunacak bir
+  // kaynak yok; getSnapshot sayı döndürdüğünden değer olarak karşılaştırılır.
+  const dayIndex = useSyncExternalStore(subscribeToNothing, planDayIndex, () => 0);
+
+  const localPlan = useMemo(() => createPersonalPlan(gym, equipmentText, history, goalText, requestedExercises, sessionHistory.length, dayIndex), [gym, equipmentText, history, goalText, requestedExercises, sessionHistory.length, dayIndex]);
   const adaptation = useMemo(() => summarizeTrainingAdaptation(sessionHistory), [sessionHistory]);
   const workouts = useMemo(() => adaptWorkoutsToHistory(aiWorkouts.length ? aiWorkouts : localPlan, adaptation, localPlan), [adaptation, aiWorkouts, localPlan]);
   const planExerciseOptions = useMemo(() => exerciseLibrary.filter((exercise) => isExerciseSafeForProfile(exercise, gym, equipmentText, history)).map((exercise) => ({ ...exercise, level: exercise.area, sets: `3 set · ${exercise.name === "Plank" || exercise.name === "Dead Bug" ? "30 sn" : "10 tekrar"}`, rest: "60 sn dinlenme", seconds: exercise.name === "Plank" || exercise.name === "Dead Bug" ? 30 : 45 })), [equipmentText, gym, history]);
@@ -1426,6 +1459,7 @@ export default function Home() {
           <div className="stats-row"><div><span>{t.dashboard.bmiLabel}</span><strong>{bmi}</strong><small>{t.dashboard.bmiHint}</small></div><div><span>{t.dashboard.goalLabel}</span><strong>{goalText ? t.dashboard.goalPersonal : t.dashboard.goalDefault}</strong><small>{t.dashboard.goalHint}</small></div><div><span>{t.dashboard.environmentLabel}</span><strong>{gym === "Salon" ? t.onboarding.gymLabel : t.onboarding.homeLabel}</strong><small>{equipmentText || t.dashboard.noEquipment}</small></div></div>
           <button type="button" className="activity-open" onClick={() => setActivityOpen(true)}><span className="activity-open-icon">🏃</span><span className="activity-open-text"><span className="eyebrow">{t.dashboard.activityEyebrow}</span><strong>{t.dashboard.activityTitle}</strong><small>{t.dashboard.activityBody}</small></span><span className="activity-open-cta">{t.dashboard.activityOpen} →</span></button>
           {activityOpen && <div className="activity-overlay" role="dialog" aria-modal="true" aria-label={t.dashboard.activityDialogLabel} onClick={(event) => { if (event.target === event.currentTarget) setActivityOpen(false); }}><div className="activity-modal"><button type="button" className="activity-modal-close" onClick={() => setActivityOpen(false)} aria-label={t.dashboard.activityCloseLabel}>×</button><ActivityLogger userId={authUser.id} weightKg={Number(weight) || 70} /></div></div>}
+          <GoalForecast userId={authUser?.id} currentWeightKg={Number(weight) || null} />
           <div className="wellness-row"><div className="wellness-card calorie-card"><div><span>{t.dashboard.todaysEnergy}</span><strong>{displayedSessionCalories} <small>kcal</small></strong><p>{t.dashboard.todaysEnergyBody}</p></div><div className="calorie-ring"><i>{displayedSessionCalories}</i></div><div className="calorie-note"><span>{t.dashboard.trackingLabel}</span><strong>{t.dashboard.trackingValue}</strong><small>{t.dashboard.trackingHint}</small></div></div></div>
           {energyMetrics && <div className="energy-dashboard"><article><span>{t.dashboard.bmrLabel}</span><strong>{energyMetrics.bmr} <small>kcal/gün</small></strong><p>{t.dashboard.bmrBody}</p></article><article><span>{t.dashboard.tdeeLabel}</span><strong>{energyMetrics.tdee} <small>kcal/gün</small></strong><p>{t.dashboard.tdeeBody(energyMetrics.activityLabel)}</p></article><div><strong>{t.dashboard.approxTitle}</strong><p>{t.dashboard.approxBody}</p></div></div>}</>}
           </>}

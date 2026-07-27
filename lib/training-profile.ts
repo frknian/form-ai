@@ -14,6 +14,19 @@ export function extractSessionMinutes(value: unknown, fallback = 30) {
 // kullanıcı en düşük hacimle başlar; her blokta yalnızca TEK bir değişken artar
 // (önce tekrar, sonra set, en son dinlenme kısalır). Aynı anda hem set hem tekrar
 // artırmak yeni başlayanlarda aşırı yüklenme riski taşıdığı için kaçınıldı.
+/**
+ * Profil testindeki haftalık sıklık cevabını ("5+ gün", "3–4 gün", "0 gün")
+ * antrenman günü sayısına çevirir. Hem yerel plan hem AI istemi aynı yorumu
+ * kullansın diye tek yerde durur.
+ */
+export function extractWeeklyDays(value: unknown, fallback = 2) {
+  const text = typeof value === "string" ? value : "";
+  if (text.includes("5+")) return 5;
+  if (text.includes("3–4") || text.includes("3-4")) return 3;
+  if (text.includes("0")) return 2;
+  return fallback;
+}
+
 export function planProgressionBlock(completedSessions: number) {
   if (completedSessions >= 12) return 3;
   if (completedSessions >= 7) return 2;

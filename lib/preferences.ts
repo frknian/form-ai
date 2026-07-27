@@ -37,3 +37,32 @@ function subscribe(callback: () => void) {
 export function useWeightUnit(): WeightUnit {
   return useSyncExternalStore(subscribe, readWeightUnit, () => "kg");
 }
+
+// Hedef kilo. Veritabanında böyle bir alan yok; kurulum adımı gerektirmemesi için
+// ağırlık birimiyle aynı yerel depoda tutulur (bu yüzden cihaza özeldir).
+const TARGET_WEIGHT_KEY = "fitai:target-weight-kg";
+
+function readTargetWeightRaw(): string | null {
+  try {
+    return typeof localStorage !== "undefined" ? localStorage.getItem(TARGET_WEIGHT_KEY) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function setStoredTargetWeightKg(weightKg: number | null) {
+  try {
+    if (weightKg === null || !Number.isFinite(weightKg) || weightKg <= 0) localStorage.removeItem(TARGET_WEIGHT_KEY);
+    else localStorage.setItem(TARGET_WEIGHT_KEY, String(weightKg));
+  } catch {
+    // yerel depolama kapalıysa sessizce geç
+  }
+  listeners.forEach((listener) => listener());
+}
+
+export function useTargetWeightKg(): number | null {
+  const raw = useSyncExternalStore(subscribe, readTargetWeightRaw, () => null);
+  if (raw === null) return null;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
