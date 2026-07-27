@@ -1,11 +1,12 @@
 import { createClient } from "@supabase/supabase-js";
 import { bearerToken } from "./api-auth.ts";
+import { normalizeSupabaseUrl } from "./supabase/url.ts";
 import { mapOpenFoodFactsProduct, mapSupabaseFood, mapUsdaFood, type FoodNutrition, type OpenFoodFactsProduct, type SupabaseFoodRow, type UsdaFood } from "./nutrition-model.ts";
 
 const FOOD_SELECT = "id,canonical_name,display_name_tr,brand,barcode,source,source_id,image_url,calories_per_100g,protein_per_100g,carbs_per_100g,fat_per_100g,fiber_per_100g,serving_size_grams,serving_label,verified,data_quality";
 
 function userClient(request: Request) {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const url = normalizeSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL);
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const token = bearerToken(request);
   if (!url || !anonKey || !token) return null;
@@ -16,7 +17,7 @@ function userClient(request: Request) {
 }
 
 function serviceClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const url = normalizeSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL);
   const serviceKey = process.env.SUPABASE_SECRET_KEY;
   if (!url || !serviceKey) return null;
   return createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });

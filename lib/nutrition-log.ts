@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { bearerToken } from "./api-auth.ts";
+import { normalizeSupabaseUrl } from "./supabase/url.ts";
 import { validateManualNutrition } from "./nutrition-calculation.ts";
 
 export const MEAL_TYPES = ["Kahvaltı", "Öğle yemeği", "Akşam yemeği", "Atıştırmalık"] as const;
@@ -94,7 +95,7 @@ export function validateNutritionLogInput(value: unknown, partial = false): Part
 }
 
 export function nutritionUserClient(request: Request) {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const url = normalizeSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL);
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const token = bearerToken(request);
   if (!url || !anonKey || !token) return null;

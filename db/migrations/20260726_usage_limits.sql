@@ -44,15 +44,19 @@ begin
   values (v_user, p_feature, current_date, 0)
   on conflict (user_id, feature, usage_date) do nothing;
 
-  select count into v_count from public.usage_counters
-  where user_id = v_user and feature = p_feature and usage_date = current_date
+  -- "count" hem sütun hem toplama fonksiyonu adı olduğu için tablo takma adıyla
+  -- nitelenir; niteliksiz bırakmak okunması zor bir belirsizlik yaratır.
+  select uc.count into v_count
+  from public.usage_counters uc
+  where uc.user_id = v_user and uc.feature = p_feature and uc.usage_date = current_date
   for update;
 
   if v_count >= p_limit then
     return query select false, v_count;
   else
-    update public.usage_counters set count = count + 1, updated_at = now()
-    where user_id = v_user and feature = p_feature and usage_date = current_date;
+    update public.usage_counters uc
+    set count = uc.count + 1, updated_at = now()
+    where uc.user_id = v_user and uc.feature = p_feature and uc.usage_date = current_date;
     return query select true, v_count + 1;
   end if;
 end;

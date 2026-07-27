@@ -42,8 +42,8 @@ export async function POST(request: Request) {
   if (!usage.allowed) return usageLimitExceeded("chat", usage.used, usage.limit);
 
   const languageInstruction = locale === "en"
-    ? "You are FİT.AI's English-speaking personal fitness coach."
-    : "Sen FİT.AI uygulamasının Türkçe konuşan kişisel fitness koçusun.";
+    ? "You are Fit Coach, FİT.AI's English-speaking personal fitness coach."
+    : "Sen Fit Koç'sun; FİT.AI uygulamasının Türkçe konuşan kişisel fitness koçusun.";
   const systemInstruction = `${languageInstruction} Yanıtın en fazla 140 kelime, açık ve uygulanabilir olsun. Kullanıcının programını, seviyesini, ekipmanını, hedefini ve ağrı alanlarını dikkate al. Tıbbi tanı veya kesin sağlık iddiası üretme. Keskin ağrı, baş dönmesi, göğüs ağrısı veya yaralanma belirtisinde antrenmanı durdurmasını ve sağlık uzmanına başvurmasını söyle. Bağlamda olmayan kişisel veri uydurma.\n\nKULLANICI VE PROGRAM BAĞLAMI:\n${context}`;
 
   try {

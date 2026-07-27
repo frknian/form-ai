@@ -37,8 +37,10 @@ test("buffers Supabase proxy bodies for Safari and Cloudflare compatibility", as
   assert.match(browserClient, /new XMLHttpRequest\(\)/);
   assert.match(browserClient, /sendAuthProxyRequest\(proxy\.url, proxy\.init\)/);
   assert.match(browserClient, /x-form-ai-proxy/);
-  assert.match(browserClient, /function normalizeSupabaseUrl/);
-  assert.match(browserClient, /new URL\(configuredUrl\)\.origin/);
+  // Normalizasyon artık lib/supabase/url.ts'te; sunucu tarafı da aynı yardımcıyı
+  // kullanmalı (bkz. tests/supabase-url.test.mjs), yoksa geçerli oturumlar
+  // "Oturum doğrulanamadı." ile reddediliyordu.
+  assert.match(browserClient, /import \{ normalizeSupabaseUrl \} from "\.\/url"/);
   assert.match(browserClient, /normalizeSupabaseUrl\(rawConfiguredUrl\)/);
   assert.match(workerProxy, /await request\.arrayBuffer\(\)/);
   assert.match(workerProxy, /X-Form-AI-Proxy", "supabase"/);

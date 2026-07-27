@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { normalizeSupabaseUrl } from "./supabase/url.ts";
 import { bearerToken } from "./api-auth.ts";
 
 export type UsageFeature = "chat" | "photo";
@@ -16,7 +17,7 @@ export type UsageCheckResult = { allowed: boolean; used: number; limit: number }
  * increment_usage_counter). Sınır aşılmışsa sayaç ARTIRILMAZ.
  */
 export async function checkAndConsumeUsage(request: Request, feature: UsageFeature): Promise<UsageCheckResult | { error: Response }> {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const url = normalizeSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL);
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !anonKey) {
     return { error: Response.json({ error: "Kullanım sınırı servisi yapılandırılmamış." }, { status: 503 }) };

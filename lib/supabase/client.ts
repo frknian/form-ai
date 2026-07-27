@@ -1,13 +1,6 @@
 import { createBrowserClient } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
-
-function normalizeSupabaseUrl(configuredUrl: string) {
-  // Supabase project URL must be the origin only. Deployment dashboards are
-  // sometimes configured with the OAuth callback URL by mistake; stripping
-  // its path prevents malformed routes such as
-  // /auth/v1/callback/auth/v1/token.
-  return new URL(configuredUrl).origin;
-}
+import { normalizeSupabaseUrl } from "./url";
 
 async function proxiedRequest(source: Request, configuredUrl: string) {
   const target = new URL(source.url);
@@ -77,8 +70,9 @@ async function resilientSupabaseFetch(input: RequestInfo | URL, init?: RequestIn
   if (typeof window === "undefined" || !rawConfiguredUrl) return fetch(input, init);
 
   const configuredUrl = normalizeSupabaseUrl(rawConfiguredUrl);
+  if (!configuredUrl) return fetch(input, init);
   const request = new Request(input, init);
-  const configuredOrigin = new URL(configuredUrl).origin;
+  const configuredOrigin = configuredUrl;
   const target = new URL(request.url);
   if (target.origin !== configuredOrigin) return fetch(request);
 
@@ -108,7 +102,7 @@ async function resilientSupabaseFetch(input: RequestInfo | URL, init?: RequestIn
 export function createClient(): SupabaseClient | null {
   const configuredUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!configuredUrl || !key) return null;
   const url = normalizeSupabaseUrl(configuredUrl);
+  if (!url || !key) return null;
   return createBrowserClient(url, key, { global: { fetch: resilientSupabaseFetch } });
 }

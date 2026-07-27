@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { normalizeSupabaseUrl } from "./supabase/url.ts";
 
 export type AuthenticatedUser = { id: string; email: string | null };
 
@@ -12,7 +13,7 @@ export function bearerToken(request: Request) {
  * Yapılandırma eksikse kapalı tarafa düşer: kimlik doğrulanamıyorsa istek reddedilir.
  */
 export async function authenticateRequest(request: Request): Promise<{ user: AuthenticatedUser } | { error: Response }> {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const url = normalizeSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL);
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !anonKey) {
     return { error: Response.json({ error: "Kimlik doğrulama servisi yapılandırılmamış." }, { status: 503 }) };
