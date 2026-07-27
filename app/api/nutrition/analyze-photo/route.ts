@@ -91,7 +91,8 @@ export async function POST(request: Request) {
       confidence,
       isEstimated: true,
       needsManualNutrition: matched.length !== resolved.items.length,
-      usage: { used: usage.used, limit: usage.limit },
+      // Sınır uygulanmıyorsa limit sonsuzdur; JSON'da null'a döneceği için atlanır.
+      ...(Number.isFinite(usage.limit) ? { usage: { used: usage.used, limit: usage.limit } } : {}),
     });
   } catch (error) {
     console.error("[nutrition-photo] Kimi request failed", error instanceof Error ? error.name : "unknown");

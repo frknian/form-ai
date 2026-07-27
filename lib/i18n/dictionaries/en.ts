@@ -865,7 +865,6 @@ export const en: typeof tr = {
     todaysPlan: "TODAY'S PLAN · 01",
     greeting: (name: string) => `${name}, `,
     greetingEm: "ready?",
-    heroBody: "We built your first program draft from your data. It'll get even more personal as you go.",
     bmiLabel: "Body mass index",
     bmiHint: "First measurement",
     goalLabel: "Goal",

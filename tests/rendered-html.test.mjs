@@ -43,8 +43,16 @@ test("buffers Supabase proxy bodies for Safari and Cloudflare compatibility", as
   assert.match(workerProxy, /await request\.arrayBuffer\(\)/);
   assert.match(workerProxy, /X-Form-AI-Proxy", "supabase"/);
   assert.doesNotMatch(workerProxy, /body:\s*request\.body/);
-  assert.match(workerEntry, /const staticAsset = await env\.ASSETS\.fetch\(request\)/);
-  assert.match(workerEntry, /if \(staticAsset\.status !== 404\) return staticAsset/);
+  // env.ASSETS bu dağıtımda yalnızca /_vinext/image yolunda bağlıdır. Her isteğin
+  // başında env.ASSETS.fetch çağırmak, binding tanımsız olduğu için worker'ı
+  // anında çökertiyordu (ve bunu sağlamak için eklenen wrangler.jsonc,
+  // nodejs_compat'ı ikinci kez tanımlayıp Cloudflare derlemesini kırıyordu).
+  // Bu yüzden ASSETS yalnızca görsel işleyicisinin içinde kullanılmalı.
+  const beforeImageHandler = workerEntry.slice(0, workerEntry.indexOf('url.pathname === "/_vinext/image"'));
+  assert.doesNotMatch(beforeImageHandler, /env\.ASSETS/);
+  assert.match(workerEntry, /fetchAsset: \(path\) => env\.ASSETS\.fetch/);
+  // Supabase proxy'si app router'dan önce çalışmalı (CPU limiti için).
+  assert.ok(workerEntry.indexOf("handleSupabaseProxy(request)") < workerEntry.indexOf("await getAppRouterHandler()"));
 });
 
 test("server-renders the secure form.ai account entry", async () => {

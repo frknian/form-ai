@@ -768,6 +768,14 @@ button,input { font:inherit; } button { cursor:pointer; }
 .dark .profile-editor,.dark .movement-guide,.dark .energy-reference,.dark .week-schedule > div,.dark .form-cues > div { background:#20231a; }
 .dark .energy-dashboard > div,.dark .form-cues > div.warning { background:#292219; }
 .dark .ai-safety,.dark .ai-scan,.dark .ai-scan.complete { background:#20231a; border-color:#46502c; }
+/* AI kişiselleştirme raporu: iç öğelerin (.adaptation-list, .week-schedule) koyu
+   kuralları vardı ama kabuğun yoktu; kart koyu temada açık gradyanıyla kalıyordu. */
+.dark .ai-insights { background:linear-gradient(145deg,#20231a,#1d2017); border-color:#46502c; }
+.dark .analysis-grid article { background:#252a1e; border-color:#46502c; }
+.dark .week-schedule > div { border-color:#46502c; }
+.dark .analysis-grid small,.dark .adaptation-list p,.dark .week-schedule small { color:var(--muted-text); }
+.dark .analysis-grid span,.dark .adaptation-list > div > span,.dark .week-schedule span { color:#9aa578; }
+.dark .adaptation-list p b { background:#33411f; color:#d9ed9e; }
 .dark .ai-scan.fallback,.dark .integration-message { background:#29251b; border-color:#5a4c30; }
 .dark .coach-error { background:#30231e; color:#f0b99c; border-color:#664330; }
 .dark .play-btn { background:#30312c; color:#dadbd3; }
