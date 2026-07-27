@@ -288,8 +288,8 @@ create policy "Users can delete own food entries" on public.food_entries for del
 -- to clients so duplicate same-day records cannot increase a streak.
 create table if not exists public.user_streaks (
   user_id uuid primary key references auth.users(id) on delete cascade,
-  current_streak integer not null default 1 check (current_streak >= 1),
-  last_activity_date date not null,
+  current_streak integer not null default 0 check (current_streak >= 0),
+  last_activity_date date,
   timezone text not null default 'UTC',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -311,6 +311,38 @@ alter table public.user_streaks enable row level security;
 alter table public.activity_logs enable row level security;
 create policy "Users can read own streak" on public.user_streaks for select using (auth.uid() = user_id);
 create policy "Users can read own activities" on public.activity_logs for select using (auth.uid() = user_id);
+
+-- Atomically clear training-derived progress while keeping the user's profile,
+-- preferences, nutrition data and current workout plan.
+create or replace function public.reset_training_progress(p_confirmation text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_user uuid := auth.uid();
+  v_workout_count integer := 0;
+begin
+  if v_user is null then raise exception 'Authentication required'; end if;
+  if p_confirmation <> 'RESET_TRAINING_PROGRESS' then raise exception 'Invalid reset confirmation'; end if;
+
+  select count(*)::integer into v_workout_count
+  from public.workout_sessions where user_id = v_user;
+
+  delete from public.weekly_ai_reviews where user_id = v_user;
+  delete from public.activity_logs where user_id = v_user;
+  update public.user_streaks
+  set current_streak = 0, last_activity_date = null, updated_at = now()
+  where user_id = v_user;
+  delete from public.workout_sessions where user_id = v_user;
+
+  return jsonb_build_object('reset', true, 'deleted_workouts', v_workout_count);
+end
+$$;
+
+revoke all on function public.reset_training_progress(text) from public;
+grant execute on function public.reset_training_progress(text) to authenticated;
 
 -- Detailed walking and sport journal entries are stored separately from the
 -- daily streak ledger. This allows multiple activities per day without ever

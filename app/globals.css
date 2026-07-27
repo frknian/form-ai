@@ -1002,14 +1002,15 @@ input,select,textarea { color-scheme:inherit; }
 .profile-personal-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }.profile-personal-grid label,.account-delete-dialog > label { display:grid; gap:6px; color:var(--muted-text); font-size:8px; font-weight:800; letter-spacing:.6px; }.profile-personal-grid input,.profile-personal-grid select,.account-delete-dialog input { width:100%; min-height:44px; padding:10px 11px; border:1px solid var(--line); border-radius:6px; background:var(--surface); color:var(--ink); font:inherit; }.profile-personal-grid label > small { color:var(--muted-text); font-size:8px; font-weight:500; letter-spacing:0; }
 .profile-save-message { margin:10px 0 0; color:#6f8426; font-size:10px; }
 .profile-history { grid-column:1/-1; padding:18px; border:1px solid var(--line); border-radius:10px; background:var(--surface-soft); }.profile-history > div span,.profile-history > div strong { display:block; }.profile-history > div span { color:#77882f; font-size:8px; font-weight:850; letter-spacing:1px; }.profile-history > div strong { margin-top:4px; font-size:14px; }.profile-history > p { color:var(--muted-text); font-size:10px; }.profile-history ol { display:grid; gap:0; margin:14px 0 0; padding:0; list-style:none; }.profile-history li { display:grid; grid-template-columns:145px 1fr auto; gap:10px; padding:10px 0; border-top:1px solid var(--line); font-size:9px; }.profile-history time,.profile-history small { color:var(--muted-text); }
-.profile-preferences,.profile-export { grid-column:1/-1; display:flex; align-items:center; justify-content:space-between; gap:20px; padding:18px; border:1px solid var(--line); border-radius:10px; background:var(--surface-soft); }
-.profile-preferences span,.profile-export span { color:var(--muted-text); font-size:8px; font-weight:850; letter-spacing:1px; }
-.profile-preferences strong,.profile-export strong { display:block; margin-top:4px; font-size:13px; }
-.profile-preferences small,.profile-export p { display:block; margin:5px 0 0; color:var(--muted-text); font-size:9px; line-height:1.5; }
+.profile-preferences,.profile-export,.profile-reset { grid-column:1/-1; display:flex; align-items:center; justify-content:space-between; gap:20px; padding:18px; border:1px solid var(--line); border-radius:10px; background:var(--surface-soft); }
+.profile-preferences span,.profile-export span,.profile-reset span { color:var(--muted-text); font-size:8px; font-weight:850; letter-spacing:1px; }
+.profile-preferences strong,.profile-export strong,.profile-reset strong { display:block; margin-top:4px; font-size:13px; }
+.profile-preferences small,.profile-export p,.profile-reset p { display:block; margin:5px 0 0; color:var(--muted-text); font-size:9px; line-height:1.5; }
 .unit-segmented { flex:0 0 auto; width:auto; }
 .unit-segmented button { min-height:40px; padding:0 14px; white-space:nowrap; }
-.profile-export button { flex:0 0 auto; min-height:42px; padding:0 15px; border:1px solid var(--line); border-radius:6px; background:var(--surface); color:var(--ink); font-size:10px; font-weight:800; cursor:pointer; }
-.profile-export button:disabled { opacity:.55; cursor:wait; }
+.profile-export button,.profile-reset button { flex:0 0 auto; min-height:42px; padding:0 15px; border:1px solid var(--line); border-radius:6px; background:var(--surface); color:var(--ink); font-size:10px; font-weight:800; cursor:pointer; }
+.profile-export button:disabled,.profile-reset button:disabled { opacity:.55; cursor:wait; }
+.profile-reset { border-color:#e6d5a8; background:#fffdf5; }.profile-reset span { color:#8b6717; }
 .pr-panel { margin:0 0 24px; padding:22px; border:1px solid var(--line); border-radius:9px; background:var(--surface); }
 .pr-panel .section-title h2 { font-size:20px; }
 .pr-note { border-radius:20px; padding:7px 11px; background:#e8f7b5; color:#53641a; font-size:9px; font-weight:800; white-space:nowrap; }
@@ -1024,11 +1025,11 @@ input,select,textarea { color-scheme:inherit; }
 .pr-disclaimer { margin:14px 0 0; color:var(--muted-text); font-size:9px; line-height:1.5; }
 .dark .pr-orm b { color:#c7dd7e; }
 .dark .pr-note { background:#34401a; color:#c7dd7e; }
-@media (max-width:700px) { .profile-preferences,.profile-export { flex-direction:column; align-items:stretch; gap:12px; }.unit-segmented,.profile-export button { width:100%; } }
+@media (max-width:700px) { .profile-preferences,.profile-export,.profile-reset { flex-direction:column; align-items:stretch; gap:12px; }.unit-segmented,.profile-export button,.profile-reset button { width:100%; } }
 .account-danger-zone { grid-column:1/-1; display:flex; align-items:center; justify-content:space-between; gap:20px; padding:18px; border:1px solid #e9c7bb; border-radius:10px; background:#fff8f5; }.account-danger-zone span { color:#a44b2d; font-size:8px; font-weight:850; letter-spacing:1px; }.account-danger-zone strong { display:block; margin-top:4px; font-size:13px; }.account-danger-zone p { margin:5px 0 0; color:var(--muted-text); font-size:9px; }.account-danger-zone > div:last-child { display:flex; gap:8px; }.account-danger-zone button,.account-delete-dialog button { min-height:42px; padding:0 13px; border:1px solid var(--line); border-radius:6px; background:var(--surface); color:var(--ink); font-size:9px; font-weight:750; cursor:pointer; }.account-danger-zone button.danger,.account-delete-dialog button.danger { border-color:#b74c35; background:#a63d29; color:white; }.account-danger-zone button:disabled,.account-delete-dialog button:disabled { opacity:.5; cursor:not-allowed; }
-.account-delete-overlay { position:fixed; z-index:120; inset:0; display:grid; place-items:center; padding:20px; background:rgba(10,12,8,.72); backdrop-filter:blur(8px); }.account-delete-dialog { width:min(520px,100%); padding:24px; border:1px solid var(--line); border-radius:14px; background:var(--surface-elevated); color:var(--ink); box-shadow:0 28px 80px rgba(0,0,0,.35); }.account-delete-dialog .danger-label { color:#b65237; font-size:8px; font-weight:900; letter-spacing:1.2px; }.account-delete-dialog h2 { margin:7px 0; font-size:23px; }.account-delete-dialog > p { color:var(--muted-text); font-size:10px; line-height:1.55; }.account-delete-dialog > label { margin-top:13px; }.account-delete-dialog .delete-checkbox { display:flex; grid-template-columns:none; align-items:flex-start; gap:9px; font-weight:550; letter-spacing:0; line-height:1.45; }.delete-checkbox input { width:16px; min-height:16px; margin:1px 0 0; }.account-delete-dialog > div:last-child { display:flex; justify-content:flex-end; gap:8px; margin-top:20px; }
+.account-delete-overlay { position:fixed; z-index:120; inset:0; display:grid; place-items:center; padding:20px; background:rgba(10,12,8,.72); backdrop-filter:blur(8px); }.account-delete-dialog { width:min(520px,100%); padding:24px; border:1px solid var(--line); border-radius:14px; background:var(--surface-elevated); color:var(--ink); box-shadow:0 28px 80px rgba(0,0,0,.35); }.account-delete-dialog .danger-label { color:#b65237; font-size:8px; font-weight:900; letter-spacing:1.2px; }.account-delete-dialog .warning-label { color:#8b6717; font-size:8px; font-weight:900; letter-spacing:1.2px; }.account-delete-dialog h2 { margin:7px 0; font-size:23px; }.account-delete-dialog > p { color:var(--muted-text); font-size:10px; line-height:1.55; }.account-delete-dialog > label { margin-top:13px; }.account-delete-dialog .delete-checkbox { display:flex; grid-template-columns:none; align-items:flex-start; gap:9px; font-weight:550; letter-spacing:0; line-height:1.45; }.delete-checkbox input { width:16px; min-height:16px; margin:1px 0 0; }.account-delete-dialog > div:last-child { display:flex; justify-content:flex-end; gap:8px; margin-top:20px; }
 .frozen-account { min-height:100dvh; padding:28px 5vw; background:var(--page); color:var(--ink); }.frozen-account section { width:min(680px,100%); margin:16vh auto 0; padding:32px; border:1px solid var(--line); border-radius:16px; background:var(--surface-elevated); }.frozen-account section > span { color:#77882f; font-size:9px; font-weight:850; letter-spacing:1.2px; }.frozen-account h1 { margin:10px 0; font-size:42px; letter-spacing:-2px; }.frozen-account h1 em { color:#99af3f; font-family:Georgia,serif; font-weight:400; }.frozen-account p { color:var(--muted-text); line-height:1.6; }.frozen-account section > button { min-height:46px; padding:0 16px; border:0; border-radius:7px; background:var(--ink); color:var(--page); font-weight:750; }.frozen-account .text-button { margin-left:8px; background:transparent; color:var(--muted-text); text-decoration:underline; }
-.dark .account-danger-zone { border-color:#653d32; background:#2b211e; }.dark .profile-avatar-card,.dark .profile-history { background:var(--surface-soft); }
+.dark .account-danger-zone { border-color:#653d32; background:#2b211e; }.dark .profile-reset { border-color:#65552d; background:#29261d; }.dark .profile-avatar-card,.dark .profile-history { background:var(--surface-soft); }
 @media (max-width:800px) { .profile-manager { grid-template-columns:1fr; }.profile-manager-intro { position:static; }.profile-personal-grid { grid-template-columns:1fr; }.profile-history li { grid-template-columns:1fr; gap:4px; }.account-danger-zone { align-items:stretch; flex-direction:column; }.account-danger-zone > div:last-child { flex-direction:column; }.account-delete-dialog > div:last-child { flex-direction:column-reverse; }.frozen-account section { margin-top:10vh; padding:22px; }.frozen-account h1 { font-size:34px; }.frozen-account section > button { width:100%; margin:8px 0 0; } }
 
 /* Profil, ortam anahtarı ve beslenme okunabilirliği */
@@ -1073,6 +1074,33 @@ input,select,textarea { color-scheme:inherit; }
 .ready-tabs button:focus-visible { outline:2px solid #8ba844; outline-offset:1px; }
 .ready-programs .ready-card { margin-top:10px; }
 .dark .ready-tabs button.active { background:#3f4d21; color:#e2f2ad; }
+
+/* Hedef ve ekipmana göre süzülen hazır program kütüphanesi */
+.programs-page { width:100%; }
+.program-profile-note { display:flex; align-items:center; gap:14px; margin:24px 0 18px; padding:16px 18px; border:1px solid #cfdd9e; border-radius:11px; background:#f5f9e7; }
+.program-profile-note > span { display:grid; place-items:center; flex:0 0 38px; width:38px; height:38px; border-radius:50%; background:#dcee9d; color:#41501a; font-size:16px; }
+.program-profile-note strong { display:block; font-size:12px; }.program-profile-note p { margin:4px 0 0; color:var(--muted-text); font-size:10px; }
+.program-profile-note small { margin-left:auto; padding:7px 10px; border-radius:999px; background:var(--surface); color:#6d7e2a; font-size:9px; font-weight:800; white-space:nowrap; }
+.program-goal-filters { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:5px; margin-bottom:18px; padding:5px; border:1px solid var(--line); border-radius:10px; background:var(--surface-soft); }
+.program-goal-filters button { min-height:44px; border:0; border-radius:7px; background:transparent; color:var(--muted-text); font:700 11px/1 inherit; cursor:pointer; }
+.program-goal-filters button.active { background:var(--ink); color:var(--page); box-shadow:0 5px 16px rgba(35,40,22,.12); }
+.program-goal-filters button:focus-visible { outline:2px solid #8ba844; outline-offset:1px; }
+.program-library-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+.program-library-card { display:flex; flex-direction:column; min-height:360px; padding:20px; border:1px solid var(--line); border-radius:12px; background:var(--surface-elevated); box-shadow:0 10px 28px rgba(32,37,20,.05); }
+.program-card-top { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.program-card-top span { padding:6px 9px; border-radius:999px; background:#edf5cf; color:#596b1f; font-size:9px; font-weight:850; }
+.program-card-top small { color:var(--muted-text); font-size:9px; }
+.program-library-card h2 { margin:18px 0 6px; font-size:20px; letter-spacing:-.5px; }
+.program-library-card > p { min-height:32px; margin:0; color:var(--muted-text); font-size:10px; line-height:1.55; }
+.program-library-card ol { display:grid; gap:7px; margin:18px 0; padding:0; list-style:none; }
+.program-library-card li { display:flex; align-items:center; gap:9px; padding:9px 0; border-top:1px solid var(--line); font-size:10px; }
+.program-library-card li b { display:grid; place-items:center; flex:0 0 23px; width:23px; height:23px; border-radius:50%; background:var(--surface-soft); color:#71852b; font-size:8px; }
+.program-library-card > button { width:100%; min-height:44px; margin-top:auto; border:0; border-radius:7px; background:#dcee9d; color:#3f4d19; font-size:10px; font-weight:850; cursor:pointer; }
+.program-library-card > button:hover { background:#cee787; }
+.program-empty { padding:28px; border:1px dashed var(--line); border-radius:12px; background:var(--surface-soft); text-align:center; }
+.program-empty strong { font-size:14px; }.program-empty p { margin:7px 0 0; color:var(--muted-text); font-size:10px; }
+.dark .program-profile-note { border-color:#53622c; background:#252b1d; }.dark .program-profile-note > span,.dark .program-card-top span,.dark .program-library-card > button { background:#3f4d21; color:#e2f2ad; }
+@media (max-width:700px) { .program-profile-note { align-items:flex-start; flex-wrap:wrap; }.program-profile-note small { width:100%; margin-left:52px; white-space:normal; }.program-library-grid { grid-template-columns:1fr; }.program-library-card { min-height:0; }.program-goal-filters button { font-size:10px; } }
 
 /* Antrenman planının kademeli ilerleme rozeti */
 .plan-stage { display:grid; gap:3px; padding:10px 13px; border:1px solid var(--line); border-radius:9px; background:var(--surface-soft); text-align:right; }

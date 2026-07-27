@@ -33,6 +33,7 @@ import { buildCompletedExerciseLog, createWorkoutSetDrafts, exerciseLogKey, type
 import { localTimeKey } from "@/lib/workout-calendar";
 import { localDateKey } from "@/lib/streak";
 import { inferWorkoutDays } from "@/lib/nutrition-goals";
+import { equipmentMatchesInventory, normalizeEquipmentInventory, orderExercisesForProgression } from "@/lib/training-programs";
 import type { EditableWorkout } from "@/lib/plan-editor";
 import type { Exercise } from "@/types/exercise";
 import { calculateAge, isValidBirthDate, type AccountStatus, type EditableProfile } from "@/lib/profile";
@@ -261,11 +262,11 @@ function createPersonalPlan(gym: string, equipmentText: string, history: string[
   const goal = profileText.includes("kilo") || profileText.includes("yağ") ? "kilo" : profileText.includes("kas") ? "kas" : profileText.includes("kondisyon") ? "kondisyon" : "güç";
   const isBeginner = history[2] === "Yeni başlıyorum" || !history[2];
   const wantsGym = gym === "Salon";
-  const equipment = equipmentText.toLowerCase();
+  const equipment = normalizeEquipmentInventory(equipmentText);
   const durationText = history[3] || goalText.match(/(15|30|45|60)/)?.[1] || "30";
   const duration = extractSessionMinutes(durationText);
   const pain = history[6]?.toLowerCase() || "";
-  const matchesEquipment = (item: typeof exerciseLibrary[number]) => wantsGym || item.bodyweight || item.requires.some((requirement) => equipment.includes(requirement));
+  const matchesEquipment = (item: typeof exerciseLibrary[number]) => wantsGym || item.bodyweight || equipmentMatchesInventory(equipment, item.requires);
   const avoidKneeLoad = pain.includes("diz");
   const avoidShoulderLoad = pain.includes("omuz");
   const safeForPain = (item: typeof exerciseLibrary[number]) => !(avoidKneeLoad && ["Reverse Lunge", "Bulgarian Split Squat", "Step-up", "Mountain Climber", "Leg Press"].includes(item.name)) && !(avoidShoulderLoad && ["Şınav", "Eğimli Şınav", "Dambıl Omuz Press", "Lat Pulldown"].includes(item.name));
@@ -276,10 +277,18 @@ function createPersonalPlan(gym: string, equipmentText: string, history: string[
   // Evde antrenman yapan ve ekipman belirten kullanıcı için, sahip olduğu ekipmanı kullanan
   // hareketleri güvenli oldukları sürece plana öncelikli olarak dahil et.
   const ownsHomeEquipment = !wantsGym && equipment.trim().length > 0;
-  const equipmentItems = ownsHomeEquipment ? exerciseLibrary.filter((item) => !item.bodyweight && safeForPain(item) && item.requires.some((requirement) => equipment.includes(requirement))) : [];
+  const equipmentItems = ownsHomeEquipment ? exerciseLibrary.filter((item) => !item.bodyweight && safeForPain(item) && equipmentMatchesInventory(equipment, item.requires)) : [];
   const score = (name: string) => [...name].reduce((total, character) => total + character.charCodeAt(0), seed) % 997;
   const priority = (item: typeof exerciseLibrary[number]) => requestedItems.includes(item) ? 0 : equipmentItems.includes(item) ? 1 : 2;
-  const chosen = [...requestedItems, ...equipmentItems, ...goalItems, ...fallback].filter((item, index, list) => list.findIndex((candidate) => candidate.name === item.name) === index).sort((a, b) => priority(a) - priority(b) || score(a.name) - score(b.name)).slice(0, duration <= 15 ? 3 : duration >= 60 ? 6 : 5);
+  const candidates = [...requestedItems, ...equipmentItems, ...goalItems, ...fallback]
+    .filter((item, index, list) => list.findIndex((candidate) => candidate.name === item.name) === index)
+    .sort((a, b) => priority(a) - priority(b) || score(a.name) - score(b.name));
+  const targetCount = duration <= 15 ? 3 : duration >= 60 ? 6 : 5;
+  let chosen = orderExercisesForProgression(candidates, completedSessions, (item) => item.name).slice(0, targetCount);
+  const equipmentAnchor = equipmentItems[0];
+  if (equipmentAnchor && !chosen.some((item) => equipmentItems.includes(item))) {
+    chosen = orderExercisesForProgression([...chosen.slice(0, -1), equipmentAnchor], completedSessions, (item) => item.name);
+  }
   const block = planProgressionBlock(completedSessions);
   const baseSets = isBeginner ? (duration <= 15 ? 2 : 3) : duration >= 60 ? 4 : 3;
   const baseReps = goal === "kondisyon" || goal === "kilo" ? (isBeginner ? 10 : 14) : isBeginner ? 10 : 8;
@@ -454,9 +463,9 @@ function fallbackAnalysis(gym: string, equipmentText: string, history: string[],
 
 function findRequestedLibraryExercises(requestedExercises: string, goalText: string, gym: string, equipmentText: string, history: string[]) {
   const requestedNames = `${requestedExercises} ${goalText}`.toLowerCase().split(/[\n,;]+/).map((value) => value.trim()).filter(Boolean);
-  const equipment = equipmentText.toLowerCase();
+  const equipment = normalizeEquipmentInventory(equipmentText);
   const pain = history[6]?.toLowerCase() || "";
-  const matchesEquipment = (item: typeof exerciseLibrary[number]) => gym === "Salon" || item.bodyweight || item.requires.some((requirement) => equipment.includes(requirement));
+  const matchesEquipment = (item: typeof exerciseLibrary[number]) => gym === "Salon" || item.bodyweight || equipmentMatchesInventory(equipment, item.requires);
   const safeForPain = (item: typeof exerciseLibrary[number]) => !(pain.includes("diz") && ["Reverse Lunge", "Bulgarian Split Squat", "Step-up", "Mountain Climber", "Leg Press"].includes(item.name)) && !(pain.includes("omuz") && ["Şınav", "Eğimli Şınav", "Dambıl Omuz Press", "Lat Pulldown"].includes(item.name));
   return exerciseLibrary.filter((item) => requestedNames.some((requested) => item.name.toLowerCase().includes(requested) || item.english.toLowerCase().includes(requested) || requested.includes("yerde") && item.name === "Yerde Dambıl Göğüs Presi") && matchesEquipment(item) && safeForPain(item));
 }
@@ -488,15 +497,15 @@ function profileGoal(goalText: string, history: string[]) {
 function isExerciseSafeForProfile(exercise: { id?: string; name: string; english: string }, gym: string, equipmentText: string, history: string[]) {
   const text = `${exercise.name} ${exercise.english}`.toLocaleLowerCase("tr-TR");
   const pain = (history[6] || "").toLocaleLowerCase("tr-TR");
-  const equipment = equipmentText.toLocaleLowerCase("tr-TR");
+  const equipment = normalizeEquipmentInventory(equipmentText);
   if (pain.includes("diz") && /squat|lunge|jump|step|leg press|mountain climber|box jump|skater/.test(text)) return false;
   if (pain.includes("omuz") && /push|press|dip|shoulder|fly|overhead|lateral raise|pulldown|barfiks/.test(text)) return false;
   if (pain.includes("bel") && /deadlift|good morning|back extension|woodchop|superman|russian twist/.test(text)) return false;
   const databaseExercise = exercise.id ? getExerciseById(exercise.id) : null;
-  if (databaseExercise) return gym === "Salon" || !databaseExercise.equipment || ["body only", "none"].includes(databaseExercise.equipment) || equipment.includes(databaseExercise.equipment);
+  if (databaseExercise) return gym === "Salon" || !databaseExercise.equipment || ["body only", "none"].includes(databaseExercise.equipment) || equipmentMatchesInventory(equipment, [databaseExercise.equipment]);
   const libraryExercise = findLibraryExercise(exercise);
   if (!libraryExercise) return false;
-  return gym === "Salon" || libraryExercise.bodyweight || libraryExercise.requires.some((requirement) => equipment.includes(requirement));
+  return gym === "Salon" || libraryExercise.bodyweight || equipmentMatchesInventory(equipment, libraryExercise.requires);
 }
 
 function personalizeAiWorkouts(items: AiWorkout[], gym: string, equipmentText: string, history: string[], goalText: string, requestedExercises: string, completedSessions = 0) {
@@ -515,7 +524,15 @@ function personalizeAiWorkouts(items: AiWorkout[], gym: string, equipmentText: s
   const localGoalAnchors = [...requiredGoalAnchors, ...localPlan].filter((item) => item.goals.includes(goal) && !safeAiKeys.has(exerciseKey(item)) && !requestedKeys.has(exerciseKey(item))).slice(0, 2);
   const candidates = [...requestedItems.filter((item) => !safeAiKeys.has(exerciseKey(item))), ...aiRequested, ...localGoalAnchors, ...safeAi.filter((item) => !requestedKeys.has(exerciseKey(item))), ...localPlan];
   const targetCount = Math.min(6, Math.max(3, localPlan.length || safeAi.length || 5));
-  return candidates.filter((item, index, list) => list.findIndex((candidate) => exerciseKey(candidate) === exerciseKey(item)) === index).slice(0, targetCount);
+  const unique = candidates.filter((item, index, list) => list.findIndex((candidate) => exerciseKey(candidate) === exerciseKey(item)) === index);
+  let selected = orderExercisesForProgression(unique, completedSessions, (item) => item.name).slice(0, targetCount);
+  const equipmentAnchor = gym !== "Salon" && equipmentText.trim()
+    ? localPlan.find((item) => !item.bodyweight)
+    : undefined;
+  if (equipmentAnchor && !selected.some((item) => exerciseKey(item) === exerciseKey(equipmentAnchor))) {
+    selected = orderExercisesForProgression([...selected.slice(0, -1), equipmentAnchor], completedSessions, (item) => item.name);
+  }
+  return selected;
 }
 
 function normalizeAiWorkouts(items: Array<{ id: string; name: string; english: string; area: string; sets: number; reps: string; restSeconds: number; instructions?: string }>): AiWorkout[] {
@@ -623,30 +640,59 @@ function LibraryView({ onOpenWorkout, onAddWorkout }: { onOpenWorkout: (exercise
   return <ExerciseLibrary onOpenWorkout={(exercise) => onOpenWorkout(databaseExerciseAsWorkout(exercise))} onAddWorkout={(exercise) => onAddWorkout(databaseExerciseAsWorkout(exercise))} />;
 }
 
+type ProgramGoalFilter = "weightLoss" | "strength" | "regional";
+
 const readyPrograms = [
-  { id: "equipmentFree" as const, title: "Ekipmansız başlangıç", detail: "15 dk · Evde", names: ["Şınav", "Glute Bridge", "Dead Bug"] },
-  { id: "dumbbell" as const, title: "Dumbbell ile güç", detail: "30 dk · Evde", names: ["Goblet Squat", "Dambıl Row", "Dambıl Omuz Press", "Plank"] },
-  { id: "gym" as const, title: "Salon full body", detail: "45 dk · Spor salonu", names: ["Leg Press", "Lat Pulldown", "Dambıl Omuz Press", "Reverse Lunge", "Plank"] },
+  { id: "weightStarter" as const, goal: "weightLoss" as const, mode: "any" as const, minutes: 20, names: ["Glute Bridge", "Dead Bug", "Diz Üstü Şınav", "Jumping Jack"] },
+  { id: "weightDumbbell" as const, goal: "weightLoss" as const, mode: "equipment" as const, minutes: 30, names: ["Goblet Squat", "Dambıl Row", "Yerde Dambıl Göğüs Presi", "Mountain Climber"] },
+  { id: "strengthStarter" as const, goal: "strength" as const, mode: "any" as const, minutes: 20, names: ["Glute Bridge", "Dead Bug", "Diz Üstü Şınav", "Reverse Lunge"] },
+  { id: "strengthDumbbell" as const, goal: "strength" as const, mode: "equipment" as const, minutes: 35, names: ["Goblet Squat", "Dambıl Row", "Yerde Dambıl Göğüs Presi", "Dambıl Omuz Press", "Plank"] },
+  { id: "strengthGym" as const, goal: "strength" as const, mode: "gym" as const, minutes: 45, names: ["Leg Press", "Oturarak Leg Curl", "Lat Pulldown", "Oturarak Kablo Row", "Pec Deck", "Makine Omuz Press"] },
+  { id: "regionalCore" as const, goal: "regional" as const, mode: "any" as const, minutes: 20, names: ["Dead Bug", "Crunch", "Plank", "Side Plank"] },
+  { id: "regionalGlutes" as const, goal: "regional" as const, mode: "any" as const, minutes: 25, names: ["Glute Bridge", "Fire Hydrant", "Donkey Kick", "Tek Bacak Glute Bridge"] },
 ];
 
 function readyProgramCopy(t: Dictionary, id: (typeof readyPrograms)[number]["id"]) {
-  if (id === "equipmentFree") return { title: t.readyPrograms.equipmentFreeTitle, detail: t.readyPrograms.equipmentFreeDetail, tab: t.readyPrograms.equipmentFreeTab };
-  if (id === "dumbbell") return { title: t.readyPrograms.dumbbellTitle, detail: t.readyPrograms.dumbbellDetail, tab: t.readyPrograms.dumbbellTab };
-  return { title: t.readyPrograms.gymTitle, detail: t.readyPrograms.gymDetail, tab: t.readyPrograms.gymTab };
+  if (id === "weightStarter") return { title: t.readyPrograms.weightStarterTitle, detail: t.readyPrograms.weightStarterDetail };
+  if (id === "weightDumbbell") return { title: t.readyPrograms.weightDumbbellTitle, detail: t.readyPrograms.weightDumbbellDetail };
+  if (id === "strengthStarter") return { title: t.readyPrograms.strengthStarterTitle, detail: t.readyPrograms.strengthStarterDetail };
+  if (id === "strengthDumbbell") return { title: t.readyPrograms.strengthDumbbellTitle, detail: t.readyPrograms.strengthDumbbellDetail };
+  if (id === "strengthGym") return { title: t.readyPrograms.strengthGymTitle, detail: t.readyPrograms.strengthGymDetail };
+  if (id === "regionalCore") return { title: t.readyPrograms.regionalCoreTitle, detail: t.readyPrograms.regionalCoreDetail };
+  return { title: t.readyPrograms.regionalGlutesTitle, detail: t.readyPrograms.regionalGlutesDetail };
 }
 
-// Ortamına göre seçilen hazır program. Varsayılan sekme kullanıcının profilindeki
-// antrenman yerine göre açılır, böylece salonda çalışan biri ekipmansız programla
-// karşılaşmaz.
-function ReadyPrograms({ onApply, environment }: { onApply: (program: typeof readyPrograms[number]) => void; environment: string }) {
+function ReadyPrograms({ onApply, environment, equipmentText, history, goalText, completedSessions }: { onApply: (program: typeof readyPrograms[number]) => void; environment: string; equipmentText: string; history: string[]; goalText: string; completedSessions: number }) {
   const t = useTranslations();
-  const [selectedId, setSelectedId] = useState<(typeof readyPrograms)[number]["id"]>(environment === "Salon" ? "gym" : "equipmentFree");
-  const selected = readyPrograms.find((program) => program.id === selectedId) || readyPrograms[0];
-  const copy = readyProgramCopy(t, selected.id);
-  return <div className="ready-programs">
-    <div className="section-title"><div><div className="eyebrow">{t.readyPrograms.eyebrow}</div><h2>{t.readyPrograms.title}</h2></div><span className="ready-note">{t.readyPrograms.note}</span></div>
-    <div className="ready-tabs" role="tablist" aria-label={t.readyPrograms.tabsLabel}>{readyPrograms.map((program) => <button type="button" key={program.id} role="tab" id={`ready-tab-${program.id}`} aria-selected={program.id === selectedId} aria-controls="ready-tab-panel" className={program.id === selectedId ? "active" : ""} onClick={() => setSelectedId(program.id)}>{readyProgramCopy(t, program.id).tab}</button>)}</div>
-    <article className="ready-card" id="ready-tab-panel" role="tabpanel" aria-labelledby={`ready-tab-${selected.id}`}><div><h3>{copy.title}</h3><p>{copy.detail}</p><small>{selected.names.join(" · ")}</small></div><button type="button" onClick={() => onApply(selected)}>{t.readyPrograms.use} →</button></article>
+  const initialGoal = profileGoal(goalText, history) === "kilo" ? "weightLoss" : "strength";
+  const [selectedGoal, setSelectedGoal] = useState<ProgramGoalFilter>(initialGoal);
+  const availablePrograms = useMemo(() => readyPrograms.filter((program) => program.mode !== "gym" || environment === "Salon").map((program) => ({
+    ...program,
+    names: orderExercisesForProgression(
+      program.names.filter((exerciseName) => {
+        const exercise = exerciseLibrary.find((item) => item.name === exerciseName);
+        const matchesProgramMode = program.mode !== "gym" || Boolean(exercise && !exercise.bodyweight && exercise.requires.length);
+        return Boolean(exercise && matchesProgramMode && isExerciseSafeForProfile(exercise, environment, equipmentText, history));
+      }),
+      completedSessions,
+      String,
+    ),
+  })).filter((program) => program.names.length >= 3), [completedSessions, environment, equipmentText, history]);
+  const filteredPrograms = availablePrograms.filter((program) => program.goal === selectedGoal);
+  const equipmentLabel = environment === "Salon" ? t.readyPrograms.gymEquipment : equipmentText.trim() || t.readyPrograms.noEquipment;
+  const filters: Array<{ id: ProgramGoalFilter; label: string }> = [
+    { id: "weightLoss", label: t.readyPrograms.filterWeightLoss },
+    { id: "strength", label: t.readyPrograms.filterStrength },
+    { id: "regional", label: t.readyPrograms.filterRegional },
+  ];
+
+  return <div className="subview programs-page">
+    <div className="eyebrow">{t.readyPrograms.eyebrow}</div>
+    <h1>{t.readyPrograms.pageTitle1}<br /><em>{t.readyPrograms.pageTitle2}</em></h1>
+    <p className="lead">{t.readyPrograms.pageLead}</p>
+    <div className="program-profile-note"><span>✦</span><div><strong>{t.readyPrograms.equipmentTitle}</strong><p>{t.readyPrograms.equipmentBody(equipmentLabel)}</p></div><small>{completedSessions < 3 ? t.readyPrograms.beginnerStage : t.readyPrograms.progressiveStage}</small></div>
+    <div className="program-goal-filters" role="group" aria-label={t.readyPrograms.goalFiltersLabel}>{filters.map((filter) => <button type="button" aria-pressed={selectedGoal === filter.id} className={selectedGoal === filter.id ? "active" : ""} key={filter.id} onClick={() => setSelectedGoal(filter.id)}>{filter.label}</button>)}</div>
+    {filteredPrograms.length ? <div className="program-library-grid">{filteredPrograms.map((program) => { const copy = readyProgramCopy(t, program.id); return <article className="program-library-card" key={program.id}><div className="program-card-top"><span>{t.readyPrograms.minutes(program.minutes)}</span><small>{program.names.length} {t.readyPrograms.exerciseUnit}</small></div><h2>{copy.title}</h2><p>{copy.detail}</p><ol>{program.names.map((exerciseName, index) => <li key={exerciseName}><b>{index + 1}</b><span>{exerciseName}</span></li>)}</ol><button type="button" onClick={() => onApply(program)}>{t.readyPrograms.useProgram} →</button></article>; })}</div> : <div className="program-empty"><strong>{t.readyPrograms.noMatchingProgram}</strong><p>{t.readyPrograms.noMatchingProgramBody}</p></div>}
   </div>;
 }
 
@@ -699,7 +745,7 @@ export default function Home() {
   const [aiProgression, setAiProgression] = useState<string[]>([]);
   const [aiFingerprint, setAiFingerprint] = useState("");
   const [aiStage, setAiStage] = useState<AiStage>("profile");
-  const [activeView, setActiveView] = useState<"plan" | "workout" | "progress" | "library" | "nutrition" | "calendar" | "profile">("plan");
+  const [activeView, setActiveView] = useState<"plan" | "workout" | "programs" | "progress" | "library" | "nutrition" | "calendar" | "profile">("plan");
   const [, setAiStatus] = useState<"idle" | "scanning" | "complete" | "fallback">("idle");
   const [activityOpen, setActivityOpen] = useState(false);
   const weightUnit = useWeightUnit();
@@ -1184,12 +1230,18 @@ export default function Home() {
     }
     setAiStage("history");
     try {
-      const exerciseCatalog = getExercisesForAI();
+      const equipmentInventory = normalizeEquipmentInventory(equipmentText);
+      const exerciseCatalog = getExercisesForAI().filter((exercise) => (
+        gym === "Salon"
+        || !exercise.equipment
+        || ["body only", "none"].includes(exercise.equipment.toLocaleLowerCase("en-US"))
+        || equipmentMatchesInventory(equipmentInventory, [exercise.equipment])
+      ));
       setAiStage("planning");
       const controller = new AbortController();
       const timeout = window.setTimeout(() => controller.abort(), 45_000);
       const trainingHistory = sessionHistory.slice(0, 8).map((session) => ({ completedAt: session.completedAt, completedExercises: session.completedExercises, totalExercises: session.totalExercises, difficulty: session.difficulty, fatigue: session.fatigue, painAreas: session.painAreas, feedbackNote: session.feedbackNote }));
-      const aiResponse = await authorizedFetch("/api/generate-plan", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, birthDate, age, gender, height, weight, environment: gym, equipment: equipmentText, goal: goalText, requestedExercises, history, trainingHistory, adaptation, exerciseCatalog, photoDataUrl, locale }), signal: controller.signal }).finally(() => window.clearTimeout(timeout));
+      const aiResponse = await authorizedFetch("/api/generate-plan", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, birthDate, age, gender, height, weight, environment: gym, equipment: equipmentText, goal: goalText, requestedExercises, history, completedSessions: sessionHistory.length, trainingHistory, adaptation, exerciseCatalog, photoDataUrl, locale }), signal: controller.signal }).finally(() => window.clearTimeout(timeout));
       if (aiResponse.ok) {
         const aiPlan = await aiResponse.json() as { workouts?: Array<{ id: string; name: string; english: string; area: string; sets: number; reps: string; restSeconds: number; instructions?: string }>; rationale?: string; safetyNote?: string; analysis?: AiPlanAnalysis; weeklySchedule?: AiScheduleDay[]; progression?: string[]; profileFingerprint?: string };
         const normalizedWorkouts = aiPlan.workouts?.length ? normalizeAiWorkouts(aiPlan.workouts) : [];
@@ -1223,8 +1275,23 @@ export default function Home() {
     setStep(5);
   }
 
-  function applyReadyProgram(program: typeof readyPrograms[number]) {
-    const prepared = program.names.map((name) => exerciseLibrary.find((exercise) => exercise.name === name)).filter((exercise): exercise is typeof exerciseLibrary[number] => Boolean(exercise)).map((exercise) => ({ ...exercise, level: exercise.area, sets: `3 set · ${exercise.name === "Plank" || exercise.name === "Dead Bug" ? "30 sn" : "10 tekrar"}`, rest: "60 sn dinlenme", seconds: exercise.name === "Plank" || exercise.name === "Dead Bug" ? 30 : 45 }));
+  async function applyReadyProgram(program: typeof readyPrograms[number]) {
+    const block = planProgressionBlock(sessionHistory.length);
+    const sets = block === 0 ? 2 : block >= 2 ? 4 : 3;
+    const reps = block === 0 ? 8 : block >= 3 ? 12 : 10;
+    const holdSeconds = 20 + block * 5;
+    const prepared = orderExercisesForProgression(
+      program.names
+        .map((exerciseName) => exerciseLibrary.find((exercise) => exercise.name === exerciseName))
+        .filter((exercise): exercise is typeof exerciseLibrary[number] => Boolean(exercise))
+        .filter((exercise) => program.mode !== "gym" || (!exercise.bodyweight && exercise.requires.length > 0))
+        .filter((exercise) => isExerciseSafeForProfile(exercise, gym, equipmentText, history)),
+      sessionHistory.length,
+      (exercise) => exercise.name,
+    ).map((exercise) => {
+      const isHold = exercise.name === "Plank" || exercise.name === "Dead Bug";
+      return { ...exercise, level: exercise.area, sets: `${sets} set · ${isHold ? `${holdSeconds} sn` : `${reps} tekrar`}`, rest: `${block === 0 ? 75 : 60} sn dinlenme`, seconds: isHold ? holdSeconds : 45 };
+    });
     setAiWorkouts(prepared);
     setAiRationale(t.readyPrograms.appliedRationale(readyProgramCopy(t, program.id).title));
     setAiAnalysis(fallbackAnalysis(gym, equipmentText, history, goalText));
@@ -1232,7 +1299,9 @@ export default function Home() {
     setAiProgression([t.readyPrograms.progressionLearn, t.readyPrograms.progressionConsistency, t.readyPrograms.progressionRest, t.readyPrograms.progressionLoad]);
     setAiFingerprint(t.readyPrograms.ready);
     setAiStatus("complete");
-    setActiveView("plan");
+    setActiveView("workout");
+    const supabase = createClient();
+    if (supabase && authUser) await supabase.from("workout_plans").upsert({ user_id: authUser.id, workouts: prepared, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
   }
 
   async function saveCustomPlan(plan: EditableWorkout[]) {
@@ -1327,7 +1396,7 @@ export default function Home() {
       <MobileRuntime />
       {step === 5 && <nav className="topbar">
         <div className="brand"><span className="brand-mark">↗</span><span>form<span className="brand-dot">.</span>ai</span></div>
-<div className="top-links"><button type="button" aria-pressed={activeView === "plan"} className={activeView === "plan" ? "active" : ""} onClick={() => setActiveView("plan")}>{t.nav.home}</button><button type="button" aria-pressed={activeView === "workout"} className={activeView === "workout" ? "active" : ""} onClick={() => setActiveView("workout")}>{t.nav.workout}</button><button type="button" aria-pressed={activeView === "nutrition"} className={activeView === "nutrition" ? "active" : ""} onClick={() => setActiveView("nutrition")}>{t.nav.nutrition}</button><button type="button" aria-pressed={activeView === "progress"} className={activeView === "progress" ? "active" : ""} onClick={() => setActiveView("progress")}>{t.nav.progress}</button><button type="button" aria-pressed={activeView === "calendar"} className={activeView === "calendar" ? "active" : ""} onClick={() => setActiveView("calendar")}>{t.nav.calendar}</button><button type="button" aria-pressed={activeView === "library"} className={activeView === "library" ? "active" : ""} onClick={() => setActiveView("library")}>{t.nav.library}</button></div>
+<div className="top-links"><button type="button" aria-pressed={activeView === "plan"} className={activeView === "plan" ? "active" : ""} onClick={() => setActiveView("plan")}>{t.nav.home}</button><button type="button" aria-pressed={activeView === "workout"} className={activeView === "workout" ? "active" : ""} onClick={() => setActiveView("workout")}>{t.nav.workout}</button><button type="button" aria-pressed={activeView === "programs"} className={activeView === "programs" ? "active" : ""} onClick={() => setActiveView("programs")}>{t.nav.programs}</button><button type="button" aria-pressed={activeView === "nutrition"} className={activeView === "nutrition" ? "active" : ""} onClick={() => setActiveView("nutrition")}>{t.nav.nutrition}</button><button type="button" aria-pressed={activeView === "progress"} className={activeView === "progress" ? "active" : ""} onClick={() => setActiveView("progress")}>{t.nav.progress}</button><button type="button" aria-pressed={activeView === "calendar"} className={activeView === "calendar" ? "active" : ""} onClick={() => setActiveView("calendar")}>{t.nav.calendar}</button><button type="button" aria-pressed={activeView === "library"} className={activeView === "library" ? "active" : ""} onClick={() => setActiveView("library")}>{t.nav.library}</button></div>
         <div className="top-actions"><LanguageToggle /><ThemeToggle /><button type="button" className={activeView === "profile" ? "profile-mini active" : "profile-mini"} aria-pressed={activeView === "profile"} onClick={() => step === 5 && setActiveView("profile")}><span className="mini-avatar">{avatarUrl ? <Image src={avatarUrl} alt="" width={30} height={30} unoptimized /> : name ? name.charAt(0).toUpperCase() : "E"}</span><span>{t.nav.profile}</span></button></div>
       </nav>}
       {step < 5 && <div className="toggle-row onboarding-toggle-row"><LanguageToggle /><ThemeToggle /></div>}
@@ -1373,7 +1442,7 @@ export default function Home() {
         </section>
       ) : (
         <section className="dashboard">
-<WorkoutCalendar active={activeView === "calendar"} userId={authUser?.id} onStartWorkout={() => setActiveView("workout")} />{activeView === "calendar" ? null : activeView === "profile" ? <ProfileManager user={authUser} profile={{ displayName: name, birthDate, gender, heightCm: Number(height) || null, weightKg: Number(weight) || null, goalText, environment: gym === "Salon" ? "Salon" : "Evde", equipmentText, requestedExercises, avatarPath }} avatarUrl={avatarUrl} onSaved={applySavedProfile} onFrozen={() => setAccountStatus("frozen")} onDeleted={clearDeletedAccount} onSignOut={handleSignOut} /> : activeView === "progress" ? <ProgressView name={name} sessions={sessionHistory} referenceTime={progressReferenceTime} energyMetrics={energyMetrics} userId={authUser?.id} goalText={goalText || planGoal} /> : activeView === "nutrition" ? <CalorieTracker userId={authUser?.id} bmr={energyMetrics?.bmr} tdee={energyMetrics?.tdee} weightKg={Number(weight) || undefined} activityFactor={energyMetrics?.activityFactor} workoutDays={inferWorkoutDays(history[1] || history[3])} profileGoal={goalText || planGoal} /> : activeView === "library" ? <LibraryView onOpenWorkout={(exercise) => openWorkout(0, [exercise])} onAddWorkout={(exercise) => setAiWorkouts((current) => current.some((item) => item.id === exercise.id) ? current : [...current, exercise])} /> : <>
+<WorkoutCalendar active={activeView === "calendar"} userId={authUser?.id} onStartWorkout={() => setActiveView("workout")} />{activeView === "calendar" ? null : activeView === "profile" ? <ProfileManager user={authUser} profile={{ displayName: name, birthDate, gender, heightCm: Number(height) || null, weightKg: Number(weight) || null, goalText, environment: gym === "Salon" ? "Salon" : "Evde", equipmentText, requestedExercises, avatarPath }} avatarUrl={avatarUrl} onSaved={applySavedProfile} onProgressReset={() => { setSessionHistory([]); setPreviousPerformances({}); requestedPerformanceKeys.current.clear(); }} onFrozen={() => setAccountStatus("frozen")} onDeleted={clearDeletedAccount} onSignOut={handleSignOut} /> : activeView === "programs" ? <ReadyPrograms onApply={(program) => void applyReadyProgram(program)} environment={gym} equipmentText={equipmentText} history={history} goalText={goalText} completedSessions={sessionHistory.length} /> : activeView === "progress" ? <ProgressView name={name} sessions={sessionHistory} referenceTime={progressReferenceTime} energyMetrics={energyMetrics} userId={authUser?.id} goalText={goalText || planGoal} /> : activeView === "nutrition" ? <CalorieTracker userId={authUser?.id} bmr={energyMetrics?.bmr} tdee={energyMetrics?.tdee} weightKg={Number(weight) || undefined} activityFactor={energyMetrics?.activityFactor} workoutDays={inferWorkoutDays(history[1] || history[3])} profileGoal={goalText || planGoal} /> : activeView === "library" ? <LibraryView onOpenWorkout={(exercise) => openWorkout(0, [exercise])} onAddWorkout={(exercise) => setAiWorkouts((current) => current.some((item) => item.id === exercise.id) ? current : [...current, exercise])} /> : <>
           {activeView === "workout" && activeWorkout !== null && currentWorkout && currentGuide && currentPrescription ? <div className="workout-player">
             <button className="back-btn" type="button" onClick={() => { setIsRunning(false); setActiveWorkout(null); }}>{t.workoutPlayer.backToPlan}</button>
             <div className="workout-session-progress" aria-label={t.workoutPlayer.progressLabel}>{playerQueue.map((exercise, index) => <span key={`${exercise.name}-${index}`} className={completedExercises.includes(index) ? "complete" : skippedExercises.includes(index) ? "skipped" : index === activeWorkout ? "active" : ""} />)}</div>
@@ -1391,7 +1460,6 @@ export default function Home() {
           <div className="plan-explanation"><div><div className="eyebrow">{t.dashboard.planWhyEyebrow}</div><h2>{planLevel} · {planGoal}</h2><p>{aiRationale || t.dashboard.planWhyDefault}</p>{aiSafetyNote && <div className="ai-safety"><strong>{t.dashboard.safetyNoteLabel}</strong><span>{aiSafetyNote}</span></div>}{aiError && <div className="ai-error">{aiError}</div>}</div></div>
           <AdaptivePlanCard adaptation={adaptation} sessionCount={sessionHistory.length} />
           {aiAnalysis && <AiPlanInsights analysis={aiAnalysis} schedule={aiSchedule} progression={aiProgression} fingerprint={aiFingerprint} />}
-          <ReadyPrograms onApply={applyReadyProgram} environment={gym} />
           <div className="workout-layout"><div className="workout-main"><div className="section-title"><div><div className="eyebrow">{t.dashboard.todayEyebrow}</div><h2>{t.dashboard.fullBody(planLevel)}</h2></div><div className="plan-stage"><span>{t.dashboard.stageLabel(progressionBlock + 1)}</span><strong>{[t.dashboard.stageIntro, t.dashboard.stageVolume, t.dashboard.stageStrength, t.dashboard.stageIntensity][progressionBlock]}</strong><small>{progressionBlock >= 3 ? t.dashboard.stageMaxHint : t.dashboard.stageHint([3, 7, 12][progressionBlock] - sessionHistory.length)}</small></div></div><PlanEditor workouts={aiWorkouts.length ? aiWorkouts : localPlan} exerciseOptions={planExerciseOptions} onSave={saveCustomPlan} onReset={resetCustomPlan} /><div className="workout-list">{workouts.map((workout, index) => { const guide = getMotionGuide(workout); return <article className="workout-card" key={workout.name}><ExerciseAnimation exercise={workout} compact autoplay={false} /><div className="exercise-info"><div className="exercise-labels"><div className="pill">{workout.level}</div><span>{guide.action}</span></div><h3>{workout.name} <small>{workout.english}</small></h3><p>{workout.sets} · {workout.rest}</p><details className="how-to"><summary>{t.dashboard.howTo}</summary><ol className="mini-steps"><li>{guide.start}</li><li>{workout.instructions}</li><li>{guide.finish}</li></ol></details></div><button className="play-btn" type="button" aria-label={t.dashboard.openWorkoutLabel(workout.name)} onClick={() => openWorkout(index)}><span>▶</span><small>{t.dashboard.openShort}</small></button></article>; })}</div><button className="start-btn" type="button" onClick={() => openWorkout(0)}>{t.dashboard.startWorkout} <span>→</span></button></div><aside className="coach-card"><div className="coach-top"><span className="spark">✦</span><span>{t.dashboard.coachBrand}</span></div><h2>{t.dashboard.coachTitleLine1}<br /><em>{t.dashboard.coachTitleEm}</em> {t.dashboard.coachTitleRest}</h2><p>{t.dashboard.coachBody}</p><div className="coach-line" /><small>{t.dashboard.coachSignoff(name || t.dashboard.defaultName)}</small></aside></div></>
           : <>
           <div className="dashboard-head"><div><div className="eyebrow">{t.dashboard.todaysPlan}</div><h1>{t.dashboard.greeting(name || t.dashboard.defaultName)}<em>{t.dashboard.greetingEm}</em></h1><p>{t.dashboard.heroBody}</p></div><ActivityStreak userId={authUser.id} /></div>

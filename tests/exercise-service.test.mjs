@@ -67,6 +67,15 @@ test("animasyon görünürlük, fallback ve timer temizliğini uygular", async (
   assert.match(source, /loading="lazy"/);
 });
 
+test("kütüphane kartında animasyon tıklanana kadar durur, detayda oynar", async () => {
+  const [card, detail] = await Promise.all([
+    readFile(new URL("../components/exercises/ExerciseCard.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../components/exercises/ExerciseDetail.tsx", import.meta.url), "utf8"),
+  ]);
+  assert.match(card, /autoplay=\{false\}/);
+  assert.doesNotMatch(detail, /autoplay=\{false\}/);
+});
+
 test("crunch ve reverse crunch için lisanslı yerel gerçek hareket karelerini kullanır", () => {
   assert.deepEqual(trustedExerciseMedia("Crunch"), ["/exercise-images/Crunches/0.jpg", "/exercise-images/Crunches/1.jpg"]);
   assert.deepEqual(trustedExerciseMedia("Bicycle Crunch"), ["/exercise-images/Cross-Body_Crunch/0.jpg", "/exercise-images/Cross-Body_Crunch/1.jpg"]);

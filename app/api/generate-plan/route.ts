@@ -8,6 +8,8 @@ const plannerRules = [
   "Yaş, cinsiyet, boy, kilo, hedef metni, ortam, ekipman, istenen hareketler ve 10 test cevabının her birini değerlendir.",
   "Programın hareket sayısını, setini, tekrarını ve dinlenmesini kullanıcının seviyesi ile ayırdığı süreye göre değiştir.",
   "Yalnızca kullanıcının ortamında ve ekipmanıyla uygulanabilen katalog hareketlerini seç.",
+  "Evde antrenman yapan kullanıcı ekipman belirttiyse, o ekipmanı kullanan en az bir güvenli hareketi programa dahil et.",
+  "Kullanıcının ilk üç tamamlanmış antrenmanında ileri seviye, sıçramalı veya yüksek teknik isteyen hareketleri seçme; hareketleri kolaydan zora sırala.",
   "Ağrı veya sakatlık belirtilen tüm bölgeleri aynı anda kısıt kabul et; riskli hareketleri çıkar.",
   "Fotoğraf, BMI veya metinlerden tıbbi tanı ya da kesin yağ oranı çıkarma.",
   "Fotoğraf varsa yalnızca görünür duruş ve genel vücut dağılımına ilişkin yaklaşık, tanısal olmayan gözlem kullan.",
@@ -101,13 +103,15 @@ export function profileSignals(payload: Record<string, unknown>) {
   const frequencyText = history[1] || "1–2 gün";
   const weeklyDays = frequencyText.includes("5+") ? 5 : frequencyText.includes("3–4") ? 3 : frequencyText.includes("0") ? 2 : 2;
   const beginner = /yeni|hayır|0 gün/i.test(`${experience} ${history[0] || ""}`);
+  const completedSessions = Math.max(0, Math.floor(Number(payload.completedSessions) || 0));
+  const progressionPhase = completedSessions < 3 ? "Başlangıç: temel ve kolay hareketler" : completedSessions < 7 ? "Temel gelişim" : completedSessions < 12 ? "Orta seviye gelişim" : "İleri gelişim";
   const intensity = beginner || history[7] === "Düşük" ? "Düşük-orta" : primaryGoal === "Kondisyon" ? "Orta-yüksek" : "Orta";
   const exerciseCount = sessionMinutes <= 15 ? 3 : sessionMinutes >= 60 ? 6 : sessionMinutes >= 45 ? 5 : 4;
   const setRange = beginner ? "2–3" : sessionMinutes >= 45 ? "3–4" : "3";
   const restRange = primaryGoal === "Kondisyon" || primaryGoal === "Kilo verme" ? "30–60 sn" : beginner ? "60–90 sn" : "75–120 sn";
-  const raw = JSON.stringify({ age: payload.age, gender: payload.gender, height: payload.height, weight: payload.weight, environment: payload.environment, equipment: payload.equipment, goal: payload.goal, requestedExercises: payload.requestedExercises, history });
+  const raw = JSON.stringify({ age: payload.age, gender: payload.gender, height: payload.height, weight: payload.weight, environment: payload.environment, equipment: payload.equipment, goal: payload.goal, requestedExercises: payload.requestedExercises, history, completedSessions });
   const fingerprint = [...raw].reduce((hash, character) => (hash * 33 + character.charCodeAt(0)) % 1000003, 17).toString(36).toUpperCase();
-  return { history, sessionMinutes, experience, primaryGoal, frequencyText, weeklyDays, intensity, exerciseCount, setRange, restRange, painAreas: history[6] || "Yok", movementLevel: history[7] || "Belirtilmedi", sleepQuality: history[8] || "Belirtilmedi", preferredStyle: history[5] || "Karışık", note: history[9] || "Yok", fingerprint };
+  return { history, sessionMinutes, experience, primaryGoal, frequencyText, weeklyDays, intensity, exerciseCount, setRange, restRange, completedSessions, progressionPhase, painAreas: history[6] || "Yok", movementLevel: history[7] || "Belirtilmedi", sleepQuality: history[8] || "Belirtilmedi", preferredStyle: history[5] || "Karışık", note: history[9] || "Yok", fingerprint };
 }
 
 export async function POST(request: Request) {
@@ -157,6 +161,8 @@ BU PROFİL İÇİN ZORUNLU PLAN PARAMETRELERİ:
 - Set aralığı: ${signals.setRange}
 - Dinlenme aralığı: ${signals.restRange}
 - Yoğunluk: ${signals.intensity}
+- Tamamlanan antrenman: ${signals.completedSessions}
+- İlerleme aşaması: ${signals.progressionPhase}
 - Ağrı/sakatlık kısıtları: ${signals.painAreas}
 - Tercih: ${signals.preferredStyle}
 - Günlük hareket: ${signals.movementLevel}

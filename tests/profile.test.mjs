@@ -44,3 +44,22 @@ test("profil yaşam döngüsü özel depolama, RLS ve güçlü silme doğrulamas
   assert.doesNotMatch(migration, /public\.activity_logs/);
   assert.match(migration, /public = false/);
 });
+
+test("antrenman ilerlemesi profil ve plan korunarak atomik sıfırlanır", async () => {
+  const [component, migration, streak] = await Promise.all([
+    readFile(new URL("../components/ProfileManager.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../db/migrations/20260727_reset_training_progress.sql", import.meta.url), "utf8"),
+    readFile(new URL("../components/ActivityStreak.tsx", import.meta.url), "utf8"),
+  ]);
+  assert.match(component, /reset_training_progress/);
+  assert.match(component, /fit-ai-progress-reset/);
+  assert.match(migration, /security definer/);
+  assert.match(migration, /delete from public\.workout_sessions/);
+  assert.match(migration, /current_streak = 0/);
+  assert.match(migration, /last_activity_date = null/);
+  assert.match(migration, /delete from public\.activity_logs/);
+  assert.doesNotMatch(migration, /delete from public\.profiles/);
+  assert.doesNotMatch(migration, /delete from public\.workout_plans/);
+  assert.match(streak, /useState\(0\)/);
+  assert.match(streak, /ensure_user_streak/);
+});
