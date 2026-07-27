@@ -1,10 +1,10 @@
-// This dashboard is loaded lazily from the route shell to keep Worker startup light.
 "use client";
 
-import { ChangeEvent, lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
+import { AiCoachChat } from "@/components/AiCoachChat";
 import { AuthScreen } from "@/components/AuthScreen";
 import { adaptPrescription, summarizeTrainingAdaptation, type TrainingAdaptation, type WorkoutDifficulty } from "@/lib/training-adaptation";
 import { ExerciseAnimation as ExerciseFrameAnimation } from "@/components/exercises/ExerciseAnimation";
@@ -42,8 +42,6 @@ import { summarizePersonalRecords, type PersonalRecord, type SetLogInput } from 
 import { formatWeight, unitToKg } from "@/lib/units";
 import { useWeightUnit } from "@/lib/preferences";
 import { authorizedFetch } from "@/lib/api-client";
-
-const AiCoachChat = lazy(() => import("@/components/AiCoachChat").then((module) => ({ default: module.AiCoachChat })));
 
 // Kullanıcı hangi arayüz dilini seçerse seçsin, seçilen cevaplar bu Türkçe
 // kanonik değerlerle saklanır — plan üretimi ve ağrı bölgesi eşleştirmesi
@@ -1406,7 +1404,7 @@ export default function Home() {
         </section>
       )}
       {pendingSession && <div className="feedback-overlay" role="dialog" aria-modal="true" aria-labelledby="feedback-title"><div className="feedback-dialog"><div className="feedback-check">✓</div><div className="eyebrow">{t.feedback.completedEyebrow}</div><h2 id="feedback-title">{t.feedback.titleLine1}<br /><em>{t.feedback.titleEm}</em></h2><p>{t.feedback.body}</p><fieldset><legend>{t.feedback.difficultyLegend}</legend><div className="feedback-options">{(["Kolay", "Uygun", "Zor"] as WorkoutDifficulty[]).map((option) => <button type="button" aria-pressed={feedbackDifficulty === option} className={feedbackDifficulty === option ? "selected" : ""} onClick={() => setFeedbackDifficulty(option)} key={option}>{option === "Kolay" ? t.feedback.difficultyEasy : option === "Uygun" ? t.feedback.difficultySuitable : t.feedback.difficultyHard}</button>)}</div></fieldset><fieldset><legend>{t.feedback.fatigueLegend}</legend><div className="fatigue-scale">{[1, 2, 3, 4, 5].map((value) => <button type="button" aria-pressed={feedbackFatigue === value} className={feedbackFatigue === value ? "selected" : ""} onClick={() => setFeedbackFatigue(value)} key={value}><strong>{value}</strong><small>{value === 1 ? t.feedback.fatigueVeryLow : value === 3 ? t.feedback.fatigueMedium : value === 5 ? t.feedback.fatigueVeryHigh : ""}</small></button>)}</div></fieldset><fieldset><legend>{t.feedback.painLegend}</legend><div className="feedback-options pain-options">{["Yok", "Bel", "Diz", "Omuz", "Diğer"].map((area) => <button type="button" aria-pressed={feedbackPainAreas.includes(area)} className={feedbackPainAreas.includes(area) ? "selected" : ""} onClick={() => toggleFeedbackPain(area)} key={area}>{area === "Yok" ? t.feedback.painNone : area === "Bel" ? t.feedback.painLowerBack : area === "Diz" ? t.feedback.painKnee : area === "Omuz" ? t.feedback.painShoulder : t.feedback.painOther}</button>)}</div></fieldset><label className="feedback-note">{t.feedback.noteLabel} <small>{t.onboarding.optionalHint}</small><textarea value={feedbackNote} onChange={(event) => setFeedbackNote(event.target.value)} placeholder={t.feedback.notePlaceholder} /></label><div className="feedback-summary"><span>{t.feedback.nextStepLabel}</span><strong>{feedbackPainAreas.some((area) => area !== "Yok") || feedbackDifficulty === "Zor" || feedbackFatigue >= 4 ? t.feedback.nextStepRecovery : feedbackDifficulty === "Kolay" && feedbackFatigue <= 2 ? t.feedback.nextStepIncrease : t.feedback.nextStepBalanced}</strong></div><button className="primary-btn feedback-save" type="button" onClick={() => void saveWorkoutFeedback()}>{t.feedback.save} <span>→</span></button></div></div>}
-      {step === 5 && <Suspense fallback={null}><AiCoachChat context={coachContext} /></Suspense>}
+      {step === 5 && <AiCoachChat context={coachContext} />}
       <footer><span>{t.common.footerTagline}</span><span>© 2026</span></footer>
     </main>
   );
