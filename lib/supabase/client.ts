@@ -26,7 +26,42 @@ async function proxiedRequest(source: Request, configuredUrl: string) {
 }
 
 function isUnexpectedAuthResponse(response: Response) {
-  return !response.headers.get("content-type")?.toLocaleLowerCase("en-US").includes("application/json");
+  return response.headers.get("x-form-ai-proxy") !== "supabase"
+    || !response.headers.get("content-type")?.toLocaleLowerCase("en-US").includes("application/json");
+}
+
+function sendAuthProxyRequest(url: URL, init: RequestInit): Promise<Response> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open(init.method ?? "GET", url.href, true);
+    xhr.responseType = "arraybuffer";
+    xhr.withCredentials = init.credentials === "include";
+
+    new Headers(init.headers).forEach((value, name) => {
+      xhr.setRequestHeader(name, value);
+    });
+
+    xhr.onload = () => {
+      const headers = new Headers();
+      for (const line of xhr.getAllResponseHeaders().trim().split(/[\r\n]+/)) {
+        if (!line) continue;
+        const separator = line.indexOf(":");
+        if (separator === -1) continue;
+        headers.append(line.slice(0, separator).trim(), line.slice(separator + 1).trim());
+      }
+
+      const body = xhr.response?.byteLength ? xhr.response : null;
+      resolve(new Response(body, {
+        status: xhr.status,
+        statusText: xhr.statusText,
+        headers,
+      }));
+    };
+    xhr.onerror = () => reject(new TypeError("Kimlik doğrulama proxy bağlantısı kurulamadı."));
+    xhr.ontimeout = () => reject(new TypeError("Kimlik doğrulama proxy isteği zaman aşımına uğradı."));
+    xhr.timeout = 20_000;
+    xhr.send((init.body as XMLHttpRequestBodyInit | null | undefined) ?? null);
+  });
 }
 
 async function resilientSupabaseFetch(input: RequestInfo | URL, init?: RequestInit) {
@@ -43,16 +78,19 @@ async function resilientSupabaseFetch(input: RequestInfo | URL, init?: RequestIn
   // aynı-origin proxy üzerinden gider.
   if (target.pathname.startsWith("/auth/v1/")) {
     const proxy = await proxiedRequest(request, configuredUrl);
-    const firstProxyResponse = await fetch(proxy.url, proxy.init);
+    const firstProxyResponse = await sendAuthProxyRequest(proxy.url, proxy.init);
     if (!isUnexpectedAuthResponse(firstProxyResponse)) return firstProxyResponse;
 
     // Geçici Cloudflare HTML hata sayfasına karşı aynı ArrayBuffer gövdesiyle
     // yalnızca bir kez daha deneriz; ReadableStream yeniden kullanılmaz.
-    const retryProxyResponse = await fetch(proxy.url, proxy.init);
+    const retryProxyResponse = await sendAuthProxyRequest(proxy.url, proxy.init);
     if (!isUnexpectedAuthResponse(retryProxyResponse)) return retryProxyResponse;
 
     const contentType = retryProxyResponse.headers.get("content-type") ?? "bilinmiyor";
-    throw new Error(`Kimlik doğrulama proxy'si JSON döndürmedi (HTTP ${retryProxyResponse.status}, ${contentType}).`);
+    throw new Error(
+      `Kimlik doğrulama proxy doğrulaması başarısız `
+      + `(HTTP ${retryProxyResponse.status}, ${contentType}, ${proxy.url.pathname}).`,
+    );
   }
 
   return fetch(request);
