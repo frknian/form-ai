@@ -158,9 +158,9 @@ test("keeps the AI plan and movement library wired into the product", async () =
   assert.match(weeklyRoute, /JSON\.stringify\(safeSummary\)/);
   assert.doesNotMatch(weeklyRoute, /payload\.(email|name|userId)/);
   assert.match(layout, /form\.ai — Sana özel antrenman/);
-  assert.match(layout, /generateMetadata/);
+  assert.match(layout, /export const metadata/);
   assert.match(layout, /og\.png/);
-  assert.match(layout, /x-forwarded-host/);
+  assert.match(layout, /form-ai\.frknian\.workers\.dev/);
   assert.doesNotMatch(page, /gymvisual|iframe/i);
   assert.doesNotMatch(page, /knowledge-sources|fitnessSources/);
   assert.doesNotMatch(route, /knowledge-sources|fitnessSources/);
