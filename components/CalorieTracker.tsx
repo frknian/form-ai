@@ -10,6 +10,7 @@ import { isNativeApp, mobileImpact, takeFoodPhoto } from "@/lib/mobile";
 import { createClient } from "@/lib/supabase/client";
 import { localDateKey } from "@/lib/streak";
 import { authorizedFetch } from "@/lib/api-client";
+import { validateManualNutrition } from "@/lib/nutrition-calculation";
 import { translateFoodSource, translateMeal, useTranslations, type Dictionary } from "@/lib/i18n/translate";
 import { useLocale } from "@/lib/i18n/locale";
 import { BarcodeFormat, DecodeHintType } from "@zxing/library";
@@ -23,7 +24,7 @@ const barcodeHints = new Map([[DecodeHintType.POSSIBLE_FORMATS, [
 ]]]);
 
 type Meal = "Kahvaltı" | "Öğle yemeği" | "Akşam yemeği" | "Atıştırmalık";
-type FoodEntry = { id: string; name: string; meal: Meal; calories: number; protein: number; carbs: number; fat: number; fiber?: number; grams?: number; micros?: FoodMicronutrients; time: string; consumedAt: string; source: "Barkod" | "Fotoğraf" | "Manuel" };
+type FoodEntry = { id: string; name: string; meal: Meal; calories: number; protein: number; carbs: number; fat: number; fiber?: number; grams?: number; micros?: FoodMicronutrients; time: string; consumedAt: string; source: "Barkod" | "Fotoğraf" | "Manuel"; isEstimated?: boolean };
 
 interface CalorieTrackerProps {
   userId?: string;
@@ -99,9 +100,10 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
   const [message, setMessage] = useState("");
   const [mealAdvice, setMealAdvice] = useState("");
   const [mealAdviceLoading, setMealAdviceLoading] = useState(false);
-  const [mealAdviceSource, setMealAdviceSource] = useState<"gemini" | "fallback">("fallback");
+  const [mealAdviceSource, setMealAdviceSource] = useState<"ai" | "fallback">("fallback");
   const [adviceRevision, setAdviceRevision] = useState(0);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [dateOffset, setDateOffset] = useState(0);
   const [storageReady, setStorageReady] = useState(false);
   const cameraInput = useRef<HTMLInputElement>(null);
@@ -271,10 +273,10 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
           body: JSON.stringify({ calorieTarget: nutritionGoal.calorieTarget, proteinTarget: nutritionGoal.proteinGrams, carbsTarget: nutritionGoal.carbsGrams, fatTarget: nutritionGoal.fatGrams, totals, meals: dailyEntries.map(({ name, meal: mealName, calories, protein, carbs, fat }) => ({ name, meal: mealName, calories, protein, carbs, fat })), locale }),
           signal: controller.signal,
         });
-        const result = await response.json().catch(() => ({})) as { advice?: string; source?: "gemini" | "fallback" };
+        const result = await response.json().catch(() => ({})) as { advice?: string; source?: "ai" | "fallback" };
         if (!controller.signal.aborted && result.advice) {
           setMealAdvice(result.advice);
-          setMealAdviceSource(result.source === "gemini" ? "gemini" : "fallback");
+          setMealAdviceSource(result.source === "ai" ? "ai" : "fallback");
         }
       } catch {
         if (!controller.signal.aborted) setMealAdvice(t.calorieTracker.mealAdviceUnavailable);
@@ -287,19 +289,52 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
 
   async function addEntry(entry: Omit<FoodEntry, "id" | "time" | "consumedAt">, productBarcode?: string) {
     const now = new Date();
-    const record = { ...entry, id: crypto.randomUUID(), time: new Intl.DateTimeFormat(dateLocale, { hour: "2-digit", minute: "2-digit" }).format(now), consumedAt: now.toISOString() };
+    const temporaryId = crypto.randomUUID();
+    const record = { ...entry, id: temporaryId, time: new Intl.DateTimeFormat(dateLocale, { hour: "2-digit", minute: "2-digit" }).format(now), consumedAt: now.toISOString() };
     setEntries((current) => [record, ...current]);
     if (userId) {
-      const supabase = createClient();
-      const { error } = await supabase?.from("food_entries").insert({ id: record.id, user_id: userId, consumed_at: record.consumedAt, meal: record.meal, name: record.name, calories: record.calories, protein_g: record.protein, carbs_g: record.carbs, fat_g: record.fat, fiber_g: record.fiber || 0, grams: record.grams || null, micros: record.micros || {}, source: record.source, barcode: productBarcode || null }) || {};
-      if (error) setMessage(t.calorieTracker.syncedLocallyOnly);
+      const inputMethod = record.source === "Barkod" ? "barcode" : record.source === "Fotoğraf" ? "photo" : selectedProduct ? "search" : aiEstimate ? "natural_language" : "manual";
+      const foodId = selectedProduct && /^[0-9a-f-]{36}$/i.test(selectedProduct.id) ? selectedProduct.id : null;
+      const response = await authorizedFetch("/api/nutrition/logs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          foodId,
+          loggedDate: selectedDate,
+          mealType: record.meal,
+          foodName: record.name,
+          portionGrams: record.grams || 100,
+          calories: record.calories,
+          protein: record.protein,
+          carbohydrates: record.carbs,
+          fat: record.fat,
+          fiber: record.fiber || 0,
+          inputMethod,
+          confidence: aiEstimate ? (aiEstimate.confidence === "high" ? 0.9 : aiEstimate.confidence === "medium" ? 0.7 : 0.45) : null,
+          isEstimated: Boolean(record.isEstimated || aiEstimate),
+          metadata: { barcode: productBarcode || null, micros: record.micros || {} },
+        }),
+      });
+      const result = await response.json().catch(() => ({})) as { log?: { id?: string } };
+      if (!response.ok) setMessage(t.calorieTracker.syncedLocallyOnly);
+      else if (result.log?.id) setEntries((current) => current.map((item) => item.id === temporaryId ? { ...item, id: result.log!.id! } : item));
     }
-    setFoodName(""); setGrams("100"); setNutrition(emptyFoodNutrition()); setSelectedProduct(null); setSearchResults([]); setBarcode(""); setPhotoPreview(null); setMessage("");
+    setFoodName(""); setGrams("100"); setNutrition(emptyFoodNutrition()); setSelectedProduct(null); setSearchResults([]); setBarcode(""); setPhotoPreview(null); setAiEstimate(null);
   }
 
-  function submitManual() {
-    if (!foodName.trim() || !nutrition.calories) { setMessage(t.calorieTracker.fillNameAndCalories); return; }
-    void addEntry({ name: foodName.trim(), meal, calories: nutrition.calories, protein: nutrition.protein, carbs: nutrition.carbs, fat: nutrition.fat, fiber: nutrition.fiber, grams: Number(grams) || undefined, micros: nutrition.micros, source: activeMethod === "photo" ? "Fotoğraf" : selectedProduct?.barcode ? "Barkod" : "Manuel" }, selectedProduct?.barcode);
+  async function submitManual() {
+    if (isSubmitting || !foodName.trim()) { if (!foodName.trim()) setMessage(t.calorieTracker.fillNameAndCalories); return; }
+    const portionGrams = Number(grams.replace(",", "."));
+    const validation = validateManualNutrition({ portionGrams, calories: nutrition.calories, protein: nutrition.protein, carbohydrates: nutrition.carbs, fat: nutrition.fat, fiber: nutrition.fiber });
+    if (!validation.valid) { setMessage(validation.error || t.calorieTracker.fillNameAndCalories); return; }
+    if (validation.warning) setMessage(validation.warning);
+    setIsSubmitting(true);
+    try {
+      await addEntry({ name: foodName.trim(), meal, calories: nutrition.calories, protein: nutrition.protein, carbs: nutrition.carbs, fat: nutrition.fat, fiber: nutrition.fiber, grams: portionGrams, micros: nutrition.micros, source: activeMethod === "photo" ? "Fotoğraf" : selectedProduct?.barcode ? "Barkod" : "Manuel", isEstimated: Boolean(aiEstimate) }, selectedProduct?.barcode);
+      setMessage(validation.warning ? `${t.calorieTracker.entryAdded} ${validation.warning}` : t.calorieTracker.entryAdded);
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   // Katalogda karşılığı olmayan serbest metinler için AI tahmini. Porsiyonu da
@@ -311,18 +346,28 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
     setEstimating(true);
     setMessage(t.calorieTracker.estimating);
     try {
-      const response = await authorizedFetch("/api/nutrition/estimate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query, locale }) });
-      const result = await response.json().catch(() => ({})) as { recognized?: boolean; error?: string; name?: string; grams?: number; calories?: number; protein?: number; carbs?: number; fat?: number; fiber?: number; confidence?: "low" | "medium" | "high" };
+      const response = await authorizedFetch("/api/nutrition/parse-text", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query, locale }) });
+      const result = await response.json().catch(() => ({})) as {
+        error?: string;
+        warnings?: string[];
+        totals?: { calories: number; protein: number; carbohydrates: number; fat: number; fiber: number };
+        items?: Array<{ query: string; estimatedGrams: number; confidence: number; needsConfirmation: boolean; food: unknown; nutrition: unknown }>;
+      };
       if (!response.ok) { setMessage(result.error || t.calorieTracker.estimateFailed); return; }
-      if (!result.recognized) { setMessage(t.calorieTracker.estimateNotRecognized); return; }
-      setFoodName(result.name || query);
-      setGrams(String(result.grams || 100));
-      setNutrition({ calories: result.calories || 0, protein: result.protein || 0, carbs: result.carbs || 0, fat: result.fat || 0, fiber: result.fiber || 0, micros: {} });
+      const items = result.items || [];
+      const totals = result.totals;
+      if (!items.length || !totals) { setMessage(t.calorieTracker.estimateNotRecognized); return; }
+      const totalGrams = items.reduce((sum, item) => sum + item.estimatedGrams, 0);
+      const averageConfidence = items.reduce((sum, item) => sum + item.confidence, 0) / items.length;
+      const confidence = averageConfidence >= 0.8 && items.every((item) => !item.needsConfirmation) ? "high" : averageConfidence >= 0.55 ? "medium" : "low";
+      setFoodName(items.map((item) => item.query).join(", "));
+      setGrams(String(Math.round(totalGrams)));
+      setNutrition({ calories: totals.calories, protein: totals.protein, carbs: totals.carbohydrates, fat: totals.fat, fiber: totals.fiber, micros: {} });
       setSelectedProduct(null);
       setSearchResults([]);
       setSearchState("idle");
-      setAiEstimate({ grams: result.grams || 100, items: [], confidence: result.confidence || "medium" });
-      setMessage(result.confidence === "low" ? t.calorieTracker.estimateLowConfidence : t.calorieTracker.estimateReady);
+      setAiEstimate({ grams: Math.round(totalGrams), items: items.map((item) => item.query), confidence });
+      setMessage([confidence === "low" ? t.calorieTracker.estimateLowConfidence : t.calorieTracker.estimateReady, ...(result.warnings || [])].join(" "));
     } catch {
       setMessage(t.calorieTracker.estimateFailed);
     } finally {
@@ -334,12 +379,14 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
     if (!barcode.trim()) { setMessage(t.calorieTracker.enterOrScanBarcode); return; }
     setMessage(t.calorieTracker.searchingCatalogMessage);
     const response = await authorizedFetch(`/api/nutrition/barcode?code=${encodeURIComponent(barcode)}`);
-    const result = await response.json().catch(() => ({})) as { error?: string; name?: string; calories?: number; protein?: number; carbs?: number; fat?: number; fiber?: number; micros?: FoodMicronutrients };
-    if (!response.ok || !result.name) { setMessage(result.error || t.calorieTracker.productNotFound); return; }
+    const result = await response.json().catch(() => ({})) as { error?: string; name?: string; brand?: string; barcode?: string; servingGrams?: number; source?: FoodSearchResult["source"]; verified?: boolean; dataQuality?: FoodSearchResult["dataQuality"]; nutritionPer100g?: FoodNutrition };
+    if (!response.ok || !result.name || !result.nutritionPer100g) { setMessage(result.error || t.calorieTracker.productNotFound); return; }
+    const serving = result.servingGrams || 100;
     setFoodName(result.name);
-    setGrams("100");
-    setNutrition({ calories: result.calories || 0, protein: result.protein || 0, carbs: result.carbs || 0, fat: result.fat || 0, fiber: result.fiber || 0, micros: result.micros || {} });
-    setSelectedProduct({ id: `barcode-${barcode}`, name: result.name, barcode, servingGrams: 100, nutritionPer100g: { calories: result.calories || 0, protein: result.protein || 0, carbs: result.carbs || 0, fat: result.fat || 0, fiber: result.fiber || 0, micros: result.micros || {} }, source: "Open Food Facts" });
+    setGrams(String(serving));
+    setNutrition(scaleFoodNutrition(result.nutritionPer100g, serving));
+    setSelectedProduct({ id: `barcode-${barcode}`, name: result.name, brand: result.brand, barcode: result.barcode || barcode, servingGrams: serving, nutritionPer100g: result.nutritionPer100g, source: result.source || "Open Food Facts", verified: result.verified, dataQuality: result.dataQuality });
+    setAiEstimate(null);
     setActiveMethod("manual");
     setMessage(t.calorieTracker.productFoundMessage);
   }
@@ -356,7 +403,7 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
     setPhotoPreview(previewUrl);
     setMessage(t.calorieTracker.analyzingPhoto);
     const response = await authorizedFetch("/api/nutrition/analyze-photo", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ photoDataUrl }) });
-    const result = await response.json().catch(() => ({})) as { error?: string; name?: string; items?: string[]; grams?: number; calories?: number; protein?: number; carbs?: number; fat?: number; fiber?: number; confidence?: "low" | "medium" | "high"; usage?: { used: number; limit: number } };
+    const result = await response.json().catch(() => ({})) as { error?: string; name?: string; itemNames?: string[]; grams?: number; calories?: number; protein?: number; carbs?: number; fat?: number; fiber?: number; confidence?: "low" | "medium" | "high"; needsManualNutrition?: boolean; warnings?: string[]; usage?: { used: number; limit: number } };
     if (!response.ok || !result.name) { setMessage(result.error || t.calorieTracker.photoAnalysisFailed); return; }
     // Makrolar porsiyonun tamamı için geldiği için gramajı da modelin tahminine
     // eşitliyoruz; aksi halde 100 g varsayımı değerleri yanlış ölçeklerdi.
@@ -364,9 +411,10 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
     setGrams(String(result.grams || 100));
     setNutrition({ calories: result.calories || 0, protein: result.protein || 0, carbs: result.carbs || 0, fat: result.fat || 0, fiber: result.fiber || 0, micros: {} });
     setSelectedProduct(null);
-    setAiEstimate({ grams: result.grams || 100, items: result.items || [], confidence: result.confidence || "medium" });
+    setAiEstimate({ grams: result.grams || 100, items: result.itemNames || [], confidence: result.confidence || "medium" });
     const resultMessage = result.confidence === "low" ? t.calorieTracker.photoResultLowConfidence : t.calorieTracker.photoResultMessage;
-    setMessage(result.usage ? `${resultMessage} ${t.calorieTracker.photoDailyUsage(result.usage.used, result.usage.limit)}` : resultMessage);
+    const manualNotice = result.needsManualNutrition ? " Bazı besin değerlerini elle tamamlamalısın." : "";
+    setMessage(`${resultMessage}${manualNotice} ${(result.warnings || []).join(" ")}${result.usage ? ` ${t.calorieTracker.photoDailyUsage(result.usage.used, result.usage.limit)}` : ""}`.trim());
   }
 
   function updateNutrition(field: Exclude<keyof FoodNutrition, "micros">, value: string) {
@@ -378,7 +426,7 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
     const next = Number(value.replace(",", "."));
     const previous = Number(grams.replace(",", "."));
     setGrams(value);
-    if (Number.isFinite(next) && next >= 0 && Number.isFinite(previous) && previous > 0) setNutrition((current) => scaleFoodNutrition(current, (next / previous) * 100));
+    if (Number.isFinite(next) && next > 0 && next <= 5_000 && Number.isFinite(previous) && previous > 0) setNutrition((current) => scaleFoodNutrition(current, (next / previous) * 100));
   }
 
   function selectProduct(product: FoodSearchResult) {
@@ -403,7 +451,7 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
 
   async function deleteEntry(entryId: string) {
     setEntries((current) => current.filter((item) => item.id !== entryId));
-    if (userId) await createClient()?.from("food_entries").delete().eq("id", entryId);
+    if (userId && /^[0-9a-f-]{36}$/i.test(entryId)) await authorizedFetch(`/api/nutrition/logs/${entryId}`, { method: "DELETE" });
   }
 
   async function saveNutritionGoal(goal: NutritionGoal) {
@@ -434,7 +482,7 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
     </section>
 
     <section className="meal-ai-advice" aria-labelledby="meal-ai-advice-title">
-      <div className="meal-ai-icon" aria-hidden="true">✦</div><div><span>{t.calorieTracker.mealAdviceEyebrow}</span><h2 id="meal-ai-advice-title">{t.calorieTracker.mealAdviceTitle}</h2><p>{mealAdviceLoading ? t.calorieTracker.mealAdviceLoading : mealAdvice || t.calorieTracker.mealAdvicePreparing}</p><small>{mealAdviceSource === "gemini" ? t.calorieTracker.mealAdviceGeminiNote : t.calorieTracker.mealAdviceFallbackNote} {t.calorieTracker.mealAdviceDisclaimer}</small></div><button type="button" disabled={mealAdviceLoading} onClick={() => setAdviceRevision((value) => value + 1)}>{mealAdviceLoading ? t.calorieTracker.refreshing : t.calorieTracker.refresh}</button>
+      <div className="meal-ai-icon" aria-hidden="true">✦</div><div><span>{t.calorieTracker.mealAdviceEyebrow}</span><h2 id="meal-ai-advice-title">{t.calorieTracker.mealAdviceTitle}</h2><p>{mealAdviceLoading ? t.calorieTracker.mealAdviceLoading : mealAdvice || t.calorieTracker.mealAdvicePreparing}</p><small>{mealAdviceSource === "ai" ? t.calorieTracker.mealAdviceAiNote : t.calorieTracker.mealAdviceFallbackNote} {t.calorieTracker.mealAdviceDisclaimer}</small></div><button type="button" disabled={mealAdviceLoading} onClick={() => setAdviceRevision((value) => value + 1)}>{mealAdviceLoading ? t.calorieTracker.refreshing : t.calorieTracker.refresh}</button>
     </section>
 
     <section className="food-entry-panel">
@@ -450,16 +498,16 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
         {activeMethod === "photo" && <div className="method-content photo-food-content"><button type="button" className="food-photo-drop" onClick={() => void chooseFoodPhoto()}>{photoPreview ? <Image src={photoPreview} alt={t.calorieTracker.photoAlt} width={640} height={480} unoptimized /> : <><ImagePlus size={26} /><strong>{t.calorieTracker.photoDropPrompt1}</strong><span>{t.calorieTracker.photoDropPrompt2}</span></>}</button><input ref={cameraInput} className="sr-only" type="file" accept="image/*" capture="environment" onChange={handlePhoto} />{photoPreview && <button type="button" className="outline-btn" onClick={() => void chooseFoodPhoto()}>{t.calorieTracker.choosePhotoAgain}</button>}</div>}
         {(activeMethod === "manual" || photoPreview) && <>
           <div className="manual-fields">
-            <label className="food-name">{t.calorieTracker.foodNameLabel}<input value={foodName} onChange={(event) => { setFoodName(event.target.value); setSelectedProduct(null); }} placeholder={t.calorieTracker.foodNamePlaceholder} autoComplete="off" /></label>
+            <label className="food-name">{t.calorieTracker.foodNameLabel}<input value={foodName} onChange={(event) => { setFoodName(event.target.value); setSelectedProduct(null); setAiEstimate(null); }} placeholder={t.calorieTracker.foodNamePlaceholder} autoComplete="off" /></label>
             <label>{t.calorieTracker.portionLabel}<input inputMode="decimal" value={grams} onChange={(event) => updateGrams(event.target.value)} placeholder="100" /></label>
             {nutritionFields.map((field) => <label key={field.key}>{field.label} ({field.unit})<input inputMode="decimal" value={formatAmount(nutrition[field.key], dateLocale)} onChange={(event) => updateNutrition(field.key, event.target.value)} placeholder="0" /></label>)}
             {aiEstimate && <div className={`ai-estimate-card ${aiEstimate.confidence}`}><span>{t.calorieTracker.aiEstimateLabel}</span><strong>{t.calorieTracker.aiEstimateGrams(aiEstimate.grams)}</strong>{aiEstimate.items.length > 0 && <small>{aiEstimate.items.join(" · ")}</small>}<p>{aiEstimate.confidence === "low" ? t.calorieTracker.aiConfidenceLow : aiEstimate.confidence === "high" ? t.calorieTracker.aiConfidenceHigh : t.calorieTracker.aiConfidenceMedium}</p></div>}
-            <button type="button" className="primary-btn add-food" onClick={submitManual}><Plus size={16} /> {t.calorieTracker.addToLog}</button>
+            <button type="button" className="primary-btn add-food" disabled={isSubmitting} onClick={() => void submitManual()}><Plus size={16} /> {t.calorieTracker.addToLog}</button>
           </div>
           {activeMethod === "manual" && foodName.trim().length >= 2 && <div className={`food-search-panel ${searchState}`} aria-live="polite">
             <div className="food-search-heading"><strong>{t.calorieTracker.productSearchLabel}</strong><span>{searchState === "loading" ? t.calorieTracker.searchingCatalog : selectedProduct ? t.calorieTracker.productSelected(selectedProduct.source) : t.calorieTracker.typeProductName}</span></div>
             {searchState === "loading" && <div className="food-search-loading"><i /><i /><i /> {t.calorieTracker.preparingResults}</div>}
-            {searchState === "ready" && <div className="food-search-results">{searchResults.map((product) => <button type="button" key={product.id} onClick={() => selectProduct(product)}><span><strong>{product.name}</strong><small>{[product.brand, product.source].filter(Boolean).join(" · ")}</small></span><b>{product.nutritionPer100g.calories} kcal<small>/100 g</small></b></button>)}</div>}
+            {searchState === "ready" && <div className="food-search-results">{searchResults.map((product) => <button type="button" key={product.id} onClick={() => selectProduct(product)}><span><strong>{product.name}</strong><small>{[product.brand, product.source, product.verified ? "Doğrulanmış" : "Sağlayıcı verisi"].filter(Boolean).join(" · ")}</small></span><b>{product.nutritionPer100g.calories} kcal<small>/100 g</small></b></button>)}</div>}
             {(searchState === "empty" || searchState === "error") && <div className="food-search-empty"><strong>{searchState === "error" ? t.calorieTracker.catalogUnavailable : t.calorieTracker.noResultsFound}</strong><span>{searchNotice || t.calorieTracker.manualFallbackNote}</span><button type="button" className="ai-estimate-btn" disabled={estimating} onClick={() => void estimateFromText()}><Sparkles size={14} /> {estimating ? t.calorieTracker.estimating : t.calorieTracker.estimateWithAi}</button></div>}
             {selectedProduct && <div className="selected-food-summary"><span><strong>{selectedProduct.name}</strong><small>{t.calorieTracker.perGram(formatAmount(Number(grams) || 0, dateLocale), selectedProduct.source)}</small></span><b>{nutrition.calories} kcal</b><p>{t.calorieTracker.fiberLabel(formatAmount(nutrition.fiber, dateLocale))}{Object.entries(nutrition.micros).filter(([, value]) => Number(value) > 0).slice(0, 3).map(([key, value]) => ` · ${microLabel(t, key as keyof FoodMicronutrients)} ${formatAmount(Number(value), dateLocale)} mg`).join("")}</p></div>}
           </div>}

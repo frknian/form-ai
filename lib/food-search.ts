@@ -22,7 +22,10 @@ export type FoodSearchResult = {
   barcode?: string;
   servingGrams?: number;
   nutritionPer100g: FoodNutrition;
-  source: "Open Food Facts" | "FİT.AI temel besin listesi";
+  source: "Open Food Facts" | "USDA FoodData Central" | "FİT.AI temel besin listesi" | "FİT.AI besin veritabanı";
+  verified?: boolean;
+  dataQuality?: "verified" | "provider" | "estimated" | "user_entered" | "incomplete";
+  imageUrl?: string;
 };
 
 export type OpenFoodFactsSearchHit = {

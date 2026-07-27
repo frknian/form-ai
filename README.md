@@ -9,7 +9,7 @@ Açık kaynak bir yapay zeka modeliyle (varsayılan: Moonshot AI'nin Kimi K3'ü,
 - **Antrenman oynatıcı ve set kaydı**: Set/tekrar/dinlenme sayaçları, ağırlık · tekrar · RPE kaydı ve önceki performansa göre güvenli ilerleme önerisi.
 - **Kişisel rekorlar (tahmini 1RM)**: Ağırlıklı set kayıtlarından Epley formülüyle hareket bazında en yüksek tahmini 1RM İlerlemem ekranında listelenir.
 - **Aktivite günlüğü**: Koşu, yürüyüş, bisiklet, yüzme ve diğer sporlar için açılır pencerede kayıt ve geçmiş; günlük seri (streak) takibi.
-- **Kalori/beslenme takibi, vücut ölçümleri ve takvim**: Kalori-makro hedefleri, ölçüm trend grafikleri ve antrenman takvimi/hatırlatıcıları.
+- **Kalori/beslenme takibi, vücut ölçümleri ve takvim**: Barkod, katalog araması, Kimi K3 ile doğal dil/fotoğraf ayrıştırma, doğrulanmış kaynaklardan porsiyon hesabı, kalori-makro hedefleri, ölçüm trend grafikleri ve antrenman takvimi/hatırlatıcıları.
 - **kg/lb birim tercihi**: Profil kilosu, set kaydı, kişisel rekorlar ve vücut ölçümleri seçilen birimde gösterilir (tercih yerel olarak saklanır).
 - **Veri dışa aktarma**: Profilden tüm hesap verileri tek bir JSON dosyası olarak indirilebilir.
 - **Güvenli hesap**: E-posta doğrulaması ve şifre sıfırlama 6 haneli OTP koduyla; Google ile giriş; hesabı dondurma/silme.
@@ -36,6 +36,8 @@ npm run lint
 - Görsel girdi (öğün fotoğrafı, plan fotoğrafı) gerektiği için `AI_MODEL` görsel destekli bir model olmalı; varsayılan `kimi-k3`, Moonshot AI'nin kendi API'si (`https://api.moonshot.ai/v1`) üzerinden native görsel destekler. OpenRouter/Together/Fireworks gibi başka bir sağlayıcıya geçmek için `.env.example`'daki örneğe bakın.
 - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` — hesap ve veri katmanı. Tanımlı değilse giriş ekranı "yapılandırılmamış" durumunu gösterir.
 - `SUPABASE_SECRET_KEY` — yalnız sunucu tarafındaki hesap silme işlemi için; `NEXT_PUBLIC_` öneki eklemeyin.
+- `USDA_FDC_API_KEY` — isteğe bağlı USDA FoodData Central arama yedeği; yalnız sunucuda kullanılır.
+- `AI_VISION_ENABLED` — Kimi K3 dağıtımında görsel girdi kapalıysa `false`; fotoğraf akışı kullanıcıyı güvenli biçimde yazarak eklemeye yönlendirir.
 - `CAPACITOR_SERVER_URL` — Capacitor geliştirmesinde yerel sunucu adresi.
 
 ## Veritabanı kurulumu
