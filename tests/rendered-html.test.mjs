@@ -72,6 +72,11 @@ test("keeps email verification and Google authentication wired into profile crea
   assert.match(page, /MobileRuntime/);
   assert.match(authScreen, /skipBrowserRedirect: native/);
   assert.match(authScreen, /openNativeBrowser/);
+  const supabaseClient = await readFile(new URL("../lib/supabase/client.ts", import.meta.url), "utf8");
+  assert.match(supabaseClient, /resilientSupabaseFetch/);
+  assert.match(supabaseClient, /isUnexpectedAuthResponse/);
+  assert.match(supabaseClient, /firstProxySource/);
+  assert.match(supabaseClient, /retryProxySource/);
   assert.match(mobileRuntime, /com\.fitai\.app:\/\/auth\/callback/);
   assert.match(mobileRuntime, /exchangeCodeForSession/);
   assert.match(mobileRuntime, /LocalNotifications\.schedule/);
