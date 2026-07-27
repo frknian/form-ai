@@ -22,6 +22,10 @@
 .DS_Store
 *.pem
 
+# editor / local tooling state
+/.idea/
+/.claude/settings.local.json
+
 # debug
 npm-debug.log*
 yarn-debug.log*

@@ -41,6 +41,15 @@ const worker = {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
 
+    // Doğrudan Workers yayını, Vinext'in statik bundle dosyalarını her zaman
+    // otomatik olarak asset katmanına yönlendirmeyebilir. Uygulama router'ına
+    // geçmeden önce mevcut bir varlığı döndürmek, istemcinin hydrate olmasını
+    // ve oturum başlatma kodunun çalışmasını sağlar.
+    if (!url.pathname.startsWith("/api/") && url.pathname !== "/_vinext/image") {
+      const staticAsset = await env.ASSETS.fetch(request);
+      if (staticAsset.status !== 404) return staticAsset;
+    }
+
     // Supabase auth/data trafiğini Vinext ve React route motorunu başlatmadan geçir.
     // Bu yol Cloudflare ücretsiz Worker CPU limitinin altında kalacak kadar hafiftir.
     const supabaseResponse = await handleSupabaseProxy(request);

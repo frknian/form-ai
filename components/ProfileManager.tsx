@@ -25,6 +25,7 @@ type ProfileManagerProps = {
   onSaved: (profile: EditableProfile, avatarUrl: string | null) => void;
   onFrozen: () => void;
   onDeleted: () => void;
+  onProgressReset: () => void;
   onSignOut: () => Promise<void>;
 };
 
@@ -34,7 +35,7 @@ function numberOrNull(value: string) {
   return Number.isFinite(number) && number > 0 ? number : null;
 }
 
-export function ProfileManager({ user, profile, avatarUrl, onSaved, onFrozen, onDeleted, onSignOut }: ProfileManagerProps) {
+export function ProfileManager({ user, profile, avatarUrl, onSaved, onFrozen, onDeleted, onProgressReset, onSignOut }: ProfileManagerProps) {
   const t = useTranslations();
   const locale = useLocale();
   const dateLocale = locale === "en" ? "en-US" : "tr-TR";
@@ -48,6 +49,10 @@ export function ProfileManager({ user, profile, avatarUrl, onSaved, onFrozen, on
   const [deletePhrase, setDeletePhrase] = useState("");
   const [deleteEmail, setDeleteEmail] = useState("");
   const [deleteAccepted, setDeleteAccepted] = useState(false);
+  const [progressResetOpen, setProgressResetOpen] = useState(false);
+  const [progressResetPhrase, setProgressResetPhrase] = useState("");
+  const [progressResetAccepted, setProgressResetAccepted] = useState(false);
+  const [resettingProgress, setResettingProgress] = useState(false);
   const [exporting, setExporting] = useState(false);
   const deleteEmailRef = useRef<HTMLInputElement>(null);
   const age = useMemo(() => calculateAge(draft.birthDate), [draft.birthDate]);
@@ -194,6 +199,38 @@ export function ProfileManager({ user, profile, avatarUrl, onSaved, onFrozen, on
     }
   }
 
+  async function resetProgress() {
+    if (progressResetPhrase !== t.profileManager.progressResetConfirmPhrase || !progressResetAccepted) return;
+    const client = createClient();
+    if (!client) return;
+    setResettingProgress(true);
+    setMessage("");
+    const { data: { session } } = await client.auth.getSession();
+    if (!session?.access_token) {
+      setResettingProgress(false);
+      setMessage(t.profileManager.secureSessionFailed);
+      return;
+    }
+    try {
+      const response = await fetch("/api/account/reset-progress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ confirmation: "RESET_PROGRESS" }),
+      });
+      const payload = await response.json().catch(() => null) as { error?: string } | null;
+      if (!response.ok) throw new Error(payload?.error || t.profileManager.progressResetFailed);
+      setProgressResetOpen(false);
+      setProgressResetPhrase("");
+      setProgressResetAccepted(false);
+      onProgressReset();
+      setMessage(t.profileManager.progressResetComplete);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : t.profileManager.progressResetFailed);
+    } finally {
+      setResettingProgress(false);
+    }
+  }
+
   return <section className="profile-editor profile-manager" aria-labelledby="profile-manager-title">
     <div className="profile-manager-intro">
       <div className="eyebrow">{t.profileManager.eyebrow}</div><h2 id="profile-manager-title">{t.profileManager.title}</h2><p>{t.profileManager.body}</p>
@@ -212,7 +249,11 @@ export function ProfileManager({ user, profile, avatarUrl, onSaved, onFrozen, on
 
     <div className="profile-export"><div><span>{t.profileManager.dataEyebrow}</span><strong>{t.profileManager.exportTitle}</strong><p>{t.profileManager.exportBody}</p></div><button type="button" disabled={exporting} onClick={() => void exportData()}>{exporting ? t.profileManager.exportPreparing : t.profileManager.exportButton}</button></div>
 
+    <div className="account-danger-zone progress-reset-zone"><div><span>{t.profileManager.progressResetEyebrow}</span><strong>{t.profileManager.progressResetTitle}</strong><p>{t.profileManager.progressResetBody}</p></div><div><button className="danger" type="button" disabled={saving || resettingProgress} onClick={() => setProgressResetOpen(true)}>{t.profileManager.progressResetButton}</button></div></div>
+
     <div className="account-danger-zone"><div><span>{t.profileManager.accountManagementEyebrow}</span><strong>{t.profileManager.accountManagementTitle}</strong><p>{t.profileManager.accountManagementBody}</p></div><div><button type="button" disabled={saving} onClick={() => void freezeAccount()}>{t.profileManager.freezeAccount}</button><button className="danger" type="button" disabled={saving} onClick={() => setDeleteOpen(true)}>{t.profileManager.deleteAccount}</button></div></div>
+
+    {progressResetOpen && <div className="account-delete-overlay" role="dialog" aria-modal="true" aria-labelledby="reset-progress-title" aria-describedby="reset-progress-description"><div className="account-delete-dialog"><span className="danger-label">{t.profileManager.irreversibleLabel}</span><h2 id="reset-progress-title">{t.profileManager.progressResetDialogTitle}</h2><p id="reset-progress-description">{t.profileManager.progressResetDialogBody}</p><label>{t.profileManager.confirmPhraseLabel}<strong>{t.profileManager.progressResetConfirmPhrase}</strong>{t.profileManager.confirmPhraseSuffix}<input autoFocus value={progressResetPhrase} onChange={(event) => setProgressResetPhrase(event.target.value)} /></label><label className="delete-checkbox"><input type="checkbox" checked={progressResetAccepted} onChange={(event) => setProgressResetAccepted(event.target.checked)} /><span>{t.profileManager.progressResetCheckboxLabel}</span></label><div><button type="button" disabled={resettingProgress} onClick={() => setProgressResetOpen(false)}>{t.profileManager.cancel}</button><button className="danger" type="button" disabled={resettingProgress || progressResetPhrase !== t.profileManager.progressResetConfirmPhrase || !progressResetAccepted} onClick={() => void resetProgress()}>{resettingProgress ? t.profileManager.progressResetting : t.profileManager.progressResetButton}</button></div></div></div>}
 
     {deleteOpen && <div className="account-delete-overlay" role="dialog" aria-modal="true" aria-labelledby="delete-account-title" aria-describedby="delete-account-description"><div className="account-delete-dialog"><span className="danger-label">{t.profileManager.irreversibleLabel}</span><h2 id="delete-account-title">{t.profileManager.deleteDialogTitle}</h2><p id="delete-account-description">{t.profileManager.deleteDialogBody}</p><label>{t.profileManager.typeEmailLabel}<input ref={deleteEmailRef} type="email" value={deleteEmail} onChange={(event) => setDeleteEmail(event.target.value)} placeholder={user.email || t.profileManager.emailPlaceholder} /></label><label>{t.profileManager.confirmPhraseLabel}<strong>{deleteConfirmPhrase}</strong>{t.profileManager.confirmPhraseSuffix}<input value={deletePhrase} onChange={(event) => setDeletePhrase(event.target.value)} /></label><label className="delete-checkbox"><input type="checkbox" checked={deleteAccepted} onChange={(event) => setDeleteAccepted(event.target.checked)} /><span>{t.profileManager.deleteCheckboxLabel}</span></label><div><button type="button" disabled={saving} onClick={() => setDeleteOpen(false)}>{t.profileManager.cancel}</button><button className="danger" type="button" disabled={saving || deletePhrase !== deleteConfirmPhrase || deleteEmail.trim().toLocaleLowerCase("tr-TR") !== (user.email || "").toLocaleLowerCase("tr-TR") || !deleteAccepted} onClick={() => void deleteAccount()}>{saving ? t.profileManager.deleting : t.profileManager.confirmDeleteAccount}</button></div></div></div>}
   </section>;

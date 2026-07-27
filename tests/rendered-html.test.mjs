@@ -27,9 +27,10 @@ test("rejects unknown Supabase projects before loading the app router", async ()
 });
 
 test("buffers Supabase proxy bodies for Safari and Cloudflare compatibility", async () => {
-  const [browserClient, workerProxy] = await Promise.all([
+  const [browserClient, workerProxy, workerEntry] = await Promise.all([
     readFile(new URL("../lib/supabase/client.ts", import.meta.url), "utf8"),
     readFile(new URL("../worker/supabase-proxy.ts", import.meta.url), "utf8"),
+    readFile(new URL("../worker/index.ts", import.meta.url), "utf8"),
   ]);
 
   assert.match(browserClient, /await source\.arrayBuffer\(\)/);
@@ -42,6 +43,8 @@ test("buffers Supabase proxy bodies for Safari and Cloudflare compatibility", as
   assert.match(workerProxy, /await request\.arrayBuffer\(\)/);
   assert.match(workerProxy, /X-Form-AI-Proxy", "supabase"/);
   assert.doesNotMatch(workerProxy, /body:\s*request\.body/);
+  assert.match(workerEntry, /const staticAsset = await env\.ASSETS\.fetch\(request\)/);
+  assert.match(workerEntry, /if \(staticAsset\.status !== 404\) return staticAsset/);
 });
 
 test("server-renders the secure form.ai account entry", async () => {

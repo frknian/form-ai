@@ -24,19 +24,27 @@ test("profil tarihçesi alanları Türkçe ve anlaşılır etiketlenir", () => {
 });
 
 test("profil yaşam döngüsü özel depolama, RLS ve güçlü silme doğrulaması içerir", async () => {
-  const [component, route, migration, auth] = await Promise.all([
+  const [component, route, progressResetRoute, migration, auth] = await Promise.all([
     readFile(new URL("../components/ProfileManager.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/api/account/delete/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/account/reset-progress/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../db/migrations/20260723_profile_lifecycle.sql", import.meta.url), "utf8"),
     readFile(new URL("../components/AuthScreen.tsx", import.meta.url), "utf8"),
   ]);
   assert.match(auth, /birth_date/);
   assert.match(component, /deleteConfirmPhrase/);
+  assert.match(component, /progressResetConfirmPhrase/);
+  assert.match(component, /onProgressReset/);
   assert.match(component, /t\.profileManager\.freezeAccount/);
   assert.match(component, /profile-avatars/);
   assert.doesNotMatch(component, /DEĞİŞİKLİK GEÇMİŞİ|her doğum gününde otomatik güncellenir/);
   assert.match(route, /auth\.admin\.deleteUser/);
   assert.match(route, /SUPABASE_SECRET_KEY/);
+  assert.match(progressResetRoute, /payload\.confirmation !== "RESET_PROGRESS"/);
+  assert.match(progressResetRoute, /authClient\.auth\.getUser\(token\)/);
+  for (const table of ["food_entries", "sport_activity_entries", "activity_logs", "user_streaks", "workout_sessions"]) {
+    assert.match(progressResetRoute, new RegExp(table));
+  }
   assert.match(migration, /birthday_premium_day', false/);
   assert.match(migration, /profile_history/);
   assert.match(migration, /account_is_active/);
