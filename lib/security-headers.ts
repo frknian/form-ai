@@ -28,7 +28,9 @@ export const securityHeaders: Record<string, string> = {
   "Referrer-Policy": "strict-origin-when-cross-origin",
   "Permissions-Policy": "camera=(self), microphone=(), geolocation=(), interest-cohort=()",
   "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
-  "Cross-Origin-Opener-Policy": "same-origin",
+  // Google Identity Services popup'ı kimlik bilgisini ana pencereye postMessage ile iletir.
+  // İzolasyonu korurken yalnızca bu popup iletişimine izin ver.
+  "Cross-Origin-Opener-Policy": "same-origin-allow-popups",
   "X-DNS-Prefetch-Control": "off",
 };
 

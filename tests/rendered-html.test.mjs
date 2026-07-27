@@ -18,6 +18,7 @@ test("server-renders the secure form.ai account entry", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
+  assert.equal(response.headers.get("cross-origin-opener-policy"), "same-origin-allow-popups");
 
   const html = await response.text();
   assert.match(html, /<title>form\.ai — Sana özel antrenman<\/title>/i);
