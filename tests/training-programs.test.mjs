@@ -33,3 +33,33 @@ test("salon full body şablonu yalnızca salon ekipmanlı hareketlerden oluşur"
   }
   assert.doesNotMatch(gymProgram, /Reverse Lunge|Plank/);
 });
+
+test("hazır program havuzu geniştir ve modern hedef seçici kararlı tema değişkenleri kullanır", async () => {
+  const source = await readFile(new URL("../components/FitAiApp.tsx", import.meta.url), "utf8");
+  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  const programIds = [...source.matchAll(/\{\s*id:\s*"[^"]+"\s+as const,\s*goal:/g)];
+  assert.ok(programIds.length >= 15);
+  assert.match(source, /role="group"/);
+  assert.match(source, /aria-pressed=\{active\}/);
+  assert.match(source, /program-filter-copy/);
+  const filterStyles = styles.match(/\.program-goal-filters[\s\S]+?\.program-results/)?.[0] || "";
+  assert.doesNotMatch(filterStyles, /var\(--page\)/);
+  assert.match(filterStyles, /var\(--surface-elevated\)/);
+});
+
+test("Türkçe hazır program arayüzünde ekipman adı Dumbell olarak gösterilir", async () => {
+  const source = await readFile(new URL("../components/FitAiApp.tsx", import.meta.url), "utf8");
+  const dictionary = await readFile(new URL("../lib/i18n/dictionaries/tr.ts", import.meta.url), "utf8");
+  assert.match(source, /replace\(\/Dambıl\/g, "Dumbell"\)/);
+  assert.match(dictionary, /Dumbell ile/);
+  assert.doesNotMatch(dictionary, /Dambılla/);
+});
+
+test("korumalı API istekleri 401 sonrası oturumu bir kez yeniler", async () => {
+  const client = await readFile(new URL("../lib/api-client.ts", import.meta.url), "utf8");
+  const coach = await readFile(new URL("../components/AiCoachChat.tsx", import.meta.url), "utf8");
+  assert.match(client, /response\.status !== 401/);
+  assert.match(client, /supabase\.auth\.refreshSession\(\)/);
+  assert.match(coach, /\[401, 403, 503\]\.includes\(response\.status\)/);
+  assert.match(coach, /localCoachReply\(value, locale\)/);
+});

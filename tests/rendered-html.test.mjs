@@ -244,12 +244,12 @@ test("Android manifesti kamera, galeri ve bildirim izinlerini tanımlar", async 
   assert.match(manifest, /uses-feature[^>]*android\.hardware\.camera[^>]*required="false"/);
 });
 
-test("veritabanı kurulum sırası belgelenmiştir", async () => {
+test("README yalnızca iki dilli ürün tanıtımı içerir", async () => {
   const readme = await readFile(new URL("../README.md", import.meta.url), "utf8");
-  const schema = await readFile(new URL("../db/supabase-schema.sql", import.meta.url), "utf8");
-  // profile_history yalnızca migration'da tanımlı; yalnız temel şemayı çalıştıran
-  // biri eksik veritabanı elde eder, bu yüzden sıra README'de yazmalı.
-  assert.doesNotMatch(schema, /create table if not exists public\.profile_history/);
-  assert.match(readme, /## Veritabanı kurulumu/);
-  assert.match(readme, /db\/migrations/);
+  assert.match(readme, /## Türkçe/);
+  assert.match(readme, /## English/);
+  assert.match(readme, /### Hazır programlar/);
+  assert.match(readme, /### Ready-made programs/);
+  assert.doesNotMatch(readme, /## (Geliştirme|Ortam değişkenleri|Veritabanı kurulumu|Kimlik doğrulama|Dağıtım|Android yayını|Egzersiz veri tabanı)/i);
+  assert.doesNotMatch(readme, /## (Development|Environment variables|Database setup|Authentication|Deployment|Android release|Exercise database)/i);
 });

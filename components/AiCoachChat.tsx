@@ -3,7 +3,7 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { Conversation, ConversationContent, ConversationEmptyState, ConversationScrollButton } from "@/components/ai-elements/conversation";
 import { Message, MessageContent, MessageResponse } from "@/components/ai-elements/message";
-import type { CoachMessage } from "@/lib/ai-coach";
+import { localCoachReply, type CoachMessage } from "@/lib/ai-coach";
 import { authorizedFetch } from "@/lib/api-client";
 import { useTranslations } from "@/lib/i18n/translate";
 import { useLocale } from "@/lib/i18n/locale";
@@ -55,6 +55,11 @@ export function AiCoachChat({ context }: { context: string }) {
     try {
       const response = await authorizedFetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ context, messages: conversation.map(({ role, text: messageText }) => ({ role, text: messageText })), locale }), signal: controller.signal });
       const result = await response.json().catch(() => ({})) as { text?: string; error?: string; notice?: string; usage?: { used: number; limit: number } };
+      if ([401, 403, 503].includes(response.status)) {
+        setMessages((current) => [...current, { id: crypto.randomUUID(), role: "assistant", text: localCoachReply(value, locale) }]);
+        setNotice(t.aiCoachChat.localSessionFallback);
+        return;
+      }
       if (!response.ok || !result.text) throw new Error(result.error || t.aiCoachChat.coachUnresponsive);
       setMessages((current) => [...current, { id: crypto.randomUUID(), role: "assistant", text: result.text as string }]);
       setNotice(result.notice || "");

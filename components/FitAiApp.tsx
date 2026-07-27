@@ -644,26 +644,54 @@ type ProgramGoalFilter = "weightLoss" | "strength" | "regional";
 
 const readyPrograms = [
   { id: "weightStarter" as const, goal: "weightLoss" as const, mode: "any" as const, minutes: 20, names: ["Glute Bridge", "Dead Bug", "Diz Üstü Şınav", "Jumping Jack"] },
+  { id: "weightLowImpact" as const, goal: "weightLoss" as const, mode: "any" as const, minutes: 25, names: ["Glute Bridge", "Dead Bug", "Diz Üstü Şınav", "Reverse Lunge", "Superman"] },
+  { id: "weightCardio" as const, goal: "weightLoss" as const, mode: "any" as const, minutes: 25, names: ["Jumping Jack", "High Knees", "Mountain Climber", "Squat Thrust", "Bicycle Crunch"] },
   { id: "weightDumbbell" as const, goal: "weightLoss" as const, mode: "equipment" as const, minutes: 30, names: ["Goblet Squat", "Dambıl Row", "Yerde Dambıl Göğüs Presi", "Mountain Climber"] },
+  { id: "weightDumbbellCircuit" as const, goal: "weightLoss" as const, mode: "equipment" as const, minutes: 35, names: ["Goblet Squat", "Dambıl Row", "Yerde Dambıl Göğüs Presi", "Dambıl Omuz Press", "Romanian Deadlift"] },
+  { id: "weightGym" as const, goal: "weightLoss" as const, mode: "gym" as const, minutes: 40, names: ["Leg Press", "Lat Pulldown", "Pec Deck", "Oturarak Kablo Row", "Hip Abduction"] },
   { id: "strengthStarter" as const, goal: "strength" as const, mode: "any" as const, minutes: 20, names: ["Glute Bridge", "Dead Bug", "Diz Üstü Şınav", "Reverse Lunge"] },
+  { id: "strengthBodyweight" as const, goal: "strength" as const, mode: "any" as const, minutes: 30, names: ["Glute Bridge", "Diz Üstü Şınav", "Reverse Lunge", "Superman", "Plank"] },
   { id: "strengthDumbbell" as const, goal: "strength" as const, mode: "equipment" as const, minutes: 35, names: ["Goblet Squat", "Dambıl Row", "Yerde Dambıl Göğüs Presi", "Dambıl Omuz Press", "Plank"] },
   { id: "strengthGym" as const, goal: "strength" as const, mode: "gym" as const, minutes: 45, names: ["Leg Press", "Oturarak Leg Curl", "Lat Pulldown", "Oturarak Kablo Row", "Pec Deck", "Makine Omuz Press"] },
+  { id: "strengthGymUpper" as const, goal: "strength" as const, mode: "gym" as const, minutes: 45, names: ["Lat Pulldown", "Oturarak Kablo Row", "Pec Deck", "Makine Omuz Press", "Triceps Pushdown", "Kablo Curl"] },
+  { id: "strengthGymLower" as const, goal: "strength" as const, mode: "gym" as const, minutes: 40, names: ["Leg Press", "Oturarak Leg Curl", "Leg Extension", "Hip Abduction", "Ayakta Baldır Raise"] },
   { id: "regionalCore" as const, goal: "regional" as const, mode: "any" as const, minutes: 20, names: ["Dead Bug", "Crunch", "Plank", "Side Plank"] },
   { id: "regionalGlutes" as const, goal: "regional" as const, mode: "any" as const, minutes: 25, names: ["Glute Bridge", "Fire Hydrant", "Donkey Kick", "Tek Bacak Glute Bridge"] },
+  { id: "regionalUpper" as const, goal: "regional" as const, mode: "any" as const, minutes: 25, names: ["Diz Üstü Şınav", "Superman", "Şınav", "Plank"] },
+  { id: "regionalDumbbellArms" as const, goal: "regional" as const, mode: "equipment" as const, minutes: 30, names: ["Dambıl Curl", "Hammer Curl", "Dambıl Skull Crusher", "Triceps Kickback"] },
+  { id: "regionalGymBack" as const, goal: "regional" as const, mode: "gym" as const, minutes: 35, names: ["Lat Pulldown", "Oturarak Kablo Row", "Göğüs Destekli Row", "Face Pull", "Düz Kol Pulldown"] },
+  { id: "regionalGymLegs" as const, goal: "regional" as const, mode: "gym" as const, minutes: 40, names: ["Leg Press", "Oturarak Leg Curl", "Leg Extension", "Hip Abduction", "Ayakta Baldır Raise"] },
 ];
 
 function readyProgramCopy(t: Dictionary, id: (typeof readyPrograms)[number]["id"]) {
   if (id === "weightStarter") return { title: t.readyPrograms.weightStarterTitle, detail: t.readyPrograms.weightStarterDetail };
+  if (id === "weightLowImpact") return { title: t.readyPrograms.weightLowImpactTitle, detail: t.readyPrograms.weightLowImpactDetail };
+  if (id === "weightCardio") return { title: t.readyPrograms.weightCardioTitle, detail: t.readyPrograms.weightCardioDetail };
   if (id === "weightDumbbell") return { title: t.readyPrograms.weightDumbbellTitle, detail: t.readyPrograms.weightDumbbellDetail };
+  if (id === "weightDumbbellCircuit") return { title: t.readyPrograms.weightDumbbellCircuitTitle, detail: t.readyPrograms.weightDumbbellCircuitDetail };
+  if (id === "weightGym") return { title: t.readyPrograms.weightGymTitle, detail: t.readyPrograms.weightGymDetail };
   if (id === "strengthStarter") return { title: t.readyPrograms.strengthStarterTitle, detail: t.readyPrograms.strengthStarterDetail };
+  if (id === "strengthBodyweight") return { title: t.readyPrograms.strengthBodyweightTitle, detail: t.readyPrograms.strengthBodyweightDetail };
   if (id === "strengthDumbbell") return { title: t.readyPrograms.strengthDumbbellTitle, detail: t.readyPrograms.strengthDumbbellDetail };
   if (id === "strengthGym") return { title: t.readyPrograms.strengthGymTitle, detail: t.readyPrograms.strengthGymDetail };
+  if (id === "strengthGymUpper") return { title: t.readyPrograms.strengthGymUpperTitle, detail: t.readyPrograms.strengthGymUpperDetail };
+  if (id === "strengthGymLower") return { title: t.readyPrograms.strengthGymLowerTitle, detail: t.readyPrograms.strengthGymLowerDetail };
   if (id === "regionalCore") return { title: t.readyPrograms.regionalCoreTitle, detail: t.readyPrograms.regionalCoreDetail };
-  return { title: t.readyPrograms.regionalGlutesTitle, detail: t.readyPrograms.regionalGlutesDetail };
+  if (id === "regionalGlutes") return { title: t.readyPrograms.regionalGlutesTitle, detail: t.readyPrograms.regionalGlutesDetail };
+  if (id === "regionalUpper") return { title: t.readyPrograms.regionalUpperTitle, detail: t.readyPrograms.regionalUpperDetail };
+  if (id === "regionalDumbbellArms") return { title: t.readyPrograms.regionalDumbbellArmsTitle, detail: t.readyPrograms.regionalDumbbellArmsDetail };
+  if (id === "regionalGymBack") return { title: t.readyPrograms.regionalGymBackTitle, detail: t.readyPrograms.regionalGymBackDetail };
+  return { title: t.readyPrograms.regionalGymLegsTitle, detail: t.readyPrograms.regionalGymLegsDetail };
+}
+
+function readyProgramExerciseLabel(name: string, locale: "tr" | "en") {
+  if (locale !== "tr") return name;
+  return name.replace(/Dambıl/g, "Dumbell").replace(/dambıl/g, "dumbell");
 }
 
 function ReadyPrograms({ onApply, environment, equipmentText, history, goalText, completedSessions }: { onApply: (program: typeof readyPrograms[number]) => void; environment: string; equipmentText: string; history: string[]; goalText: string; completedSessions: number }) {
   const t = useTranslations();
+  const locale = useLocale();
   const initialGoal = profileGoal(goalText, history) === "kilo" ? "weightLoss" : "strength";
   const [selectedGoal, setSelectedGoal] = useState<ProgramGoalFilter>(initialGoal);
   const availablePrograms = useMemo(() => readyPrograms.filter((program) => program.mode !== "gym" || environment === "Salon").map((program) => ({
@@ -680,10 +708,10 @@ function ReadyPrograms({ onApply, environment, equipmentText, history, goalText,
   })).filter((program) => program.names.length >= 3), [completedSessions, environment, equipmentText, history]);
   const filteredPrograms = availablePrograms.filter((program) => program.goal === selectedGoal);
   const equipmentLabel = environment === "Salon" ? t.readyPrograms.gymEquipment : equipmentText.trim() || t.readyPrograms.noEquipment;
-  const filters: Array<{ id: ProgramGoalFilter; label: string }> = [
-    { id: "weightLoss", label: t.readyPrograms.filterWeightLoss },
-    { id: "strength", label: t.readyPrograms.filterStrength },
-    { id: "regional", label: t.readyPrograms.filterRegional },
+  const filters: Array<{ id: ProgramGoalFilter; label: string; description: string; icon: string }> = [
+    { id: "weightLoss", label: t.readyPrograms.filterWeightLoss, description: t.readyPrograms.filterWeightLossDetail, icon: "↗" },
+    { id: "strength", label: t.readyPrograms.filterStrength, description: t.readyPrograms.filterStrengthDetail, icon: "✦" },
+    { id: "regional", label: t.readyPrograms.filterRegional, description: t.readyPrograms.filterRegionalDetail, icon: "◎" },
   ];
 
   return <div className="subview programs-page">
@@ -691,8 +719,8 @@ function ReadyPrograms({ onApply, environment, equipmentText, history, goalText,
     <h1>{t.readyPrograms.pageTitle1}<br /><em>{t.readyPrograms.pageTitle2}</em></h1>
     <p className="lead">{t.readyPrograms.pageLead}</p>
     <div className="program-profile-note"><span>✦</span><div><strong>{t.readyPrograms.equipmentTitle}</strong><p>{t.readyPrograms.equipmentBody(equipmentLabel)}</p></div><small>{completedSessions < 3 ? t.readyPrograms.beginnerStage : t.readyPrograms.progressiveStage}</small></div>
-    <div className="program-goal-filters" role="group" aria-label={t.readyPrograms.goalFiltersLabel}>{filters.map((filter) => <button type="button" aria-pressed={selectedGoal === filter.id} className={selectedGoal === filter.id ? "active" : ""} key={filter.id} onClick={() => setSelectedGoal(filter.id)}>{filter.label}</button>)}</div>
-    {filteredPrograms.length ? <div className="program-library-grid">{filteredPrograms.map((program) => { const copy = readyProgramCopy(t, program.id); return <article className="program-library-card" key={program.id}><div className="program-card-top"><span>{t.readyPrograms.minutes(program.minutes)}</span><small>{program.names.length} {t.readyPrograms.exerciseUnit}</small></div><h2>{copy.title}</h2><p>{copy.detail}</p><ol>{program.names.map((exerciseName, index) => <li key={exerciseName}><b>{index + 1}</b><span>{exerciseName}</span></li>)}</ol><button type="button" onClick={() => onApply(program)}>{t.readyPrograms.useProgram} →</button></article>; })}</div> : <div className="program-empty"><strong>{t.readyPrograms.noMatchingProgram}</strong><p>{t.readyPrograms.noMatchingProgramBody}</p></div>}
+    <div className="program-goal-filters" role="group" aria-label={t.readyPrograms.goalFiltersLabel}>{filters.map((filter) => { const count = availablePrograms.filter((program) => program.goal === filter.id).length; const active = selectedGoal === filter.id; return <button type="button" aria-pressed={active} aria-controls="ready-program-results" className={active ? "active" : ""} key={filter.id} onClick={() => setSelectedGoal(filter.id)}><span className="program-filter-icon" aria-hidden="true">{filter.icon}</span><span className="program-filter-copy"><strong>{filter.label}</strong><small>{filter.description}</small></span><b>{count}</b></button>; })}</div>
+    <div id="ready-program-results" className="program-results">{filteredPrograms.length ? <div className="program-library-grid">{filteredPrograms.map((program) => { const copy = readyProgramCopy(t, program.id); return <article className="program-library-card" key={program.id}><div className="program-card-top"><span>{t.readyPrograms.minutes(program.minutes)}</span><small>{program.names.length} {t.readyPrograms.exerciseUnit}</small></div><h2>{copy.title}</h2><p>{copy.detail}</p><ol>{program.names.map((exerciseName, index) => <li key={exerciseName}><b>{index + 1}</b><span>{readyProgramExerciseLabel(exerciseName, locale)}</span></li>)}</ol><button type="button" onClick={() => onApply(program)}>{t.readyPrograms.useProgram} →</button></article>; })}</div> : <div className="program-empty"><strong>{t.readyPrograms.noMatchingProgram}</strong><p>{t.readyPrograms.noMatchingProgramBody}</p></div>}</div>
   </div>;
 }
 
