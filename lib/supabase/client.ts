@@ -14,16 +14,18 @@ async function proxiedRequest(source: Request, configuredUrl: string) {
     ? undefined
     : await source.arrayBuffer();
 
-  return new Request(proxyUrl, {
-    method: source.method,
-    headers,
-    body,
-    credentials: source.credentials,
-  });
+  return {
+    url: proxyUrl,
+    init: {
+      method: source.method,
+      headers,
+      body,
+      credentials: source.credentials,
+    } satisfies RequestInit,
+  };
 }
 
-function isUnexpectedAuthResponse(response: Response, pathname: string) {
-  if (!pathname.startsWith("/auth/v1/")) return false;
+function isUnexpectedAuthResponse(response: Response) {
   return !response.headers.get("content-type")?.toLocaleLowerCase("en-US").includes("application/json");
 }
 
@@ -36,20 +38,24 @@ async function resilientSupabaseFetch(input: RequestInfo | URL, init?: RequestIn
   const target = new URL(request.url);
   if (target.origin !== configuredOrigin) return fetch(request);
 
-  const firstProxySource = request.clone();
-  const retryProxySource = request.clone();
-  try {
-    return await fetch(request);
-  } catch {
-    const firstProxyResponse = await fetch(await proxiedRequest(firstProxySource, configuredUrl));
-    if (!isUnexpectedAuthResponse(firstProxyResponse, target.pathname)) return firstProxyResponse;
+  // Kimlik doğrulama isteklerini doğrudan Supabase'e göndermeyi denemek Safari'de
+  // gövde stream'ini bozabiliyor. Auth trafiği ilk denemeden itibaren yalnızca
+  // aynı-origin proxy üzerinden gider.
+  if (target.pathname.startsWith("/auth/v1/")) {
+    const proxy = await proxiedRequest(request, configuredUrl);
+    const firstProxyResponse = await fetch(proxy.url, proxy.init);
+    if (!isUnexpectedAuthResponse(firstProxyResponse)) return firstProxyResponse;
 
-    // Cloudflare ücretsiz Worker bazen JSON yerine geçici HTML hata sayfası üretebilir.
-    // Supabase istemcisine HTML vermek yerine aynı isteği tek kez temiz gövdeyle yineleriz.
-    const retryProxyResponse = await fetch(await proxiedRequest(retryProxySource, configuredUrl));
-    if (!isUnexpectedAuthResponse(retryProxyResponse, target.pathname)) return retryProxyResponse;
-    throw new Error("Kimlik doğrulama servisi geçici olarak yanıt veremedi. Lütfen tekrar dene.");
+    // Geçici Cloudflare HTML hata sayfasına karşı aynı ArrayBuffer gövdesiyle
+    // yalnızca bir kez daha deneriz; ReadableStream yeniden kullanılmaz.
+    const retryProxyResponse = await fetch(proxy.url, proxy.init);
+    if (!isUnexpectedAuthResponse(retryProxyResponse)) return retryProxyResponse;
+
+    const contentType = retryProxyResponse.headers.get("content-type") ?? "bilinmiyor";
+    throw new Error(`Kimlik doğrulama proxy'si JSON döndürmedi (HTTP ${retryProxyResponse.status}, ${contentType}).`);
   }
+
+  return fetch(request);
 }
 
 export function createClient(): SupabaseClient | null {
