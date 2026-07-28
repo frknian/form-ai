@@ -26,7 +26,7 @@ import { PlanEditor } from "@/components/PlanEditor";
 import { GoalForecast } from "@/components/GoalForecast";
 import { FrozenAccountScreen, ProfileManager } from "@/components/ProfileManager";
 import { TrainingPlaceSwitch } from "@/components/TrainingPlaceSwitch";
-import { getExerciseById, getExercisesForAI } from "@/lib/exercise-service";
+import { getExerciseById } from "@/lib/exercise-service";
 import { trustedExerciseMedia } from "@/lib/trusted-exercise-media";
 import { translateExerciseLabel, turkishExerciseInstructions } from "@/lib/exercise-translations";
 import { extractSessionMinutes, extractWeeklyDays, planProgressionBlock } from "@/lib/training-profile";
@@ -44,6 +44,7 @@ import { detectNewPersonalRecords, summarizePersonalRecords, type NewPersonalRec
 import { formatWeight, unitToKg, type WeightUnit } from "@/lib/units";
 import { useWeightUnit } from "@/lib/preferences";
 import { authorizedFetch } from "@/lib/api-client";
+import { dailyWorkoutScore, localPlanDayIndex, preferredWorkoutAreas, selectBalancedWorkoutItems } from "@/lib/workout-planning";
 
 // Kullanıcı hangi arayüz dilini seçerse seçsin, seçilen cevaplar bu Türkçe
 // kanonik değerlerle saklanır — plan üretimi ve ağrı bölgesi eşleştirmesi
@@ -264,11 +265,24 @@ const exerciseLibrary = [...coreExerciseLibrary, ...additionalExerciseLibrary];
 
 /** Bugünün gün numarası; planın her gün yenilenmesi için döndürme anahtarı. */
 export function planDayIndex(now = new Date()) {
-  return Math.floor(now.getTime() / 86_400_000);
+  return localPlanDayIndex(now);
 }
 
-/** Gün numarası oturum içinde değişmez; useSyncExternalStore için boş abonelik. */
-const subscribeToNothing = () => () => {};
+/** Uygulama gece boyunca açık kalsa bile yerel gece yarısında planı yeniler. */
+function subscribeToPlanDay(onDayChange: () => void) {
+  let timer: ReturnType<typeof setTimeout>;
+  const schedule = () => {
+    const now = new Date();
+    const nextDay = new Date(now);
+    nextDay.setHours(24, 0, 1, 0);
+    timer = setTimeout(() => {
+      onDayChange();
+      schedule();
+    }, Math.max(1_000, nextDay.getTime() - now.getTime()));
+  };
+  schedule();
+  return () => clearTimeout(timer);
+}
 
 function createPersonalPlan(gym: string, equipmentText: string, history: string[], goalText: string, requestedExercises = "", completedSessions = 0, dayIndex = 0) {
   const profileText = `${equipmentText} ${goalText} ${requestedExercises} ${history.join(" ")}`.toLowerCase();
@@ -281,23 +295,19 @@ function createPersonalPlan(gym: string, equipmentText: string, history: string[
   const durationText = history[3] || goalText.match(/(15|30|45|60)/)?.[1] || "30";
   const duration = extractSessionMinutes(durationText);
   const weeklyDays = extractWeeklyDays(history[1]);
-  const pain = history[6]?.toLowerCase() || "";
-  const matchesEquipment = (item: typeof exerciseLibrary[number]) => wantsGym || item.bodyweight || item.requires.some((requirement) => equipment.includes(requirement));
-  const avoidKneeLoad = pain.includes("diz");
-  const avoidShoulderLoad = pain.includes("omuz");
-  const safeForPain = (item: typeof exerciseLibrary[number]) => !(avoidKneeLoad && ["Reverse Lunge", "Bulgarian Split Squat", "Step-up", "Mountain Climber", "Leg Press"].includes(item.name)) && !(avoidShoulderLoad && ["Şınav", "Eğimli Şınav", "Dambıl Omuz Press", "Lat Pulldown"].includes(item.name));
   const seed = [...profileText].reduce((total, character) => (total * 31 + character.charCodeAt(0)) % 997, 7);
-  const goalItems = exerciseLibrary.filter((item) => matchesEquipment(item) && safeForPain(item) && item.goals.includes(goal));
-  const fallback = exerciseLibrary.filter((item) => matchesEquipment(item) && safeForPain(item));
+  const safeItems = exerciseLibrary.filter((item) => isExerciseSafeForProfile(item, gym, equipmentText, history));
+  const goalItems = safeItems.filter((item) => item.goals.includes(goal));
+  const fallback = safeItems;
   const requestedItems = findRequestedLibraryExercises(requestedExercises, goalText, gym, equipmentText, history);
   // Evde antrenman yapan ve ekipman belirten kullanıcı için, sahip olduğu ekipmanı kullanan
   // hareketleri güvenli oldukları sürece plana öncelikli olarak dahil et.
   const ownsHomeEquipment = !wantsGym && equipment.trim().length > 0;
-  const equipmentItems = ownsHomeEquipment ? exerciseLibrary.filter((item) => !item.bodyweight && safeForPain(item) && item.requires.some((requirement) => equipment.includes(requirement))) : [];
+  const equipmentItems = ownsHomeEquipment ? safeItems.filter((item) => !item.bodyweight) : [];
   // Gün numarası skora karışır: kullanıcının özellikle istediği ve ekipmanına
   // özel hareketler (öncelik 0/1) sabit kalırken, kalan slotlar her gün dönerek
   // programı tekdüzelikten çıkarır.
-  const score = (name: string) => [...name].reduce((total, character) => total + character.charCodeAt(0), seed + dayIndex * 131) % 997;
+  const score = (name: string) => dailyWorkoutScore(name, seed, dayIndex);
   // Hazır programlardaki hareketler en sona itilir; aksi halde kişisel plan ile
   // "hemen başla" şablonları neredeyse aynı listeyi gösteriyordu.
   const priority = (item: typeof exerciseLibrary[number]) => requestedItems.includes(item) ? 0 : equipmentItems.includes(item) ? 1 : READY_PROGRAM_NAMES.has(item.name) ? 3 : 2;
@@ -307,7 +317,14 @@ function createPersonalPlan(gym: string, equipmentText: string, history: string[
   const baseCount = duration <= 15 ? 3 : duration >= 60 ? 6 : 5;
   const frequencyAdjustment = weeklyDays >= 5 ? -1 : weeklyDays <= 2 ? 1 : 0;
   const exerciseCount = Math.min(7, Math.max(3, baseCount + frequencyAdjustment));
-  const chosen = [...requestedItems, ...equipmentItems, ...goalItems, ...fallback].filter((item, index, list) => list.findIndex((candidate) => candidate.name === item.name) === index).sort((a, b) => priority(a) - priority(b) || score(a.name) - score(b.name)).slice(0, exerciseCount);
+  const candidates = [...requestedItems, ...equipmentItems, ...goalItems, ...fallback];
+  const chosen = selectBalancedWorkoutItems({
+    candidates,
+    count: exerciseCount,
+    preferredAreas: preferredWorkoutAreas(goal),
+    isPinned: (item) => requestedItems.includes(item),
+    rank: (item) => priority(item) * 10_000_000_000 + score(item.name),
+  });
   const block = planProgressionBlock(completedSessions);
   const baseSets = isBeginner ? (duration <= 15 ? 2 : 3) : duration >= 60 ? 4 : 3;
   const baseReps = goal === "kondisyon" || goal === "kilo" ? (isBeginner ? 10 : 14) : isBeginner ? 10 : 8;
@@ -482,11 +499,7 @@ function fallbackAnalysis(gym: string, equipmentText: string, history: string[],
 
 function findRequestedLibraryExercises(requestedExercises: string, goalText: string, gym: string, equipmentText: string, history: string[]) {
   const requestedNames = `${requestedExercises} ${goalText}`.toLowerCase().split(/[\n,;]+/).map((value) => value.trim()).filter(Boolean);
-  const equipment = equipmentText.toLowerCase();
-  const pain = history[6]?.toLowerCase() || "";
-  const matchesEquipment = (item: typeof exerciseLibrary[number]) => gym === "Salon" || item.bodyweight || item.requires.some((requirement) => equipment.includes(requirement));
-  const safeForPain = (item: typeof exerciseLibrary[number]) => !(pain.includes("diz") && ["Reverse Lunge", "Bulgarian Split Squat", "Step-up", "Mountain Climber", "Leg Press"].includes(item.name)) && !(pain.includes("omuz") && ["Şınav", "Eğimli Şınav", "Dambıl Omuz Press", "Lat Pulldown"].includes(item.name));
-  return exerciseLibrary.filter((item) => requestedNames.some((requested) => item.name.toLowerCase().includes(requested) || item.english.toLowerCase().includes(requested) || requested.includes("yerde") && item.name === "Yerde Dambıl Göğüs Presi") && matchesEquipment(item) && safeForPain(item));
+  return exerciseLibrary.filter((item) => requestedNames.some((requested) => item.name.toLowerCase().includes(requested) || item.english.toLowerCase().includes(requested) || requested.includes("yerde") && item.name === "Yerde Dambıl Göğüs Presi") && isExerciseSafeForProfile(item, gym, equipmentText, history));
 }
 
 function exerciseKey(exercise: { name: string; english: string }) {
@@ -517,14 +530,26 @@ function isExerciseSafeForProfile(exercise: { id?: string; name: string; english
   const text = `${exercise.name} ${exercise.english}`.toLocaleLowerCase("tr-TR");
   const pain = (history[6] || "").toLocaleLowerCase("tr-TR");
   const equipment = equipmentText.toLocaleLowerCase("tr-TR");
-  if (pain.includes("diz") && /squat|lunge|jump|step|leg press|mountain climber|box jump|skater/.test(text)) return false;
+  if (pain.includes("diz") && /squat|lunge|jump|step|leg press|mountain climber|box jump|skater|bacak açış/.test(text)) return false;
   if (pain.includes("omuz") && /push|press|dip|shoulder|fly|overhead|lateral raise|pulldown|barfiks/.test(text)) return false;
   if (pain.includes("bel") && /deadlift|good morning|back extension|woodchop|superman|russian twist/.test(text)) return false;
   const databaseExercise = exercise.id ? getExerciseById(exercise.id) : null;
   if (databaseExercise) return gym === "Salon" || !databaseExercise.equipment || ["body only", "none"].includes(databaseExercise.equipment) || equipment.includes(databaseExercise.equipment);
   const libraryExercise = findLibraryExercise(exercise);
   if (!libraryExercise) return false;
-  return gym === "Salon" || libraryExercise.bodyweight || libraryExercise.requires.some((requirement) => equipment.includes(requirement));
+  if (gym === "Salon" || libraryExercise.bodyweight) return true;
+  const requirementMatches = (requirement: string) => {
+    if (requirement === "duvar") return true;
+    if (requirement === "dambıl") return /dambıl|dumbbell/.test(equipment);
+    if (requirement === "band" || requirement === "lastik") return /band|lastik/.test(equipment);
+    if (requirement === "bench" || requirement === "sehpa") return /bench|sehpa/.test(equipment);
+    if (requirement === "barbell" || requirement === "bar") return /barbell|halter|olimpik bar/.test(equipment);
+    return equipment.includes(requirement);
+  };
+  const benchRequirements = libraryExercise.requires.filter((requirement) => requirement === "bench" || requirement === "sehpa");
+  if (benchRequirements.length && !benchRequirements.some(requirementMatches)) return false;
+  const otherRequirements = libraryExercise.requires.filter((requirement) => requirement !== "bench" && requirement !== "sehpa" && requirement !== "salon");
+  return otherRequirements.length === 0 || otherRequirements.some(requirementMatches);
 }
 
 function personalizeAiWorkouts(items: AiWorkout[], gym: string, equipmentText: string, history: string[], goalText: string, requestedExercises: string, completedSessions = 0) {
@@ -665,7 +690,7 @@ function PersonalRecordCelebration({ records, unit, onDismiss }: { records: NewP
   </section>;
 }
 
-function LibraryView({ onOpenWorkout, onAddWorkout }: { onOpenWorkout: (exercise: AiWorkout) => void; onAddWorkout: (exercise: AiWorkout) => void }) {
+function LibraryView({ onOpenWorkout, onAddWorkout }: { onOpenWorkout: (exercise: AiWorkout) => void; onAddWorkout: (exercise: AiWorkout) => boolean }) {
   return <ExerciseLibrary onOpenWorkout={(exercise) => onOpenWorkout(databaseExerciseAsWorkout(exercise))} onAddWorkout={(exercise) => onAddWorkout(databaseExerciseAsWorkout(exercise))} />;
 }
 
@@ -767,7 +792,7 @@ export default function Home() {
   // Date.now() okunsaydı sunucu ile istemci farklı plan üretip hydration
   // uyuşmazlığı çıkarırdı. Gün içinde değişmediği için abone olunacak bir
   // kaynak yok; getSnapshot sayı döndürdüğünden değer olarak karşılaştırılır.
-  const dayIndex = useSyncExternalStore(subscribeToNothing, planDayIndex, () => 0);
+  const dayIndex = useSyncExternalStore(subscribeToPlanDay, planDayIndex, () => 0);
 
   const localPlan = useMemo(() => createPersonalPlan(gym, equipmentText, history, goalText, requestedExercises, sessionHistory.length, dayIndex), [gym, equipmentText, history, goalText, requestedExercises, sessionHistory.length, dayIndex]);
   const adaptation = useMemo(() => summarizeTrainingAdaptation(sessionHistory), [sessionHistory]);
@@ -1333,12 +1358,11 @@ export default function Home() {
     }
     setAiStage("history");
     try {
-      const exerciseCatalog = getExercisesForAI();
       setAiStage("planning");
       const controller = new AbortController();
       const timeout = window.setTimeout(() => controller.abort(), 45_000);
       const trainingHistory = sessionHistory.slice(0, 8).map((session) => ({ completedAt: session.completedAt, completedExercises: session.completedExercises, totalExercises: session.totalExercises, difficulty: session.difficulty, fatigue: session.fatigue, painAreas: session.painAreas, feedbackNote: session.feedbackNote }));
-      const aiResponse = await authorizedFetch("/api/generate-plan", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, birthDate, age, gender, height, weight, environment: gym, equipment: equipmentText, goal: goalText, requestedExercises, history, trainingHistory, adaptation, exerciseCatalog, photoDataUrl, locale }), signal: controller.signal }).finally(() => window.clearTimeout(timeout));
+      const aiResponse = await authorizedFetch("/api/generate-plan", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, birthDate, age, gender, height, weight, environment: gym, equipment: equipmentText, goal: goalText, requestedExercises, history, trainingHistory, adaptation, photoDataUrl, locale }), signal: controller.signal }).finally(() => window.clearTimeout(timeout));
       if (aiResponse.ok) {
         const aiPlan = await aiResponse.json() as { workouts?: Array<{ id: string; name: string; english: string; area: string; sets: number; reps: string; restSeconds: number; instructions?: string }>; rationale?: string; safetyNote?: string; analysis?: AiPlanAnalysis; weeklySchedule?: AiScheduleDay[]; progression?: string[]; profileFingerprint?: string };
         const normalizedWorkouts = aiPlan.workouts?.length ? normalizeAiWorkouts(aiPlan.workouts) : [];
@@ -1373,7 +1397,14 @@ export default function Home() {
   }
 
   function applyReadyProgram(program: typeof readyPrograms[number]) {
-    const prepared = program.names.map((name) => exerciseLibrary.find((exercise) => exercise.name === name)).filter((exercise): exercise is typeof exerciseLibrary[number] => Boolean(exercise)).map((exercise) => ({ ...exercise, level: exercise.area, sets: `3 set · ${exercise.name === "Plank" || exercise.name === "Dead Bug" ? "30 sn" : "10 tekrar"}`, rest: "60 sn dinlenme", seconds: exercise.name === "Plank" || exercise.name === "Dead Bug" ? 30 : 45 }));
+    const preparedFromTemplate = program.names
+      .map((name) => exerciseLibrary.find((exercise) => exercise.name === name))
+      .filter((exercise): exercise is typeof exerciseLibrary[number] => Boolean(exercise))
+      .filter((exercise) => isExerciseSafeForProfile(exercise, gym, equipmentText, history))
+      .map((exercise) => ({ ...exercise, level: exercise.area, sets: `3 set · ${exercise.name === "Plank" || exercise.name === "Dead Bug" ? "30 sn" : "10 tekrar"}`, rest: "60 sn dinlenme", seconds: exercise.name === "Plank" || exercise.name === "Dead Bug" ? 30 : 45 }));
+    const prepared = [...preparedFromTemplate, ...localPlan]
+      .filter((exercise, index, list) => list.findIndex((candidate) => exerciseKey(candidate) === exerciseKey(exercise)) === index)
+      .slice(0, 5);
     setAiWorkouts(prepared);
     setAiRationale(t.readyPrograms.appliedRationale(readyProgramCopy(t, program.id).title));
     setAiAnalysis(fallbackAnalysis(gym, equipmentText, history, goalText));
@@ -1539,7 +1570,7 @@ export default function Home() {
         </section>
       ) : (
         <section className="dashboard">
-<WorkoutCalendar active={activeView === "calendar"} userId={authUser?.id} onStartWorkout={() => setActiveView("workout")} />{activeView === "calendar" ? null : activeView === "profile" ? <ProfileManager user={authUser} profile={{ displayName: name, birthDate, gender, heightCm: Number(height) || null, weightKg: Number(weight) || null, goalText, environment: gym === "Salon" ? "Salon" : "Evde", equipmentText, requestedExercises, avatarPath }} avatarUrl={avatarUrl} onSaved={applySavedProfile} onFrozen={() => setAccountStatus("frozen")} onDeleted={clearDeletedAccount} onProgressReset={resetSavedProgress} onSignOut={handleSignOut} /> : activeView === "progress" ? <><PersonalRecordCelebration records={newRecords} unit={weightUnit} onDismiss={() => setNewRecords([])} /><ProgressView name={name} sessions={sessionHistory} referenceTime={progressReferenceTime} energyMetrics={energyMetrics} userId={authUser?.id} goalText={goalText || planGoal} /></> : activeView === "nutrition" ? <CalorieTracker userId={authUser?.id} bmr={energyMetrics?.bmr} tdee={energyMetrics?.tdee} weightKg={Number(weight) || undefined} activityFactor={energyMetrics?.activityFactor} workoutDays={inferWorkoutDays(history[1] || history[3])} profileGoal={goalText || planGoal} /> : activeView === "library" ? <LibraryView onOpenWorkout={(exercise) => openWorkout(0, [exercise])} onAddWorkout={(exercise) => setAiWorkouts((current) => current.some((item) => item.id === exercise.id) ? current : [...current, exercise])} /> : <>
+<WorkoutCalendar active={activeView === "calendar"} userId={authUser?.id} onStartWorkout={() => setActiveView("workout")} />{activeView === "calendar" ? null : activeView === "profile" ? <ProfileManager user={authUser} profile={{ displayName: name, birthDate, gender, heightCm: Number(height) || null, weightKg: Number(weight) || null, goalText, environment: gym === "Salon" ? "Salon" : "Evde", equipmentText, requestedExercises, avatarPath }} avatarUrl={avatarUrl} onSaved={applySavedProfile} onFrozen={() => setAccountStatus("frozen")} onDeleted={clearDeletedAccount} onProgressReset={resetSavedProgress} onSignOut={handleSignOut} /> : activeView === "progress" ? <><PersonalRecordCelebration records={newRecords} unit={weightUnit} onDismiss={() => setNewRecords([])} /><ProgressView name={name} sessions={sessionHistory} referenceTime={progressReferenceTime} energyMetrics={energyMetrics} userId={authUser?.id} goalText={goalText || planGoal} /></> : activeView === "nutrition" ? <CalorieTracker userId={authUser?.id} bmr={energyMetrics?.bmr} tdee={energyMetrics?.tdee} weightKg={Number(weight) || undefined} activityFactor={energyMetrics?.activityFactor} workoutDays={inferWorkoutDays(history[1] || history[3])} profileGoal={goalText || planGoal} /> : activeView === "library" ? <LibraryView onOpenWorkout={(exercise) => openWorkout(0, [exercise])} onAddWorkout={(exercise) => { if (!isExerciseSafeForProfile(exercise, gym, equipmentText, history)) return false; setAiWorkouts((current) => current.some((item) => item.id === exercise.id) ? current : [...current, exercise]); return true; }} /> : <>
           {activeView === "workout" && activeWorkout !== null && currentWorkout && currentGuide && currentPrescription ? <div className="workout-player">
             <button className="back-btn" type="button" onClick={() => { setIsRunning(false); setActiveWorkout(null); }}>{t.workoutPlayer.backToPlan}</button>
             <div className="workout-session-progress" aria-label={t.workoutPlayer.progressLabel}>{playerQueue.map((exercise, index) => <span key={`${exercise.name}-${index}`} className={completedExercises.includes(index) ? "complete" : skippedExercises.includes(index) ? "skipped" : index === activeWorkout ? "active" : ""} />)}</div>

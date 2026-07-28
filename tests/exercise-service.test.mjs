@@ -114,6 +114,18 @@ test("hareket medyası mobil ve koyu tema için güvenli görünüm kurallarına
   assert.match(styles, /\.workout-card > \.db-exercise-animation\.compact \{ flex:0 0 128px/);
 });
 
+test("kütüphane uygun olmayan hareketi eklendi diye göstermiyor", async () => {
+  const [library, trDictionary, enDictionary] = await Promise.all([
+    readFile(new URL("../components/exercises/ExerciseLibrary.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../lib/i18n/dictionaries/tr.ts", import.meta.url), "utf8"),
+    readFile(new URL("../lib/i18n/dictionaries/en.ts", import.meta.url), "utf8"),
+  ]);
+  assert.match(library, /const added = onAddWorkout\(exercise\)/);
+  assert.match(library, /role="alert"/);
+  assert.match(trDictionary, /notAddedToWorkout/);
+  assert.match(enDictionary, /notAddedToWorkout/);
+});
+
 test("kas grubu seçilince yalnızca verisi olan filtre seçenekleri kalır", () => {
   const all = getExerciseFilterOptions();
   const chest = getExerciseFilterOptions({ muscle: "chest" });

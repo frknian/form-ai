@@ -3,6 +3,8 @@ import { extractSessionMinutes, extractWeeklyDays } from "../../../lib/training-
 import { authenticateRequest } from "../../../lib/api-auth.ts";
 import { rateLimit, tooManyRequests } from "../../../lib/rate-limit.ts";
 import { generateAiObject, hasAiProvider, aiModelId, parseImageDataUrl } from "../../../lib/ai-provider.ts";
+import { getExercisesForAI } from "../../../lib/exercise-service.ts";
+import type { AIExerciseContext } from "../../../types/exercise.ts";
 
 const plannerRules = [
   "Yaş, cinsiyet, boy, kilo, hedef metni, ortam, ekipman, istenen hareketler ve 10 test cevabının her birini değerlendir.",
@@ -110,6 +112,65 @@ export function profileSignals(payload: Record<string, unknown>) {
   return { history, sessionMinutes, experience, primaryGoal, frequencyText, weeklyDays, intensity, exerciseCount, setRange, restRange, painAreas: history[6] || "Yok", movementLevel: history[7] || "Belirtilmedi", sleepQuality: history[8] || "Belirtilmedi", preferredStyle: history[5] || "Karışık", note: history[9] || "Yok", fingerprint };
 }
 
+function catalogExerciseFitsProfile(exercise: AIExerciseContext, payload: Record<string, unknown>, signals: ReturnType<typeof profileSignals>) {
+  const environment = text(payload.environment).toLocaleLowerCase("tr-TR");
+  const equipmentText = text(payload.equipment).toLocaleLowerCase("tr-TR");
+  const equipment = (exercise.equipment || "").toLowerCase();
+  const exerciseText = exercise.name.toLowerCase();
+  const pain = signals.painAreas.toLocaleLowerCase("tr-TR");
+  if (pain.includes("diz") && /squat|lunge|jump|step|leg press|skater/.test(exerciseText)) return false;
+  if (pain.includes("omuz") && /push|press|dip|fly|raise|pulldown|pull-up/.test(exerciseText)) return false;
+  if (pain.includes("bel") && /deadlift|good morning|back extension|russian twist|woodchop/.test(exerciseText)) return false;
+  if (/yeni|başlangıç/i.test(signals.experience) && exercise.level === "expert") return false;
+  if (environment.includes("salon")) return true;
+  if (!equipment || equipment === "body only" || equipment === "none") return true;
+  const aliases: Record<string, RegExp> = {
+    dumbbell: /dambıl|dumbbell/,
+    kettlebells: /kettlebell/,
+    bands: /band|lastik/,
+    barbell: /barbell|halter|olimpik bar/,
+    cable: /kablo/,
+    machine: /makine/,
+    "exercise ball": /egzersiz topu|pilates topu|exercise ball/,
+    "medicine ball": /sağlık topu|medicine ball/,
+    "e-z curl bar": /ez bar|e-z bar/,
+  };
+  return aliases[equipment]?.test(equipmentText) ?? equipmentText.includes(equipment);
+}
+
+function validateGeneratedPlan(
+  result: GeneratedPlan,
+  catalog: AIExerciseContext[],
+  payload: Record<string, unknown>,
+  signals: ReturnType<typeof profileSignals>,
+) {
+  const catalogById = new Map(catalog.map((exercise) => [exercise.id, exercise]));
+  const seen = new Set<string>();
+  const workouts = result.workouts.flatMap((workout) => {
+    const exercise = catalogById.get(workout.id);
+    if (!exercise || seen.has(exercise.id) || !catalogExerciseFitsProfile(exercise, payload, signals)) return [];
+    seen.add(exercise.id);
+    return [{ ...workout, id: exercise.id, name: exercise.name, english: exercise.name }];
+  });
+  if (workouts.length !== signals.exerciseCount) {
+    throw new Error(`Plan must contain ${signals.exerciseCount} unique, safe catalog exercises`);
+  }
+  const movementAreas = new Set(workouts.map((workout) => catalogById.get(workout.id)?.primaryMuscles[0]).filter(Boolean));
+  if (movementAreas.size < Math.min(3, workouts.length)) {
+    throw new Error("Plan does not contain a balanced exercise combination");
+  }
+  return {
+    ...result,
+    analysis: {
+      ...result.analysis,
+      primaryGoal: signals.primaryGoal,
+      weeklyFrequency: signals.frequencyText,
+      sessionMinutes: signals.sessionMinutes,
+    },
+    workouts,
+  };
+}
+
 export async function POST(request: Request) {
   const auth = await authenticateRequest(request);
   if ("error" in auth) return auth.error;
@@ -125,7 +186,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "Profil verileri okunamadı" }, { status: 400 });
   }
   const photoDataUrl = typeof payload.photoDataUrl === "string" ? payload.photoDataUrl : null;
-  const exerciseCatalog = Array.isArray(payload.exerciseCatalog) ? payload.exerciseCatalog : [];
+  const exerciseCatalog = getExercisesForAI();
   const locale = payload.locale === "en" ? "en" : "tr";
   const profile = { ...payload };
   delete profile.photoDataUrl;
@@ -185,10 +246,8 @@ Tam olarak ${signals.exerciseCount} farklı hareket seç. Her workout için kata
       maxOutputTokens: 3_000,
       abortSignal: AbortSignal.timeout(30_000),
     });
-    if (result.workouts.length < 3) {
-      return Response.json({ error: "Model yeterli hareket üretmedi" }, { status: 502 });
-    }
-    return Response.json({ ...result, profileFingerprint: signals.fingerprint, model: aiModelId() });
+    const validated = validateGeneratedPlan(result, exerciseCatalog, payload, signals);
+    return Response.json({ ...validated, profileFingerprint: signals.fingerprint, model: aiModelId() });
   } catch (error) {
     console.error("AI plan generation error", error);
     return Response.json({

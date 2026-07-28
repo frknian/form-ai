@@ -152,8 +152,11 @@ test("keeps the AI plan and movement library wired into the product", async () =
   assert.doesNotMatch(page, /toggleInjury/);
   assert.match(page, /personalizeAiWorkouts/);
   assert.match(page, /isExerciseSafeForProfile/);
-  assert.match(page, /exerciseCatalog/);
-  assert.match(page, /getExercisesForAI/);
+  // Katalog istemciden kabul edilmez; sunucu kendi güvenilir hareket
+  // kütüphanesini yükleyip model çıktısını ona karşı doğrular.
+  assert.doesNotMatch(page, /exerciseCatalog/);
+  assert.match(route, /getExercisesForAI/);
+  assert.match(route, /validateGeneratedPlan/);
   assert.match(page, /getExerciseById/);
   assert.match(page, /ExerciseLibrary/);
   assert.match(page, /ExerciseAnimation/);

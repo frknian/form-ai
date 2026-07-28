@@ -654,6 +654,7 @@ export const tr = {
     tryDifferentFilters: "Arama metnini veya filtrelerden birini değiştir.",
     loadMore: "24 hareket daha göster →",
     addedToWorkout: (name: string) => `✓ ${name} antrenmanına eklendi`,
+    notAddedToWorkout: (name: string) => `${name}, ekipman veya ağrı kısıtlarınla uyumlu olmadığı için eklenmedi.`,
     general: "Genel",
     removeFromFavorites: (name: string) => `${name} favorilerden çıkar`,
     addToFavorites: (name: string) => `${name} favorilere ekle`,

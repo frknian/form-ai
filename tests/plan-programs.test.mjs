@@ -32,6 +32,11 @@ test("hazır programlardaki hareketler uygulama kataloğunda gerçekten vardır"
   }
 });
 
+test("hazır program ve kütüphane seçimleri profil güvenlik filtresinden geçer", () => {
+  assert.match(appSource, /preparedFromTemplate[^]*?isExerciseSafeForProfile\(exercise, gym, equipmentText, history\)/);
+  assert.match(appSource, /onAddWorkout=\{\(exercise\) => \{ if \(!isExerciseSafeForProfile\(exercise, gym, equipmentText, history\)\) return false;/);
+});
+
 test("kişisel plan hazır program hareketlerini son sıraya iter", () => {
   // Aksi halde "hemen başla" şablonu ile kişisel plan neredeyse aynı listeyi gösterir.
   assert.match(appSource, /const READY_PROGRAM_NAMES = new Set\(readyPrograms\.flatMap/);
@@ -44,12 +49,13 @@ test("plan hareket sayısı süreye ve haftalık sıklığa göre değişir", ()
 });
 
 test("plan her gün yenilenir ama sunucu render'ıyla uyumlu kalır", () => {
-  // dayIndex skora karışmazsa plan hep aynı kalır; doğrudan Date.now() okunursa
+  // Gün ve hareket adı birlikte hashlenmezse plan çoğu gün aynı sıralamada kalır.
   // sunucu ile istemci farklı plan üretip hydration uyuşmazlığı çıkarır.
-  assert.match(appSource, /seed \+ dayIndex \* 131/);
+  assert.match(appSource, /dailyWorkoutScore\(name, seed, dayIndex\)/);
   // Sunucu anlık görüntüsü sabit 0 olmalı; aksi halde sunucu ile istemci farklı
   // plan üretir. useSyncExternalStore'un üçüncü argümanı tam olarak bunun içindir.
-  assert.match(appSource, /useSyncExternalStore\(subscribeToNothing, planDayIndex, \(\) => 0\)/);
+  assert.match(appSource, /useSyncExternalStore\(subscribeToPlanDay, planDayIndex, \(\) => 0\)/);
+  assert.match(appSource, /nextDay\.setHours\(24, 0, 1, 0\)/);
 });
 
 test("haftalık sıklık cevabı gün sayısına çevrilir", () => {

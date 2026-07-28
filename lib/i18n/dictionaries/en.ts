@@ -656,6 +656,7 @@ export const en: typeof tr = {
     tryDifferentFilters: "Try a different search term or filter.",
     loadMore: "Show 24 more exercises →",
     addedToWorkout: (name: string) => `✓ Added ${name} to your workout`,
+    notAddedToWorkout: (name: string) => `${name} was not added because it does not match your equipment or pain constraints.`,
     general: "General",
     removeFromFavorites: (name: string) => `Remove ${name} from favorites`,
     addToFavorites: (name: string) => `Add ${name} to favorites`,

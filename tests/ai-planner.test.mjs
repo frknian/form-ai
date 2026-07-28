@@ -56,7 +56,13 @@ test("AI sağlayıcısı başarıyla plan üretir", { concurrency: false }, asyn
       title: "Test planı", profileSummary: "Test", rationale: "Test", safetyNote: "Test",
       analysis: { experienceLevel: "Yeni", weeklyFrequency: "1–2 gün", sessionMinutes: 30, primaryGoal: "Güç", intensity: "Düşük", equipmentMode: "Ekipmansız", focusAreas: ["Tüm vücut"], adaptations: ["A", "B", "C"] },
       weeklySchedule: [{ day: "Pazartesi", focus: "Tüm vücut", durationMinutes: 30 }], progression: ["1", "2", "3", "4"],
-      workouts: [1, 2, 3, 4].map((index) => ({ id: `ex-${index}`, name: `Hareket ${index}`, english: `Exercise ${index}`, area: "Core", sets: 3, reps: "10 tekrar", restSeconds: 60, instructions: "Kontrollü uygula." })),
+      workouts: [
+        ["Decline_Push-Up", "Göğüs"],
+        ["Bent_Over_Two-Dumbbell_Row", "Sırt"],
+        ["Bodyweight_Squat", "Bacak"],
+        ["Crunches", "Core"],
+        ["Butt_Lift_Bridge", "Kalça"],
+      ].map(([id, area]) => ({ id, name: "Modelin değiştirdiği ad", english: "Wrong name", area, sets: 3, reps: "10 tekrar", restSeconds: 60, instructions: "Kontrollü uygula." })),
     };
     return Response.json({ choices: [{ message: { role: "assistant", content: JSON.stringify(generated) } }] });
   });
@@ -65,8 +71,39 @@ test("AI sağlayıcısı başarıyla plan üretir", { concurrency: false }, asyn
     const response = await POST(authorizedRequest("http://localhost/api/generate-plan", { method: "POST", body: JSON.stringify(scenarios[0].payload) }));
     const result = await response.json();
     assert.equal(response.status, 200);
-    assert.equal(result.workouts.length, 4);
+    assert.equal(result.workouts.length, 5);
+    assert.equal(result.workouts[0].name, "Decline Push-Up");
+    assert.equal(result.analysis.primaryGoal, "Kas geliştirme");
+    assert.equal(result.analysis.sessionMinutes, 45);
     assert.ok(calls.some((url) => url.includes("/chat/completions")));
+  } finally {
+    globalThis.fetch = previousFetch;
+    restoreAuthEnv();
+    if (previousKey === undefined) delete process.env.AI_API_KEY; else process.env.AI_API_KEY = previousKey;
+  }
+});
+
+test("AI planı bilinmeyen veya tekrarlanan katalog hareketleriyle kabul edilmez", { concurrency: false }, async () => {
+  const previousKey = process.env.AI_API_KEY;
+  const previousFetch = globalThis.fetch;
+  const restoreAuthEnv = withSupabaseAuthEnv();
+  process.env.AI_API_KEY = "test-key";
+  globalThis.fetch = withAuthenticatedFetch(async () => Response.json({
+    choices: [{
+      message: {
+        role: "assistant",
+        content: JSON.stringify({
+          title: "Bozuk plan", profileSummary: "Test", rationale: "Test", safetyNote: "Test",
+          analysis: { experienceLevel: "Orta", weeklyFrequency: "3 gün", sessionMinutes: 45, primaryGoal: "Kas", intensity: "Orta", equipmentMode: "Dambıl", focusAreas: ["Göğüs"], adaptations: ["A", "B", "C"] },
+          weeklySchedule: [], progression: ["1", "2", "3", "4"],
+          workouts: Array.from({ length: 5 }, () => ({ id: "Decline_Push-Up", name: "Şınav", english: "Push-up", area: "Göğüs", sets: 3, reps: "10 tekrar", restSeconds: 60, instructions: "Kontrollü uygula." })),
+        }),
+      },
+    }],
+  }));
+  try {
+    const response = await POST(authorizedRequest("http://localhost/api/generate-plan", { method: "POST", body: JSON.stringify(scenarios[0].payload) }));
+    assert.equal(response.status, 502);
   } finally {
     globalThis.fetch = previousFetch;
     restoreAuthEnv();
