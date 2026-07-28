@@ -11,6 +11,8 @@ verdiğin geri bildirimi okuyup programını kendisi ayarlar.
 
 **Türkçe** · [English](#formai--your-ai-trainer-that-adapts-to-you)
 
+[Canlı uygulamayı aç](https://form-ai.frknian.workers.dev/)
+
 <img src="store-assets/feature-graphic-1024x500.png" alt="form.ai" width="100%">
 
 </div>
@@ -45,13 +47,15 @@ Her hareketin nasıl yapıldığını gösteren yerel animasyon kareleri, kas gr
 ekipman filtreleri, Türkçe hareket ve kas adları.
 
 ### Kalori takibi, üç yoldan
-- **Fotoğraf** — tabağının fotoğrafını çek, yapay zeka yemeği tanısın, gramajı
-  ve makroları tahmin etsin
+- **Fotoğraf** — tabağındaki yemekleri ayrı ayrı tanır; eklemek istediklerini
+  seçebilir, gramajlarını düzenleyebilir ve doğrudan seçtiğin öğüne kaydedebilirsin
 - **Barkod** — ambalajı okut; barkod tamamen **cihazında** çözülür
 - **Yazarak** — "bir kase mercimek çorbası" yaz, gerisini o hesaplasın
 
 Ayrıca 309 kayıtlık yerleşik besin kataloğu: Türk mutfağı, Avrupa mutfağı,
-fast food, atıştırmalık, içecek ve tatlılar.
+fast food, atıştırmalık, içecek ve tatlılar. Tarif katmanı; gram veya porsiyonla
+hesaplama, yöresel/tarif sürümleri ve 200 Türk yemeğinden oluşan doğrulama
+kuyruğunu destekler. Kaynağı doğrulanmayan tarifler kullanıcıya yayımlanmaz.
 
 ### İlerlemeni gör
 Vücut ölçümleri ve trend grafikleri, tahmini 1RM ile kişisel rekorlar, günlük
@@ -64,7 +68,8 @@ ve planını bilerek cevaplar.
 
 ### Ayrıntılar
 Açık ve koyu tema · kg/lb birim tercihi · antrenman takvimi ve hatırlatıcılar ·
-Türkçe ve İngilizce · tüm verilerini tek JSON dosyası olarak indirme
+mobilde kaydırılabilir üst menü · Türkçe ve İngilizce · tüm verilerini tek JSON
+dosyası olarak indirme · beslenme ve aktivite kayıtları dahil ilerlemeyi sıfırlama
 
 ## Sürümler
 
@@ -119,6 +124,8 @@ the feedback you give after every session, then adjusts the plan itself.
 
 [Türkçe](#formai) · **English**
 
+[Open the live app](https://form-ai.frknian.workers.dev/)
+
 </div>
 
 ---
@@ -151,13 +158,15 @@ Local animation frames showing how each move is performed, filters by muscle
 group and equipment, exercise and muscle names in both languages.
 
 ### Calorie tracking, three ways
-- **Photo** — snap your plate, let the AI identify the meal and estimate
-  portion size and macros
+- **Photo** — identifies the foods on a plate separately; select what to log,
+  edit each weight, and add the results directly to the chosen meal
 - **Barcode** — scan the package; barcodes are decoded entirely **on your device**
 - **Text** — type "a bowl of lentil soup" and let it do the math
 
 Plus a built-in catalog of 309 foods: Turkish and European dishes, fast food,
-snacks, drinks and desserts.
+snacks, drinks and desserts. The recipe layer supports gram or serving-based
+calculations, regional/recipe versions, and a 200-dish Turkish review queue.
+Recipes without verified sources are never published to users.
 
 ### Watch yourself progress
 Body measurements with trend charts, personal records via estimated 1RM, daily
@@ -170,7 +179,9 @@ answers knowing your profile and your plan.
 
 ### Details
 Light and dark themes · kg/lb preference · workout calendar and reminders ·
-Turkish and English · export all your data as a single JSON file
+horizontally scrollable mobile navigation · Turkish and English · export all
+your data as a single JSON file · reset progress including nutrition and
+activity logs
 
 ## Plans
 

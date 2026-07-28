@@ -4,11 +4,6 @@ import { bearerToken } from "./api-auth.ts";
 
 export type UsageFeature = "chat" | "photo";
 
-const DAILY_LIMITS = {
-  free: { chat: 5, photo: 5 },
-  premium: { chat: 15, photo: 10 },
-} as const;
-
 export type UsageCheckResult = { allowed: boolean; used: number; limit: number };
 
 /**
@@ -32,30 +27,23 @@ export async function checkAndConsumeUsage(request: Request, feature: UsageFeatu
     global: { headers: { Authorization: `Bearer ${token}` } },
   });
 
-  const { data: profile, error: profileError } = await client.from("profiles").select("is_premium").maybeSingle();
-  if (profileError && !isMissingInfrastructure(profileError)) {
-    console.error("[usage-limits] profile lookup failed", profileError.code);
-    return { error: Response.json({ error: "Kullanım sınırı kontrol edilemedi." }, { status: 500 }) };
+  const { data, error } = await client.rpc("increment_usage_counter", { p_feature: feature }).single();
+  if (error && isMissingInfrastructure(error)) {
+    console.error("[usage-limits] secure usage RPC is missing", error.code);
+    return { error: Response.json({ error: "Kullanım sınırı servisi yapılandırılmamış." }, { status: 503 }) };
   }
-  if (profileError) return unlimited(feature, "profiles.is_premium");
-  const isPremium = Boolean(profile?.is_premium);
-  const limit = isPremium ? DAILY_LIMITS.premium[feature] : DAILY_LIMITS.free[feature];
-
-  const { data, error } = await client.rpc("increment_usage_counter", { p_feature: feature, p_limit: limit }).single();
-  if (error && isMissingInfrastructure(error)) return unlimited(feature, "increment_usage_counter");
   if (error || !data) {
     console.error("[usage-limits] rpc failed", error?.code);
     return { error: Response.json({ error: "Kullanım sınırı kontrol edilemedi." }, { status: 500 }) };
   }
-  const result = data as { allowed: boolean; current_count: number };
-  return { allowed: result.allowed, used: result.current_count, limit };
+  const result = data as { allowed: boolean; current_count: number; effective_limit: number };
+  if (!Number.isInteger(result.effective_limit) || result.effective_limit <= 0) {
+    console.error("[usage-limits] secure usage RPC returned an invalid limit");
+    return { error: Response.json({ error: "Kullanım sınırı kontrol edilemedi." }, { status: 500 }) };
+  }
+  return { allowed: result.allowed, used: result.current_count, limit: result.effective_limit };
 }
 
-// db/migrations/20260726_usage_limits.sql henüz uygulanmamışsa sütun/fonksiyon
-// yoktur. Bu bir kullanıcı hatası değil, eksik bir kurulum adımıdır; sohbeti ve
-// fotoğraf analizini tamamen kilitlemek yerine sınırsız çalıştırıp durumu
-// sunucu günlüğüne yazıyoruz. Migration uygulandığı anda sınırlar kendiliğinden
-// devreye girer — kod değişikliği gerekmez.
 const MISSING_INFRA_CODES = new Set([
   "42883", // undefined_function
   "42P01", // undefined_table
@@ -66,11 +54,6 @@ const MISSING_INFRA_CODES = new Set([
 
 function isMissingInfrastructure(error: { code?: string | null }) {
   return Boolean(error.code && MISSING_INFRA_CODES.has(error.code));
-}
-
-function unlimited(feature: UsageFeature, missing: string): UsageCheckResult {
-  console.warn(`[usage-limits] ${missing} bulunamadı; kullanım sınırı uygulanmıyor. db/migrations/20260726_usage_limits.sql çalıştırılmalı.`);
-  return { allowed: true, used: 0, limit: Number.POSITIVE_INFINITY };
 }
 
 export function usageLimitExceeded(feature: UsageFeature, used: number, limit: number) {

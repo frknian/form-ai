@@ -1,6 +1,6 @@
 import { jsonSchema } from "ai";
 import { authenticateRequest } from "../../../../lib/api-auth.ts";
-import { generateAiObject, hasAiProvider, parseImageDataUrl } from "../../../../lib/ai-provider.ts";
+import { generatePhotoAiObject, hasPhotoAiProvider, parseImageDataUrl } from "../../../../lib/ai-provider.ts";
 import { validateParsedMeal, type ParsedMeal } from "../../../../lib/nutrition-parser.ts";
 import { resolveParsedMeal } from "../../../../lib/nutrition-resolver.ts";
 import { rateLimit, tooManyRequests } from "../../../../lib/rate-limit.ts";
@@ -38,7 +38,7 @@ const schema = jsonSchema<ParsedMeal>({
   additionalProperties: false,
 });
 
-const prompt = `Bu bir yemek fotoğrafı. Görseldeki muhtemel besinleri ayrı ayrı belirle. Her besin için yalnızca ad, yaklaşık gram, hazırlanma yöntemi ve güven bilgisi üret. Kalori veya makro değeri üretme. Fotoğrafta kesin belirlenemeyen porsiyon, sos ve yağ miktarları için needsConfirmation=true yap ve warnings alanına Türkçe uyarı ekle. originalText alanına görseldeki besinin kısa tanımını, quantity=1 ve uygun unit değerini yaz. Sonuçların tamamı tahmindir.`;
+const prompt = `Bu bir yemek fotoğrafı. Görseldeki muhtemel besinleri tabaktaki bileşenleri birleştirmeden ayrı ayrı belirle ve Türkçe adlandır. Türk mutfağındaki yemek adlarını (ör. bezelye yemeği, fırın makarna, bulgur pilavı) tercih et. Her besin için yalnızca ad, yaklaşık gram, hazırlanma yöntemi ve güven bilgisi üret. Kalori veya makro değeri üretme. Fotoğrafta kesin belirlenemeyen porsiyon, sos ve yağ miktarları için needsConfirmation=true yap ve warnings alanına Türkçe uyarı ekle. originalText alanına görseldeki besinin kısa tanımını, quantity=1 ve uygun unit değerini yaz. Sonuçların tamamı tahmindir.`;
 
 export async function POST(request: Request) {
   const auth = await authenticateRequest(request);
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
   const limited = rateLimit(`analyze-photo:${auth.user.id}`, 10, 60_000);
   if (!limited.ok) return tooManyRequests(limited.retryAfterSeconds);
 
-  if (!hasAiProvider() || process.env.AI_VISION_ENABLED === "false") {
+  if (!hasPhotoAiProvider() || process.env.AI_VISION_ENABLED === "false") {
     return Response.json({ error: "Fotoğraftan öğün analizi şu an kullanılamıyor; yazarak ekleyebilirsin.", featureUnavailable: true }, { status: 503 });
   }
   const contentLength = Number(request.headers.get("content-length") || 0);
@@ -61,7 +61,7 @@ export async function POST(request: Request) {
   if (!usage.allowed) return usageLimitExceeded("photo", usage.used, usage.limit);
 
   try {
-    const generated = await generateAiObject({
+    const generated = await generatePhotoAiObject({
       system: "Sen form.ai uygulamasının görsel besin ayrıştırma katmanısın. Yalnızca şemaya uygun JSON üret; besin değeri uydurma.",
       prompt,
       image,
@@ -78,8 +78,25 @@ export async function POST(request: Request) {
     const confidence = resolved.items.some((item) => item.confidence < 0.55)
       ? "low"
       : resolved.items.every((item) => item.confidence >= 0.8) ? "high" : "medium";
+    const detectedItems = resolved.items.map((item) => ({
+      name: item.query,
+      catalogName: item.food?.name || null,
+      grams: Math.round(item.estimatedGrams),
+      preparation: item.preparation,
+      confidence: item.confidence,
+      needsConfirmation: item.needsConfirmation,
+      matchKind: item.matchKind,
+      nutrition: item.nutrition ? {
+        calories: item.nutrition.calories,
+        protein: item.nutrition.protein,
+        carbs: item.nutrition.carbohydrates,
+        fat: item.nutrition.fat,
+        fiber: item.nutrition.fiber,
+      } : null,
+    }));
     return Response.json({
       ...resolved,
+      detectedItems,
       name: resolved.items.map((item) => item.query).join(", ").slice(0, 120) || "Fotoğraftaki öğün",
       itemNames: resolved.items.map((item) => item.query),
       grams: Math.round(totalGrams),
@@ -95,7 +112,7 @@ export async function POST(request: Request) {
       ...(Number.isFinite(usage.limit) ? { usage: { used: usage.used, limit: usage.limit } } : {}),
     });
   } catch (error) {
-    console.error("[nutrition-photo] Kimi request failed", error instanceof Error ? error.name : "unknown");
+    console.error("[nutrition-photo] vision request failed", error instanceof Error ? error.name : "unknown");
     return Response.json({ error: "Fotoğraf analizi şu an tamamlanamadı; yazarak ekleyebilirsin." }, { status: 502 });
   }
 }

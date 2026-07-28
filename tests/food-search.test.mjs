@@ -8,6 +8,9 @@ test("Türkçe besin araması karakter farklarına dayanıklıdır", () => {
   assert.ok(searchLocalFoods("tavuk").some((food) => food.name.includes("Tavuk")));
   assert.ok(searchLocalFoods("makarna").some((food) => food.name.includes("Makarna") || food.name.includes("makarna")));
   assert.ok(searchLocalFoods("menemen").some((food) => food.name === "Menemen"));
+  assert.equal(searchLocalFoods("sucuklu yumurta")[0]?.name, "Sucuklu yumurta");
+  assert.equal(searchLocalFoods("sucuk yumurta")[0]?.name, "Sucuklu yumurta");
+  assert.ok(searchLocalFoods("pastirma yumurta").some((food) => food.name === "Pastırmalı yumurta"));
   assert.ok(searchLocalFoods("ekmek").length >= 2);
 });
 

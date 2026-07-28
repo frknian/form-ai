@@ -1,7 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 import { bearerToken } from "./api-auth.ts";
 import { normalizeSupabaseUrl } from "./supabase/url.ts";
-import { mapOpenFoodFactsProduct, mapSupabaseFood, mapUsdaFood, type FoodNutrition, type OpenFoodFactsProduct, type SupabaseFoodRow, type UsdaFood } from "./nutrition-model.ts";
+import { mapOpenFoodFactsProduct, mapSupabaseFood, mapUsdaFood, type FoodNutrition, type OpenFoodFactsProduct, type SupabaseFoodRow } from "./nutrition-model.ts";
+import { searchUsdaFoodData } from "./providers/usda-food-data.ts";
 
 const FOOD_SELECT = "id,canonical_name,display_name_tr,brand,barcode,source,source_id,image_url,calories_per_100g,protein_per_100g,carbs_per_100g,fat_per_100g,fiber_per_100g,serving_size_grams,serving_label,verified,data_quality";
 
@@ -109,7 +110,7 @@ export async function searchOpenFoodFacts(query: string, limit = 8) {
     body: JSON.stringify({
       q: query,
       page: 1,
-      page_size: Math.min(10, limit),
+      page_size: Math.min(20, limit),
       langs: ["tr", "en"],
       boost_phrase: true,
       fields: ["code", "product_name", "product_name_tr", "brands", "serving_size", "image_front_url", "nutriments"],
@@ -121,16 +122,8 @@ export async function searchOpenFoodFacts(query: string, limit = 8) {
 }
 
 export async function searchUsdaFoods(query: string, limit = 5) {
-  const apiKey = process.env.USDA_FDC_API_KEY;
-  if (!apiKey) return [];
-  const response = await fetchWithRetry("https://api.nal.usda.gov/fdc/v1/foods/search", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "X-Api-Key": apiKey },
-    body: JSON.stringify({ query, pageSize: Math.min(10, limit), dataType: ["Foundation", "SR Legacy"] }),
-  });
-  if (!response.ok) return [];
-  const payload = await response.json() as { foods?: UsdaFood[] };
-  return (payload.foods || []).map(mapUsdaFood).filter((food): food is FoodNutrition => Boolean(food));
+  const foods = await searchUsdaFoodData(query, limit);
+  return foods.map(mapUsdaFood).filter((food): food is FoodNutrition => Boolean(food));
 }
 
 export function foodToSearchResult(food: FoodNutrition) {

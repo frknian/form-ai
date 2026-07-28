@@ -6,8 +6,9 @@ import { asSchema, generateObject, generateText, type FlexibleSchema, type Model
 // model değiştirmek tek bir ortam değişkenidir; hiçbir route dosyası
 // dokunulmaz. Gemini'ye özgü `responseSchema`/`inline_data` alanları burada
 // OpenAI'nin standart `response_format`/`image_url` alanlarına çevrilir.
-// Varsayılan: Moonshot AI'nin Kimi K3 modeli — native görsel girdi destekler,
-// öğün/plan fotoğrafı için ayrı bir görsel modele gerek yoktur.
+// Varsayılan: maliyet/kalite dengesi için Moonshot AI'nin Kimi K2.5 modeli.
+// Öğün fotoğrafı analizi, GEMINI_API_KEY tanımlıysa ayrı ve daha ekonomik
+// Gemini Flash-Lite sağlayıcısına yönlendirilir.
 //
 // Ortam değişkenleri modül yüklenirken DEĞİL, her çağrıda okunur — testlerde
 // (ve bazı edge çalışma zamanlarında) modül bir kez yüklenip önbelleğe alınır;
@@ -17,7 +18,11 @@ function hasAiProvider() {
 }
 
 function aiModelId() {
-  return process.env.AI_MODEL || "kimi-k3";
+  return process.env.AI_MODEL || "kimi-k2.5";
+}
+
+function photoAiModelId() {
+  return process.env.GEMINI_VISION_MODEL || "gemini-3.1-flash-lite";
 }
 
 function languageModel() {
@@ -36,7 +41,34 @@ function languageModel() {
   return provider.chatModel(aiModelId());
 }
 
-export { hasAiProvider, aiModelId };
+function geminiVisionModel() {
+  const provider = createOpenAICompatible({
+    name: "gemini",
+    baseURL: "https://generativelanguage.googleapis.com/v1beta/openai",
+    apiKey: process.env.GEMINI_API_KEY,
+    // Gemini 3.1 Flash-Lite JSON Schema tabanlı structured output destekler.
+    supportsStructuredOutputs: true,
+  });
+  return provider.chatModel(photoAiModelId());
+}
+
+function hasPhotoAiProvider() {
+  return Boolean(process.env.GEMINI_API_KEY || process.env.AI_API_KEY);
+}
+
+export { hasAiProvider, hasPhotoAiProvider, aiModelId, photoAiModelId };
+
+// K2.5 resmi Moonshot API'sinde varsayılan olarak düşünme modunda çalışır.
+// Uygulamadaki kısa sohbet, plan ve besin ayrıştırma işleri için instant mod
+// yeterlidir; gizli düşünme tokenlarını kapatmak maliyeti ve gecikmeyi azaltır.
+// Başka bir OpenAI-uyumlu sağlayıcı kullanıldığında ona Moonshot'a özgü alan
+// göndermemek için seçenek yalnızca resmi Moonshot uç noktasında eklenir.
+function primaryProviderOptions() {
+  const baseURL = process.env.AI_BASE_URL || "https://api.moonshot.ai/v1";
+  if (!baseURL.includes("moonshot.ai") || !aiModelId().startsWith("kimi-k2.5")) return undefined;
+  const providerName = process.env.AI_PROVIDER_NAME || "moonshot";
+  return { [providerName]: { thinking: { type: "disabled" } } };
+}
 
 // Bazı modeller (ör. Kimi K3) sıcaklık parametresini hiç kabul etmez veya
 // yalnızca tek bir sabit değeri (1) kabul eder; başka bir değer gönderildiğinde
@@ -63,10 +95,12 @@ async function withTemperatureFallback<T>(attempt: (useTemperature: boolean) => 
 // maxOutputTokens'a dahildir. Route'lardaki değerler (180–900) yalnızca
 // GÖRÜNEN yanıt için düşünülmüştü; reasoning modelinde bu, düşünme payını
 // tüketip asıl içeriğe hiç sıra bırakmadan sessizce boş sonuç döndürür (hata
-// fırlatmaz). Bu yüzden route'ların istediği değerden bağımsız bir taban
-// zorluyoruz; reasoning yapmayan modellerde zararsızdır (model kendi doğal
-// bitiş noktasında durur, bu üst sınır yalnızca bir tavan).
-const MIN_OUTPUT_TOKENS = 4_000;
+// fırlatmaz). Bu yüksek tabanı yalnızca K3 ailesinde koruyoruz. K2.5 instant
+// modunda route'un gerçek sınırını kullanmak gereksiz çıktı maliyetini önler.
+function primaryMaxOutputTokens(requested?: number) {
+  if (aiModelId().startsWith("kimi-k3")) return Math.max(requested ?? 0, 4_000);
+  return requested ?? 1_000;
+}
 
 type ImageInput = { mimeType: string; base64: string };
 
@@ -93,8 +127,9 @@ export async function generateAiText(request: AiTextRequest): Promise<string> {
     ...(request.messages
       ? { messages: request.messages }
       : { prompt: [{ role: "user" as const, content: userContent(request.prompt, request.image) }] }),
-    maxOutputTokens: Math.max(request.maxOutputTokens ?? 0, MIN_OUTPUT_TOKENS),
+    maxOutputTokens: primaryMaxOutputTokens(request.maxOutputTokens),
     temperature: useTemperature ? request.temperature : undefined,
+    providerOptions: primaryProviderOptions(),
     abortSignal: request.abortSignal,
   }));
   return text;
@@ -132,11 +167,38 @@ export async function generateAiObject<T>(request: AiObjectRequest<T>): Promise<
     system,
     prompt: [{ role: "user", content: userContent(request.prompt, request.image) }],
     schema: request.schema,
-    maxOutputTokens: Math.max(request.maxOutputTokens ?? 0, MIN_OUTPUT_TOKENS),
+    maxOutputTokens: primaryMaxOutputTokens(request.maxOutputTokens),
     temperature: useTemperature ? request.temperature : undefined,
+    providerOptions: primaryProviderOptions(),
     abortSignal: request.abortSignal,
   }));
   return object;
+}
+
+export async function generatePhotoAiObject<T>(request: AiObjectRequest<T>): Promise<T> {
+  if (!request.image) throw new TypeError("Photo AI requests require an image");
+  if (!process.env.GEMINI_API_KEY) return generateAiObject(request);
+
+  const system = await withSchemaInSystemPrompt(request.system, request.schema);
+  try {
+    const { object } = await generateObject({
+      model: geminiVisionModel(),
+      system,
+      prompt: [{ role: "user", content: userContent(request.prompt, request.image) }],
+      schema: request.schema,
+      // Fotoğraf JSON'u küçük; Kimi için gerekli 4K düşünme tabanını maliyet
+      // odaklı Gemini isteğine taşımıyoruz.
+      maxOutputTokens: Math.max(request.maxOutputTokens ?? 0, 1_200),
+      abortSignal: request.abortSignal,
+    });
+    return object;
+  } catch (error) {
+    // Gemini anahtarı/servisi geçici olarak sorunluysa çalışan görsel akışı
+    // kesilmez; mevcut sağlayıcı yalnızca yedek olarak devreye girer.
+    if (!hasAiProvider()) throw error;
+    console.warn("[photo-ai] Gemini failed; falling back to the primary AI provider");
+    return generateAiObject(request);
+  }
 }
 
 // Bir data URL'sini ("data:image/jpeg;base64,...") ImageInput'a çevirir.

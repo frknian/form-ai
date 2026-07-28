@@ -8,6 +8,7 @@ export const INPUT_METHODS = ["barcode", "search", "natural_language", "manual",
 
 export type NutritionLogInput = {
   foodId: string | null;
+  recipeVersionId: string | null;
   loggedDate: string;
   mealType: (typeof MEAL_TYPES)[number];
   foodName: string;
@@ -37,6 +38,10 @@ export function validateNutritionLogInput(value: unknown, partial = false): Part
   if (required("foodId")) {
     if (input.foodId !== null && (typeof input.foodId !== "string" || !/^[0-9a-f-]{36}$/i.test(input.foodId))) return null;
     result.foodId = input.foodId as string | null;
+  }
+  if (required("recipeVersionId")) {
+    if (input.recipeVersionId !== null && (typeof input.recipeVersionId !== "string" || !/^[0-9a-f-]{36}$/i.test(input.recipeVersionId))) return null;
+    result.recipeVersionId = input.recipeVersionId as string | null;
   }
   if (required("loggedDate")) {
     if (typeof input.loggedDate !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(input.loggedDate)) return null;
@@ -114,6 +119,11 @@ export function sourceForInputMethod(inputMethod: NutritionLogInput["inputMethod
 export function toFoodEntryRow(input: Partial<NutritionLogInput>) {
   const row: Record<string, unknown> = {};
   if ("foodId" in input) row.food_id = input.foodId;
+  // Tarif altyapısı migration'ı henüz uygulanmamış üretimlerde null bir
+  // recipe_version_id alanı göndermek bile PostgREST'in tüm barkod, fotoğraf
+  // ve manuel kayıtları reddetmesine neden olur. Sütunu yalnızca gerçekten
+  // bir tarif sürümü seçildiğinde göndererek eski şemayla uyumu koruyoruz.
+  if ("recipeVersionId" in input && input.recipeVersionId) row.recipe_version_id = input.recipeVersionId;
   if ("loggedDate" in input) row.logged_date = input.loggedDate;
   if ("mealType" in input) row.meal = input.mealType;
   if ("foodName" in input) row.name = input.foodName;

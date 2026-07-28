@@ -22,6 +22,13 @@ export type FoodSearchResult = {
   id: string;
   name: string;
   brand?: string;
+  aliases?: string[];
+  kind?: "food" | "recipe";
+  recipeSlug?: string;
+  recipeVersion?: string;
+  portionLabel?: string;
+  confidenceLevel?: "high" | "medium" | "low";
+  allergens?: string[];
   barcode?: string;
   servingGrams?: number;
   nutritionPer100g: FoodNutrition;
@@ -248,6 +255,16 @@ const staples: FoodSearchResult[] = [
   { id: "tr-kaymak", name: "Kaymak", servingGrams: 30, nutritionPer100g: { calories: 395, protein: 3.5, carbs: 3, fat: 41, fiber: 0, micros: { calciumMg: 110 } }, source: "FİT.AI temel besin listesi" },
   { id: "tr-sucuk", name: "Sucuk", servingGrams: 50, nutritionPer100g: { calories: 415, protein: 22, carbs: 2, fat: 36, fiber: 0, micros: { sodiumMg: 1400, ironMg: 2.8 } }, source: "FİT.AI temel besin listesi" },
   { id: "tr-pastirma", name: "Pastırma", servingGrams: 40, nutritionPer100g: { calories: 240, protein: 35, carbs: 2, fat: 10, fiber: 0, micros: { sodiumMg: 1900, ironMg: 3.5 } }, source: "FİT.AI temel besin listesi" },
+  { id: "tr-sucuklu-yumurta", name: "Sucuklu yumurta", aliases: ["sucuk yumurta", "sucuklu sahanda yumurta"], servingGrams: 170, nutritionPer100g: { calories: 274, protein: 17, carbs: 2, fat: 22, fiber: 0, micros: { sodiumMg: 720, ironMg: 2.2 } }, source: "FİT.AI temel besin listesi" },
+  { id: "tr-pastirmali-yumurta", name: "Pastırmalı yumurta", aliases: ["pastirma yumurta"], servingGrams: 160, nutritionPer100g: { calories: 212, protein: 20, carbs: 1.5, fat: 14, fiber: 0, micros: { sodiumMg: 820, ironMg: 2.4 } }, source: "FİT.AI temel besin listesi" },
+  { id: "tr-kiymali-yumurta", name: "Kıymalı yumurta", aliases: ["kiyma yumurta"], servingGrams: 180, nutritionPer100g: { calories: 193, protein: 17, carbs: 2, fat: 13, fiber: 0, micros: { ironMg: 2.1, sodiumMg: 210 } }, source: "FİT.AI temel besin listesi" },
+  { id: "tr-sahanda-yumurta", name: "Sahanda yumurta", aliases: ["tavada yumurta", "goz yumurta"], servingGrams: 120, nutritionPer100g: { calories: 200, protein: 13, carbs: 1, fat: 16, fiber: 0, micros: { ironMg: 1.7, calciumMg: 62 } }, source: "FİT.AI temel besin listesi" },
+  { id: "tr-peynirli-omlet", name: "Peynirli omlet", aliases: ["beyaz peynirli omlet"], servingGrams: 170, nutritionPer100g: { calories: 190, protein: 13, carbs: 2, fat: 14.5, fiber: 0, micros: { calciumMg: 190, sodiumMg: 340 } }, source: "FİT.AI temel besin listesi" },
+  { id: "tr-kasarli-omlet", name: "Kaşarlı omlet", aliases: ["kasarli yumurta"], servingGrams: 170, nutritionPer100g: { calories: 213, protein: 15, carbs: 2, fat: 16, fiber: 0, micros: { calciumMg: 250, sodiumMg: 360 } }, source: "FİT.AI temel besin listesi" },
+  { id: "tr-sebzeli-omlet", name: "Sebzeli omlet", aliases: ["sebzeli yumurta"], servingGrams: 200, nutritionPer100g: { calories: 135, protein: 8, carbs: 5, fat: 9, fiber: 1.2, micros: { potassiumMg: 190, vitaminCMg: 12 } }, source: "FİT.AI temel besin listesi" },
+  { id: "tr-mantarli-omlet", name: "Mantarlı omlet", aliases: ["mantarli yumurta"], servingGrams: 190, nutritionPer100g: { calories: 142, protein: 9, carbs: 3, fat: 10.5, fiber: 0.8, micros: { potassiumMg: 220 } }, source: "FİT.AI temel besin listesi" },
+  { id: "tr-patatesli-yumurta", name: "Patatesli yumurta", aliases: ["yumurtali patates"], servingGrams: 220, nutritionPer100g: { calories: 145, protein: 6.5, carbs: 14, fat: 7, fiber: 1.5, micros: { potassiumMg: 280 } }, source: "FİT.AI temel besin listesi" },
+  { id: "tr-yumurtali-ekmek", name: "Yumurtalı ekmek", aliases: ["ekmek kizartmasi yumurtali", "fransiz tostu"], servingGrams: 160, nutritionPer100g: { calories: 225, protein: 9, carbs: 25, fat: 10, fiber: 1.5, micros: { sodiumMg: 310, calciumMg: 75 } }, source: "FİT.AI temel besin listesi" },
   { id: "tr-salam", name: "Salam", servingGrams: 40, nutritionPer100g: { calories: 310, protein: 15, carbs: 3, fat: 26, fiber: 0, micros: { sodiumMg: 1200 } }, source: "FİT.AI temel besin listesi" },
   { id: "tr-sosis", name: "Sosis", servingGrams: 50, nutritionPer100g: { calories: 300, protein: 12, carbs: 3, fat: 27, fiber: 0, micros: { sodiumMg: 1050 } }, source: "FİT.AI temel besin listesi" },
   { id: "tr-lor", name: "Lor peyniri", servingGrams: 60, nutritionPer100g: { calories: 98, protein: 11, carbs: 3, fat: 4, fiber: 0, micros: { calciumMg: 150 } }, source: "FİT.AI temel besin listesi" },
@@ -448,6 +465,11 @@ const staples: FoodSearchResult[] = [
   { id: "base-findik-ezmesi", name: "Fıstık ezmesi", servingGrams: 20, nutritionPer100g: { calories: 588, protein: 25, carbs: 20, fat: 50, fiber: 6, micros: {  } }, source: "FİT.AI temel besin listesi" },
 ];
 
+// Seed üreticisi eski yerel katalogdaki adları yalnızca inceleme kuyruğu
+// oluşturmak için kullanır. Bu listedeki değerler doğrulanmış tarif verisi
+// sayılmaz ve recipe import sistemi tarafından otomatik yayımlanmaz.
+export const localFoodCatalog = staples;
+
 // Eşleşme kalitesine göre puan. Düz "içeriyor mu" kontrolü, "kola" aramasında
 // "çikolata" gibi alakasız sonuçları öne çıkarıyordu; tam ad ve kelime başı
 // eşleşmeleri artık her zaman kelime içi eşleşmelerin önünde geliyor.
@@ -466,7 +488,7 @@ export function searchLocalFoods(query: string, limit = 6) {
   const terms = normalizedQuery.split(" ");
   return staples
     .flatMap((food) => {
-      const searchable = normalizeFoodSearchText(`${food.name} ${food.brand || ""}`);
+      const searchable = normalizeFoodSearchText(`${food.name} ${food.brand || ""} ${(food.aliases || []).join(" ")}`);
       const matches = terms.every((term) => {
         const alternatives = term.endsWith("k") ? [term, `${term.slice(0, -1)}g`] : [term];
         return alternatives.some((candidate) => searchable.includes(candidate));

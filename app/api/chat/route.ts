@@ -54,13 +54,11 @@ export async function POST(request: Request) {
       maxOutputTokens: 500,
       abortSignal: AbortSignal.timeout(20_000),
     });
-    // Sınır uygulanmıyorsa (bkz. lib/usage-limits.ts) limit sonsuzdur; JSON'da
-    // null'a dönüşüp arayüzde "0/null" görüneceği için alanı hiç göndermiyoruz.
     if (text.trim()) return Response.json({
       text: text.trim(),
       source: "ai",
       model: aiModelId(),
-      ...(Number.isFinite(usage.limit) ? { usage: { used: usage.used, limit: usage.limit } } : {}),
+      usage: { used: usage.used, limit: usage.limit },
     });
   } catch (error) {
     console.error("AI coach error", error);

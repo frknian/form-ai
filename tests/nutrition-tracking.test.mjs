@@ -5,7 +5,7 @@ import { calculatePortionNutrition, validateManualNutrition, valueForPortion } f
 import { mapOpenFoodFactsProduct, mapSupabaseFood, mapUsdaFood } from "../lib/nutrition-model.ts";
 import { applyAmbiguityRules, containsPromptInjection, validateParsedMeal } from "../lib/nutrition-parser.ts";
 import { resolveParsedMeal } from "../lib/nutrition-resolver.ts";
-import { validateNutritionLogInput } from "../lib/nutrition-log.ts";
+import { toFoodEntryRow, validateNutritionLogInput } from "../lib/nutrition-log.ts";
 import { authorizedRequest, withAuthenticatedFetch, withSupabaseAuthEnv } from "./helpers/auth.mjs";
 
 const validParsedMeal = {
@@ -125,6 +125,24 @@ test("Kimi JSON şeması çoklu besinleri kabul eder ve katalogla çözümler", 
   assert.ok(resolved.totals.calories > 0);
 });
 
+test("fotoğraftaki hazırlanma ifadesi en yakın temel besine yaklaşık eşlenir", () => {
+  const parsed = validateParsedMeal({
+    items: [
+      { ...validParsedMeal.items[0], query: "bezelye", originalText: "bezelye", estimatedGrams: 120 },
+      { ...validParsedMeal.items[0], query: "fırın makarna", originalText: "fırın makarna", estimatedGrams: 220 },
+    ],
+    warnings: [],
+  });
+  assert.ok(parsed);
+  const resolved = resolveParsedMeal(parsed);
+  assert.equal(resolved.items[0].matchKind, "exact");
+  assert.equal(resolved.items[1].matchKind, "approximate");
+  assert.match(resolved.items[1].food?.name || "", /makarna/i);
+  assert.equal(resolved.items[1].needsConfirmation, true);
+  assert.ok(resolved.items[1].nutrition?.calories > 0);
+  assert.match(resolved.warnings.join(" "), /yaklaşık/i);
+});
+
 test("belirsiz ölçüler onay gerektirir ve güven skoru düşürülür", () => {
   const parsed = validateParsedMeal({
     ...validParsedMeal,
@@ -150,6 +168,19 @@ test("manuel kayıt doğrulaması tutarsız kaloriyi engellemeden uyarır", () =
   assert.equal(validateNutritionLogInput({}), null);
 });
 
+test("tarif seçilmemiş fotoğraf ve barkod kayıtları eski veritabanı şemasıyla uyumludur", () => {
+  const row = toFoodEntryRow({
+    recipeVersionId: null,
+    foodName: "Bezelye",
+    portionGrams: 120,
+    calories: 101,
+    inputMethod: "photo",
+  });
+  assert.equal("recipe_version_id" in row, false);
+  assert.equal(row.source, "Fotoğraf");
+  assert.equal(row.input_method, "photo");
+});
+
 test("migration, kişisel günlük RLS ve salt okunur global besin politikalarını içerir", async () => {
   const sql = await readFile(new URL("../db/migrations/20260727_nutrition_tracking.sql", import.meta.url), "utf8");
   assert.match(sql, /Authenticated users can read foods/);
@@ -160,13 +191,16 @@ test("migration, kişisel günlük RLS ve salt okunur global besin politikaları
 
 test("doğal dil route'u Kimi sonucunu katalogdan hesaplar; model makrosu kullanmaz", { concurrency: false }, async () => {
   const previousKey = process.env.AI_API_KEY;
+  const previousModel = process.env.AI_MODEL;
   const previousFetch = globalThis.fetch;
   const restoreEnv = withSupabaseAuthEnv();
   process.env.AI_API_KEY = "test-key";
-  globalThis.fetch = withAuthenticatedFetch((url) => {
-    if (String(url).includes("/rest/v1/profiles")) return Response.json({ is_premium: false });
-    if (String(url).includes("/rpc/increment_usage_counter")) return Response.json({ allowed: true, current_count: 1 });
+  delete process.env.AI_MODEL;
+  let kimiRequest = null;
+  globalThis.fetch = withAuthenticatedFetch((url, init) => {
+    if (String(url).includes("/rpc/increment_usage_counter")) return Response.json({ allowed: true, current_count: 1, effective_limit: 5 });
     if (String(url).includes("/chat/completions")) {
+      kimiRequest = JSON.parse(String(init?.body || "{}"));
       return Response.json({ choices: [{ message: { role: "assistant", content: JSON.stringify(validParsedMeal) }, finish_reason: "stop" }], usage: {} });
     }
     throw new TypeError(`beklenmeyen ağ isteği: ${url}`);
@@ -182,10 +216,93 @@ test("doğal dil route'u Kimi sonucunu katalogdan hesaplar; model makrosu kullan
     const payload = await response.json();
     assert.equal(payload.items[0].food.name, "Yumurta, haşlanmış");
     assert.equal(payload.totals.calories, 155);
+    assert.equal(kimiRequest?.model, "kimi-k2.5");
+    assert.deepEqual(kimiRequest?.thinking, { type: "disabled" });
+    assert.equal(kimiRequest?.max_tokens, 800);
   } finally {
     globalThis.fetch = previousFetch;
     restoreEnv();
     if (previousKey === undefined) delete process.env.AI_API_KEY; else process.env.AI_API_KEY = previousKey;
+    if (previousModel === undefined) delete process.env.AI_MODEL; else process.env.AI_MODEL = previousModel;
+  }
+});
+
+test("fotoğraf route'u bulunan besinleri seçilebilir satırlar olarak döndürür", { concurrency: false }, async () => {
+  const previousKey = process.env.AI_API_KEY;
+  const previousFetch = globalThis.fetch;
+  const restoreEnv = withSupabaseAuthEnv();
+  process.env.AI_API_KEY = "test-key";
+  const photoMeal = {
+    items: [
+      { ...validParsedMeal.items[0], query: "bezelye", originalText: "bezelye", estimatedGrams: 120 },
+      { ...validParsedMeal.items[0], query: "fırın makarna", originalText: "fırın makarna", estimatedGrams: 220, preparation: "fırında" },
+    ],
+    warnings: [],
+  };
+  globalThis.fetch = withAuthenticatedFetch((url) => {
+    if (String(url).includes("/rpc/increment_usage_counter")) return Response.json({ allowed: true, current_count: 1, effective_limit: 5 });
+    if (String(url).includes("/chat/completions")) {
+      return Response.json({ choices: [{ message: { role: "assistant", content: JSON.stringify(photoMeal) }, finish_reason: "stop" }], usage: {} });
+    }
+    throw new TypeError(`beklenmeyen ağ isteği: ${url}`);
+  });
+  const tinyPng = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
+  try {
+    const { POST } = await import(`../app/api/nutrition/analyze-photo/route.ts?success=${Date.now()}`);
+    const response = await POST(authorizedRequest("http://localhost/api/nutrition/analyze-photo", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ photoDataUrl: `data:image/png;base64,${tinyPng}` }),
+    }));
+    assert.equal(response.status, 200);
+    const payload = await response.json();
+    assert.equal(payload.detectedItems.length, 2);
+    assert.equal(payload.detectedItems[0].name, "bezelye");
+    assert.equal(payload.detectedItems[1].matchKind, "approximate");
+    assert.ok(payload.detectedItems[1].nutrition.calories > 0);
+  } finally {
+    globalThis.fetch = previousFetch;
+    restoreEnv();
+    if (previousKey === undefined) delete process.env.AI_API_KEY; else process.env.AI_API_KEY = previousKey;
+  }
+});
+
+test("Gemini anahtarı varsa fotoğraf analizi Flash-Lite üzerinden çalışır", { concurrency: false }, async () => {
+  const previousGeminiKey = process.env.GEMINI_API_KEY;
+  const previousGeminiModel = process.env.GEMINI_VISION_MODEL;
+  const previousAiKey = process.env.AI_API_KEY;
+  const previousFetch = globalThis.fetch;
+  const restoreEnv = withSupabaseAuthEnv();
+  process.env.GEMINI_API_KEY = "test-gemini-key";
+  process.env.GEMINI_VISION_MODEL = "gemini-3.1-flash-lite";
+  process.env.AI_API_KEY = "fallback-key";
+  let visionRequest = null;
+  globalThis.fetch = withAuthenticatedFetch((url, init) => {
+    if (String(url).includes("/rpc/increment_usage_counter")) return Response.json({ allowed: true, current_count: 1, effective_limit: 5 });
+    if (String(url).includes("generativelanguage.googleapis.com")) {
+      visionRequest = { url: String(url), body: JSON.parse(String(init?.body || "{}")) };
+      return Response.json({ choices: [{ message: { role: "assistant", content: JSON.stringify(validParsedMeal) }, finish_reason: "stop" }], usage: {} });
+    }
+    throw new TypeError(`beklenmeyen ağ isteği: ${url}`);
+  });
+  const tinyPng = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
+  try {
+    const { POST } = await import(`../app/api/nutrition/analyze-photo/route.ts?gemini=${Date.now()}`);
+    const response = await POST(authorizedRequest("http://localhost/api/nutrition/analyze-photo", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ photoDataUrl: `data:image/png;base64,${tinyPng}` }),
+    }));
+    assert.equal(response.status, 200);
+    assert.match(visionRequest?.url || "", /generativelanguage\.googleapis\.com\/v1beta\/openai\/chat\/completions/);
+    assert.equal(visionRequest?.body?.model, "gemini-3.1-flash-lite");
+    assert.equal(visionRequest?.body?.response_format?.type, "json_schema");
+  } finally {
+    globalThis.fetch = previousFetch;
+    restoreEnv();
+    if (previousGeminiKey === undefined) delete process.env.GEMINI_API_KEY; else process.env.GEMINI_API_KEY = previousGeminiKey;
+    if (previousGeminiModel === undefined) delete process.env.GEMINI_VISION_MODEL; else process.env.GEMINI_VISION_MODEL = previousGeminiModel;
+    if (previousAiKey === undefined) delete process.env.AI_API_KEY; else process.env.AI_API_KEY = previousAiKey;
   }
 });
 
@@ -196,8 +313,7 @@ test("Kimi geçersiz JSON döndürürse kontrollü tek düzeltmeden sonra manuel
   process.env.AI_API_KEY = "test-key";
   let aiCalls = 0;
   globalThis.fetch = withAuthenticatedFetch((url) => {
-    if (String(url).includes("/rest/v1/profiles")) return Response.json({ is_premium: false });
-    if (String(url).includes("/rpc/increment_usage_counter")) return Response.json({ allowed: true, current_count: 1 });
+    if (String(url).includes("/rpc/increment_usage_counter")) return Response.json({ allowed: true, current_count: 1, effective_limit: 5 });
     if (String(url).includes("/chat/completions")) {
       aiCalls += 1;
       return Response.json({ choices: [{ message: { role: "assistant", content: "{\"items\":\"invalid\"}" }, finish_reason: "stop" }], usage: {} });

@@ -20,12 +20,12 @@ npm run lint
 
 `.env.example` dosyasını `.env` olarak kopyalayıp doldurun:
 
-- `AI_API_KEY`, `AI_BASE_URL`, `AI_MODEL` — AI plan üretimi, sohbet, öğün fotoğrafı analizi ve haftalık değerlendirme. OpenAI-uyumlu herhangi bir sağlayıcıyla çalışır (OpenRouter, Together, Fireworks, kendi vLLM/Ollama sunucunuz). Anahtar yoksa uygulama her yerde güvenli bir yerel yedeğe düşer.
-- Görsel girdi (öğün fotoğrafı, plan fotoğrafı) gerektiği için `AI_MODEL` görsel destekli bir model olmalı; varsayılan `kimi-k3`, Moonshot AI'nin kendi API'si (`https://api.moonshot.ai/v1`) üzerinden native görsel destekler. OpenRouter/Together/Fireworks gibi başka bir sağlayıcıya geçmek için `.env.example`'daki örneğe bakın.
+- `AI_API_KEY`, `AI_BASE_URL`, `AI_MODEL` — AI plan üretimi, sohbet, metinle öğün ekleme ve haftalık değerlendirme. OpenAI-uyumlu herhangi bir sağlayıcıyla çalışır (OpenRouter, Together, Fireworks, kendi vLLM/Ollama sunucunuz). Anahtar yoksa uygulama her yerde güvenli bir yerel yedeğe düşer. Varsayılan `kimi-k2.5`, resmi Moonshot API'sinde maliyet için düşünme kapalı (instant) modda kullanılır.
+- `GEMINI_API_KEY`, `GEMINI_VISION_MODEL` — öğün fotoğrafı analizini ekonomik Gemini Flash-Lite modeline yönlendirir. Gemini kullanılamazsa ana AI sağlayıcısı yedek olarak denenir.
 - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` — hesap ve veri katmanı. Tanımlı değilse giriş ekranı "yapılandırılmamış" durumunu gösterir.
 - `SUPABASE_SECRET_KEY` — yalnız sunucu tarafındaki hesap silme işlemi için; `NEXT_PUBLIC_` öneki eklemeyin.
 - `USDA_FDC_API_KEY` — isteğe bağlı USDA FoodData Central arama yedeği; yalnız sunucuda kullanılır.
-- `AI_VISION_ENABLED` — Kimi K3 dağıtımında görsel girdi kapalıysa `false`; fotoğraf akışı kullanıcıyı güvenli biçimde yazarak eklemeye yönlendirir.
+- `AI_VISION_ENABLED` — fotoğraf AI özelliğini tamamen kapatmak için `false`; fotoğraf akışı kullanıcıyı güvenli biçimde yazarak eklemeye yönlendirir.
 - `CAPACITOR_SERVER_URL` — Capacitor geliştirmesinde yerel sunucu adresi.
 
 ## Veritabanı kurulumu
@@ -60,7 +60,33 @@ Yayın ortamında Supabase panelinde:
 
 ## Dağıtım
 
-Veri katmanı Supabase'dir. Uygulama Nitro tabanlı hatla yayınlanır:
+Veri katmanı Supabase'dir. Canlı uygulama Cloudflare Worker olarak
+`https://form-ai.frknian.workers.dev/` adresinde yayınlanır.
+
+Cloudflare üretim derlemesi ve yayını:
+
+```bash
+npm run build
+npx wrangler deploy --config dist/server/wrangler.json --name form-ai --keep-vars
+```
+
+`--keep-vars`, panel veya `wrangler secret put` ile tanımlanmış üretim
+değişkenlerinin sonraki yayınlarda korunmasını sağlar. Gizli değerleri kaynak
+dosyalarına yazmayın; örneğin:
+
+```bash
+npx wrangler secret put GEMINI_API_KEY --config dist/server/wrangler.json --name form-ai
+npx wrangler secret put AI_API_KEY --config dist/server/wrangler.json --name form-ai
+npx wrangler secret put AI_MODEL --config dist/server/wrangler.json --name form-ai
+```
+
+Yayın sonrası canlılık kontrolü:
+
+```bash
+curl -I https://form-ai.frknian.workers.dev/
+```
+
+Alternatif Nitro/Vercel hattı:
 
 ```bash
 npm run build:vercel   # NITRO_PRESET=vercel · çıktı: .vercel/output

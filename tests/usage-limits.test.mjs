@@ -1,15 +1,13 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { checkAndConsumeUsage, usageLimitExceeded } from "../lib/usage-limits.ts";
 import { authorizedRequest, withAuthenticatedFetch, withSupabaseAuthEnv, TEST_TOKEN } from "./helpers/auth.mjs";
 
-function withUsageFetch({ isPremium = false, allowed = true, currentCount = 1 } = {}) {
+function withUsageFetch({ allowed = true, currentCount = 1, effectiveLimit = 5 } = {}) {
   return withAuthenticatedFetch((url) => {
-    if (String(url).includes("/rest/v1/profiles")) {
-      return Response.json({ is_premium: isPremium });
-    }
     if (String(url).includes("/rpc/increment_usage_counter")) {
-      return Response.json({ allowed, current_count: currentCount });
+      return Response.json({ allowed, current_count: currentCount, effective_limit: effectiveLimit });
     }
     throw new TypeError(`beklenmeyen ağ isteği: ${url}`);
   });
@@ -18,7 +16,7 @@ function withUsageFetch({ isPremium = false, allowed = true, currentCount = 1 } 
 test("ücretsiz kullanıcı için doğru günlük limit uygulanır", async () => {
   const restoreEnv = withSupabaseAuthEnv();
   const previousFetch = globalThis.fetch;
-  globalThis.fetch = withUsageFetch({ isPremium: false, allowed: true, currentCount: 3 });
+  globalThis.fetch = withUsageFetch({ allowed: true, currentCount: 3, effectiveLimit: 5 });
   try {
     const request = authorizedRequest("http://localhost/x", { headers: { Authorization: `Bearer ${TEST_TOKEN}` } });
     const result = await checkAndConsumeUsage(request, "chat");
@@ -33,7 +31,7 @@ test("ücretsiz kullanıcı için doğru günlük limit uygulanır", async () =>
 test("ücretli kullanıcı için daha yüksek limit uygulanır", async () => {
   const restoreEnv = withSupabaseAuthEnv();
   const previousFetch = globalThis.fetch;
-  globalThis.fetch = withUsageFetch({ isPremium: true, allowed: true, currentCount: 8 });
+  globalThis.fetch = withUsageFetch({ allowed: true, currentCount: 8, effectiveLimit: 10 });
   try {
     const request = authorizedRequest("http://localhost/x");
     const result = await checkAndConsumeUsage(request, "photo");
@@ -48,7 +46,7 @@ test("ücretli kullanıcı için daha yüksek limit uygulanır", async () => {
 test("sunucu limiti aştığını bildirdiğinde sayaç artırılmadığı gibi işaretlenir", async () => {
   const restoreEnv = withSupabaseAuthEnv();
   const previousFetch = globalThis.fetch;
-  globalThis.fetch = withUsageFetch({ isPremium: false, allowed: false, currentCount: 5 });
+  globalThis.fetch = withUsageFetch({ allowed: false, currentCount: 5, effectiveLimit: 5 });
   try {
     const request = authorizedRequest("http://localhost/x");
     const result = await checkAndConsumeUsage(request, "chat");
@@ -79,10 +77,47 @@ test("jetonsuz istek Supabase'e hiç gitmeden reddedilir", async () => {
   }
 });
 
-function withRouteFetch({ isPremium = false, allowed = true, currentCount = 1, aiResponse }) {
+test("güvenli RPC eksikse kullanım sınırsız açılmaz", async () => {
+  const restoreEnv = withSupabaseAuthEnv();
+  const previousFetch = globalThis.fetch;
+  globalThis.fetch = withAuthenticatedFetch((url) => {
+    if (String(url).includes("/rpc/increment_usage_counter")) {
+      return Response.json(
+        { code: "PGRST202", message: "function not found" },
+        { status: 404 },
+      );
+    }
+    throw new TypeError(`beklenmeyen ağ isteği: ${url}`);
+  });
+  try {
+    const result = await checkAndConsumeUsage(authorizedRequest("http://localhost/x"), "chat");
+    assert.ok("error" in result);
+    assert.equal(result.error.status, 503);
+  } finally {
+    globalThis.fetch = previousFetch;
+    restoreEnv();
+  }
+});
+
+test("güvenlik migration'ı limiti ve premium yetkisini veritabanında belirler", async () => {
+  const migration = await readFile(
+    new URL("../db/migrations/20260728_security_definer_hardening.sql", import.meta.url),
+    "utf8",
+  );
+  assert.match(migration, /private\.user_entitlements/);
+  assert.match(migration, /before insert or update on public\.profiles/);
+  assert.match(migration, /increment_usage_counter\(p_feature text\)/);
+  assert.match(migration, /effective_limit integer/);
+  assert.match(migration, /p_limit is intentionally/);
+  assert.match(migration, /account_is_active[\s\S]*security invoker/);
+  assert.match(migration, /revoke all on function public\.record_workout_streak_activity\(\)[\s\S]*authenticated/);
+});
+
+function withRouteFetch({ allowed = true, currentCount = 1, effectiveLimit = 5, aiResponse }) {
   return withAuthenticatedFetch((url) => {
-    if (String(url).includes("/rest/v1/profiles")) return Response.json({ is_premium: isPremium });
-    if (String(url).includes("/rpc/increment_usage_counter")) return Response.json({ allowed, current_count: currentCount });
+    if (String(url).includes("/rpc/increment_usage_counter")) {
+      return Response.json({ allowed, current_count: currentCount, effective_limit: effectiveLimit });
+    }
     if (String(url).includes("/chat/completions")) return Response.json(aiResponse);
     throw new TypeError(`beklenmeyen ağ isteği: ${url}`);
   });
