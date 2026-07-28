@@ -515,7 +515,32 @@ export function mergeFoodResults(local: FoodSearchResult[], remote: FoodSearchRe
   const unique = new Map<string, FoodSearchResult>();
   [...local, ...remote].forEach((food) => {
     const key = `${normalizeFoodSearchText(food.name)}-${food.barcode || ""}`;
-    if (!unique.has(key)) unique.set(key, food);
+    const existing = unique.get(key);
+    if (!existing) {
+      unique.set(key, food);
+      return;
+    }
+
+    // Katalog kaydı aynı adlı temel besinin önüne geldiğinde doğrulanmış besin
+    // değerini kaybetme; katalogdaki yöre/çeşit bilgisini ise koru.
+    const preferred = existing.nutritionPer100g || !food.nutritionPer100g ? existing : food;
+    const metadata = preferred === existing ? food : existing;
+    const uniqueStrings = (...values: Array<string[] | undefined>) => [...new Set(values.flatMap((items) => items || []))];
+    unique.set(key, {
+      ...metadata,
+      ...preferred,
+      aliases: uniqueStrings(preferred.aliases, metadata.aliases),
+      allergens: uniqueStrings(preferred.allergens, metadata.allergens),
+      regions: uniqueStrings(preferred.regions, metadata.regions),
+      provinces: uniqueStrings(preferred.provinces, metadata.provinces),
+      mainIngredients: uniqueStrings(preferred.mainIngredients, metadata.mainIngredients),
+      cookingMethods: uniqueStrings(preferred.cookingMethods, metadata.cookingMethods),
+      category: preferred.category || metadata.category,
+      subcategory: preferred.subcategory || metadata.subcategory,
+      isLesserKnown: Boolean(preferred.isLesserKnown || metadata.isLesserKnown),
+      parentRecipeSlug: preferred.parentRecipeSlug || metadata.parentRecipeSlug,
+      variantReason: preferred.variantReason || metadata.variantReason,
+    });
   });
   return [...unique.values()].slice(0, limit);
 }

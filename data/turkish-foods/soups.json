@@ -72,18 +72,22 @@
       "name": "ALACA ÇORBA",
       "normalizedName": "alaca corba",
       "slug": "alaca-corba",
-      "alternativeNames": [],
+      "alternativeNames": [
+        "ALACA ÇORBASI"
+      ],
       "category": "Çorbalar",
       "subcategory": null,
       "region": [
-        "Güneydoğu Anadolu"
+        "Güneydoğu Anadolu",
+        "İç Anadolu"
       ],
       "province": [
-        "Gaziantep"
+        "Gaziantep",
+        "Aksaray"
       ],
       "district": [],
       "cuisineTraditions": [],
-      "description": "Gaziantep yemek kültürü kaynağında çorbalar grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "description": "Gaziantep ve Aksaray yemek kültürü kaynaklarında çorbalar grubunda aynı yemek adıyla kayıtlı yöresel bir lezzettir. İl ve yazım farkları tek kayıtta birleştirilmiştir; tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
       "historicalNote": null,
       "mainIngredients": [],
       "ingredients": [],
@@ -113,63 +117,7 @@
           "accessedAt": "2026-07-28",
           "license": null,
           "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
-        }
-      ],
-      "confidence": "medium",
-      "needsReview": true,
-      "isRegional": true,
-      "isLesserKnown": true,
-      "parentDishId": null,
-      "variantReason": null,
-      "tags": [
-        "Türk mutfağı",
-        "Güneydoğu Anadolu",
-        "Gaziantep",
-        "Çorbalar",
-        "il kataloğu"
-      ],
-      "catalogStatus": "visible"
-    },
-    {
-      "id": "tr-91e0f1833b5ba16ba78c",
-      "sourceRecordId": "alaca-corbasi",
-      "name": "ALACA ÇORBASI",
-      "normalizedName": "alaca corbasi",
-      "slug": "alaca-corbasi",
-      "alternativeNames": [],
-      "category": "Çorbalar",
-      "subcategory": null,
-      "region": [
-        "İç Anadolu"
-      ],
-      "province": [
-        "Aksaray"
-      ],
-      "district": [],
-      "cuisineTraditions": [],
-      "description": "Aksaray yemek kültürü kaynağında çorbalar grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
-      "historicalNote": null,
-      "mainIngredients": [],
-      "ingredients": [],
-      "cookingMethods": [
-        "haşlama"
-      ],
-      "servingTemperature": "hot",
-      "mealTypes": [
-        "lunch",
-        "dinner"
-      ],
-      "dietaryType": null,
-      "allergens": [],
-      "defaultServingAmount": null,
-      "defaultServingUnit": null,
-      "defaultServingGrams": null,
-      "nutritionPer100g": null,
-      "nutritionPerServing": null,
-      "recipeYieldGrams": null,
-      "recipeVersion": "1.0.0-catalog",
-      "sourceType": "culture_portal_catalog",
-      "sources": [
+        },
         {
           "title": "Kültür Portalı — Aksaray / Ne Yenir?",
           "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
@@ -187,12 +135,17 @@
       "variantReason": null,
       "tags": [
         "Türk mutfağı",
-        "İç Anadolu",
-        "Aksaray",
+        "Güneydoğu Anadolu",
+        "Gaziantep",
         "Çorbalar",
-        "il kataloğu"
+        "il kataloğu",
+        "İç Anadolu",
+        "Aksaray"
       ],
-      "catalogStatus": "visible"
+      "catalogStatus": "visible",
+      "mergedDishSlugs": [
+        "alaca-corbasi"
+      ]
     },
     {
       "id": "tr-6e70b4a7c55c98d9f93a",
@@ -1933,6 +1886,70 @@
         "Türk mutfağı",
         "Akdeniz",
         "Osmaniye",
+        "Çorbalar",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-04b29e311cd69310b61e",
+      "sourceRecordId": "skorpit-corbasi",
+      "name": "İSKORPİT ÇORBASI",
+      "normalizedName": "iskorpit corbasi",
+      "slug": "iskorpit-corbasi",
+      "alternativeNames": [],
+      "category": "Çorbalar",
+      "subcategory": null,
+      "region": [
+        "Marmara"
+      ],
+      "province": [
+        "Çanakkale"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Çanakkale yemek kültürü kaynağında çorbalar grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [
+        "haşlama"
+      ],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Çanakkale / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/canakkale/neyenir/skorpit-corbasi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Marmara",
+        "Çanakkale",
         "Çorbalar",
         "il kataloğu"
       ],

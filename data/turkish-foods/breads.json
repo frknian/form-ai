@@ -380,18 +380,22 @@
       "name": "ETLİ EKMEK",
       "normalizedName": "etli ekmek",
       "slug": "etli-ekmek",
-      "alternativeNames": [],
+      "alternativeNames": [
+        "ETLİEKMEK"
+      ],
       "category": "Ekmek, pide ve çörekler",
       "subcategory": null,
       "region": [
-        "Güneydoğu Anadolu"
+        "Güneydoğu Anadolu",
+        "İç Anadolu"
       ],
       "province": [
-        "Mardin"
+        "Mardin",
+        "Konya"
       ],
       "district": [],
       "cuisineTraditions": [],
-      "description": "Mardin yemek kültürü kaynağında ekmek, pide ve çörekler grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "description": "Mardin ve Konya yemek kültürü kaynaklarında ekmek, pide ve çörekler grubunda aynı yemek adıyla kayıtlı yöresel bir lezzettir. İl ve yazım farkları tek kayıtta birleştirilmiştir; tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
       "historicalNote": null,
       "mainIngredients": [],
       "ingredients": [],
@@ -419,61 +423,7 @@
           "accessedAt": "2026-07-28",
           "license": null,
           "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
-        }
-      ],
-      "confidence": "medium",
-      "needsReview": true,
-      "isRegional": true,
-      "isLesserKnown": false,
-      "parentDishId": null,
-      "variantReason": null,
-      "tags": [
-        "Türk mutfağı",
-        "Güneydoğu Anadolu",
-        "Mardin",
-        "Ekmek, pide ve çörekler",
-        "il kataloğu"
-      ],
-      "catalogStatus": "visible"
-    },
-    {
-      "id": "tr-951d7483637a5ae2594c",
-      "sourceRecordId": "etliekmek",
-      "name": "ETLİEKMEK",
-      "normalizedName": "etliekmek",
-      "slug": "etliekmek",
-      "alternativeNames": [],
-      "category": "Ekmek, pide ve çörekler",
-      "subcategory": null,
-      "region": [
-        "İç Anadolu"
-      ],
-      "province": [
-        "Konya"
-      ],
-      "district": [],
-      "cuisineTraditions": [],
-      "description": "Konya yemek kültürü kaynağında ekmek, pide ve çörekler grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
-      "historicalNote": null,
-      "mainIngredients": [],
-      "ingredients": [],
-      "cookingMethods": [],
-      "servingTemperature": "hot",
-      "mealTypes": [
-        "lunch",
-        "dinner"
-      ],
-      "dietaryType": null,
-      "allergens": [],
-      "defaultServingAmount": null,
-      "defaultServingUnit": null,
-      "defaultServingGrams": null,
-      "nutritionPer100g": null,
-      "nutritionPerServing": null,
-      "recipeYieldGrams": null,
-      "recipeVersion": "1.0.0-catalog",
-      "sourceType": "culture_portal_catalog",
-      "sources": [
+        },
         {
           "title": "Kültür Portalı — Konya / Ne Yenir?",
           "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
@@ -491,12 +441,17 @@
       "variantReason": null,
       "tags": [
         "Türk mutfağı",
-        "İç Anadolu",
-        "Konya",
+        "Güneydoğu Anadolu",
+        "Mardin",
         "Ekmek, pide ve çörekler",
-        "il kataloğu"
+        "il kataloğu",
+        "İç Anadolu",
+        "Konya"
       ],
-      "catalogStatus": "visible"
+      "catalogStatus": "visible",
+      "mergedDishSlugs": [
+        "etliekmek"
+      ]
     },
     {
       "id": "tr-8ca44191d4bf606c1ecc",
@@ -1551,6 +1506,68 @@
         "Türk mutfağı",
         "İç Anadolu",
         "Aksaray",
+        "Ekmek, pide ve çörekler",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-961a74999c02021c7b1b",
+      "sourceRecordId": "somun-ekmegi",
+      "name": "PATATESLİ BOLU KÖY EKMEĞİ",
+      "normalizedName": "patatesli bolu koy ekmegi",
+      "slug": "patatesli-bolu-koy-ekmegi",
+      "alternativeNames": [],
+      "category": "Ekmek, pide ve çörekler",
+      "subcategory": null,
+      "region": [
+        "Karadeniz"
+      ],
+      "province": [
+        "Bolu"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Bolu yemek kültürü kaynağında ekmek, pide ve çörekler grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Bolu / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/bolu/neyenir/somun-ekmegi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Karadeniz",
+        "Bolu",
         "Ekmek, pide ve çörekler",
         "il kataloğu"
       ],

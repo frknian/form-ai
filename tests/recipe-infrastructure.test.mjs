@@ -192,6 +192,24 @@ test("500 yemeklik seed tekrarsız, kaynaklı ve besin açısından inceleme gü
   }
 });
 
+test("eşdeğer yemek adları tek kayıtta birleşir, gerçek sucuk çeşitlerinin farkı açıklanır", async () => {
+  const seed = JSON.parse(await readFile(new URL("../data/turkish-recipes.seed.json", import.meta.url), "utf8"));
+  const etliEkmek = seed.dishes.filter((dish) => ["etli-ekmek", "etliekmek"].includes(dish.slug));
+  assert.equal(etliEkmek.length, 1);
+  assert.deepEqual(new Set(etliEkmek[0].province), new Set(["Mardin", "Konya"]));
+  assert.ok(etliEkmek[0].alternativeNames.includes("ETLİEKMEK"));
+  assert.ok(etliEkmek[0].mergedDishSlugs.includes("etliekmek"));
+  assert.equal(seed.dishes.filter((dish) => ["alaca-corba", "alaca-corbasi"].includes(dish.slug)).length, 1);
+  assert.equal(seed.dishes.filter((dish) => ["sor-tuzlu-balik", "tuzlu-balik"].includes(dish.slug)).length, 1);
+
+  const sucuk = seed.dishes.find((dish) => dish.slug === "sucuk");
+  const sucukIci = seed.dishes.find((dish) => dish.slug === "sucuk-ici");
+  const pestilSucugu = seed.dishes.find((dish) => dish.slug === "pestil-ve-sucuklar");
+  assert.equal(sucukIci.parentDishId, sucuk.id);
+  assert.match(sucukIci.variantReason, /kılıfsız/);
+  assert.match(pestilSucugu.variantReason, /et ürünü değildir/);
+});
+
 test("kategori kotaları, yedi bölge ve 81 il doğrulaması geçer", async () => {
   const [seed, report] = await Promise.all([
     readFile(new URL("../data/turkish-recipes.seed.json", import.meta.url), "utf8").then(JSON.parse),
@@ -206,6 +224,8 @@ test("kategori kotaları, yedi bölge ve 81 il doğrulaması geçer", async () =
   assert.ok(Object.values(report.regionDistribution).every((count) => count > 0));
   assert.equal(report.representedProvinceCount, 81);
   assert.deepEqual(report.missingProvinces, []);
+  assert.deepEqual(report.probableDuplicates, []);
+  assert.equal(report.mergedEquivalentDishes.length, 3);
 });
 
 test("slug upsert anahtarı seed tekrarında kayıt sayısını artırmaz", async () => {
@@ -249,6 +269,8 @@ test("migration geniş veri modeli ve filtreleri; import idempotency ve manuel v
   assert.match(importer, /onConflict: "slug"/);
   assert.match(importer, /onConflict: "dish_id,version"/);
   assert.match(importer, /manuallyCurated/);
+  assert.match(importer, /parent_dish_id/);
+  assert.match(importer, /catalog_status: "archived"/);
   assert.match(importer, /argumentValue\("category"\)/);
   assert.match(importer, /argumentValue\("region"\)/);
   assert.doesNotMatch(searchRoute, /searchOpenFoodFacts/);

@@ -66,6 +66,26 @@ test("uzak ve yerel ürün sonuçlarını tekrar etmeden birleştirir", () => {
   assert.equal(mergeFoodResults(local, [duplicate]).length, local.length);
 });
 
+test("aynı adlı tarif ve temel besin birleşirken doğrulanmış besin ile çeşit açıklaması korunur", () => {
+  const local = searchLocalFoods("sucuk").find((food) => food.name === "Sucuk");
+  assert.ok(local?.nutritionPer100g);
+  const recipe = {
+    ...local,
+    id: "recipe-sucuk",
+    kind: "recipe",
+    recipeSlug: "sucuk",
+    nutritionPer100g: null,
+    provinces: ["Kayseri"],
+    variantReason: "Katalog açıklaması",
+    source: "FİT.AI besin veritabanı",
+  };
+  const [merged] = mergeFoodResults([recipe], [local]);
+  assert.equal(merged.id, local.id);
+  assert.ok(merged.nutritionPer100g);
+  assert.deepEqual(merged.provinces, ["Kayseri"]);
+  assert.equal(merged.variantReason, "Katalog açıklaması");
+});
+
 test("yerel besin kataloğu tüm ana kategorileri kapsar ve tutarlıdır", () => {
   const kategoriler = {
     "Türk yemeği": ["lahmacun", "mantı", "iskender", "menemen", "kısır"],

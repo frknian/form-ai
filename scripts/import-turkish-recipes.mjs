@@ -91,6 +91,7 @@ const client = createClient(supabaseUrl, serviceKey, { auth: { persistSession: f
 
 const counters = { inserted: 0, updated: 0, skipped: 0, failed: 0 };
 const failures = [];
+const dishIdByCatalogId = new Map();
 for (const dish of dishes) {
   try {
     const { data: existingDish } = await client.from("recipe_dishes").select("id").eq("slug", dish.slug).maybeSingle();
@@ -125,6 +126,7 @@ for (const dish of dishes) {
       updated_at: isoNow(),
     }, { onConflict: "slug" }).select("id").single();
     if (dishError || !dishRow) throw new Error(`yemek upsert başarısız (${dishError?.code || "unknown"})`);
+    dishIdByCatalogId.set(dish.id, dishRow.id);
 
     const version = dish.recipeVersion || "1.0.0-catalog";
     const { data: existingVersion } = await client
@@ -172,6 +174,44 @@ for (const dish of dishes) {
     if (versionError) throw new Error(`sürüm upsert başarısız (${versionError.code})`);
     if (existingDish) counters.updated += 1;
     else counters.inserted += 1;
+  } catch (error) {
+    counters.failed += 1;
+    failures.push({ slug: dish.slug, error: error instanceof Error ? error.message : String(error) });
+  }
+}
+
+const allDishById = new Map(allDishes.map((dish) => [dish.id, dish]));
+for (const dish of dishes) {
+  const childId = dishIdByCatalogId.get(dish.id);
+  if (!childId) continue;
+  try {
+    if (dish.parentDishId) {
+      let parentId = dishIdByCatalogId.get(dish.parentDishId);
+      if (!parentId) {
+        const parentDish = allDishById.get(dish.parentDishId);
+        if (!parentDish) throw new Error("seed içinde ebeveyn yemek bulunamadı");
+        const { data: parentRow, error: parentError } = await client
+          .from("recipe_dishes")
+          .select("id")
+          .eq("slug", parentDish.slug)
+          .maybeSingle();
+        if (parentError || !parentRow) throw new Error(`veritabanında ebeveyn yemek bulunamadı (${parentError?.code || "unknown"})`);
+        parentId = parentRow.id;
+      }
+      const { error: linkError } = await client
+        .from("recipe_dishes")
+        .update({ parent_dish_id: parentId, variant_reason: dish.variantReason, updated_at: isoNow() })
+        .eq("id", childId);
+      if (linkError) throw new Error(`ebeveyn bağlantısı kurulamadı (${linkError.code})`);
+    }
+
+    if (dish.mergedDishSlugs?.length) {
+      const { error: archiveError } = await client
+        .from("recipe_dishes")
+        .update({ catalog_status: "archived", updated_at: isoNow() })
+        .in("slug", dish.mergedDishSlugs);
+      if (archiveError) throw new Error(`birleştirilmiş eski kayıtlar arşivlenemedi (${archiveError.code})`);
+    }
   } catch (error) {
     counters.failed += 1;
     failures.push({ slug: dish.slug, error: error instanceof Error ? error.message : String(error) });

@@ -3502,6 +3502,27 @@
       "provinceSlug": "ankara",
       "url": "https://www.kulturportali.gov.tr/portal/yemek-cesitleri",
       "genericSource": true
+    },
+    {
+      "name": "PATATESLİ BOLU KÖY EKMEĞİ",
+      "category": "Ekmek, pide ve çörekler",
+      "provinceSlug": "bolu",
+      "url": "https://www.kulturportali.gov.tr/turkiye/bolu/neyenir/somun-ekmegi",
+      "genericSource": false
+    },
+    {
+      "name": "İSKORPİT ÇORBASI",
+      "category": "Çorbalar",
+      "provinceSlug": "canakkale",
+      "url": "https://www.kulturportali.gov.tr/turkiye/canakkale/neyenir/skorpit-corbasi",
+      "genericSource": false
+    },
+    {
+      "name": "USKUMRU DOLMASI",
+      "category": "Balık ve deniz ürünleri",
+      "provinceSlug": "istanbul",
+      "url": "https://www.kulturportali.gov.tr/portal/geleneksel-lezzetler--balik-ve-deniz-mahsulleri",
+      "genericSource": true
     }
   ]
 }

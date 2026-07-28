@@ -2700,7 +2700,8 @@
       "normalizedName": "sor tuzlu balik",
       "slug": "sor-tuzlu-balik",
       "alternativeNames": [
-        "TUZLU"
+        "TUZLU",
+        "TUZLU BALIK"
       ],
       "category": "Balık ve deniz ürünleri",
       "subcategory": null,
@@ -2708,11 +2709,12 @@
         "Doğu Anadolu"
       ],
       "province": [
-        "Bitlis"
+        "Bitlis",
+        "Van"
       ],
       "district": [],
       "cuisineTraditions": [],
-      "description": "Bitlis yemek kültürü kaynağında balık ve deniz ürünleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "description": "Bitlis ve Van yemek kültürü kaynaklarında balık ve deniz ürünleri grubunda aynı yemek adıyla kayıtlı yöresel bir lezzettir. İl ve yazım farkları tek kayıtta birleştirilmiştir; tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
       "historicalNote": null,
       "mainIngredients": [
         "balık"
@@ -2744,6 +2746,14 @@
           "accessedAt": "2026-07-28",
           "license": null,
           "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        },
+        {
+          "title": "Kültür Portalı — Van / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/van/neyenir/tuzlu-balik",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
         }
       ],
       "confidence": "medium",
@@ -2757,9 +2767,13 @@
         "Doğu Anadolu",
         "Bitlis",
         "Balık ve deniz ürünleri",
-        "il kataloğu"
+        "il kataloğu",
+        "Van"
       ],
-      "catalogStatus": "visible"
+      "catalogStatus": "visible",
+      "mergedDishSlugs": [
+        "tuzlu-balik"
+      ]
     },
     {
       "id": "tr-925e094503e9b797a0c5",
@@ -2824,72 +2838,6 @@
         "Türk mutfağı",
         "Doğu Anadolu",
         "Bitlis",
-        "Balık ve deniz ürünleri",
-        "il kataloğu"
-      ],
-      "catalogStatus": "visible"
-    },
-    {
-      "id": "tr-c96866d9d7261f503559",
-      "sourceRecordId": "tuzlu-balik",
-      "name": "TUZLU BALIK",
-      "normalizedName": "tuzlu balik",
-      "slug": "tuzlu-balik",
-      "alternativeNames": [],
-      "category": "Balık ve deniz ürünleri",
-      "subcategory": null,
-      "region": [
-        "Doğu Anadolu"
-      ],
-      "province": [
-        "Van"
-      ],
-      "district": [],
-      "cuisineTraditions": [],
-      "description": "Van yemek kültürü kaynağında balık ve deniz ürünleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
-      "historicalNote": null,
-      "mainIngredients": [
-        "balık"
-      ],
-      "ingredients": [],
-      "cookingMethods": [],
-      "servingTemperature": "hot",
-      "mealTypes": [
-        "lunch",
-        "dinner"
-      ],
-      "dietaryType": "fish",
-      "allergens": [
-        "balık"
-      ],
-      "defaultServingAmount": null,
-      "defaultServingUnit": null,
-      "defaultServingGrams": null,
-      "nutritionPer100g": null,
-      "nutritionPerServing": null,
-      "recipeYieldGrams": null,
-      "recipeVersion": "1.0.0-catalog",
-      "sourceType": "culture_portal_catalog",
-      "sources": [
-        {
-          "title": "Kültür Portalı — Van / Ne Yenir?",
-          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
-          "url": "https://www.kulturportali.gov.tr/turkiye/van/neyenir/tuzlu-balik",
-          "accessedAt": "2026-07-28",
-          "license": null,
-          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
-        }
-      ],
-      "confidence": "medium",
-      "needsReview": true,
-      "isRegional": true,
-      "isLesserKnown": true,
-      "parentDishId": null,
-      "variantReason": null,
-      "tags": [
-        "Türk mutfağı",
-        "Doğu Anadolu",
-        "Van",
         "Balık ve deniz ürünleri",
         "il kataloğu"
       ],
@@ -4533,18 +4481,22 @@
       "name": "ALACA ÇORBA",
       "normalizedName": "alaca corba",
       "slug": "alaca-corba",
-      "alternativeNames": [],
+      "alternativeNames": [
+        "ALACA ÇORBASI"
+      ],
       "category": "Çorbalar",
       "subcategory": null,
       "region": [
-        "Güneydoğu Anadolu"
+        "Güneydoğu Anadolu",
+        "İç Anadolu"
       ],
       "province": [
-        "Gaziantep"
+        "Gaziantep",
+        "Aksaray"
       ],
       "district": [],
       "cuisineTraditions": [],
-      "description": "Gaziantep yemek kültürü kaynağında çorbalar grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "description": "Gaziantep ve Aksaray yemek kültürü kaynaklarında çorbalar grubunda aynı yemek adıyla kayıtlı yöresel bir lezzettir. İl ve yazım farkları tek kayıtta birleştirilmiştir; tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
       "historicalNote": null,
       "mainIngredients": [],
       "ingredients": [],
@@ -4574,63 +4526,7 @@
           "accessedAt": "2026-07-28",
           "license": null,
           "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
-        }
-      ],
-      "confidence": "medium",
-      "needsReview": true,
-      "isRegional": true,
-      "isLesserKnown": true,
-      "parentDishId": null,
-      "variantReason": null,
-      "tags": [
-        "Türk mutfağı",
-        "Güneydoğu Anadolu",
-        "Gaziantep",
-        "Çorbalar",
-        "il kataloğu"
-      ],
-      "catalogStatus": "visible"
-    },
-    {
-      "id": "tr-91e0f1833b5ba16ba78c",
-      "sourceRecordId": "alaca-corbasi",
-      "name": "ALACA ÇORBASI",
-      "normalizedName": "alaca corbasi",
-      "slug": "alaca-corbasi",
-      "alternativeNames": [],
-      "category": "Çorbalar",
-      "subcategory": null,
-      "region": [
-        "İç Anadolu"
-      ],
-      "province": [
-        "Aksaray"
-      ],
-      "district": [],
-      "cuisineTraditions": [],
-      "description": "Aksaray yemek kültürü kaynağında çorbalar grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
-      "historicalNote": null,
-      "mainIngredients": [],
-      "ingredients": [],
-      "cookingMethods": [
-        "haşlama"
-      ],
-      "servingTemperature": "hot",
-      "mealTypes": [
-        "lunch",
-        "dinner"
-      ],
-      "dietaryType": null,
-      "allergens": [],
-      "defaultServingAmount": null,
-      "defaultServingUnit": null,
-      "defaultServingGrams": null,
-      "nutritionPer100g": null,
-      "nutritionPerServing": null,
-      "recipeYieldGrams": null,
-      "recipeVersion": "1.0.0-catalog",
-      "sourceType": "culture_portal_catalog",
-      "sources": [
+        },
         {
           "title": "Kültür Portalı — Aksaray / Ne Yenir?",
           "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
@@ -4648,12 +4544,17 @@
       "variantReason": null,
       "tags": [
         "Türk mutfağı",
-        "İç Anadolu",
-        "Aksaray",
+        "Güneydoğu Anadolu",
+        "Gaziantep",
         "Çorbalar",
-        "il kataloğu"
+        "il kataloğu",
+        "İç Anadolu",
+        "Aksaray"
       ],
-      "catalogStatus": "visible"
+      "catalogStatus": "visible",
+      "mergedDishSlugs": [
+        "alaca-corbasi"
+      ]
     },
     {
       "id": "tr-6e70b4a7c55c98d9f93a",
@@ -8650,18 +8551,22 @@
       "name": "ETLİ EKMEK",
       "normalizedName": "etli ekmek",
       "slug": "etli-ekmek",
-      "alternativeNames": [],
+      "alternativeNames": [
+        "ETLİEKMEK"
+      ],
       "category": "Ekmek, pide ve çörekler",
       "subcategory": null,
       "region": [
-        "Güneydoğu Anadolu"
+        "Güneydoğu Anadolu",
+        "İç Anadolu"
       ],
       "province": [
-        "Mardin"
+        "Mardin",
+        "Konya"
       ],
       "district": [],
       "cuisineTraditions": [],
-      "description": "Mardin yemek kültürü kaynağında ekmek, pide ve çörekler grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "description": "Mardin ve Konya yemek kültürü kaynaklarında ekmek, pide ve çörekler grubunda aynı yemek adıyla kayıtlı yöresel bir lezzettir. İl ve yazım farkları tek kayıtta birleştirilmiştir; tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
       "historicalNote": null,
       "mainIngredients": [],
       "ingredients": [],
@@ -8689,61 +8594,7 @@
           "accessedAt": "2026-07-28",
           "license": null,
           "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
-        }
-      ],
-      "confidence": "medium",
-      "needsReview": true,
-      "isRegional": true,
-      "isLesserKnown": false,
-      "parentDishId": null,
-      "variantReason": null,
-      "tags": [
-        "Türk mutfağı",
-        "Güneydoğu Anadolu",
-        "Mardin",
-        "Ekmek, pide ve çörekler",
-        "il kataloğu"
-      ],
-      "catalogStatus": "visible"
-    },
-    {
-      "id": "tr-951d7483637a5ae2594c",
-      "sourceRecordId": "etliekmek",
-      "name": "ETLİEKMEK",
-      "normalizedName": "etliekmek",
-      "slug": "etliekmek",
-      "alternativeNames": [],
-      "category": "Ekmek, pide ve çörekler",
-      "subcategory": null,
-      "region": [
-        "İç Anadolu"
-      ],
-      "province": [
-        "Konya"
-      ],
-      "district": [],
-      "cuisineTraditions": [],
-      "description": "Konya yemek kültürü kaynağında ekmek, pide ve çörekler grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
-      "historicalNote": null,
-      "mainIngredients": [],
-      "ingredients": [],
-      "cookingMethods": [],
-      "servingTemperature": "hot",
-      "mealTypes": [
-        "lunch",
-        "dinner"
-      ],
-      "dietaryType": null,
-      "allergens": [],
-      "defaultServingAmount": null,
-      "defaultServingUnit": null,
-      "defaultServingGrams": null,
-      "nutritionPer100g": null,
-      "nutritionPerServing": null,
-      "recipeYieldGrams": null,
-      "recipeVersion": "1.0.0-catalog",
-      "sourceType": "culture_portal_catalog",
-      "sources": [
+        },
         {
           "title": "Kültür Portalı — Konya / Ne Yenir?",
           "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
@@ -8761,12 +8612,17 @@
       "variantReason": null,
       "tags": [
         "Türk mutfağı",
-        "İç Anadolu",
-        "Konya",
+        "Güneydoğu Anadolu",
+        "Mardin",
         "Ekmek, pide ve çörekler",
-        "il kataloğu"
+        "il kataloğu",
+        "İç Anadolu",
+        "Konya"
       ],
-      "catalogStatus": "visible"
+      "catalogStatus": "visible",
+      "mergedDishSlugs": [
+        "etliekmek"
+      ]
     },
     {
       "id": "tr-8ca44191d4bf606c1ecc",
@@ -14086,7 +13942,7 @@
       ],
       "district": [],
       "cuisineTraditions": [],
-      "description": "Kayseri yemek kültürü kaynağında kahvaltılıklar grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "description": "Kayseri yemek kültürü kaynağında kahvaltılıklar grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır. Klasik sucuk kılıfa doldurularak olgunlaştırılan üründür; sucuk içi ise aynı baharatlı et karışımının kılıfsız, taze biçimde pişirilen yöresel çeşididir.",
       "historicalNote": null,
       "mainIngredients": [],
       "ingredients": [],
@@ -14119,8 +13975,8 @@
       "needsReview": true,
       "isRegional": true,
       "isLesserKnown": true,
-      "parentDishId": null,
-      "variantReason": null,
+      "parentDishId": "tr-449080900e74ac8abb8e",
+      "variantReason": "Klasik sucuk kılıfa doldurularak olgunlaştırılan üründür; sucuk içi ise aynı baharatlı et karışımının kılıfsız, taze biçimde pişirilen yöresel çeşididir.",
       "tags": [
         "Türk mutfağı",
         "İç Anadolu",
@@ -27434,7 +27290,7 @@
       ],
       "district": [],
       "cuisineTraditions": [],
-      "description": "Malatya yemek kültürü kaynağında tatlılar grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "description": "Malatya yemek kültürü kaynağında tatlılar grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır. Bu kayıttaki “sucuk” et ürünü değildir; pestil ve geleneksel tatlı grubunda yer alan meyve/pekmez esaslı ürünü ifade eder.",
       "historicalNote": null,
       "mainIngredients": [],
       "ingredients": [],
@@ -27468,7 +27324,7 @@
       "isRegional": true,
       "isLesserKnown": true,
       "parentDishId": null,
-      "variantReason": null,
+      "variantReason": "Bu kayıttaki “sucuk” et ürünü değildir; pestil ve geleneksel tatlı grubunda yer alan meyve/pekmez esaslı ürünü ifade eder.",
       "tags": [
         "Türk mutfağı",
         "Doğu Anadolu",
@@ -31379,6 +31235,194 @@
         "İç Anadolu",
         "Ankara",
         "Zeytinyağlılar",
+        "genel katalog"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-961a74999c02021c7b1b",
+      "sourceRecordId": "somun-ekmegi",
+      "name": "PATATESLİ BOLU KÖY EKMEĞİ",
+      "normalizedName": "patatesli bolu koy ekmegi",
+      "slug": "patatesli-bolu-koy-ekmegi",
+      "alternativeNames": [],
+      "category": "Ekmek, pide ve çörekler",
+      "subcategory": null,
+      "region": [
+        "Karadeniz"
+      ],
+      "province": [
+        "Bolu"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Bolu yemek kültürü kaynağında ekmek, pide ve çörekler grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Bolu / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/bolu/neyenir/somun-ekmegi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Karadeniz",
+        "Bolu",
+        "Ekmek, pide ve çörekler",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-04b29e311cd69310b61e",
+      "sourceRecordId": "skorpit-corbasi",
+      "name": "İSKORPİT ÇORBASI",
+      "normalizedName": "iskorpit corbasi",
+      "slug": "iskorpit-corbasi",
+      "alternativeNames": [],
+      "category": "Çorbalar",
+      "subcategory": null,
+      "region": [
+        "Marmara"
+      ],
+      "province": [
+        "Çanakkale"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Çanakkale yemek kültürü kaynağında çorbalar grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [
+        "haşlama"
+      ],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Çanakkale / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/canakkale/neyenir/skorpit-corbasi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Marmara",
+        "Çanakkale",
+        "Çorbalar",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-a0e9bcf0f8b45733c7d3",
+      "sourceRecordId": "geleneksel-lezzetler--balik-ve-deniz-mahsulleri",
+      "name": "USKUMRU DOLMASI",
+      "normalizedName": "uskumru dolmasi",
+      "slug": "uskumru-dolmasi",
+      "alternativeNames": [],
+      "category": "Balık ve deniz ürünleri",
+      "subcategory": null,
+      "region": [
+        "Marmara"
+      ],
+      "province": [
+        "İstanbul"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "İstanbul yemek kültürü kaynağında balık ve deniz ürünleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "fish",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Yemek Çeşitleri",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/portal/geleneksel-lezzetler--balik-ve-deniz-mahsulleri",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "Genel katalog yalnızca ad ve sınıflandırma doğrulaması için kullanıldı; lisans ve tarif ayrıntıları manuel inceleme bekler."
+        }
+      ],
+      "confidence": "low",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": false,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Marmara",
+        "İstanbul",
+        "Balık ve deniz ürünleri",
         "genel katalog"
       ],
       "catalogStatus": "visible"

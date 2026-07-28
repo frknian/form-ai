@@ -2603,7 +2603,7 @@
       ],
       "district": [],
       "cuisineTraditions": [],
-      "description": "Malatya yemek kültürü kaynağında tatlılar grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "description": "Malatya yemek kültürü kaynağında tatlılar grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır. Bu kayıttaki “sucuk” et ürünü değildir; pestil ve geleneksel tatlı grubunda yer alan meyve/pekmez esaslı ürünü ifade eder.",
       "historicalNote": null,
       "mainIngredients": [],
       "ingredients": [],
@@ -2637,7 +2637,7 @@
       "isRegional": true,
       "isLesserKnown": true,
       "parentDishId": null,
-      "variantReason": null,
+      "variantReason": "Bu kayıttaki “sucuk” et ürünü değildir; pestil ve geleneksel tatlı grubunda yer alan meyve/pekmez esaslı ürünü ifade eder.",
       "tags": [
         "Türk mutfağı",
         "Doğu Anadolu",

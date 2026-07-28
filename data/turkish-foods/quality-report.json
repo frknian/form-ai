@@ -26,12 +26,12 @@
     "Geleneksel içecekler": 15
   },
   "regionDistribution": {
-    "Marmara": 71,
+    "Marmara": 73,
     "Ege": 70,
     "Akdeniz": 72,
     "İç Anadolu": 73,
-    "Karadeniz": 73,
-    "Doğu Anadolu": 69,
+    "Karadeniz": 74,
+    "Doğu Anadolu": 68,
     "Güneydoğu Anadolu": 72
   },
   "provinceDistribution": {
@@ -53,10 +53,10 @@
     "Bilecik": 7,
     "Bingöl": 2,
     "Bitlis": 17,
-    "Bolu": 6,
+    "Bolu": 7,
     "Burdur": 4,
     "Bursa": 11,
-    "Çanakkale": 13,
+    "Çanakkale": 14,
     "Çankırı": 6,
     "Çorum": 3,
     "Denizli": 9,
@@ -74,7 +74,7 @@
     "Hatay": 4,
     "Iğdır": 2,
     "Isparta": 28,
-    "İstanbul": 8,
+    "İstanbul": 9,
     "İzmir": 8,
     "Kahramanmaraş": 9,
     "Karabük": 3,
@@ -206,11 +206,43 @@
   "nutritionMissing": 500,
   "confidenceDistribution": {
     "high": 0,
-    "medium": 481,
-    "low": 19
+    "medium": 480,
+    "low": 20
   },
   "needsReview": 500,
   "probableDuplicates": [],
+  "mergedEquivalentDishes": [
+    {
+      "slug": "sor-tuzlu-balik",
+      "mergedDishSlugs": [
+        "tuzlu-balik"
+      ]
+    },
+    {
+      "slug": "alaca-corba",
+      "mergedDishSlugs": [
+        "alaca-corbasi"
+      ]
+    },
+    {
+      "slug": "etli-ekmek",
+      "mergedDishSlugs": [
+        "etliekmek"
+      ]
+    }
+  ],
+  "documentedVariants": [
+    {
+      "slug": "sucuk-ici",
+      "parentDishId": "tr-449080900e74ac8abb8e",
+      "reason": "Klasik sucuk kılıfa doldurularak olgunlaştırılan üründür; sucuk içi ise aynı baharatlı et karışımının kılıfsız, taze biçimde pişirilen yöresel çeşididir."
+    },
+    {
+      "slug": "pestil-ve-sucuklar",
+      "parentDishId": null,
+      "reason": "Bu kayıttaki “sucuk” et ürünü değildir; pestil ve geleneksel tatlı grubunda yer alan meyve/pekmez esaslı ürünü ifade eder."
+    }
+  ],
   "missingSources": [],
   "invalidRecords": [],
   "warnings": [

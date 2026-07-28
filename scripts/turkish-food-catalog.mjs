@@ -114,6 +114,17 @@ export function slugifyTurkish(value) {
   return normalizeTurkish(value).replaceAll(" ", "-");
 }
 
+function equivalentDishKey(value) {
+  const compact = normalizeTurkish(value)
+    .replace(/\b(yemegi|yemek|tarifi|usulu)\b/g, "")
+    .replace(/\bcorbasi\b/g, "corba")
+    .replaceAll(" ", "");
+  const aliases = {
+    sortuzlubalik: "tuzlubalik",
+  };
+  return aliases[compact] || compact;
+}
+
 function stableId(slug) {
   return `tr-${createHash("sha1").update(slug).digest("hex").slice(0, 20)}`;
 }
@@ -188,7 +199,7 @@ function mealTypes(category) {
 
 export function buildCatalog(manifest) {
   if (!manifest || !Array.isArray(manifest.records)) throw new Error("Kaynak manifest records dizisi içermelidir.");
-  return manifest.records.map((sourceRecord) => {
+  const records = manifest.records.map((sourceRecord) => {
     const province = PROVINCES[sourceRecord.provinceSlug];
     const region = REGION_BY_PROVINCE[sourceRecord.provinceSlug];
     if (!province || !region) throw new Error(`${sourceRecord.name}: geçersiz il kodu (${sourceRecord.provinceSlug}).`);
@@ -249,6 +260,59 @@ export function buildCatalog(manifest) {
       catalogStatus: "visible",
     };
   });
+
+  const mergedByKey = new Map();
+  for (const dish of records) {
+    const key = `${dish.category}|${equivalentDishKey(dish.name)}`;
+    const existing = mergedByKey.get(key);
+    if (!existing) {
+      mergedByKey.set(key, dish);
+      continue;
+    }
+    existing.alternativeNames = [...new Set([
+      ...existing.alternativeNames,
+      ...dish.alternativeNames,
+      ...(normalizeTurkish(existing.name) === normalizeTurkish(dish.name) ? [] : [dish.name]),
+    ])];
+    existing.region = [...new Set([...existing.region, ...dish.region])];
+    existing.province = [...new Set([...existing.province, ...dish.province])];
+    existing.district = [...new Set([...existing.district, ...dish.district])];
+    existing.sources = [...existing.sources, ...dish.sources.filter((source) => !existing.sources.some((item) => item.url === source.url))];
+    existing.tags = [...new Set([...existing.tags, ...dish.tags])];
+    existing.isRegional = existing.isRegional || dish.isRegional;
+    existing.isLesserKnown = existing.isLesserKnown || dish.isLesserKnown;
+    existing.confidence = existing.confidence === "low" || dish.confidence === "low" ? "low" : existing.confidence;
+    existing.mergedDishSlugs = [...new Set([
+      ...(existing.mergedDishSlugs || []),
+      ...(dish.mergedDishSlugs || []),
+      ...(existing.slug === dish.slug ? [] : [dish.slug]),
+    ])];
+    existing.description = `${existing.province.join(" ve ")} yemek kültürü kaynaklarında ${existing.category.toLocaleLowerCase("tr-TR")} grubunda aynı yemek adıyla kayıtlı yöresel bir lezzettir. İl ve yazım farkları tek kayıtta birleştirilmiştir; tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.`;
+  }
+
+  const dishes = [...mergedByKey.values()];
+  const bySlug = new Map(dishes.map((dish) => [dish.slug, dish]));
+  const variantRules = [
+    {
+      slug: "sucuk-ici",
+      parentSlug: "sucuk",
+      reason: "Klasik sucuk kılıfa doldurularak olgunlaştırılan üründür; sucuk içi ise aynı baharatlı et karışımının kılıfsız, taze biçimde pişirilen yöresel çeşididir.",
+    },
+  ];
+  for (const rule of variantRules) {
+    const dish = bySlug.get(rule.slug);
+    const parent = bySlug.get(rule.parentSlug);
+    if (!dish || !parent) continue;
+    dish.parentDishId = parent.id;
+    dish.variantReason = rule.reason;
+    dish.description = `${dish.description} ${rule.reason}`;
+  }
+  const fruitSucuk = bySlug.get("pestil-ve-sucuklar");
+  if (fruitSucuk) {
+    fruitSucuk.variantReason = "Bu kayıttaki “sucuk” et ürünü değildir; pestil ve geleneksel tatlı grubunda yer alan meyve/pekmez esaslı ürünü ifade eder.";
+    fruitSucuk.description = `${fruitSucuk.description} ${fruitSucuk.variantReason}`;
+  }
+  return dishes;
 }
 
 function levenshtein(a, b) {
@@ -400,6 +464,12 @@ export function validateCatalog(dishes) {
     confidenceDistribution,
     needsReview: dishes.filter((dish) => dish.needsReview).length,
     probableDuplicates,
+    mergedEquivalentDishes: dishes
+      .filter((dish) => dish.mergedDishSlugs?.length)
+      .map((dish) => ({ slug: dish.slug, mergedDishSlugs: dish.mergedDishSlugs })),
+    documentedVariants: dishes
+      .filter((dish) => dish.variantReason)
+      .map((dish) => ({ slug: dish.slug, parentDishId: dish.parentDishId, reason: dish.variantReason })),
     missingSources: dishes.filter((dish) => !dish.sources?.length).map((dish) => dish.slug),
     invalidRecords: errors,
     warnings: [...new Set(warnings)],
