@@ -8,6 +8,8 @@ export type NutrientValues = {
   carbohydrates: number;
   fat: number;
   fiber: number;
+  sugar?: number;
+  sodiumMg?: number;
 };
 
 export type IngredientNutritionBasis = {
@@ -16,6 +18,8 @@ export type IngredientNutritionBasis = {
   carbohydratesPer100g: number | null;
   fatPer100g: number | null;
   fiberPer100g: number | null;
+  sugarPer100g?: number | null;
+  sodiumMgPer100g?: number | null;
   source: string;
   sourceId?: string | null;
   confidence: RecipeConfidence;
@@ -93,23 +97,33 @@ function atwaterCalories(nutrition: IngredientNutritionBasis) {
 }
 
 function scale(values: NutrientValues, factor: number): NutrientValues {
-  return {
+  const scaled: NutrientValues = {
     calories: round(values.calories * factor),
     protein: round(values.protein * factor),
     carbohydrates: round(values.carbohydrates * factor),
     fat: round(values.fat * factor),
     fiber: round(values.fiber * factor),
   };
+  if (values.sugar !== undefined) scaled.sugar = round(values.sugar * factor);
+  if (values.sodiumMg !== undefined) scaled.sodiumMg = round(values.sodiumMg * factor);
+  return scaled;
 }
 
 function sum(values: NutrientValues[]): NutrientValues {
-  return values.reduce<NutrientValues>((total, value) => ({
-    calories: total.calories + value.calories,
-    protein: total.protein + value.protein,
-    carbohydrates: total.carbohydrates + value.carbohydrates,
-    fat: total.fat + value.fat,
-    fiber: total.fiber + value.fiber,
+  const total = values.reduce<NutrientValues>((accumulator, value) => ({
+    calories: accumulator.calories + value.calories,
+    protein: accumulator.protein + value.protein,
+    carbohydrates: accumulator.carbohydrates + value.carbohydrates,
+    fat: accumulator.fat + value.fat,
+    fiber: accumulator.fiber + value.fiber,
   }), { calories: 0, protein: 0, carbohydrates: 0, fat: 0, fiber: 0 });
+  if (values.length && values.every((value) => value.sugar !== undefined)) {
+    total.sugar = values.reduce((amount, value) => amount + Number(value.sugar), 0);
+  }
+  if (values.length && values.every((value) => value.sodiumMg !== undefined)) {
+    total.sodiumMg = values.reduce((amount, value) => amount + Number(value.sodiumMg), 0);
+  }
+  return total;
 }
 
 function lowestConfidence(values: RecipeConfidence[]) {
@@ -192,13 +206,16 @@ export function calculateRecipeNutrition(input: RecipeCalculationInput): RecipeC
       continue;
     }
 
-    const contribution = scale({
+    const basisValues: NutrientValues = {
       calories: caloriesPer100g,
       protein: Number(basis.proteinPer100g),
       carbohydrates: Number(basis.carbohydratesPer100g),
       fat: Number(basis.fatPer100g),
       fiber: Number(basis.fiberPer100g),
-    }, retainedWeightBasisGrams / 100);
+    };
+    if (validNutrient(basis.sugarPer100g ?? null)) basisValues.sugar = Number(basis.sugarPer100g);
+    if (validNutrient(basis.sodiumMgPer100g ?? null)) basisValues.sodiumMg = Number(basis.sodiumMgPer100g);
+    const contribution = scale(basisValues, retainedWeightBasisGrams / 100);
     trace.push({
       key: ingredient.key,
       name: ingredient.name,

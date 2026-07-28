@@ -1,0 +1,937 @@
+{
+  "schemaVersion": 2,
+  "category": "Geleneksel içecekler",
+  "dishes": [
+    {
+      "id": "tr-11918958356e3b2cee87",
+      "sourceRecordId": "antep-meyan-serbeti-",
+      "name": "ANTEP MEYAN ŞERBETİ",
+      "normalizedName": "antep meyan serbeti",
+      "slug": "antep-meyan-serbeti",
+      "alternativeNames": [],
+      "category": "Geleneksel içecekler",
+      "subcategory": null,
+      "region": [
+        "Güneydoğu Anadolu"
+      ],
+      "province": [
+        "Gaziantep"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Gaziantep yemek kültürü kaynağında geleneksel içecekler grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "both",
+      "mealTypes": [
+        "beverage"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Gaziantep / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/gaziantep/neyenir/antep-meyan-serbeti-",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Güneydoğu Anadolu",
+        "Gaziantep",
+        "Geleneksel içecekler",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-95153a1c30e668f9cdf7",
+      "sourceRecordId": "boza460281",
+      "name": "BOZA",
+      "normalizedName": "boza",
+      "slug": "boza",
+      "alternativeNames": [],
+      "category": "Geleneksel içecekler",
+      "subcategory": null,
+      "region": [
+        "Marmara"
+      ],
+      "province": [
+        "İstanbul"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "İstanbul yemek kültürü kaynağında geleneksel içecekler grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "both",
+      "mealTypes": [
+        "beverage"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — İstanbul / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/istanbul/neyenir/boza460281",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": false,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Marmara",
+        "İstanbul",
+        "Geleneksel içecekler",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-e621be28c144dff9672c",
+      "sourceRecordId": "amasya-elma-hosafi",
+      "name": "ELMA HOŞAFI",
+      "normalizedName": "elma hosafi",
+      "slug": "elma-hosafi",
+      "alternativeNames": [],
+      "category": "Geleneksel içecekler",
+      "subcategory": null,
+      "region": [
+        "Karadeniz"
+      ],
+      "province": [
+        "Amasya"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Amasya yemek kültürü kaynağında geleneksel içecekler grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [
+        "haşlama"
+      ],
+      "servingTemperature": "both",
+      "mealTypes": [
+        "beverage"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Amasya / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/amasya/neyenir/amasya-elma-hosafi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Karadeniz",
+        "Amasya",
+        "Geleneksel içecekler",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-0884be42e28b4fb98912",
+      "sourceRecordId": "elma-kurusu-hosafi",
+      "name": "ELMA KURUSU HOŞAFI",
+      "normalizedName": "elma kurusu hosafi",
+      "slug": "elma-kurusu-hosafi",
+      "alternativeNames": [],
+      "category": "Geleneksel içecekler",
+      "subcategory": null,
+      "region": [
+        "Güneydoğu Anadolu"
+      ],
+      "province": [
+        "Adıyaman"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Adıyaman yemek kültürü kaynağında geleneksel içecekler grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [
+        "haşlama"
+      ],
+      "servingTemperature": "both",
+      "mealTypes": [
+        "beverage"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Adıyaman / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/adiyaman/neyenir/elma-kurusu-hosafi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Güneydoğu Anadolu",
+        "Adıyaman",
+        "Geleneksel içecekler",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-7474ee67347b8bddf2d6",
+      "sourceRecordId": "gilabolu-serbeti",
+      "name": "GİLABURU ŞERBETİ",
+      "normalizedName": "gilaburu serbeti",
+      "slug": "gilaburu-serbeti",
+      "alternativeNames": [],
+      "category": "Geleneksel içecekler",
+      "subcategory": null,
+      "region": [
+        "İç Anadolu"
+      ],
+      "province": [
+        "Kayseri"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Kayseri yemek kültürü kaynağında geleneksel içecekler grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "both",
+      "mealTypes": [
+        "beverage"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Kayseri / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/kayseri/neyenir/gilabolu-serbeti",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "İç Anadolu",
+        "Kayseri",
+        "Geleneksel içecekler",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-40f998395f8daa729a82",
+      "sourceRecordId": "karavu-serbeti-kizilcik-ozu",
+      "name": "KARAVU ŞERBETİ (KIZILCIK ÖZÜ)",
+      "normalizedName": "karavu serbeti kizilcik ozu",
+      "slug": "karavu-serbeti-kizilcik-ozu",
+      "alternativeNames": [
+        "KIZILCIK ÖZÜ"
+      ],
+      "category": "Geleneksel içecekler",
+      "subcategory": null,
+      "region": [
+        "Karadeniz"
+      ],
+      "province": [
+        "Bolu"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Bolu yemek kültürü kaynağında geleneksel içecekler grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "both",
+      "mealTypes": [
+        "beverage"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Bolu / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/bolu/neyenir/karavu-serbeti-kizilcik-ozu",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Karadeniz",
+        "Bolu",
+        "Geleneksel içecekler",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-21cb91be9fce3d1aaeed",
+      "sourceRecordId": "kaysi-hosafi",
+      "name": "KAYISI HOŞAFI",
+      "normalizedName": "kayisi hosafi",
+      "slug": "kayisi-hosafi",
+      "alternativeNames": [],
+      "category": "Geleneksel içecekler",
+      "subcategory": null,
+      "region": [
+        "Güneydoğu Anadolu"
+      ],
+      "province": [
+        "Adıyaman"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Adıyaman yemek kültürü kaynağında geleneksel içecekler grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [
+        "haşlama"
+      ],
+      "servingTemperature": "both",
+      "mealTypes": [
+        "beverage"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Adıyaman / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/adiyaman/neyenir/kaysi-hosafi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Güneydoğu Anadolu",
+        "Adıyaman",
+        "Geleneksel içecekler",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-bfd31e9c43ca5ae66c5d",
+      "sourceRecordId": "keysefe-hosafi",
+      "name": "KEYSEFE HOŞAFI",
+      "normalizedName": "keysefe hosafi",
+      "slug": "keysefe-hosafi",
+      "alternativeNames": [],
+      "category": "Geleneksel içecekler",
+      "subcategory": null,
+      "region": [
+        "Doğu Anadolu"
+      ],
+      "province": [
+        "Bitlis"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Bitlis yemek kültürü kaynağında geleneksel içecekler grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [
+        "haşlama"
+      ],
+      "servingTemperature": "both",
+      "mealTypes": [
+        "beverage"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Bitlis / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/bitlis/neyenir/keysefe-hosafi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Doğu Anadolu",
+        "Bitlis",
+        "Geleneksel içecekler",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-cc5edb2b9d0db01ca0a9",
+      "sourceRecordId": "kizilcik-serbeti",
+      "name": "KIZILCIK ŞERBETİ",
+      "normalizedName": "kizilcik serbeti",
+      "slug": "kizilcik-serbeti",
+      "alternativeNames": [],
+      "category": "Geleneksel içecekler",
+      "subcategory": null,
+      "region": [
+        "Karadeniz"
+      ],
+      "province": [
+        "Bolu"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Bolu yemek kültürü kaynağında geleneksel içecekler grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "both",
+      "mealTypes": [
+        "beverage"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Bolu / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/bolu/neyenir/kizilcik-serbeti",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Karadeniz",
+        "Bolu",
+        "Geleneksel içecekler",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-e2fae92ab2135ce367fb",
+      "sourceRecordId": "koruk-serbeti",
+      "name": "KORUK ŞERBETİ",
+      "normalizedName": "koruk serbeti",
+      "slug": "koruk-serbeti",
+      "alternativeNames": [],
+      "category": "Geleneksel içecekler",
+      "subcategory": null,
+      "region": [
+        "İç Anadolu"
+      ],
+      "province": [
+        "Ankara"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Ankara yemek kültürü kaynağında geleneksel içecekler grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "both",
+      "mealTypes": [
+        "beverage"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Ankara / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/ankara/neyenir/koruk-serbeti",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "İç Anadolu",
+        "Ankara",
+        "Geleneksel içecekler",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-8744f2cf9148cc46fd72",
+      "sourceRecordId": "menengic-kahvesi-1",
+      "name": "MENENGİÇ KAHVESİ",
+      "normalizedName": "menengic kahvesi",
+      "slug": "menengic-kahvesi",
+      "alternativeNames": [],
+      "category": "Geleneksel içecekler",
+      "subcategory": null,
+      "region": [
+        "Güneydoğu Anadolu"
+      ],
+      "province": [
+        "Şanlıurfa"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Şanlıurfa yemek kültürü kaynağında geleneksel içecekler grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "both",
+      "mealTypes": [
+        "beverage"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Şanlıurfa / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/sanliurfa/neyenir/menengic-kahvesi-1",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Güneydoğu Anadolu",
+        "Şanlıurfa",
+        "Geleneksel içecekler",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-9db64eafdce0b692f9d8",
+      "sourceRecordId": "ravanda-serbeti",
+      "name": "RAVANDA ŞERBETİ",
+      "normalizedName": "ravanda serbeti",
+      "slug": "ravanda-serbeti",
+      "alternativeNames": [],
+      "category": "Geleneksel içecekler",
+      "subcategory": null,
+      "region": [
+        "Akdeniz"
+      ],
+      "province": [
+        "Kahramanmaraş"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Kahramanmaraş yemek kültürü kaynağında geleneksel içecekler grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "both",
+      "mealTypes": [
+        "beverage"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Kahramanmaraş / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/kahramanmaras/neyenir/ravanda-serbeti",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Akdeniz",
+        "Kahramanmaraş",
+        "Geleneksel içecekler",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-586e1c3eb0a6dafc67cb",
+      "sourceRecordId": "sira-cesitleri",
+      "name": "ŞIRA ÇEŞİTLERİ",
+      "normalizedName": "sira cesitleri",
+      "slug": "sira-cesitleri",
+      "alternativeNames": [],
+      "category": "Geleneksel içecekler",
+      "subcategory": null,
+      "region": [
+        "Akdeniz"
+      ],
+      "province": [
+        "Kahramanmaraş"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Kahramanmaraş yemek kültürü kaynağında geleneksel içecekler grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "both",
+      "mealTypes": [
+        "beverage"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Kahramanmaraş / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/kahramanmaras/neyenir/sira-cesitleri",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Akdeniz",
+        "Kahramanmaraş",
+        "Geleneksel içecekler",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-fc6504af9de887c20934",
+      "sourceRecordId": "uzumlu-kabak-hosafi",
+      "name": "ÜZÜMLÜ KABAK HOŞAFI",
+      "normalizedName": "uzumlu kabak hosafi",
+      "slug": "uzumlu-kabak-hosafi",
+      "alternativeNames": [],
+      "category": "Geleneksel içecekler",
+      "subcategory": null,
+      "region": [
+        "Karadeniz"
+      ],
+      "province": [
+        "Bolu"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Bolu yemek kültürü kaynağında geleneksel içecekler grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "kabak"
+      ],
+      "ingredients": [],
+      "cookingMethods": [
+        "haşlama"
+      ],
+      "servingTemperature": "both",
+      "mealTypes": [
+        "beverage"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Bolu / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/bolu/neyenir/uzumlu-kabak-hosafi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Karadeniz",
+        "Bolu",
+        "Geleneksel içecekler",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-b40d560ad90aadb7ebb9",
+      "sourceRecordId": "visne-hosafi",
+      "name": "VİŞNE HOŞAFI",
+      "normalizedName": "visne hosafi",
+      "slug": "visne-hosafi",
+      "alternativeNames": [],
+      "category": "Geleneksel içecekler",
+      "subcategory": null,
+      "region": [
+        "İç Anadolu"
+      ],
+      "province": [
+        "Ankara"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Ankara yemek kültürü kaynağında geleneksel içecekler grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [
+        "haşlama"
+      ],
+      "servingTemperature": "both",
+      "mealTypes": [
+        "beverage"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Ankara / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/ankara/neyenir/visne-hosafi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "İç Anadolu",
+        "Ankara",
+        "Geleneksel içecekler",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    }
+  ]
+}

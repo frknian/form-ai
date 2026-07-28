@@ -1,0 +1,2226 @@
+{
+  "schemaVersion": 2,
+  "category": "Sebze yemekleri",
+  "dishes": [
+    {
+      "id": "tr-f992cc99ec73a4a572fb",
+      "sourceRecordId": "amasya-pancar-yemeg",
+      "name": "AMASYA PANCAR YEMEĞİ",
+      "normalizedName": "amasya pancar yemegi",
+      "slug": "amasya-pancar-yemegi",
+      "alternativeNames": [],
+      "category": "Sebze yemekleri",
+      "subcategory": null,
+      "region": [
+        "Karadeniz"
+      ],
+      "province": [
+        "Amasya"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Amasya yemek kültürü kaynağında sebze yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Amasya / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/amasya/neyenir/amasya-pancar-yemeg",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Karadeniz",
+        "Amasya",
+        "Sebze yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-1bca78bf2c7b630f5591",
+      "sourceRecordId": "antep-kuruluk-patlicani",
+      "name": "ANTEP KURULUK PATLICANI",
+      "normalizedName": "antep kuruluk patlicani",
+      "slug": "antep-kuruluk-patlicani",
+      "alternativeNames": [],
+      "category": "Sebze yemekleri",
+      "subcategory": null,
+      "region": [
+        "Güneydoğu Anadolu"
+      ],
+      "province": [
+        "Gaziantep"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Gaziantep yemek kültürü kaynağında sebze yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Gaziantep / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/gaziantep/neyenir/antep-kuruluk-patlicani",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Güneydoğu Anadolu",
+        "Gaziantep",
+        "Sebze yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-eaf96840bee720a818f5",
+      "sourceRecordId": "ayva-ve-kabak-pelverdesi",
+      "name": "AYVA VE KABAK PELVERDESİ",
+      "normalizedName": "ayva ve kabak pelverdesi",
+      "slug": "ayva-ve-kabak-pelverdesi",
+      "alternativeNames": [],
+      "category": "Sebze yemekleri",
+      "subcategory": null,
+      "region": [
+        "Karadeniz"
+      ],
+      "province": [
+        "Artvin"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Artvin yemek kültürü kaynağında sebze yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "kabak"
+      ],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Artvin / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/artvin/neyenir/ayva-ve-kabak-pelverdesi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Karadeniz",
+        "Artvin",
+        "Sebze yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-8155333842e1a672e1ec",
+      "sourceRecordId": "bamya",
+      "name": "BAMYA",
+      "normalizedName": "bamya",
+      "slug": "bamya",
+      "alternativeNames": [],
+      "category": "Sebze yemekleri",
+      "subcategory": null,
+      "region": [
+        "Ege"
+      ],
+      "province": [
+        "Afyonkarahisar"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Afyonkarahisar yemek kültürü kaynağında sebze yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "bamya"
+      ],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Afyonkarahisar / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/afyonkarahisar/neyenir/bamya",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Ege",
+        "Afyonkarahisar",
+        "Sebze yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-e1f7899e76e6a81a9b97",
+      "sourceRecordId": "birecik-patlicani",
+      "name": "BİRECİK PATLICANI",
+      "normalizedName": "birecik patlicani",
+      "slug": "birecik-patlicani",
+      "alternativeNames": [],
+      "category": "Sebze yemekleri",
+      "subcategory": null,
+      "region": [
+        "Güneydoğu Anadolu"
+      ],
+      "province": [
+        "Şanlıurfa"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Şanlıurfa yemek kültürü kaynağında sebze yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Şanlıurfa / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/sanliurfa/neyenir/birecik-patlicani",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Güneydoğu Anadolu",
+        "Şanlıurfa",
+        "Sebze yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-5278f9f4225d2deb8193",
+      "sourceRecordId": "ebegumeci",
+      "name": "EBEGÜMECİ",
+      "normalizedName": "ebegumeci",
+      "slug": "ebegumeci",
+      "alternativeNames": [],
+      "category": "Sebze yemekleri",
+      "subcategory": null,
+      "region": [
+        "Ege"
+      ],
+      "province": [
+        "Aydın"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Aydın yemek kültürü kaynağında sebze yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Aydın / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/aydin/neyenir/ebegumeci",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Ege",
+        "Aydın",
+        "Sebze yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-cd15f8c50a1835b6eefa",
+      "sourceRecordId": "eksl-kabak",
+      "name": "EKŞİLİ KABAK",
+      "normalizedName": "eksili kabak",
+      "slug": "eksili-kabak",
+      "alternativeNames": [],
+      "category": "Sebze yemekleri",
+      "subcategory": null,
+      "region": [
+        "İç Anadolu"
+      ],
+      "province": [
+        "Yozgat"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Yozgat yemek kültürü kaynağında sebze yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "kabak"
+      ],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Yozgat / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/yozgat/neyenir/eksl-kabak",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "İç Anadolu",
+        "Yozgat",
+        "Sebze yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-12378eaefb8b5ad50239",
+      "sourceRecordId": "eski-lahana",
+      "name": "EŞKİ LAHANA",
+      "normalizedName": "eski lahana",
+      "slug": "eski-lahana",
+      "alternativeNames": [],
+      "category": "Sebze yemekleri",
+      "subcategory": null,
+      "region": [
+        "Karadeniz"
+      ],
+      "province": [
+        "Bayburt"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Bayburt yemek kültürü kaynağında sebze yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "lahana"
+      ],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Bayburt / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/bayburt/neyenir/eski-lahana",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Karadeniz",
+        "Bayburt",
+        "Sebze yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-a69c16dcb0a2f25265bd",
+      "sourceRecordId": "gobelek--kuzugobegi--mantar--yemegi",
+      "name": "GÖBELEK- KUZUGÖBEĞİ (MANTAR) YEMEĞİ",
+      "normalizedName": "gobelek kuzugobegi mantar yemegi",
+      "slug": "gobelek-kuzugobegi-mantar-yemegi",
+      "alternativeNames": [
+        "MANTAR"
+      ],
+      "category": "Sebze yemekleri",
+      "subcategory": null,
+      "region": [
+        "Akdeniz"
+      ],
+      "province": [
+        "Isparta"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Isparta yemek kültürü kaynağında sebze yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "mantar"
+      ],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Isparta / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/isparta/neyenir/gobelek--kuzugobegi--mantar--yemegi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Akdeniz",
+        "Isparta",
+        "Sebze yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-3de77d07290e74706e21",
+      "sourceRecordId": "isirgan-yemegi",
+      "name": "ISIRGAN YEMEĞİ",
+      "normalizedName": "isirgan yemegi",
+      "slug": "isirgan-yemegi",
+      "alternativeNames": [],
+      "category": "Sebze yemekleri",
+      "subcategory": null,
+      "region": [
+        "Karadeniz"
+      ],
+      "province": [
+        "Giresun"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Giresun yemek kültürü kaynağında sebze yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Giresun / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/giresun/neyenir/isirgan-yemegi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Karadeniz",
+        "Giresun",
+        "Sebze yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-4da8ad457e4e1b94e7df",
+      "sourceRecordId": "ispanak-boregi-kol-boregi",
+      "name": "ISPANAK BÖREĞİ (KOL BÖREĞİ)",
+      "normalizedName": "ispanak boregi kol boregi",
+      "slug": "ispanak-boregi-kol-boregi",
+      "alternativeNames": [
+        "KOL BÖREĞİ"
+      ],
+      "category": "Sebze yemekleri",
+      "subcategory": null,
+      "region": [
+        "Marmara"
+      ],
+      "province": [
+        "Kırklareli"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Kırklareli yemek kültürü kaynağında sebze yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "ıspanak"
+      ],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Kırklareli / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/kirklareli/neyenir/ispanak-boregi-kol-boregi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Marmara",
+        "Kırklareli",
+        "Sebze yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-dd354b03d36f9848dc79",
+      "sourceRecordId": "ispanak-musakkasi",
+      "name": "ISPANAK MUSAKKASI",
+      "normalizedName": "ispanak musakkasi",
+      "slug": "ispanak-musakkasi",
+      "alternativeNames": [],
+      "category": "Sebze yemekleri",
+      "subcategory": null,
+      "region": [
+        "Akdeniz"
+      ],
+      "province": [
+        "Isparta"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Isparta yemek kültürü kaynağında sebze yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "ıspanak"
+      ],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Isparta / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/isparta/neyenir/ispanak-musakkasi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Akdeniz",
+        "Isparta",
+        "Sebze yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-b7f00eb38a5e7f2040a3",
+      "sourceRecordId": "ispanakli-sbt",
+      "name": "ISPANAKLI ŞİBİT",
+      "normalizedName": "ispanakli sibit",
+      "slug": "ispanakli-sibit",
+      "alternativeNames": [],
+      "category": "Sebze yemekleri",
+      "subcategory": null,
+      "region": [
+        "Ege"
+      ],
+      "province": [
+        "Kütahya"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Kütahya yemek kültürü kaynağında sebze yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Kütahya / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/kutahya/neyenir/ispanakli-sbt",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Ege",
+        "Kütahya",
+        "Sebze yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-5c2be881b53e9a841421",
+      "sourceRecordId": "sot-patlatmasi",
+      "name": "İSOT PATLATMASI",
+      "normalizedName": "isot patlatmasi",
+      "slug": "isot-patlatmasi",
+      "alternativeNames": [],
+      "category": "Sebze yemekleri",
+      "subcategory": null,
+      "region": [
+        "Karadeniz"
+      ],
+      "province": [
+        "Tokat"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Tokat yemek kültürü kaynağında sebze yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Tokat / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/tokat/neyenir/sot-patlatmasi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Karadeniz",
+        "Tokat",
+        "Sebze yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-95fa2281f0501b962ac3",
+      "sourceRecordId": "kabak-cirtmasi",
+      "name": "KABAK ÇIRTMASI",
+      "normalizedName": "kabak cirtmasi",
+      "slug": "kabak-cirtmasi",
+      "alternativeNames": [],
+      "category": "Sebze yemekleri",
+      "subcategory": null,
+      "region": [
+        "Doğu Anadolu"
+      ],
+      "province": [
+        "Van"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Van yemek kültürü kaynağında sebze yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "kabak"
+      ],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Van / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/van/neyenir/kabak-cirtmasi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Doğu Anadolu",
+        "Van",
+        "Sebze yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-991efa42acf416f3bfab",
+      "sourceRecordId": "kabak-mucveri",
+      "name": "KABAK MÜCVERİ",
+      "normalizedName": "kabak mucveri",
+      "slug": "kabak-mucveri",
+      "alternativeNames": [],
+      "category": "Sebze yemekleri",
+      "subcategory": null,
+      "region": [
+        "Ege"
+      ],
+      "province": [
+        "Aydın"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Aydın yemek kültürü kaynağında sebze yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "kabak"
+      ],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Aydın / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/aydin/neyenir/kabak-mucveri",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Ege",
+        "Aydın",
+        "Sebze yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-3896afae4dbc6a4988c2",
+      "sourceRecordId": "kabak-yemekleri",
+      "name": "KABAK YEMEKLERİ",
+      "normalizedName": "kabak yemekleri",
+      "slug": "kabak-yemekleri",
+      "alternativeNames": [],
+      "category": "Sebze yemekleri",
+      "subcategory": null,
+      "region": [
+        "Doğu Anadolu"
+      ],
+      "province": [
+        "Malatya"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Malatya yemek kültürü kaynağında sebze yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "kabak"
+      ],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Malatya / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/malatya/neyenir/kabak-yemekleri",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Doğu Anadolu",
+        "Malatya",
+        "Sebze yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-a2d6bf3f570d262e88a9",
+      "sourceRecordId": "kara-lahana-haslamasi",
+      "name": "KARA LAHANA HAŞLAMASI",
+      "normalizedName": "kara lahana haslamasi",
+      "slug": "kara-lahana-haslamasi",
+      "alternativeNames": [],
+      "category": "Sebze yemekleri",
+      "subcategory": null,
+      "region": [
+        "Marmara"
+      ],
+      "province": [
+        "Sakarya"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Sakarya yemek kültürü kaynağında sebze yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "lahana"
+      ],
+      "ingredients": [],
+      "cookingMethods": [
+        "haşlama"
+      ],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Sakarya / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/sakarya/neyenir/kara-lahana-haslamasi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Marmara",
+        "Sakarya",
+        "Sebze yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-214bb1182ce29153c1dc",
+      "sourceRecordId": "kelem-pancari",
+      "name": "KELEM PANCARI",
+      "normalizedName": "kelem pancari",
+      "slug": "kelem-pancari",
+      "alternativeNames": [],
+      "category": "Sebze yemekleri",
+      "subcategory": null,
+      "region": [
+        "Doğu Anadolu"
+      ],
+      "province": [
+        "Bitlis"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Bitlis yemek kültürü kaynağında sebze yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Bitlis / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/bitlis/neyenir/kelem-pancari",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Doğu Anadolu",
+        "Bitlis",
+        "Sebze yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-7e53d4e362c7b36b2eb0",
+      "sourceRecordId": "kenger-cacigi-2",
+      "name": "KENGER CACIĞI",
+      "normalizedName": "kenger cacigi",
+      "slug": "kenger-cacigi",
+      "alternativeNames": [],
+      "category": "Sebze yemekleri",
+      "subcategory": null,
+      "region": [
+        "Doğu Anadolu"
+      ],
+      "province": [
+        "Hakkâri"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Hakkâri yemek kültürü kaynağında sebze yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Hakkâri / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/hakkari/neyenir/kenger-cacigi-2",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Doğu Anadolu",
+        "Hakkâri",
+        "Sebze yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-6d322d1bfe5a12c3abf8",
+      "sourceRecordId": "kereviz-ve-ananasli-kizilcik-surubu",
+      "name": "KEREVİZ VE ANANASLI KIZILCIK ŞURUBU",
+      "normalizedName": "kereviz ve ananasli kizilcik surubu",
+      "slug": "kereviz-ve-ananasli-kizilcik-surubu",
+      "alternativeNames": [],
+      "category": "Sebze yemekleri",
+      "subcategory": null,
+      "region": [
+        "Karadeniz"
+      ],
+      "province": [
+        "Zonguldak"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Zonguldak yemek kültürü kaynağında sebze yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Zonguldak / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/zonguldak/neyenir/kereviz-ve-ananasli-kizilcik-surubu",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Karadeniz",
+        "Zonguldak",
+        "Sebze yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-739b2d5b86fb0c900087",
+      "sourceRecordId": "kezi-pancari-yemegi",
+      "name": "KEZİ PANCARI YEMEĞİ",
+      "normalizedName": "kezi pancari yemegi",
+      "slug": "kezi-pancari-yemegi",
+      "alternativeNames": [],
+      "category": "Sebze yemekleri",
+      "subcategory": null,
+      "region": [
+        "İç Anadolu"
+      ],
+      "province": [
+        "Ankara"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Ankara yemek kültürü kaynağında sebze yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Ankara / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/ankara/neyenir/kezi-pancari-yemegi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "İç Anadolu",
+        "Ankara",
+        "Sebze yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-9c136d7682ac6fa04211",
+      "sourceRecordId": "kuru-patlican-yemeg490201",
+      "name": "KURU PATLICAN YEMEĞİ",
+      "normalizedName": "kuru patlican yemegi",
+      "slug": "kuru-patlican-yemegi",
+      "alternativeNames": [],
+      "category": "Sebze yemekleri",
+      "subcategory": null,
+      "region": [
+        "Karadeniz"
+      ],
+      "province": [
+        "Tokat"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Tokat yemek kültürü kaynağında sebze yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "patlıcan"
+      ],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Tokat / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/tokat/neyenir/kuru-patlican-yemeg490201",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Karadeniz",
+        "Tokat",
+        "Sebze yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-599ebc100feb728a5829",
+      "sourceRecordId": "kurutulmus-badilcan-yemegi",
+      "name": "KURUTULMUŞ PATLICAN (BADILCAN) YEMEĞİ",
+      "normalizedName": "kurutulmus patlican badilcan yemegi",
+      "slug": "kurutulmus-patlican-badilcan-yemegi",
+      "alternativeNames": [
+        "BADILCAN"
+      ],
+      "category": "Sebze yemekleri",
+      "subcategory": null,
+      "region": [
+        "Akdeniz"
+      ],
+      "province": [
+        "Isparta"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Isparta yemek kültürü kaynağında sebze yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "patlıcan"
+      ],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Isparta / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/isparta/neyenir/kurutulmus-badilcan-yemegi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Akdeniz",
+        "Isparta",
+        "Sebze yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-6a7e72697d4d6167d53b",
+      "sourceRecordId": "madimak-cacigi",
+      "name": "MADIMAK CACIĞI",
+      "normalizedName": "madimak cacigi",
+      "slug": "madimak-cacigi",
+      "alternativeNames": [],
+      "category": "Sebze yemekleri",
+      "subcategory": null,
+      "region": [
+        "İç Anadolu"
+      ],
+      "province": [
+        "Sivas"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Sivas yemek kültürü kaynağında sebze yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Sivas / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/sivas/neyenir/madimak-cacigi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "İç Anadolu",
+        "Sivas",
+        "Sebze yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-dcff2a330fab95a14a95",
+      "sourceRecordId": "melki-yemegi",
+      "name": "MELKİ YEMEĞİ",
+      "normalizedName": "melki yemegi",
+      "slug": "melki-yemegi",
+      "alternativeNames": [],
+      "category": "Sebze yemekleri",
+      "subcategory": null,
+      "region": [
+        "Marmara"
+      ],
+      "province": [
+        "Çanakkale"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Çanakkale yemek kültürü kaynağında sebze yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Çanakkale / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/canakkale/neyenir/melki-yemegi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Marmara",
+        "Çanakkale",
+        "Sebze yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-3160468d0469ea60d8bb",
+      "sourceRecordId": "monca-domatesli-patlican-kizartmasi",
+      "name": "MONCA (DOMATESLİ PATLICAN KIZARTMASI)",
+      "normalizedName": "monca domatesli patlican kizartmasi",
+      "slug": "monca-domatesli-patlican-kizartmasi",
+      "alternativeNames": [
+        "DOMATESLİ PATLICAN KIZARTMASI"
+      ],
+      "category": "Sebze yemekleri",
+      "subcategory": null,
+      "region": [
+        "Güneydoğu Anadolu"
+      ],
+      "province": [
+        "Kilis"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Kilis yemek kültürü kaynağında sebze yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "patlıcan"
+      ],
+      "ingredients": [],
+      "cookingMethods": [
+        "tavada pişirme"
+      ],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Kilis / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/kilis/neyenir/monca-domatesli-patlican-kizartmasi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Güneydoğu Anadolu",
+        "Kilis",
+        "Sebze yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-67bd0fc96bb1d1a4d5d3",
+      "sourceRecordId": "pancar-pezzigi",
+      "name": "PANCAR PEZZİĞİ",
+      "normalizedName": "pancar pezzigi",
+      "slug": "pancar-pezzigi",
+      "alternativeNames": [],
+      "category": "Sebze yemekleri",
+      "subcategory": null,
+      "region": [
+        "İç Anadolu"
+      ],
+      "province": [
+        "Niğde"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Niğde yemek kültürü kaynağında sebze yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Niğde / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/nigde/neyenir/pancar-pezzigi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "İç Anadolu",
+        "Niğde",
+        "Sebze yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-6b1b13d531ef5e23e45a",
+      "sourceRecordId": "patlican-musakka",
+      "name": "PATLICAN MUSAKKA",
+      "normalizedName": "patlican musakka",
+      "slug": "patlican-musakka",
+      "alternativeNames": [],
+      "category": "Sebze yemekleri",
+      "subcategory": null,
+      "region": [
+        "Ege"
+      ],
+      "province": [
+        "Afyonkarahisar"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Afyonkarahisar yemek kültürü kaynağında sebze yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "patlıcan"
+      ],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Afyonkarahisar / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/afyonkarahisar/neyenir/patlican-musakka",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Ege",
+        "Afyonkarahisar",
+        "Sebze yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-ffd0626dd9ff17a2fee2",
+      "sourceRecordId": "pirasa-boregi",
+      "name": "PIRASA BÖREĞİ",
+      "normalizedName": "pirasa boregi",
+      "slug": "pirasa-boregi",
+      "alternativeNames": [],
+      "category": "Sebze yemekleri",
+      "subcategory": null,
+      "region": [
+        "Marmara"
+      ],
+      "province": [
+        "Kırklareli"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Kırklareli yemek kültürü kaynağında sebze yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "pırasa"
+      ],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Kırklareli / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/kirklareli/neyenir/pirasa-boregi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Marmara",
+        "Kırklareli",
+        "Sebze yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-295ec2fc96ff4d3ddec0",
+      "sourceRecordId": "suluklu-pancar-1",
+      "name": "SÜLÜKLÜ PANCAR",
+      "normalizedName": "suluklu pancar",
+      "slug": "suluklu-pancar",
+      "alternativeNames": [],
+      "category": "Sebze yemekleri",
+      "subcategory": null,
+      "region": [
+        "Güneydoğu Anadolu"
+      ],
+      "province": [
+        "Kilis"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Kilis yemek kültürü kaynağında sebze yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Kilis / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/kilis/neyenir/suluklu-pancar-1",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Güneydoğu Anadolu",
+        "Kilis",
+        "Sebze yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-c593217eac5a17e79fd3",
+      "sourceRecordId": "sutlu-kabak",
+      "name": "SÜTLÜ KABAK",
+      "normalizedName": "sutlu kabak",
+      "slug": "sutlu-kabak",
+      "alternativeNames": [],
+      "category": "Sebze yemekleri",
+      "subcategory": null,
+      "region": [
+        "Marmara"
+      ],
+      "province": [
+        "Bursa"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Bursa yemek kültürü kaynağında sebze yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "kabak"
+      ],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Bursa / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/bursa/neyenir/sutlu-kabak",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Marmara",
+        "Bursa",
+        "Sebze yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-d1db4347a7f474576fd7",
+      "sourceRecordId": "urfa--sanliurfa--isot-comlegi",
+      "name": "URFA (ŞANLIURFA) İSOT ÇÖMLEĞİ",
+      "normalizedName": "urfa sanliurfa isot comlegi",
+      "slug": "urfa-sanliurfa-isot-comlegi",
+      "alternativeNames": [
+        "ŞANLIURFA"
+      ],
+      "category": "Sebze yemekleri",
+      "subcategory": null,
+      "region": [
+        "Güneydoğu Anadolu"
+      ],
+      "province": [
+        "Şanlıurfa"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Şanlıurfa yemek kültürü kaynağında sebze yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Şanlıurfa / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/sanliurfa/neyenir/urfa--sanliurfa--isot-comlegi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Güneydoğu Anadolu",
+        "Şanlıurfa",
+        "Sebze yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-1504ba096f24192b1213",
+      "sourceRecordId": "uzun-kabak-yemegi",
+      "name": "UZUN KABAK YEMEĞİ",
+      "normalizedName": "uzun kabak yemegi",
+      "slug": "uzun-kabak-yemegi",
+      "alternativeNames": [],
+      "category": "Sebze yemekleri",
+      "subcategory": null,
+      "region": [
+        "Akdeniz"
+      ],
+      "province": [
+        "Isparta"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Isparta yemek kültürü kaynağında sebze yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "kabak"
+      ],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Isparta / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/isparta/neyenir/uzun-kabak-yemegi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Akdeniz",
+        "Isparta",
+        "Sebze yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-c6acce3932c9da581f7c",
+      "sourceRecordId": "yogurtlu-temizlik-otu-",
+      "name": "YOĞURTLU TEMİZLİK OTU",
+      "normalizedName": "yogurtlu temizlik otu",
+      "slug": "yogurtlu-temizlik-otu",
+      "alternativeNames": [],
+      "category": "Sebze yemekleri",
+      "subcategory": null,
+      "region": [
+        "İç Anadolu"
+      ],
+      "province": [
+        "Aksaray"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Aksaray yemek kültürü kaynağında sebze yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Aksaray / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/aksaray/neyenir/yogurtlu-temizlik-otu-",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "İç Anadolu",
+        "Aksaray",
+        "Sebze yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    }
+  ]
+}

@@ -1,0 +1,1882 @@
+{
+  "schemaVersion": 2,
+  "category": "Kebaplar",
+  "dishes": [
+    {
+      "id": "tr-40d5276e22c133f1a3fa",
+      "sourceRecordId": "adana-kebabi",
+      "name": "ADANA KEBABI",
+      "normalizedName": "adana kebabi",
+      "slug": "adana-kebabi",
+      "alternativeNames": [],
+      "category": "Kebaplar",
+      "subcategory": null,
+      "region": [
+        "Akdeniz"
+      ],
+      "province": [
+        "Adana"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Adana yemek kültürü kaynağında kebaplar grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Adana / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/adana/neyenir/adana-kebabi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Akdeniz",
+        "Adana",
+        "Kebaplar",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-c3c2133f377a90909cdf",
+      "sourceRecordId": "yogurtlu-alnazk",
+      "name": "ALİNAZİK KEBABI",
+      "normalizedName": "alinazik kebabi",
+      "slug": "alinazik-kebabi",
+      "alternativeNames": [],
+      "category": "Kebaplar",
+      "subcategory": null,
+      "region": [
+        "Güneydoğu Anadolu"
+      ],
+      "province": [
+        "Gaziantep"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Gaziantep yemek kültürü kaynağında kebaplar grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Gaziantep / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/gaziantep/neyenir/yogurtlu-alnazk",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Güneydoğu Anadolu",
+        "Gaziantep",
+        "Kebaplar",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-f046baa97dda986809a3",
+      "sourceRecordId": "arapgir-dugun-kebabi",
+      "name": "ARAPGİR DÜĞÜN KEBABI",
+      "normalizedName": "arapgir dugun kebabi",
+      "slug": "arapgir-dugun-kebabi",
+      "alternativeNames": [],
+      "category": "Kebaplar",
+      "subcategory": null,
+      "region": [
+        "Doğu Anadolu"
+      ],
+      "province": [
+        "Malatya"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Malatya yemek kültürü kaynağında kebaplar grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Malatya / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/malatya/neyenir/arapgir-dugun-kebabi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Doğu Anadolu",
+        "Malatya",
+        "Kebaplar",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-6438a2ff32a17e7dc200",
+      "sourceRecordId": "begendili-kebap",
+      "name": "BEĞENDİLİ KEBAP",
+      "normalizedName": "begendili kebap",
+      "slug": "begendili-kebap",
+      "alternativeNames": [],
+      "category": "Kebaplar",
+      "subcategory": null,
+      "region": [
+        "Marmara"
+      ],
+      "province": [
+        "Bursa"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Bursa yemek kültürü kaynağında kebaplar grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Bursa / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/bursa/neyenir/begendili-kebap",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Marmara",
+        "Bursa",
+        "Kebaplar",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-4e7b09b7c27a95dc299a",
+      "sourceRecordId": "beyinli-beykoz-kebabi",
+      "name": "BEYİNLİ BEYKOZ KEBABI",
+      "normalizedName": "beyinli beykoz kebabi",
+      "slug": "beyinli-beykoz-kebabi",
+      "alternativeNames": [],
+      "category": "Kebaplar",
+      "subcategory": null,
+      "region": [
+        "Marmara"
+      ],
+      "province": [
+        "İstanbul"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "İstanbul yemek kültürü kaynağında kebaplar grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — İstanbul / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/istanbul/neyenir/beyinli-beykoz-kebabi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Marmara",
+        "İstanbul",
+        "Kebaplar",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-f8bbe4d7e5a507b2faf6",
+      "sourceRecordId": "bildircin-kebabi",
+      "name": "BILDIRCIN KEBABI",
+      "normalizedName": "bildircin kebabi",
+      "slug": "bildircin-kebabi",
+      "alternativeNames": [],
+      "category": "Kebaplar",
+      "subcategory": null,
+      "region": [
+        "Marmara"
+      ],
+      "province": [
+        "Bilecik"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Bilecik yemek kültürü kaynağında kebaplar grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Bilecik / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/bilecik/neyenir/bildircin-kebabi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Marmara",
+        "Bilecik",
+        "Kebaplar",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-ba6d85c2296e2219ffb6",
+      "sourceRecordId": "bursa-kebabi-skender-kebap",
+      "name": "BURSA KEBABI (İSKENDER KEBAP)",
+      "normalizedName": "bursa kebabi iskender kebap",
+      "slug": "bursa-kebabi-iskender-kebap",
+      "alternativeNames": [
+        "İSKENDER KEBAP"
+      ],
+      "category": "Kebaplar",
+      "subcategory": null,
+      "region": [
+        "Marmara"
+      ],
+      "province": [
+        "Bursa"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Bursa yemek kültürü kaynağında kebaplar grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Bursa / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/bursa/neyenir/bursa-kebabi-skender-kebap",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Marmara",
+        "Bursa",
+        "Kebaplar",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-7ca4af4b32b1d12ee409",
+      "sourceRecordId": "cag-kebabi",
+      "name": "CAĞ KEBABI",
+      "normalizedName": "cag kebabi",
+      "slug": "cag-kebabi",
+      "alternativeNames": [],
+      "category": "Kebaplar",
+      "subcategory": null,
+      "region": [
+        "Doğu Anadolu"
+      ],
+      "province": [
+        "Erzurum"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Erzurum yemek kültürü kaynağında kebaplar grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Erzurum / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/erzurum/neyenir/cag-kebabi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Doğu Anadolu",
+        "Erzurum",
+        "Kebaplar",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-370ce92ff70c99cbc6b0",
+      "sourceRecordId": "cagirtlak-kebabi",
+      "name": "CAĞIRTLAK (CİĞER) KEBABI",
+      "normalizedName": "cagirtlak ciger kebabi",
+      "slug": "cagirtlak-ciger-kebabi",
+      "alternativeNames": [
+        "CİĞER"
+      ],
+      "category": "Kebaplar",
+      "subcategory": null,
+      "region": [
+        "Güneydoğu Anadolu"
+      ],
+      "province": [
+        "Gaziantep"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Gaziantep yemek kültürü kaynağında kebaplar grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "ciğer"
+      ],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Gaziantep / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/gaziantep/neyenir/cagirtlak-kebabi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Güneydoğu Anadolu",
+        "Gaziantep",
+        "Kebaplar",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-b853206c5bec528d51ee",
+      "sourceRecordId": "cger-kebabi",
+      "name": "CİĞER KEBABI",
+      "normalizedName": "ciger kebabi",
+      "slug": "ciger-kebabi",
+      "alternativeNames": [],
+      "category": "Kebaplar",
+      "subcategory": null,
+      "region": [
+        "Güneydoğu Anadolu"
+      ],
+      "province": [
+        "Diyarbakır"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Diyarbakır yemek kültürü kaynağında kebaplar grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "ciğer"
+      ],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Diyarbakır / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/diyarbakir/neyenir/cger-kebabi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Güneydoğu Anadolu",
+        "Diyarbakır",
+        "Kebaplar",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-03572d157890e70df0c9",
+      "sourceRecordId": "cekme-kebabi",
+      "name": "ÇEKME KEBABI",
+      "normalizedName": "cekme kebabi",
+      "slug": "cekme-kebabi",
+      "alternativeNames": [],
+      "category": "Kebaplar",
+      "subcategory": null,
+      "region": [
+        "Ege"
+      ],
+      "province": [
+        "Manisa"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Manisa yemek kültürü kaynağında kebaplar grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Manisa / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/manisa/neyenir/cekme-kebabi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Ege",
+        "Manisa",
+        "Kebaplar",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-95d5c7d1beae9c332d3f",
+      "sourceRecordId": "dest-kebabi",
+      "name": "DESTİ KEBABI",
+      "normalizedName": "desti kebabi",
+      "slug": "desti-kebabi",
+      "alternativeNames": [],
+      "category": "Kebaplar",
+      "subcategory": null,
+      "region": [
+        "İç Anadolu"
+      ],
+      "province": [
+        "Yozgat"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Yozgat yemek kültürü kaynağında kebaplar grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Yozgat / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/yozgat/neyenir/dest-kebabi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "İç Anadolu",
+        "Yozgat",
+        "Kebaplar",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-883cc389f966f056c28b",
+      "sourceRecordId": "dik-dik-kebabi",
+      "name": "DİK DİK KEBABI",
+      "normalizedName": "dik dik kebabi",
+      "slug": "dik-dik-kebabi",
+      "alternativeNames": [],
+      "category": "Kebaplar",
+      "subcategory": null,
+      "region": [
+        "Marmara"
+      ],
+      "province": [
+        "Bursa"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Bursa yemek kültürü kaynağında kebaplar grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Bursa / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/bursa/neyenir/dik-dik-kebabi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Marmara",
+        "Bursa",
+        "Kebaplar",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-61d4d686012ab9b730cf",
+      "sourceRecordId": "domatesli-kebap",
+      "name": "DOMATESLİ KEBAP",
+      "normalizedName": "domatesli kebap",
+      "slug": "domatesli-kebap",
+      "alternativeNames": [],
+      "category": "Kebaplar",
+      "subcategory": null,
+      "region": [
+        "Doğu Anadolu"
+      ],
+      "province": [
+        "Malatya"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Malatya yemek kültürü kaynağında kebaplar grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Malatya / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/malatya/neyenir/domatesli-kebap",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Doğu Anadolu",
+        "Malatya",
+        "Kebaplar",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-75d515e40bfca77b8583",
+      "sourceRecordId": "eksili-kebap-1",
+      "name": "EKŞİLİ KEBAP",
+      "normalizedName": "eksili kebap",
+      "slug": "eksili-kebap",
+      "alternativeNames": [],
+      "category": "Kebaplar",
+      "subcategory": null,
+      "region": [
+        "Güneydoğu Anadolu"
+      ],
+      "province": [
+        "Kilis"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Kilis yemek kültürü kaynağında kebaplar grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Kilis / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/kilis/neyenir/eksili-kebap-1",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Güneydoğu Anadolu",
+        "Kilis",
+        "Kebaplar",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-13f971ce8cacd85c0590",
+      "sourceRecordId": "firin-kebabi",
+      "name": "FIRIN KEBABI",
+      "normalizedName": "firin kebabi",
+      "slug": "firin-kebabi",
+      "alternativeNames": [],
+      "category": "Kebaplar",
+      "subcategory": null,
+      "region": [
+        "İç Anadolu"
+      ],
+      "province": [
+        "Konya"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Konya yemek kültürü kaynağında kebaplar grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [
+        "fırınlama"
+      ],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Konya / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/konya/neyenir/firin-kebabi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "İç Anadolu",
+        "Konya",
+        "Kebaplar",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-0a21fb30a85338cdbb0d",
+      "sourceRecordId": "firin-kebap",
+      "name": "FIRIN KEBAP",
+      "normalizedName": "firin kebap",
+      "slug": "firin-kebap",
+      "alternativeNames": [],
+      "category": "Kebaplar",
+      "subcategory": null,
+      "region": [
+        "İç Anadolu"
+      ],
+      "province": [
+        "Karaman"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Karaman yemek kültürü kaynağında kebaplar grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [
+        "fırınlama"
+      ],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Karaman / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/karaman/neyenir/firin-kebap",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "İç Anadolu",
+        "Karaman",
+        "Kebaplar",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-1cdcec015365c5479f2a",
+      "sourceRecordId": "hakkari-kebabi",
+      "name": "HAKKARİ KEBABI",
+      "normalizedName": "hakkari kebabi",
+      "slug": "hakkari-kebabi",
+      "alternativeNames": [],
+      "category": "Kebaplar",
+      "subcategory": null,
+      "region": [
+        "Doğu Anadolu"
+      ],
+      "province": [
+        "Hakkâri"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Hakkâri yemek kültürü kaynağında kebaplar grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Hakkâri / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/hakkari/neyenir/hakkari-kebabi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Doğu Anadolu",
+        "Hakkâri",
+        "Kebaplar",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-b3161dcc493ae18a6fab",
+      "sourceRecordId": "kazan-kebabi",
+      "name": "KAZAN KEBABI",
+      "normalizedName": "kazan kebabi",
+      "slug": "kazan-kebabi",
+      "alternativeNames": [],
+      "category": "Kebaplar",
+      "subcategory": null,
+      "region": [
+        "Güneydoğu Anadolu"
+      ],
+      "province": [
+        "Şanlıurfa"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Şanlıurfa yemek kültürü kaynağında kebaplar grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Şanlıurfa / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/sanliurfa/neyenir/kazan-kebabi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Güneydoğu Anadolu",
+        "Şanlıurfa",
+        "Kebaplar",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-1bf746537b8980291a7c",
+      "sourceRecordId": "kebaplar",
+      "name": "KEBAPLAR",
+      "normalizedName": "kebaplar",
+      "slug": "kebaplar",
+      "alternativeNames": [],
+      "category": "Kebaplar",
+      "subcategory": null,
+      "region": [
+        "Güneydoğu Anadolu"
+      ],
+      "province": [
+        "Şanlıurfa"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Şanlıurfa yemek kültürü kaynağında kebaplar grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Şanlıurfa / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/sanliurfa/neyenir/kebaplar",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Güneydoğu Anadolu",
+        "Şanlıurfa",
+        "Kebaplar",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-da20e65872b18855e6dd",
+      "sourceRecordId": "maras-yogurtlu-kebap",
+      "name": "MARAŞ YOĞURTLU KEBAP",
+      "normalizedName": "maras yogurtlu kebap",
+      "slug": "maras-yogurtlu-kebap",
+      "alternativeNames": [],
+      "category": "Kebaplar",
+      "subcategory": null,
+      "region": [
+        "Akdeniz"
+      ],
+      "province": [
+        "Kahramanmaraş"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Kahramanmaraş yemek kültürü kaynağında kebaplar grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Kahramanmaraş / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/kahramanmaras/neyenir/maras-yogurtlu-kebap",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Akdeniz",
+        "Kahramanmaraş",
+        "Kebaplar",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-344f1926b1485cf1be37",
+      "sourceRecordId": "mfloylu-yalova-kebabi",
+      "name": "MİLFÖYLÜ YALOVA KEBABI",
+      "normalizedName": "milfoylu yalova kebabi",
+      "slug": "milfoylu-yalova-kebabi",
+      "alternativeNames": [],
+      "category": "Kebaplar",
+      "subcategory": null,
+      "region": [
+        "Marmara"
+      ],
+      "province": [
+        "Yalova"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Yalova yemek kültürü kaynağında kebaplar grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Yalova / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/yalova/neyenir/mfloylu-yalova-kebabi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Marmara",
+        "Yalova",
+        "Kebaplar",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-1181556bec8f4c027b73",
+      "sourceRecordId": "ramazan-kebabi",
+      "name": "RAMAZAN KEBABI",
+      "normalizedName": "ramazan kebabi",
+      "slug": "ramazan-kebabi",
+      "alternativeNames": [],
+      "category": "Kebaplar",
+      "subcategory": null,
+      "region": [
+        "Ege"
+      ],
+      "province": [
+        "Afyonkarahisar"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Afyonkarahisar yemek kültürü kaynağında kebaplar grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Afyonkarahisar / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/afyonkarahisar/neyenir/ramazan-kebabi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Ege",
+        "Afyonkarahisar",
+        "Kebaplar",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-318a14875b0803aa0e67",
+      "sourceRecordId": "sebzeli-sivas-kebabi",
+      "name": "SEBZELİ SİVAS KEBABI",
+      "normalizedName": "sebzeli sivas kebabi",
+      "slug": "sebzeli-sivas-kebabi",
+      "alternativeNames": [],
+      "category": "Kebaplar",
+      "subcategory": null,
+      "region": [
+        "İç Anadolu"
+      ],
+      "province": [
+        "Sivas"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Sivas yemek kültürü kaynağında kebaplar grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Sivas / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/sivas/neyenir/sebzeli-sivas-kebabi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "İç Anadolu",
+        "Sivas",
+        "Kebaplar",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-cea0bf42a449933f3972",
+      "sourceRecordId": "sirik-kebabi",
+      "name": "SIRIK KEBABI",
+      "normalizedName": "sirik kebabi",
+      "slug": "sirik-kebabi",
+      "alternativeNames": [],
+      "category": "Kebaplar",
+      "subcategory": null,
+      "region": [
+        "Karadeniz"
+      ],
+      "province": [
+        "Çorum"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Çorum yemek kültürü kaynağında kebaplar grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Çorum / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/corum/neyenir/sirik-kebabi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Karadeniz",
+        "Çorum",
+        "Kebaplar",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-34001e26c27a7fcb2b17",
+      "sourceRecordId": "tencerede-ss-kebap",
+      "name": "TENCEREDE ŞİŞ KEBAP",
+      "normalizedName": "tencerede sis kebap",
+      "slug": "tencerede-sis-kebap",
+      "alternativeNames": [],
+      "category": "Kebaplar",
+      "subcategory": null,
+      "region": [
+        "Doğu Anadolu"
+      ],
+      "province": [
+        "Kars"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Kars yemek kültürü kaynağında kebaplar grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Kars / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/kars/neyenir/tencerede-ss-kebap",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Doğu Anadolu",
+        "Kars",
+        "Kebaplar",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-0293de1af50cac753c30",
+      "sourceRecordId": "tirit-kebabi",
+      "name": "TİRİT KEBABI",
+      "normalizedName": "tirit kebabi",
+      "slug": "tirit-kebabi",
+      "alternativeNames": [],
+      "category": "Kebaplar",
+      "subcategory": null,
+      "region": [
+        "İç Anadolu"
+      ],
+      "province": [
+        "Konya"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Konya yemek kültürü kaynağında kebaplar grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Konya / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/konya/neyenir/tirit-kebabi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "İç Anadolu",
+        "Konya",
+        "Kebaplar",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-31b7f7ff84d382c727a2",
+      "sourceRecordId": "urfa-ciger-kebabi",
+      "name": "URFA CİĞER KEBABI",
+      "normalizedName": "urfa ciger kebabi",
+      "slug": "urfa-ciger-kebabi",
+      "alternativeNames": [],
+      "category": "Kebaplar",
+      "subcategory": null,
+      "region": [
+        "Güneydoğu Anadolu"
+      ],
+      "province": [
+        "Şanlıurfa"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Şanlıurfa yemek kültürü kaynağında kebaplar grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "ciğer"
+      ],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Şanlıurfa / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/sanliurfa/neyenir/urfa-ciger-kebabi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Güneydoğu Anadolu",
+        "Şanlıurfa",
+        "Kebaplar",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-a3540a571bfe4896b2ad",
+      "sourceRecordId": "urfa-hashas-kebabi",
+      "name": "URFA HAŞHAŞ KEBABI",
+      "normalizedName": "urfa hashas kebabi",
+      "slug": "urfa-hashas-kebabi",
+      "alternativeNames": [],
+      "category": "Kebaplar",
+      "subcategory": null,
+      "region": [
+        "Güneydoğu Anadolu"
+      ],
+      "province": [
+        "Şanlıurfa"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Şanlıurfa yemek kültürü kaynağında kebaplar grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Şanlıurfa / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/sanliurfa/neyenir/urfa-hashas-kebabi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Güneydoğu Anadolu",
+        "Şanlıurfa",
+        "Kebaplar",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-ea9bc30e25e5a598c19b",
+      "sourceRecordId": "tandir-kebabi492769",
+      "name": "YOZGAT TANDIR KEBABI",
+      "normalizedName": "yozgat tandir kebabi",
+      "slug": "yozgat-tandir-kebabi",
+      "alternativeNames": [],
+      "category": "Kebaplar",
+      "subcategory": null,
+      "region": [
+        "İç Anadolu"
+      ],
+      "province": [
+        "Yozgat"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Yozgat yemek kültürü kaynağında kebaplar grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [
+        "tandır"
+      ],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Yozgat / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/yozgat/neyenir/tandir-kebabi492769",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "İç Anadolu",
+        "Yozgat",
+        "Kebaplar",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    }
+  ]
+}

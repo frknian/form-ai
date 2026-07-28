@@ -2,41 +2,18 @@ import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { createClient } from "@supabase/supabase-js";
-import { calculateRecipeNutrition } from "../lib/recipe-nutrition.ts";
+import { normalizeTurkish, slugifyTurkish, validateCatalog } from "./turkish-food-catalog.mjs";
 
 const defaultSeed = fileURLToPath(new URL("../data/turkish-recipes.seed.json", import.meta.url));
-const sourceArgument = process.argv.find((argument) => argument.startsWith("--source="))?.slice(9);
-const seedPath = sourceArgument || defaultSeed;
-const dryRun = process.argv.includes("--dry-run");
+const argumentValue = (name) => process.argv.find((argument) => argument.startsWith(`--${name}=`))?.slice(name.length + 3);
+const seedPath = argumentValue("source") || defaultSeed;
+const categoryFilter = argumentValue("category");
+const regionFilter = argumentValue("region");
+const dryRun = process.argv.includes("--dry-run") || process.argv.includes("--report");
+const printReport = process.argv.includes("--report");
 
-function slugify(value) {
-  return String(value || "")
-    .toLocaleLowerCase("tr-TR")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replaceAll("ı", "i")
-    .replaceAll("ş", "s")
-    .replaceAll("ğ", "g")
-    .replaceAll("ç", "c")
-    .replaceAll("ö", "o")
-    .replaceAll("ü", "u")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
-}
-
-function searchText(dish) {
-  return [dish.name, ...(dish.alternativeNames || []), dish.region, dish.category]
-    .filter(Boolean)
-    .map(slugify)
-    .join(" ")
-    .replaceAll("-", " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function fingerprint(value) {
-  return createHash("sha256").update(JSON.stringify(value)).digest("hex");
-}
+const fingerprint = (value) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
+const isoNow = () => new Date().toISOString();
 
 function requiredString(value, label) {
   const text = typeof value === "string" ? value.trim() : "";
@@ -44,66 +21,66 @@ function requiredString(value, label) {
   return text;
 }
 
-function optionalPositive(value, label) {
-  if (value === null || value === undefined) return null;
-  const number = Number(value);
-  if (!Number.isFinite(number) || number <= 0) throw new Error(`${label} pozitif olmalıdır.`);
-  return number;
-}
-
-function validateDish(raw, index) {
+function normalizeDish(raw, index) {
   const name = requiredString(raw?.name, `dishes[${index}].name`);
-  const slug = raw.slug ? slugify(raw.slug) : slugify(name);
-  const version = requiredString(raw?.version || "1.0.0-review", `dishes[${index}].version`);
-  const ingredients = Array.isArray(raw.ingredients) ? raw.ingredients : [];
-  const cookedWeightGrams = optionalPositive(raw.cookedWeightGrams, `${slug}.cookedWeightGrams`);
-  const defaultPortionGrams = optionalPositive(raw.defaultPortionGrams, `${slug}.defaultPortionGrams`);
-  if (ingredients.length && (!cookedWeightGrams || !defaultPortionGrams)) {
-    throw new Error(`${slug}: malzemeli tariflerde pişmiş ağırlık ve porsiyon gramı zorunludur.`);
-  }
-  const normalizedIngredients = ingredients.map((ingredient, ingredientIndex) => ({
-    key: slugify(requiredString(ingredient.key || ingredient.name, `${slug}.ingredients[${ingredientIndex}].key`)),
-    name: requiredString(ingredient.name, `${slug}.ingredients[${ingredientIndex}].name`),
-    rawWeightGrams: optionalPositive(ingredient.rawWeightGrams, `${slug}.ingredients[${ingredientIndex}].rawWeightGrams`),
-    edibleYieldFactor: ingredient.edibleYieldFactor ?? 1,
-    nutrientRetentionFactor: ingredient.nutrientRetentionFactor ?? 1,
-    nutrition: ingredient.nutrition || null,
-    allergens: Array.isArray(ingredient.allergens) ? ingredient.allergens.map(String) : [],
-  }));
-  if (normalizedIngredients.some((ingredient) => !ingredient.rawWeightGrams)) {
-    throw new Error(`${slug}: her malzemenin gramajı zorunludur.`);
-  }
+  const slug = slugifyTurkish(raw.slug || name);
   return {
-    slug,
+    ...raw,
+    id: requiredString(raw.id, `${slug}.id`),
     name,
+    normalizedName: normalizeTurkish(raw.normalizedName || name),
+    slug,
     alternativeNames: Array.isArray(raw.alternativeNames) ? [...new Set(raw.alternativeNames.map(String).filter(Boolean))] : [],
-    category: requiredString(raw.category || "Diğer", `${slug}.category`),
-    region: typeof raw.region === "string" ? raw.region.trim() || null : null,
-    description: typeof raw.description === "string" ? raw.description.trim() || null : null,
+    category: requiredString(raw.category, `${slug}.category`),
+    subcategory: typeof raw.subcategory === "string" ? raw.subcategory.trim() || null : null,
+    region: Array.isArray(raw.region) ? [...new Set(raw.region.map(String).filter(Boolean))] : [],
+    province: Array.isArray(raw.province) ? [...new Set(raw.province.map(String).filter(Boolean))] : [],
+    district: Array.isArray(raw.district) ? [...new Set(raw.district.map(String).filter(Boolean))] : [],
+    cuisineTraditions: Array.isArray(raw.cuisineTraditions) ? [...new Set(raw.cuisineTraditions.map(String).filter(Boolean))] : [],
+    description: requiredString(raw.description, `${slug}.description`),
+    mainIngredients: Array.isArray(raw.mainIngredients) ? [...new Set(raw.mainIngredients.map(String).filter(Boolean))] : [],
+    ingredients: Array.isArray(raw.ingredients) ? raw.ingredients : [],
+    cookingMethods: Array.isArray(raw.cookingMethods) ? [...new Set(raw.cookingMethods.map(String).filter(Boolean))] : [],
+    mealTypes: Array.isArray(raw.mealTypes) ? [...new Set(raw.mealTypes.map(String).filter(Boolean))] : [],
     allergens: Array.isArray(raw.allergens) ? [...new Set(raw.allergens.map(String).filter(Boolean))] : [],
-    version,
-    variantName: typeof raw.variantName === "string" ? raw.variantName.trim() || null : null,
-    defaultPortionGrams,
-    cookedWeightGrams,
-    sourceCode: requiredString(raw.sourceCode || "form_ai_seed", `${slug}.sourceCode`),
-    sourceReference: typeof raw.sourceReference === "string" ? raw.sourceReference.trim() || null : null,
-    sourceLicense: raw.sourceLicense && typeof raw.sourceLicense === "object" ? raw.sourceLicense : {},
-    requestedReviewStatus: raw.reviewStatus === "published" ? "published" : "needs_review",
-    confidenceLevel: ["high", "medium", "low"].includes(raw.confidenceLevel) ? raw.confidenceLevel : "low",
-    ingredients: normalizedIngredients,
+    sources: Array.isArray(raw.sources) ? raw.sources : [],
+    tags: Array.isArray(raw.tags) ? [...new Set(raw.tags.map(String).filter(Boolean))] : [],
   };
 }
 
+function searchText(dish) {
+  const values = [
+    dish.name,
+    ...dish.alternativeNames,
+    dish.category,
+    dish.subcategory,
+    ...dish.region,
+    ...dish.province,
+    ...dish.district,
+    ...dish.mainIngredients,
+    ...dish.cookingMethods,
+    ...dish.tags,
+  ].filter(Boolean).map(normalizeTurkish);
+  return values.flatMap((value) => [value, value.replaceAll(" ", "")]).join(" ").replace(/\s+/g, " ").trim();
+}
+
 const seed = JSON.parse(await readFile(seedPath, "utf8"));
-if (seed?.schemaVersion !== 1 || !Array.isArray(seed.dishes)) throw new Error("Seed dosyası schemaVersion=1 ve dishes dizisi içermelidir.");
-const dishes = seed.dishes.map(validateDish);
-const duplicateSlugs = dishes.map((dish) => dish.slug).filter((slug, index, all) => all.indexOf(slug) !== index);
-if (duplicateSlugs.length) throw new Error(`Tekrarlanan slug: ${[...new Set(duplicateSlugs)].join(", ")}`);
-if (dishes.length < 190) throw new Error(`Başlangıç kataloğu en az 190 yemek içermelidir; bulunan: ${dishes.length}`);
+if (seed?.schemaVersion !== 2 || !Array.isArray(seed.dishes)) {
+  throw new Error("Seed dosyası schemaVersion=2 ve dishes dizisi içermelidir.");
+}
+const allDishes = seed.dishes.map(normalizeDish);
+const quality = validateCatalog(allDishes);
+if (!quality.valid) throw new Error(`Seed doğrulaması başarısız:\n${quality.invalidRecords.join("\n")}`);
+
+const dishes = allDishes.filter((dish) => (
+  (!categoryFilter || normalizeTurkish(dish.category) === normalizeTurkish(categoryFilter))
+  && (!regionFilter || dish.region.some((region) => normalizeTurkish(region) === normalizeTurkish(regionFilter)))
+));
+if (!dishes.length) throw new Error("Seçilen kategori/bölge için içe aktarılacak yemek bulunamadı.");
 
 if (dryRun) {
-  const reviewCount = dishes.filter((dish) => !dish.ingredients.length).length;
-  console.log(`Validated ${dishes.length} Turkish dishes (${reviewCount} needs ingredient review).`);
+  if (printReport) console.log(JSON.stringify(quality, null, 2));
+  else console.log(`Validated ${allDishes.length} Turkish dishes; selected ${dishes.length} (${quality.lesserKnownDishes} lesser-known, ${quality.representedProvinceCount} provinces).`);
   process.exit(0);
 }
 
@@ -112,98 +89,94 @@ const serviceKey = process.env.SUPABASE_SECRET_KEY?.trim();
 if (!supabaseUrl || !serviceKey) throw new Error("NEXT_PUBLIC_SUPABASE_URL ve SUPABASE_SECRET_KEY gereklidir.");
 const client = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
 
-let published = 0;
-let needsReview = 0;
+const counters = { inserted: 0, updated: 0, skipped: 0, failed: 0 };
+const failures = [];
 for (const dish of dishes) {
-  const calculation = dish.ingredients.length
-    ? calculateRecipeNutrition({
-        recipeSlug: dish.slug,
-        recipeVersion: dish.version,
-        cookedWeightGrams: dish.cookedWeightGrams,
-        defaultPortionGrams: dish.defaultPortionGrams,
-        ingredients: dish.ingredients,
-      })
-    : null;
-  const reviewStatus = dish.requestedReviewStatus === "published" && calculation && !calculation.needsReview
-    ? "published"
-    : "needs_review";
-  const dataFingerprint = fingerprint({ ...dish, calculation });
+  try {
+    const { data: existingDish } = await client.from("recipe_dishes").select("id").eq("slug", dish.slug).maybeSingle();
+    const { data: dishRow, error: dishError } = await client.from("recipe_dishes").upsert({
+      slug: dish.slug,
+      name: dish.name,
+      normalized_name: dish.normalizedName,
+      alternative_names: dish.alternativeNames,
+      category: dish.category,
+      subcategory: dish.subcategory,
+      region: dish.region[0] || null,
+      regions: dish.region,
+      provinces: dish.province,
+      districts: dish.district,
+      cuisine_traditions: dish.cuisineTraditions,
+      description: dish.description,
+      historical_note: dish.historicalNote,
+      main_ingredients: dish.mainIngredients,
+      cooking_methods: dish.cookingMethods,
+      serving_temperature: dish.servingTemperature,
+      meal_types: dish.mealTypes,
+      dietary_type: dish.dietaryType,
+      allergens: dish.allergens,
+      source_type: dish.sourceType,
+      sources: dish.sources,
+      is_regional: dish.isRegional,
+      is_lesser_known: dish.isLesserKnown,
+      variant_reason: dish.variantReason,
+      tags: dish.tags,
+      catalog_status: dish.catalogStatus || "visible",
+      search_text: searchText(dish),
+      updated_at: isoNow(),
+    }, { onConflict: "slug" }).select("id").single();
+    if (dishError || !dishRow) throw new Error(`yemek upsert başarısız (${dishError?.code || "unknown"})`);
 
-  const { data: dishRow, error: dishError } = await client.from("recipe_dishes").upsert({
-    slug: dish.slug,
-    name: dish.name,
-    alternative_names: dish.alternativeNames,
-    category: dish.category,
-    region: dish.region,
-    description: dish.description,
-    allergens: dish.allergens,
-    search_text: searchText(dish),
-    updated_at: new Date().toISOString(),
-  }, { onConflict: "slug" }).select("id").single();
-  if (dishError || !dishRow) throw new Error(`${dish.slug}: yemek upsert başarısız (${dishError?.code || "unknown"}).`);
+    const version = dish.recipeVersion || "1.0.0-catalog";
+    const { data: existingVersion } = await client
+      .from("recipe_versions")
+      .select("id,source_code,review_status,calories_per_100g,calculation_method")
+      .eq("dish_id", dishRow.id)
+      .eq("version", version)
+      .maybeSingle();
+    const manuallyCurated = existingVersion && (
+      existingVersion.source_code !== "culture_portal"
+      || existingVersion.review_status === "published"
+      || existingVersion.calculation_method !== "not_calculated"
+      || existingVersion.calories_per_100g !== null
+    );
+    if (manuallyCurated) {
+      counters.skipped += 1;
+      continue;
+    }
 
-  const { data: versionRow, error: versionError } = await client.from("recipe_versions").upsert({
-    dish_id: dishRow.id,
-    version: dish.version,
-    variant_name: dish.variantName,
-    default_portion_grams: dish.defaultPortionGrams,
-    cooked_weight_grams: dish.cookedWeightGrams,
-    calories_per_100g: calculation?.per100g.calories ?? null,
-    protein_per_100g: calculation?.per100g.protein ?? null,
-    carbs_per_100g: calculation?.per100g.carbohydrates ?? null,
-    fat_per_100g: calculation?.per100g.fat ?? null,
-    fiber_per_100g: calculation?.per100g.fiber ?? null,
-    source_code: dish.sourceCode,
-    source_reference: dish.sourceReference,
-    source_license_snapshot: dish.sourceLicense,
-    calculation_method: calculation?.calculationMethod === "incomplete" ? "not_calculated" : calculation?.calculationMethod || "not_calculated",
-    confidence_level: calculation?.confidence || dish.confidenceLevel,
-    review_status: reviewStatus,
-    data_fingerprint: dataFingerprint,
-    calculation_metadata: { seedSchemaVersion: seed.schemaVersion, warnings: calculation?.warnings || [] },
-    updated_at: new Date().toISOString(),
-  }, { onConflict: "dish_id,version" }).select("id").single();
-  if (versionError || !versionRow) throw new Error(`${dish.slug}: sürüm upsert başarısız (${versionError?.code || "unknown"}).`);
-
-  const { error: deleteIngredientsError } = await client.from("recipe_ingredients").delete().eq("recipe_version_id", versionRow.id);
-  if (deleteIngredientsError) throw new Error(`${dish.slug}: eski malzemeler temizlenemedi (${deleteIngredientsError.code}).`);
-  if (dish.ingredients.length) {
-    const { error: ingredientError } = await client.from("recipe_ingredients").insert(dish.ingredients.map((ingredient, index) => ({
-      recipe_version_id: versionRow.id,
-      position: index + 1,
-      ingredient_key: ingredient.key,
-      ingredient_name: ingredient.name,
-      raw_weight_grams: ingredient.rawWeightGrams,
-      edible_yield_factor: ingredient.edibleYieldFactor,
-      nutrient_retention_factor: ingredient.nutrientRetentionFactor,
-      source_code: ingredient.nutrition?.source || null,
-      source_id: ingredient.nutrition?.sourceId || null,
-      calories_per_100g: ingredient.nutrition?.caloriesPer100g ?? null,
-      protein_per_100g: ingredient.nutrition?.proteinPer100g ?? null,
-      carbs_per_100g: ingredient.nutrition?.carbohydratesPer100g ?? null,
-      fat_per_100g: ingredient.nutrition?.fatPer100g ?? null,
-      fiber_per_100g: ingredient.nutrition?.fiberPer100g ?? null,
-      confidence_level: ingredient.nutrition?.confidence || "low",
-      allergens: ingredient.allergens,
-    })));
-    if (ingredientError) throw new Error(`${dish.slug}: malzemeler eklenemedi (${ingredientError.code}).`);
+    const source = dish.sources[0] || null;
+    const nutrition = dish.nutritionPer100g;
+    const { error: versionError } = await client.from("recipe_versions").upsert({
+      dish_id: dishRow.id,
+      version,
+      variant_name: null,
+      default_portion_grams: dish.defaultServingGrams,
+      cooked_weight_grams: dish.recipeYieldGrams,
+      calories_per_100g: nutrition?.energyKcal ?? null,
+      protein_per_100g: nutrition?.proteinG ?? null,
+      carbs_per_100g: nutrition?.carbohydrateG ?? null,
+      fat_per_100g: nutrition?.fatG ?? null,
+      fiber_per_100g: nutrition?.fiberG ?? null,
+      sugar_per_100g: nutrition?.sugarG ?? null,
+      sodium_mg_per_100g: nutrition?.sodiumMg ?? null,
+      source_code: "culture_portal",
+      source_reference: source?.url || null,
+      source_license_snapshot: { license: source?.license || null, publisher: source?.publisher || null, notes: source?.notes || null },
+      calculation_method: nutrition ? "provider_energy" : "not_calculated",
+      confidence_level: dish.confidence,
+      review_status: dish.needsReview ? "needs_review" : "published",
+      data_fingerprint: fingerprint(dish),
+      calculation_metadata: { seedSchemaVersion: seed.schemaVersion, sourceRecordId: dish.sourceRecordId },
+      updated_at: isoNow(),
+    }, { onConflict: "dish_id,version" });
+    if (versionError) throw new Error(`sürüm upsert başarısız (${versionError.code})`);
+    if (existingDish) counters.updated += 1;
+    else counters.inserted += 1;
+  } catch (error) {
+    counters.failed += 1;
+    failures.push({ slug: dish.slug, error: error instanceof Error ? error.message : String(error) });
   }
-
-  if (calculation) {
-    const { error: auditError } = await client.from("recipe_calculation_runs").upsert({
-      recipe_version_id: versionRow.id,
-      calculator_version: "recipe-nutrition/1.0.0",
-      calculation_method: calculation.calculationMethod,
-      data_fingerprint: dataFingerprint,
-      input_snapshot: dish,
-      output_snapshot: calculation,
-      warnings: calculation.warnings,
-    }, { onConflict: "recipe_version_id,data_fingerprint" });
-    if (auditError) throw new Error(`${dish.slug}: hesaplama izi kaydedilemedi (${auditError.code}).`);
-  }
-
-  if (reviewStatus === "published") published += 1;
-  else needsReview += 1;
 }
 
-console.log(`Imported ${dishes.length} Turkish dishes: ${published} published, ${needsReview} needs review.`);
+console.log(JSON.stringify({ selected: dishes.length, ...counters, failures }, null, 2));
+if (failures.length) process.exitCode = 1;

@@ -1,0 +1,632 @@
+{
+  "schemaVersion": 2,
+  "category": "Yumurtalı yemekler",
+  "dishes": [
+    {
+      "id": "tr-ac54714202ad5a5a4a9c",
+      "sourceRecordId": "amasya-clbr",
+      "name": "AMASYA CİLBİRİ",
+      "normalizedName": "amasya cilbiri",
+      "slug": "amasya-cilbiri",
+      "alternativeNames": [],
+      "category": "Yumurtalı yemekler",
+      "subcategory": null,
+      "region": [
+        "Karadeniz"
+      ],
+      "province": [
+        "Amasya"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Amasya yemek kültürü kaynağında yumurtalı yemekler grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "breakfast"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Amasya / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/amasya/neyenir/amasya-clbr",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Karadeniz",
+        "Amasya",
+        "Yumurtalı yemekler",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-02154259b83beb6a5ad4",
+      "sourceRecordId": "cakalli-menemeni",
+      "name": "ÇAKALLI MENEMENİ",
+      "normalizedName": "cakalli menemeni",
+      "slug": "cakalli-menemeni",
+      "alternativeNames": [],
+      "category": "Yumurtalı yemekler",
+      "subcategory": null,
+      "region": [
+        "Karadeniz"
+      ],
+      "province": [
+        "Samsun"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Samsun yemek kültürü kaynağında yumurtalı yemekler grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "breakfast"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Samsun / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/samsun/neyenir/cakalli-menemeni",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Karadeniz",
+        "Samsun",
+        "Yumurtalı yemekler",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-cd76880c9b536a8e856b",
+      "sourceRecordId": "mihli--kiymali-yumurta---6-kisilik-",
+      "name": "MIHLI KIYMALI YUMURTA",
+      "normalizedName": "mihli kiymali yumurta",
+      "slug": "mihli-kiymali-yumurta",
+      "alternativeNames": [],
+      "category": "Yumurtalı yemekler",
+      "subcategory": null,
+      "region": [
+        "Akdeniz"
+      ],
+      "province": [
+        "Antalya"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Antalya yemek kültürü kaynağında yumurtalı yemekler grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "yumurta"
+      ],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "breakfast"
+      ],
+      "dietaryType": null,
+      "allergens": [
+        "yumurta"
+      ],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Antalya / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/antalya/neyenir/mihli--kiymali-yumurta---6-kisilik-",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Akdeniz",
+        "Antalya",
+        "Yumurtalı yemekler",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-c35607ba3d8b64d546d7",
+      "sourceRecordId": "urfa-yumurtali-kofte",
+      "name": "URFA YUMURTALI KÖFTE",
+      "normalizedName": "urfa yumurtali kofte",
+      "slug": "urfa-yumurtali-kofte",
+      "alternativeNames": [],
+      "category": "Yumurtalı yemekler",
+      "subcategory": null,
+      "region": [
+        "Güneydoğu Anadolu"
+      ],
+      "province": [
+        "Şanlıurfa"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Şanlıurfa yemek kültürü kaynağında yumurtalı yemekler grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "breakfast"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Şanlıurfa / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/sanliurfa/neyenir/urfa-yumurtali-kofte",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Güneydoğu Anadolu",
+        "Şanlıurfa",
+        "Yumurtalı yemekler",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-0663745961a0b80f6e22",
+      "sourceRecordId": "yumurta-dolmasi680302",
+      "name": "YUMURTA DOLMASI",
+      "normalizedName": "yumurta dolmasi",
+      "slug": "yumurta-dolmasi",
+      "alternativeNames": [],
+      "category": "Yumurtalı yemekler",
+      "subcategory": null,
+      "region": [
+        "Marmara"
+      ],
+      "province": [
+        "Kocaeli"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Kocaeli yemek kültürü kaynağında yumurtalı yemekler grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "yumurta"
+      ],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "breakfast"
+      ],
+      "dietaryType": null,
+      "allergens": [
+        "yumurta"
+      ],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Kocaeli / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/kocaeli/neyenir/yumurta-dolmasi680302",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Marmara",
+        "Kocaeli",
+        "Yumurtalı yemekler",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-78a90736033efe82789a",
+      "sourceRecordId": "yumurta-eristesi-pilavi",
+      "name": "YUMURTA ERİŞTESİ PİLAVI",
+      "normalizedName": "yumurta eristesi pilavi",
+      "slug": "yumurta-eristesi-pilavi",
+      "alternativeNames": [],
+      "category": "Yumurtalı yemekler",
+      "subcategory": null,
+      "region": [
+        "İç Anadolu"
+      ],
+      "province": [
+        "Sivas"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Sivas yemek kültürü kaynağında yumurtalı yemekler grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "yumurta"
+      ],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "breakfast"
+      ],
+      "dietaryType": null,
+      "allergens": [
+        "yumurta"
+      ],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Sivas / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/sivas/neyenir/yumurta-eristesi-pilavi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "İç Anadolu",
+        "Sivas",
+        "Yumurtalı yemekler",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-a0c9b9e4e00e48263fec",
+      "sourceRecordId": "yumurta-helva",
+      "name": "YUMURTA HELVASI",
+      "normalizedName": "yumurta helvasi",
+      "slug": "yumurta-helvasi",
+      "alternativeNames": [],
+      "category": "Yumurtalı yemekler",
+      "subcategory": null,
+      "region": [
+        "Marmara"
+      ],
+      "province": [
+        "Çanakkale"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Çanakkale yemek kültürü kaynağında yumurtalı yemekler grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "yumurta"
+      ],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "breakfast"
+      ],
+      "dietaryType": null,
+      "allergens": [
+        "yumurta"
+      ],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Çanakkale / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/canakkale/neyenir/yumurta-helva",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Marmara",
+        "Çanakkale",
+        "Yumurtalı yemekler",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-c83dadca4292cbf734dc",
+      "sourceRecordId": "yumurtali-kenger",
+      "name": "YUMURTALI KENGER",
+      "normalizedName": "yumurtali kenger",
+      "slug": "yumurtali-kenger",
+      "alternativeNames": [],
+      "category": "Yumurtalı yemekler",
+      "subcategory": null,
+      "region": [
+        "Güneydoğu Anadolu"
+      ],
+      "province": [
+        "Diyarbakır"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Diyarbakır yemek kültürü kaynağında yumurtalı yemekler grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "breakfast"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Diyarbakır / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/diyarbakir/neyenir/yumurtali-kenger",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Güneydoğu Anadolu",
+        "Diyarbakır",
+        "Yumurtalı yemekler",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-6183dc7d8e4df527004f",
+      "sourceRecordId": "yumurtali-tiken",
+      "name": "YUMURTALI TİKEN",
+      "normalizedName": "yumurtali tiken",
+      "slug": "yumurtali-tiken",
+      "alternativeNames": [],
+      "category": "Yumurtalı yemekler",
+      "subcategory": null,
+      "region": [
+        "Marmara"
+      ],
+      "province": [
+        "Çanakkale"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Çanakkale yemek kültürü kaynağında yumurtalı yemekler grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "breakfast"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Çanakkale / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/canakkale/neyenir/yumurtali-tiken",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Marmara",
+        "Çanakkale",
+        "Yumurtalı yemekler",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-2e2fcb540bfd2f501a97",
+      "sourceRecordId": "yumurtali-tilkisen-kavurmasi",
+      "name": "YUMURTALI TİLKİŞEN KAVURMASI",
+      "normalizedName": "yumurtali tilkisen kavurmasi",
+      "slug": "yumurtali-tilkisen-kavurmasi",
+      "alternativeNames": [],
+      "category": "Yumurtalı yemekler",
+      "subcategory": null,
+      "region": [
+        "Ege"
+      ],
+      "province": [
+        "Muğla"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Muğla yemek kültürü kaynağında yumurtalı yemekler grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "breakfast"
+      ],
+      "dietaryType": null,
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Muğla / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/mugla/neyenir/yumurtali-tilkisen-kavurmasi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Ege",
+        "Muğla",
+        "Yumurtalı yemekler",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    }
+  ]
+}

@@ -50,6 +50,15 @@ interface CalorieTrackerProps {
 }
 
 const meals: Meal[] = ["Kahvaltı", "Öğle yemeği", "Akşam yemeği", "Atıştırmalık"];
+const recipeCategories = [
+  "Çorbalar", "Kahvaltılıklar", "Yumurtalı yemekler", "Etli tencere ve tava yemekleri",
+  "Tavuk ve kümes hayvanı yemekleri", "Balık ve deniz ürünleri", "Kebaplar", "Köfteler",
+  "Sebze yemekleri", "Zeytinyağlılar", "Bakliyat yemekleri", "Dolma ve sarmalar",
+  "Pilavlar", "Mantı, erişte ve makarna türleri", "Börekler ve hamur işleri",
+  "Ekmek, pide ve çörekler", "Salatalar", "Mezeler ve ezmeler", "Tatlılar",
+  "Geleneksel içecekler",
+];
+const turkishRegions = ["Marmara", "Ege", "Akdeniz", "İç Anadolu", "Karadeniz", "Doğu Anadolu", "Güneydoğu Anadolu"];
 const seedTime = new Date().toISOString();
 const initialEntries: FoodEntry[] = [
   { id: "seed-yogurt", name: "Yoğurtlu yulaf kasesi", meal: "Kahvaltı", calories: 385, protein: 19, carbs: 48, fat: 12, time: "08:35", consumedAt: seedTime, source: "Manuel" },
@@ -134,6 +143,16 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
   const [searchResults, setSearchResults] = useState<FoodSearchResult[]>([]);
   const [searchState, setSearchState] = useState<"idle" | "loading" | "ready" | "empty" | "error">("idle");
   const [searchNotice, setSearchNotice] = useState("");
+  const [catalogCategory, setCatalogCategory] = useState("");
+  const [catalogSubcategory, setCatalogSubcategory] = useState("");
+  const [catalogRegion, setCatalogRegion] = useState("");
+  const [catalogProvince, setCatalogProvince] = useState("");
+  const [catalogIngredient, setCatalogIngredient] = useState("");
+  const [catalogDietary, setCatalogDietary] = useState("");
+  const [catalogAllergen, setCatalogAllergen] = useState("");
+  const [catalogMethod, setCatalogMethod] = useState("");
+  const [catalogLesserKnown, setCatalogLesserKnown] = useState(false);
+  const [catalogNutritionVerified, setCatalogNutritionVerified] = useState(false);
   const [barcode, setBarcode] = useState("");
   const [isScanning, setIsScanning] = useState(false);
   const [aiEstimate, setAiEstimate] = useState<{ grams: number; items: string[]; confidence: "low" | "medium" | "high" } | null>(null);
@@ -227,7 +246,18 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
       return;
     }
     const query = foodName.trim();
-    const cacheKey = query.toLocaleLowerCase("tr-TR");
+    const params = new URLSearchParams({ q: query });
+    if (catalogCategory) params.set("category", catalogCategory);
+    if (catalogSubcategory) params.set("subcategory", catalogSubcategory);
+    if (catalogRegion) params.set("region", catalogRegion);
+    if (catalogProvince) params.set("province", catalogProvince);
+    if (catalogIngredient) params.set("ingredient", catalogIngredient);
+    if (catalogDietary) params.set("dietary", catalogDietary);
+    if (catalogAllergen) params.set("allergen", catalogAllergen);
+    if (catalogMethod) params.set("method", catalogMethod);
+    if (catalogLesserKnown) params.set("lesserKnown", "true");
+    if (catalogNutritionVerified) params.set("nutritionVerified", "true");
+    const cacheKey = params.toString().toLocaleLowerCase("tr-TR");
     const cached = productSearchCache.current.get(cacheKey);
     if (cached) {
       queueMicrotask(() => {
@@ -242,7 +272,7 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
       setSearchState("loading");
       setSearchNotice("");
       try {
-        const response = await authorizedFetch(`/api/nutrition/search?q=${encodeURIComponent(query)}`, { signal: controller.signal });
+        const response = await authorizedFetch(`/api/nutrition/search?${params.toString()}`, { signal: controller.signal });
         const result = await response.json().catch(() => ({})) as { results?: FoodSearchResult[]; error?: string; notice?: string };
         if (controller.signal.aborted) return;
         const results = Array.isArray(result.results) ? result.results : [];
@@ -258,7 +288,7 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
       }
     }, 650);
     return () => { controller.abort(); window.clearTimeout(timer); };
-  }, [activeMethod, foodName, selectedProduct?.name, t]);
+  }, [activeMethod, catalogAllergen, catalogCategory, catalogDietary, catalogIngredient, catalogLesserKnown, catalogMethod, catalogNutritionVerified, catalogProvince, catalogRegion, catalogSubcategory, foodName, selectedProduct?.name, t]);
 
   useEffect(() => {
     if (!isScanning) return;
@@ -606,7 +636,7 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
     const previous = Number(grams.replace(",", "."));
     setGrams(value);
     if (!Number.isFinite(next) || next <= 0 || next > 5_000) return;
-    if (selectedProduct) {
+    if (selectedProduct?.nutritionPer100g) {
       setNutrition(scaleFoodNutrition(selectedProduct.nutritionPer100g, next));
       return;
     }
@@ -617,7 +647,7 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
     setPortionCount(value);
     const count = Number(value.replace(",", "."));
     const serving = selectedProduct?.servingGrams;
-    if (!serving || !Number.isFinite(count) || count <= 0 || count > 20) return;
+    if (!serving || !selectedProduct?.nutritionPer100g || !Number.isFinite(count) || count <= 0 || count > 20) return;
     const nextGrams = Math.round(serving * count * 10) / 10;
     setGrams(String(nextGrams));
     setNutrition(scaleFoodNutrition(selectedProduct.nutritionPer100g, nextGrams));
@@ -629,6 +659,14 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
   }
 
   function selectProduct(product: FoodSearchResult) {
+    if (!product.nutritionPer100g) {
+      setFoodName(product.name);
+      setSelectedProduct(null);
+      setMessage(locale === "en"
+        ? "Nutrition has not been verified yet. You can enter the portion and values manually."
+        : "Besin değeri henüz doğrulanmadı. Porsiyon ve değerleri elle girebilirsiniz.");
+      return;
+    }
     const serving = product.servingGrams || 100;
     setFoodName(product.name);
     setGrams(String(serving));
@@ -715,8 +753,23 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
           </div>
           {activeMethod === "manual" && foodName.trim().length >= 2 && <div className={`food-search-panel ${searchState}`} aria-live="polite">
             <div className="food-search-heading"><strong>{t.calorieTracker.productSearchLabel}</strong><span>{searchState === "loading" ? t.calorieTracker.searchingCatalog : selectedProduct ? t.calorieTracker.productSelected : t.calorieTracker.typeProductName}</span></div>
+            <details className="food-catalog-filters">
+              <summary>{locale === "en" ? "Turkish food filters" : "Türk yemeği filtreleri"}</summary>
+              <div>
+                <label>{locale === "en" ? "Category" : "Kategori"}<select value={catalogCategory} onChange={(event) => setCatalogCategory(event.target.value)}><option value="">{locale === "en" ? "All" : "Tümü"}</option>{recipeCategories.map((category) => <option key={category} value={category}>{category}</option>)}</select></label>
+                <label>{locale === "en" ? "Subcategory" : "Alt kategori"}<input value={catalogSubcategory} onChange={(event) => setCatalogSubcategory(event.target.value)} /></label>
+                <label>{locale === "en" ? "Region" : "Bölge"}<select value={catalogRegion} onChange={(event) => setCatalogRegion(event.target.value)}><option value="">{locale === "en" ? "All" : "Tümü"}</option>{turkishRegions.map((region) => <option key={region} value={region}>{region}</option>)}</select></label>
+                <label>{locale === "en" ? "Province" : "İl"}<input value={catalogProvince} onChange={(event) => setCatalogProvince(event.target.value)} placeholder={locale === "en" ? "e.g. Gaziantep" : "örn. Gaziantep"} /></label>
+                <label>{locale === "en" ? "Main ingredient" : "Ana malzeme"}<input value={catalogIngredient} onChange={(event) => setCatalogIngredient(event.target.value)} /></label>
+                <label>{locale === "en" ? "Diet" : "Beslenme türü"}<select value={catalogDietary} onChange={(event) => setCatalogDietary(event.target.value)}><option value="">{locale === "en" ? "All" : "Tümü"}</option><option value="meat">{locale === "en" ? "Meat" : "Etli"}</option><option value="poultry">{locale === "en" ? "Poultry" : "Kümes hayvanı"}</option><option value="fish">{locale === "en" ? "Fish" : "Balık"}</option><option value="vegetarian">{locale === "en" ? "Vegetarian" : "Vejetaryen"}</option><option value="vegan">Vegan</option></select></label>
+                <label>{locale === "en" ? "Allergen" : "Alerjen"}<input value={catalogAllergen} onChange={(event) => setCatalogAllergen(event.target.value)} placeholder={locale === "en" ? "e.g. milk" : "örn. süt"} /></label>
+                <label>{locale === "en" ? "Cooking method" : "Pişirme yöntemi"}<input value={catalogMethod} onChange={(event) => setCatalogMethod(event.target.value)} placeholder={locale === "en" ? "e.g. oven" : "örn. fırınlama"} /></label>
+                <label className="food-filter-check"><input type="checkbox" checked={catalogLesserKnown} onChange={(event) => setCatalogLesserKnown(event.target.checked)} />{locale === "en" ? "Lesser-known only" : "Yalnızca az bilinenler"}</label>
+                <label className="food-filter-check"><input type="checkbox" checked={catalogNutritionVerified} onChange={(event) => setCatalogNutritionVerified(event.target.checked)} />{locale === "en" ? "Verified nutrition only" : "Yalnızca doğrulanmış besin değeri"}</label>
+              </div>
+            </details>
             {searchState === "loading" && <div className="food-search-loading"><i /><i /><i /> {t.calorieTracker.preparingResults}</div>}
-            {searchState === "ready" && <div className="food-search-results">{searchResults.map((product) => <button type="button" key={product.id} onClick={() => selectProduct(product)}><span><strong>{product.name}</strong>{product.kind === "recipe" ? <small>{t.calorieTracker.standardRecipe(product.recipeVersion || "")}</small> : product.brand && <small>{product.brand}</small>}</span><b>{product.kind === "recipe" && product.servingGrams ? scaleFoodNutrition(product.nutritionPer100g, product.servingGrams).calories : product.nutritionPer100g.calories} kcal<small>{product.kind === "recipe" ? t.calorieTracker.perPortionSuffix : "/100 g"}</small></b></button>)}</div>}
+            {searchState === "ready" && <div className="food-search-results">{searchResults.map((product) => <button type="button" key={product.id} onClick={() => selectProduct(product)}><span><strong>{product.name}</strong>{product.kind === "recipe" ? <small>{[product.category, ...(product.provinces || []), product.isLesserKnown ? (locale === "en" ? "lesser-known" : "az bilinen") : ""].filter(Boolean).join(" · ")}</small> : product.brand && <small>{product.brand}</small>}{product.parentRecipeSlug && <small>{locale === "en" ? "Regional variant" : "Yöresel çeşit"}: {product.parentRecipeSlug}</small>}</span>{product.nutritionPer100g ? <b>{product.kind === "recipe" && product.servingGrams ? scaleFoodNutrition(product.nutritionPer100g, product.servingGrams).calories : product.nutritionPer100g.calories} kcal<small>{product.kind === "recipe" && product.servingGrams ? t.calorieTracker.perPortionSuffix : "/100 g"}</small></b> : <b className="nutrition-pending">{locale === "en" ? "Nutrition not verified yet" : "Besin değeri henüz doğrulanmadı"}</b>}</button>)}</div>}
             {(searchState === "empty" || searchState === "error") && <div className="food-search-empty"><strong>{searchState === "error" ? t.calorieTracker.catalogUnavailable : t.calorieTracker.noResultsFound}</strong><span>{searchNotice || t.calorieTracker.manualFallbackNote}</span><button type="button" className="ai-estimate-btn" disabled={estimating} onClick={() => void estimateFromText()}><Sparkles size={14} /> {estimating ? t.calorieTracker.estimating : t.calorieTracker.estimateWithAi}</button></div>}
             {selectedProduct && <div className="selected-food-summary"><span><strong>{selectedProduct.name}</strong><small>{t.calorieTracker.perGram(formatAmount(Number(grams) || 0, dateLocale))}</small></span><b>{nutrition.calories} kcal</b><p>{t.calorieTracker.fiberLabel(formatAmount(nutrition.fiber, dateLocale))}{Object.entries(nutrition.micros).filter(([, value]) => Number(value) > 0).slice(0, 3).map(([key, value]) => ` · ${microLabel(t, key as keyof FoodMicronutrients)} ${formatAmount(Number(value), dateLocale)} mg`).join("")}</p></div>}
           </div>}

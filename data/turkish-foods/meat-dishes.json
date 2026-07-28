@@ -1,0 +1,2212 @@
+{
+  "schemaVersion": 2,
+  "category": "Etli tencere ve tava yemekleri",
+  "dishes": [
+    {
+      "id": "tr-fcd71be75f2f2ff6573b",
+      "sourceRecordId": "alasehr-kapamasi",
+      "name": "ALAŞEHİR KAPAMASI",
+      "normalizedName": "alasehir kapamasi",
+      "slug": "alasehir-kapamasi",
+      "alternativeNames": [],
+      "category": "Etli tencere ve tava yemekleri",
+      "subcategory": null,
+      "region": [
+        "Ege"
+      ],
+      "province": [
+        "Manisa"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Manisa yemek kültürü kaynağında etli tencere ve tava yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Manisa / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/manisa/neyenir/alasehr-kapamasi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Ege",
+        "Manisa",
+        "Etli tencere ve tava yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-05b68fb74c26b957d983",
+      "sourceRecordId": "ayvali-kavurma",
+      "name": "AYVALI KAVURMA",
+      "normalizedName": "ayvali kavurma",
+      "slug": "ayvali-kavurma",
+      "alternativeNames": [],
+      "category": "Etli tencere ve tava yemekleri",
+      "subcategory": null,
+      "region": [
+        "Güneydoğu Anadolu"
+      ],
+      "province": [
+        "Diyarbakır"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Diyarbakır yemek kültürü kaynağında etli tencere ve tava yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Diyarbakır / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/diyarbakir/neyenir/ayvali-kavurma",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Güneydoğu Anadolu",
+        "Diyarbakır",
+        "Etli tencere ve tava yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-caf88a226c93c04ed500",
+      "sourceRecordId": "beypazari-kusbasili-guvec",
+      "name": "BEYPAZARI KUŞBAŞILI GÜVEÇ",
+      "normalizedName": "beypazari kusbasili guvec",
+      "slug": "beypazari-kusbasili-guvec",
+      "alternativeNames": [],
+      "category": "Etli tencere ve tava yemekleri",
+      "subcategory": null,
+      "region": [
+        "İç Anadolu"
+      ],
+      "province": [
+        "Ankara"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Ankara yemek kültürü kaynağında etli tencere ve tava yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [
+        "güveçte pişirme"
+      ],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Ankara / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/ankara/neyenir/beypazari-kusbasili-guvec",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "İç Anadolu",
+        "Ankara",
+        "Etli tencere ve tava yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-b0c8d4738753b8930cdb",
+      "sourceRecordId": "buryan-perive",
+      "name": "Büryan (Perive)",
+      "normalizedName": "buryan perive",
+      "slug": "buryan-perive",
+      "alternativeNames": [
+        "Perive"
+      ],
+      "category": "Etli tencere ve tava yemekleri",
+      "subcategory": null,
+      "region": [
+        "Güneydoğu Anadolu"
+      ],
+      "province": [
+        "Siirt"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Siirt yemek kültürü kaynağında etli tencere ve tava yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Siirt / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/siirt/neyenir/buryan-perive",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Güneydoğu Anadolu",
+        "Siirt",
+        "Etli tencere ve tava yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-142745b40b184706e7a6",
+      "sourceRecordId": "butun-et-yemegi-",
+      "name": "BÜTÜN ET YEMEĞİ",
+      "normalizedName": "butun et yemegi",
+      "slug": "butun-et-yemegi",
+      "alternativeNames": [],
+      "category": "Etli tencere ve tava yemekleri",
+      "subcategory": null,
+      "region": [
+        "Karadeniz"
+      ],
+      "province": [
+        "Karabük"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Karabük yemek kültürü kaynağında etli tencere ve tava yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Karabük / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/karabuk/neyenir/butun-et-yemegi-",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Karadeniz",
+        "Karabük",
+        "Etli tencere ve tava yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-ca7cdf6f5edee5a79339",
+      "sourceRecordId": "cigceli-kavurma",
+      "name": "CİĞCELİ KAVURMA",
+      "normalizedName": "cigceli kavurma",
+      "slug": "cigceli-kavurma",
+      "alternativeNames": [],
+      "category": "Etli tencere ve tava yemekleri",
+      "subcategory": null,
+      "region": [
+        "Marmara"
+      ],
+      "province": [
+        "Kocaeli"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Kocaeli yemek kültürü kaynağında etli tencere ve tava yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Kocaeli / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/kocaeli/neyenir/cigceli-kavurma",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Marmara",
+        "Kocaeli",
+        "Etli tencere ve tava yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-780dbfdd420ea81b3d7f",
+      "sourceRecordId": "ciger-kavurma-1",
+      "name": "CİĞER KAVURMA",
+      "normalizedName": "ciger kavurma",
+      "slug": "ciger-kavurma",
+      "alternativeNames": [],
+      "category": "Etli tencere ve tava yemekleri",
+      "subcategory": null,
+      "region": [
+        "Doğu Anadolu"
+      ],
+      "province": [
+        "Bitlis"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Bitlis yemek kültürü kaynağında etli tencere ve tava yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "ciğer"
+      ],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Bitlis / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/bitlis/neyenir/ciger-kavurma-1",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Doğu Anadolu",
+        "Bitlis",
+        "Etli tencere ve tava yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-1547c52d3c69aaa9a3df",
+      "sourceRecordId": "celem-yahnisi",
+      "name": "ÇELEM YAHNİSİ",
+      "normalizedName": "celem yahnisi",
+      "slug": "celem-yahnisi",
+      "alternativeNames": [],
+      "category": "Etli tencere ve tava yemekleri",
+      "subcategory": null,
+      "region": [
+        "Doğu Anadolu"
+      ],
+      "province": [
+        "Malatya"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Malatya yemek kültürü kaynağında etli tencere ve tava yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [
+        "haşlama"
+      ],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Malatya / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/malatya/neyenir/celem-yahnisi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Doğu Anadolu",
+        "Malatya",
+        "Etli tencere ve tava yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-fe7d251abdc6e4ef847d",
+      "sourceRecordId": "crs-kavurmasi",
+      "name": "ÇİRİŞ KAVURMASI",
+      "normalizedName": "ciris kavurmasi",
+      "slug": "ciris-kavurmasi",
+      "alternativeNames": [],
+      "category": "Etli tencere ve tava yemekleri",
+      "subcategory": null,
+      "region": [
+        "Doğu Anadolu"
+      ],
+      "province": [
+        "Van"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Van yemek kültürü kaynağında etli tencere ve tava yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Van / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/van/neyenir/crs-kavurmasi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Doğu Anadolu",
+        "Van",
+        "Etli tencere ve tava yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-61a3e622ee384e86041f",
+      "sourceRecordId": "guvec-comlekte",
+      "name": "ÇÖMLEKTE GÜVEÇ",
+      "normalizedName": "comlekte guvec",
+      "slug": "comlekte-guvec",
+      "alternativeNames": [],
+      "category": "Etli tencere ve tava yemekleri",
+      "subcategory": null,
+      "region": [
+        "Güneydoğu Anadolu"
+      ],
+      "province": [
+        "Diyarbakır"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Diyarbakır yemek kültürü kaynağında etli tencere ve tava yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [
+        "güveçte pişirme"
+      ],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Diyarbakır / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/diyarbakir/neyenir/guvec-comlekte",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Güneydoğu Anadolu",
+        "Diyarbakır",
+        "Etli tencere ve tava yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-54d344aca4f1f397238d",
+      "sourceRecordId": "daday-etli-ekmegi",
+      "name": "DADAY ETLİ EKMEĞİ",
+      "normalizedName": "daday etli ekmegi",
+      "slug": "daday-etli-ekmegi",
+      "alternativeNames": [],
+      "category": "Etli tencere ve tava yemekleri",
+      "subcategory": null,
+      "region": [
+        "Karadeniz"
+      ],
+      "province": [
+        "Kastamonu"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Kastamonu yemek kültürü kaynağında etli tencere ve tava yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Kastamonu / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/kastamonu/neyenir/daday-etli-ekmegi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Karadeniz",
+        "Kastamonu",
+        "Etli tencere ve tava yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-0cda41629534f78bc0fe",
+      "sourceRecordId": "damat-pacasi",
+      "name": "DAMAT PAÇASI",
+      "normalizedName": "damat pacasi",
+      "slug": "damat-pacasi",
+      "alternativeNames": [],
+      "category": "Etli tencere ve tava yemekleri",
+      "subcategory": null,
+      "region": [
+        "Marmara"
+      ],
+      "province": [
+        "Bursa"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Bursa yemek kültürü kaynağında etli tencere ve tava yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Bursa / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/bursa/neyenir/damat-pacasi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Marmara",
+        "Bursa",
+        "Etli tencere ve tava yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-ee84a1a97a1873d70f91",
+      "sourceRecordId": "edirne-tava-ciger",
+      "name": "EDİRNE TAVA CİĞER",
+      "normalizedName": "edirne tava ciger",
+      "slug": "edirne-tava-ciger",
+      "alternativeNames": [],
+      "category": "Etli tencere ve tava yemekleri",
+      "subcategory": null,
+      "region": [
+        "Marmara"
+      ],
+      "province": [
+        "Edirne"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Edirne yemek kültürü kaynağında etli tencere ve tava yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "ciğer"
+      ],
+      "ingredients": [],
+      "cookingMethods": [
+        "tavada pişirme"
+      ],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Edirne / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/edirne/neyenir/edirne-tava-ciger",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Marmara",
+        "Edirne",
+        "Etli tencere ve tava yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-6ede5decc8dcecac6185",
+      "sourceRecordId": "eksili-et-kabagi-sulusu",
+      "name": "EKŞİLİ ET KABAĞI SULUSU",
+      "normalizedName": "eksili et kabagi sulusu",
+      "slug": "eksili-et-kabagi-sulusu",
+      "alternativeNames": [],
+      "category": "Etli tencere ve tava yemekleri",
+      "subcategory": null,
+      "region": [
+        "Akdeniz"
+      ],
+      "province": [
+        "Kahramanmaraş"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Kahramanmaraş yemek kültürü kaynağında etli tencere ve tava yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Kahramanmaraş / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/kahramanmaras/neyenir/eksili-et-kabagi-sulusu",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Akdeniz",
+        "Kahramanmaraş",
+        "Etli tencere ve tava yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-13af914358a3c6d11531",
+      "sourceRecordId": "et-kabagi",
+      "name": "ET KABAĞI",
+      "normalizedName": "et kabagi",
+      "slug": "et-kabagi",
+      "alternativeNames": [],
+      "category": "Etli tencere ve tava yemekleri",
+      "subcategory": null,
+      "region": [
+        "İç Anadolu"
+      ],
+      "province": [
+        "Niğde"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Niğde yemek kültürü kaynağında etli tencere ve tava yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Niğde / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/nigde/neyenir/et-kabagi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "İç Anadolu",
+        "Niğde",
+        "Etli tencere ve tava yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-842bb6c33ebe57591ce1",
+      "sourceRecordId": "et-kizartmasi-1",
+      "name": "ET KIZARTMASI",
+      "normalizedName": "et kizartmasi",
+      "slug": "et-kizartmasi",
+      "alternativeNames": [],
+      "category": "Etli tencere ve tava yemekleri",
+      "subcategory": null,
+      "region": [
+        "Güneydoğu Anadolu"
+      ],
+      "province": [
+        "Adıyaman"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Adıyaman yemek kültürü kaynağında etli tencere ve tava yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [
+        "tavada pişirme"
+      ],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Adıyaman / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/adiyaman/neyenir/et-kizartmasi-1",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Güneydoğu Anadolu",
+        "Adıyaman",
+        "Etli tencere ve tava yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-55f5817ee58556504586",
+      "sourceRecordId": "etli-bamya",
+      "name": "ETLİ BAMYA",
+      "normalizedName": "etli bamya",
+      "slug": "etli-bamya",
+      "alternativeNames": [],
+      "category": "Etli tencere ve tava yemekleri",
+      "subcategory": null,
+      "region": [
+        "İç Anadolu"
+      ],
+      "province": [
+        "Niğde"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Niğde yemek kültürü kaynağında etli tencere ve tava yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "bamya"
+      ],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Niğde / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/nigde/neyenir/etli-bamya",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "İç Anadolu",
+        "Niğde",
+        "Etli tencere ve tava yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-1a98bbdcd79755bdc4bb",
+      "sourceRecordId": "etli-erik-yemegi",
+      "name": "ETLİ ERİK YEMEĞİ",
+      "normalizedName": "etli erik yemegi",
+      "slug": "etli-erik-yemegi",
+      "alternativeNames": [],
+      "category": "Etli tencere ve tava yemekleri",
+      "subcategory": null,
+      "region": [
+        "Marmara"
+      ],
+      "province": [
+        "Bursa"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Bursa yemek kültürü kaynağında etli tencere ve tava yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Bursa / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/bursa/neyenir/etli-erik-yemegi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Marmara",
+        "Bursa",
+        "Etli tencere ve tava yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-37154c9ed3cb224ab312",
+      "sourceRecordId": "etli-haslama",
+      "name": "ETLİ HAŞLAMA",
+      "normalizedName": "etli haslama",
+      "slug": "etli-haslama",
+      "alternativeNames": [],
+      "category": "Etli tencere ve tava yemekleri",
+      "subcategory": null,
+      "region": [
+        "Doğu Anadolu"
+      ],
+      "province": [
+        "Hakkâri"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Hakkâri yemek kültürü kaynağında etli tencere ve tava yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [
+        "haşlama"
+      ],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Hakkâri / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/hakkari/neyenir/etli-haslama",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Doğu Anadolu",
+        "Hakkâri",
+        "Etli tencere ve tava yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-d00e2ff45af3c6d4009e",
+      "sourceRecordId": "etli-senget-sac-boregi",
+      "name": "ETLİ SENGET SAC BÖREĞİ",
+      "normalizedName": "etli senget sac boregi",
+      "slug": "etli-senget-sac-boregi",
+      "alternativeNames": [],
+      "category": "Etli tencere ve tava yemekleri",
+      "subcategory": null,
+      "region": [
+        "Akdeniz"
+      ],
+      "province": [
+        "Isparta"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Isparta yemek kültürü kaynağında etli tencere ve tava yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [
+        "sacda pişirme"
+      ],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Isparta / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/isparta/neyenir/etli-senget-sac-boregi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Akdeniz",
+        "Isparta",
+        "Etli tencere ve tava yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-d5b9de075312cf8bbc54",
+      "sourceRecordId": "firinda-kelle",
+      "name": "FIRINDA KELLE",
+      "normalizedName": "firinda kelle",
+      "slug": "firinda-kelle",
+      "alternativeNames": [],
+      "category": "Etli tencere ve tava yemekleri",
+      "subcategory": null,
+      "region": [
+        "İç Anadolu"
+      ],
+      "province": [
+        "Sivas"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Sivas yemek kültürü kaynağında etli tencere ve tava yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [
+        "fırınlama"
+      ],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Sivas / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/sivas/neyenir/firinda-kelle",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "İç Anadolu",
+        "Sivas",
+        "Etli tencere ve tava yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-9b3d2bc87cf31ec76710",
+      "sourceRecordId": "gulik-kavurmasi",
+      "name": "GULİK KAVURMASI",
+      "normalizedName": "gulik kavurmasi",
+      "slug": "gulik-kavurmasi",
+      "alternativeNames": [],
+      "category": "Etli tencere ve tava yemekleri",
+      "subcategory": null,
+      "region": [
+        "Doğu Anadolu"
+      ],
+      "province": [
+        "Tunceli"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Tunceli yemek kültürü kaynağında etli tencere ve tava yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Tunceli / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/tunceli/neyenir/gulik-kavurmasi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Doğu Anadolu",
+        "Tunceli",
+        "Etli tencere ve tava yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-0802a342c571050418a4",
+      "sourceRecordId": "gurcu-kavurmasi",
+      "name": "GÜRCÜ KAVURMASI",
+      "normalizedName": "gurcu kavurmasi",
+      "slug": "gurcu-kavurmasi",
+      "alternativeNames": [],
+      "category": "Etli tencere ve tava yemekleri",
+      "subcategory": null,
+      "region": [
+        "Karadeniz"
+      ],
+      "province": [
+        "Ordu"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Ordu yemek kültürü kaynağında etli tencere ve tava yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Ordu / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/ordu/neyenir/gurcu-kavurmasi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Karadeniz",
+        "Ordu",
+        "Etli tencere ve tava yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-98f879f29ba80543b3e3",
+      "sourceRecordId": "kabalak-kavurmasi",
+      "name": "KABALAK KAVURMASI",
+      "normalizedName": "kabalak kavurmasi",
+      "slug": "kabalak-kavurmasi",
+      "alternativeNames": [],
+      "category": "Etli tencere ve tava yemekleri",
+      "subcategory": null,
+      "region": [
+        "Karadeniz"
+      ],
+      "province": [
+        "Giresun"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Giresun yemek kültürü kaynağında etli tencere ve tava yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Giresun / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/giresun/neyenir/kabalak-kavurmasi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Karadeniz",
+        "Giresun",
+        "Etli tencere ve tava yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-3b36915d90813d67fe91",
+      "sourceRecordId": "kelle-paca",
+      "name": "KELLE-PAÇA",
+      "normalizedName": "kelle paca",
+      "slug": "kelle-paca",
+      "alternativeNames": [],
+      "category": "Etli tencere ve tava yemekleri",
+      "subcategory": null,
+      "region": [
+        "Güneydoğu Anadolu"
+      ],
+      "province": [
+        "Diyarbakır"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Diyarbakır yemek kültürü kaynağında etli tencere ve tava yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Diyarbakır / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/diyarbakir/neyenir/kelle-paca",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Güneydoğu Anadolu",
+        "Diyarbakır",
+        "Etli tencere ve tava yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-ad60a24fcf3566b8d042",
+      "sourceRecordId": "kellecos",
+      "name": "KELLECOŞ",
+      "normalizedName": "kellecos",
+      "slug": "kellecos",
+      "alternativeNames": [],
+      "category": "Etli tencere ve tava yemekleri",
+      "subcategory": null,
+      "region": [
+        "Doğu Anadolu"
+      ],
+      "province": [
+        "Elazığ"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Elazığ yemek kültürü kaynağında etli tencere ve tava yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Elazığ / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/elazig/neyenir/kellecos",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Doğu Anadolu",
+        "Elazığ",
+        "Etli tencere ve tava yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-16ba7a6df1e649cef274",
+      "sourceRecordId": "keskek-ustu-kavurma757709",
+      "name": "KEŞKEK ÜSTÜ KAVURMA",
+      "normalizedName": "keskek ustu kavurma",
+      "slug": "keskek-ustu-kavurma",
+      "alternativeNames": [],
+      "category": "Etli tencere ve tava yemekleri",
+      "subcategory": null,
+      "region": [
+        "Ege"
+      ],
+      "province": [
+        "Denizli"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Denizli yemek kültürü kaynağında etli tencere ve tava yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Denizli / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/denizli/neyenir/keskek-ustu-kavurma757709",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Ege",
+        "Denizli",
+        "Etli tencere ve tava yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-4276dc722586c6ba6678",
+      "sourceRecordId": "kuzu-etli-cagla",
+      "name": "KUZU ETLİ ÇAĞLA",
+      "normalizedName": "kuzu etli cagla",
+      "slug": "kuzu-etli-cagla",
+      "alternativeNames": [],
+      "category": "Etli tencere ve tava yemekleri",
+      "subcategory": null,
+      "region": [
+        "İç Anadolu"
+      ],
+      "province": [
+        "Niğde"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Niğde yemek kültürü kaynağında etli tencere ve tava yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "kuzu eti"
+      ],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Niğde / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/nigde/neyenir/kuzu-etli-cagla",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "İç Anadolu",
+        "Niğde",
+        "Etli tencere ve tava yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-b5d0f6471dcd732f8a30",
+      "sourceRecordId": "kuzu-tas-kapama",
+      "name": "KUZU TAS KAPAMA",
+      "normalizedName": "kuzu tas kapama",
+      "slug": "kuzu-tas-kapama",
+      "alternativeNames": [],
+      "category": "Etli tencere ve tava yemekleri",
+      "subcategory": null,
+      "region": [
+        "Ege"
+      ],
+      "province": [
+        "Denizli"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Denizli yemek kültürü kaynağında etli tencere ve tava yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "kuzu eti"
+      ],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Denizli / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/denizli/neyenir/kuzu-tas-kapama",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Ege",
+        "Denizli",
+        "Etli tencere ve tava yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-57239e5c960ad689fc8f",
+      "sourceRecordId": "kutahya-usulu-kavurma",
+      "name": "KÜTAHYA USULÜ KAVURMA",
+      "normalizedName": "kutahya usulu kavurma",
+      "slug": "kutahya-usulu-kavurma",
+      "alternativeNames": [],
+      "category": "Etli tencere ve tava yemekleri",
+      "subcategory": null,
+      "region": [
+        "Ege"
+      ],
+      "province": [
+        "Kütahya"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Kütahya yemek kültürü kaynağında etli tencere ve tava yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Kütahya / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/kutahya/neyenir/kutahya-usulu-kavurma",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Ege",
+        "Kütahya",
+        "Etli tencere ve tava yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-ab4e4ff9a7966932ee47",
+      "sourceRecordId": "maras-kelle-paca",
+      "name": "MARAŞ KELLE PAÇA",
+      "normalizedName": "maras kelle paca",
+      "slug": "maras-kelle-paca",
+      "alternativeNames": [],
+      "category": "Etli tencere ve tava yemekleri",
+      "subcategory": null,
+      "region": [
+        "Akdeniz"
+      ],
+      "province": [
+        "Kahramanmaraş"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Kahramanmaraş yemek kültürü kaynağında etli tencere ve tava yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Kahramanmaraş / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/kahramanmaras/neyenir/maras-kelle-paca",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Akdeniz",
+        "Kahramanmaraş",
+        "Etli tencere ve tava yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-1d49bb8cdd1dd2d90e0f",
+      "sourceRecordId": "pastirma--et-kurusu-",
+      "name": "PASTIRMA (ET KURUSU)",
+      "normalizedName": "pastirma et kurusu",
+      "slug": "pastirma-et-kurusu",
+      "alternativeNames": [
+        "ET KURUSU"
+      ],
+      "category": "Etli tencere ve tava yemekleri",
+      "subcategory": null,
+      "region": [
+        "Akdeniz"
+      ],
+      "province": [
+        "Isparta"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Isparta yemek kültürü kaynağında etli tencere ve tava yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Isparta / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/isparta/neyenir/pastirma--et-kurusu-",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Akdeniz",
+        "Isparta",
+        "Etli tencere ve tava yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-17cca00e1f61e4d83233",
+      "sourceRecordId": "patlican-kapama",
+      "name": "PATLICAN KAPAMA",
+      "normalizedName": "patlican kapama",
+      "slug": "patlican-kapama",
+      "alternativeNames": [],
+      "category": "Etli tencere ve tava yemekleri",
+      "subcategory": null,
+      "region": [
+        "Marmara"
+      ],
+      "province": [
+        "Çanakkale"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Çanakkale yemek kültürü kaynağında etli tencere ve tava yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "patlıcan"
+      ],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Çanakkale / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/canakkale/neyenir/patlican-kapama",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Marmara",
+        "Çanakkale",
+        "Etli tencere ve tava yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-55fa9a38ecb417bfc755",
+      "sourceRecordId": "tavsan-yahnisi",
+      "name": "TAVŞAN YAHNİSİ",
+      "normalizedName": "tavsan yahnisi",
+      "slug": "tavsan-yahnisi",
+      "alternativeNames": [],
+      "category": "Etli tencere ve tava yemekleri",
+      "subcategory": null,
+      "region": [
+        "Akdeniz"
+      ],
+      "province": [
+        "Isparta"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Isparta yemek kültürü kaynağında etli tencere ve tava yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [
+        "haşlama"
+      ],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Isparta / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/isparta/neyenir/tavsan-yahnisi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Akdeniz",
+        "Isparta",
+        "Etli tencere ve tava yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-f7c62040fa2446188264",
+      "sourceRecordId": "yaren-guveci",
+      "name": "YAREN GÜVECİ",
+      "normalizedName": "yaren guveci",
+      "slug": "yaren-guveci",
+      "alternativeNames": [],
+      "category": "Etli tencere ve tava yemekleri",
+      "subcategory": null,
+      "region": [
+        "İç Anadolu"
+      ],
+      "province": [
+        "Çankırı"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Çankırı yemek kültürü kaynağında etli tencere ve tava yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [
+        "güveçte pişirme"
+      ],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "meat",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Çankırı / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/cankiri/neyenir/yaren-guveci",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "İç Anadolu",
+        "Çankırı",
+        "Etli tencere ve tava yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    }
+  ]
+}

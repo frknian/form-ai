@@ -1,0 +1,975 @@
+{
+  "schemaVersion": 2,
+  "category": "Tavuk ve kümes hayvanı yemekleri",
+  "dishes": [
+    {
+      "id": "tr-e0a1d901f51c9aa6d4d6",
+      "sourceRecordId": "banduma",
+      "name": "DEVREKANİ HİNDİ BANDUMASI",
+      "normalizedName": "devrekani hindi bandumasi",
+      "slug": "devrekani-hindi-bandumasi",
+      "alternativeNames": [],
+      "category": "Tavuk ve kümes hayvanı yemekleri",
+      "subcategory": null,
+      "region": [
+        "Karadeniz"
+      ],
+      "province": [
+        "Kastamonu"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Kastamonu yemek kültürü kaynağında tavuk ve kümes hayvanı yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "hindi"
+      ],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "poultry",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Kastamonu / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/kastamonu/neyenir/banduma",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Karadeniz",
+        "Kastamonu",
+        "Tavuk ve kümes hayvanı yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-b1b3ff442a42919aab60",
+      "sourceRecordId": "eksili-tavuk",
+      "name": "EKŞİLİ TAVUK",
+      "normalizedName": "eksili tavuk",
+      "slug": "eksili-tavuk",
+      "alternativeNames": [],
+      "category": "Tavuk ve kümes hayvanı yemekleri",
+      "subcategory": null,
+      "region": [
+        "Ege"
+      ],
+      "province": [
+        "Muğla"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Muğla yemek kültürü kaynağında tavuk ve kümes hayvanı yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "tavuk"
+      ],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "poultry",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Muğla / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/mugla/neyenir/eksili-tavuk",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Ege",
+        "Muğla",
+        "Tavuk ve kümes hayvanı yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-41d51557c7e0847fca8c",
+      "sourceRecordId": "eksili-tavuk-dolmasi--4-kisilik-",
+      "name": "EKŞİLİ TAVUK DOLMASI",
+      "normalizedName": "eksili tavuk dolmasi",
+      "slug": "eksili-tavuk-dolmasi",
+      "alternativeNames": [],
+      "category": "Tavuk ve kümes hayvanı yemekleri",
+      "subcategory": null,
+      "region": [
+        "Akdeniz"
+      ],
+      "province": [
+        "Antalya"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Antalya yemek kültürü kaynağında tavuk ve kümes hayvanı yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "tavuk"
+      ],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "poultry",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Antalya / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/antalya/neyenir/eksili-tavuk-dolmasi--4-kisilik-",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Akdeniz",
+        "Antalya",
+        "Tavuk ve kümes hayvanı yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-7b7b3f7731925b6047fa",
+      "sourceRecordId": "hindi-dolmasi",
+      "name": "HİNDİ DOLMASI",
+      "normalizedName": "hindi dolmasi",
+      "slug": "hindi-dolmasi",
+      "alternativeNames": [],
+      "category": "Tavuk ve kümes hayvanı yemekleri",
+      "subcategory": null,
+      "region": [
+        "Güneydoğu Anadolu"
+      ],
+      "province": [
+        "Mardin"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Mardin yemek kültürü kaynağında tavuk ve kümes hayvanı yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "hindi"
+      ],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "poultry",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Mardin / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/mardin/neyenir/hindi-dolmasi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Güneydoğu Anadolu",
+        "Mardin",
+        "Tavuk ve kümes hayvanı yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-35bbc896772ee1bdc8c6",
+      "sourceRecordId": "kaz-tiridi-kaz-asma",
+      "name": "KAZ TİRİDİ (KAZ ASMA)",
+      "normalizedName": "kaz tiridi kaz asma",
+      "slug": "kaz-tiridi-kaz-asma",
+      "alternativeNames": [
+        "KAZ ASMA"
+      ],
+      "category": "Tavuk ve kümes hayvanı yemekleri",
+      "subcategory": null,
+      "region": [
+        "Karadeniz"
+      ],
+      "province": [
+        "Samsun"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Samsun yemek kültürü kaynağında tavuk ve kümes hayvanı yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "kaz"
+      ],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "poultry",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Samsun / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/samsun/neyenir/kaz-tiridi-kaz-asma",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Karadeniz",
+        "Samsun",
+        "Tavuk ve kümes hayvanı yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-76173f72051442f193de",
+      "sourceRecordId": "kirmizi-tavuk--4-kisilik-",
+      "name": "KIRMIZI TAVUK",
+      "normalizedName": "kirmizi tavuk",
+      "slug": "kirmizi-tavuk",
+      "alternativeNames": [],
+      "category": "Tavuk ve kümes hayvanı yemekleri",
+      "subcategory": null,
+      "region": [
+        "Akdeniz"
+      ],
+      "province": [
+        "Antalya"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Antalya yemek kültürü kaynağında tavuk ve kümes hayvanı yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "tavuk"
+      ],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "poultry",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Antalya / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/antalya/neyenir/kirmizi-tavuk--4-kisilik-",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Akdeniz",
+        "Antalya",
+        "Tavuk ve kümes hayvanı yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-82a3091d32b2d877326c",
+      "sourceRecordId": "kizilcik-pekmezi-marineli-ordek-gogsu",
+      "name": "KIZILCIK PEKMEZİ MARİNELİ ÖRDEK GÖĞSÜ",
+      "normalizedName": "kizilcik pekmezi marineli ordek gogsu",
+      "slug": "kizilcik-pekmezi-marineli-ordek-gogsu",
+      "alternativeNames": [],
+      "category": "Tavuk ve kümes hayvanı yemekleri",
+      "subcategory": null,
+      "region": [
+        "Karadeniz"
+      ],
+      "province": [
+        "Zonguldak"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Zonguldak yemek kültürü kaynağında tavuk ve kümes hayvanı yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "ördek"
+      ],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "poultry",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Zonguldak / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/zonguldak/neyenir/kizilcik-pekmezi-marineli-ordek-gogsu",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Karadeniz",
+        "Zonguldak",
+        "Tavuk ve kümes hayvanı yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-8f009630cfae32b444ff",
+      "sourceRecordId": "kokoska--yufkali-tavuk---6-kisilik-",
+      "name": "KOKOŞKA (YUFKALI TAVUK)",
+      "normalizedName": "kokoska yufkali tavuk",
+      "slug": "kokoska-yufkali-tavuk",
+      "alternativeNames": [
+        "YUFKALI TAVUK"
+      ],
+      "category": "Tavuk ve kümes hayvanı yemekleri",
+      "subcategory": null,
+      "region": [
+        "Akdeniz"
+      ],
+      "province": [
+        "Antalya"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Antalya yemek kültürü kaynağında tavuk ve kümes hayvanı yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "tavuk"
+      ],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "poultry",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Antalya / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/antalya/neyenir/kokoska--yufkali-tavuk---6-kisilik-",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Akdeniz",
+        "Antalya",
+        "Tavuk ve kümes hayvanı yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-d168c2040eae50233957",
+      "sourceRecordId": "pilic-dolmasi",
+      "name": "PİLİÇ DOLMASI",
+      "normalizedName": "pilic dolmasi",
+      "slug": "pilic-dolmasi",
+      "alternativeNames": [],
+      "category": "Tavuk ve kümes hayvanı yemekleri",
+      "subcategory": null,
+      "region": [
+        "İç Anadolu"
+      ],
+      "province": [
+        "Karaman"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Karaman yemek kültürü kaynağında tavuk ve kümes hayvanı yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "poultry",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Karaman / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/karaman/neyenir/pilic-dolmasi",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "İç Anadolu",
+        "Karaman",
+        "Tavuk ve kümes hayvanı yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-9f48dff15e0d075b72df",
+      "sourceRecordId": "sac-kapamada-soganli-tavuk",
+      "name": "SAÇ KAPAMADA SOĞANLI TAVUK",
+      "normalizedName": "sac kapamada soganli tavuk",
+      "slug": "sac-kapamada-soganli-tavuk",
+      "alternativeNames": [],
+      "category": "Tavuk ve kümes hayvanı yemekleri",
+      "subcategory": null,
+      "region": [
+        "İç Anadolu"
+      ],
+      "province": [
+        "Niğde"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Niğde yemek kültürü kaynağında tavuk ve kümes hayvanı yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "tavuk"
+      ],
+      "ingredients": [],
+      "cookingMethods": [
+        "sacda pişirme"
+      ],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "poultry",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Niğde / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/nigde/neyenir/sac-kapamada-soganli-tavuk",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "İç Anadolu",
+        "Niğde",
+        "Tavuk ve kümes hayvanı yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-d250e4f7691ade831f1a",
+      "sourceRecordId": "sbtl-tavuk-trd",
+      "name": "ŞİBİTLİ TAVUK TİRİDİ",
+      "normalizedName": "sibitli tavuk tiridi",
+      "slug": "sibitli-tavuk-tiridi",
+      "alternativeNames": [],
+      "category": "Tavuk ve kümes hayvanı yemekleri",
+      "subcategory": null,
+      "region": [
+        "Ege"
+      ],
+      "province": [
+        "Kütahya"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Kütahya yemek kültürü kaynağında tavuk ve kümes hayvanı yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "tavuk"
+      ],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "poultry",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Kütahya / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/kutahya/neyenir/sbtl-tavuk-trd",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Ege",
+        "Kütahya",
+        "Tavuk ve kümes hayvanı yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-47aca03934f62a759c36",
+      "sourceRecordId": "tandirda-tavuk",
+      "name": "TANDIRDA TAVUK",
+      "normalizedName": "tandirda tavuk",
+      "slug": "tandirda-tavuk",
+      "alternativeNames": [],
+      "category": "Tavuk ve kümes hayvanı yemekleri",
+      "subcategory": null,
+      "region": [
+        "Doğu Anadolu"
+      ],
+      "province": [
+        "Hakkâri"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Hakkâri yemek kültürü kaynağında tavuk ve kümes hayvanı yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "tavuk"
+      ],
+      "ingredients": [],
+      "cookingMethods": [
+        "tandır"
+      ],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "poultry",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Hakkâri / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/hakkari/neyenir/tandirda-tavuk",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Doğu Anadolu",
+        "Hakkâri",
+        "Tavuk ve kümes hayvanı yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-9f09ffe692f760eba21b",
+      "sourceRecordId": "tavuk-etli-kuru-bamya",
+      "name": "TAVUK ETLİ KURU BAMYA",
+      "normalizedName": "tavuk etli kuru bamya",
+      "slug": "tavuk-etli-kuru-bamya",
+      "alternativeNames": [],
+      "category": "Tavuk ve kümes hayvanı yemekleri",
+      "subcategory": null,
+      "region": [
+        "İç Anadolu"
+      ],
+      "province": [
+        "Çankırı"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Çankırı yemek kültürü kaynağında tavuk ve kümes hayvanı yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "tavuk",
+        "bamya"
+      ],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "poultry",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Çankırı / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/cankiri/neyenir/tavuk-etli-kuru-bamya",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "İç Anadolu",
+        "Çankırı",
+        "Tavuk ve kümes hayvanı yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-701025fcc003f873063d",
+      "sourceRecordId": "tavuk-kapama",
+      "name": "TAVUK KAPAMA",
+      "normalizedName": "tavuk kapama",
+      "slug": "tavuk-kapama",
+      "alternativeNames": [],
+      "category": "Tavuk ve kümes hayvanı yemekleri",
+      "subcategory": null,
+      "region": [
+        "Ege"
+      ],
+      "province": [
+        "Denizli"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Denizli yemek kültürü kaynağında tavuk ve kümes hayvanı yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "tavuk"
+      ],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "poultry",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Denizli / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/denizli/neyenir/tavuk-kapama",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Ege",
+        "Denizli",
+        "Tavuk ve kümes hayvanı yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    },
+    {
+      "id": "tr-8a8999686b193a0b6792",
+      "sourceRecordId": "teneke-kebabi-teneke-tavuk",
+      "name": "TENEKE KEBABI (TENEKE TAVUK)",
+      "normalizedName": "teneke kebabi teneke tavuk",
+      "slug": "teneke-kebabi-teneke-tavuk",
+      "alternativeNames": [
+        "TENEKE TAVUK"
+      ],
+      "category": "Tavuk ve kümes hayvanı yemekleri",
+      "subcategory": null,
+      "region": [
+        "Akdeniz"
+      ],
+      "province": [
+        "Burdur"
+      ],
+      "district": [],
+      "cuisineTraditions": [],
+      "description": "Burdur yemek kültürü kaynağında tavuk ve kümes hayvanı yemekleri grubunda kayıtlı yöresel bir lezzettir. Tarif bileşimi ve besin değerleri ayrıca doğrulanmalıdır.",
+      "historicalNote": null,
+      "mainIngredients": [
+        "tavuk"
+      ],
+      "ingredients": [],
+      "cookingMethods": [],
+      "servingTemperature": "hot",
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "dietaryType": "poultry",
+      "allergens": [],
+      "defaultServingAmount": null,
+      "defaultServingUnit": null,
+      "defaultServingGrams": null,
+      "nutritionPer100g": null,
+      "nutritionPerServing": null,
+      "recipeYieldGrams": null,
+      "recipeVersion": "1.0.0-catalog",
+      "sourceType": "culture_portal_catalog",
+      "sources": [
+        {
+          "title": "Kültür Portalı — Burdur / Ne Yenir?",
+          "publisher": "T.C. Kültür ve Turizm Bakanlığı Kültür Portalı",
+          "url": "https://www.kulturportali.gov.tr/turkiye/burdur/neyenir/teneke-kebabi-teneke-tavuk",
+          "accessedAt": "2026-07-28",
+          "license": null,
+          "notes": "İl kataloğu yalnızca yemek adı ve yöresel kayıt doğrulaması için kullanıldı; kaynak metni kopyalanmadı."
+        }
+      ],
+      "confidence": "medium",
+      "needsReview": true,
+      "isRegional": true,
+      "isLesserKnown": true,
+      "parentDishId": null,
+      "variantReason": null,
+      "tags": [
+        "Türk mutfağı",
+        "Akdeniz",
+        "Burdur",
+        "Tavuk ve kümes hayvanı yemekleri",
+        "il kataloğu"
+      ],
+      "catalogStatus": "visible"
+    }
+  ]
+}

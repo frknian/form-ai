@@ -165,6 +165,42 @@ Gizlilik politikası taslağı ve veri güvenliği formu cevapları için
 
 Bilinen kabul edilen risk: `shadcn` CLI aracından gelen 3 orta seviye uyarı, yalnızca geliştirme aracını etkiler ve çalışma zamanı paketine girmez; düzeltmesi büyük sürüm düşürme gerektirdiği için uygulanmamıştır.
 
+## Türk yemeği kataloğu
+
+Kaynak manifesti `data/turkish-foods/source-manifest.json`, üretilen kategori
+dosyaları `data/turkish-foods/*.json`, birleşik seed ise
+`data/turkish-recipes.seed.json` içindedir. Üretici aynı girdiden deterministik
+olarak 500 kayıt ve `data/turkish-foods/quality-report.json` raporunu oluşturur.
+
+Önce Supabase SQL Editor'de migration dosyalarını sırasıyla, özellikle
+`20260730_turkish_recipe_infrastructure.sql` ve
+`20260731_turkish_food_catalog_expansion.sql` dosyalarını çalıştırın. Ardından
+komutları proje kökünde (`package.json` dosyasının bulunduğu klasör) çalıştırın:
+
+```bash
+npm run seed:foods:validate
+npm run seed:foods:report
+npm run seed:foods:dry-run
+npm run seed:foods
+```
+
+Belirli bir bölüm için doğrudan importer filtreleri de kullanılabilir:
+
+```bash
+npm run data:import-turkish-recipes -- --category="Çorbalar"
+npm run data:import-turkish-recipes -- --region="Karadeniz"
+```
+
+Seed slug üzerinden upsert eder, mevcut kullanıcı öğünlerini silmez ve
+yayımlanmış/elle hesaplanmış tarif sürümlerinin besin değerlerini ezmez. REST
+üzerinden çok tablolı tek transaction bulunmadığı için kayıtlar ayrı ayrı
+işlenir; hatalar topluca raporlanır ve diğer kayıtların işlenmesini kesmez.
+
+Kültür Portalı bu katalogda yemek adı, il ve kategori doğrulaması için
+kullanılır; kaynak metinleri kopyalanmaz. TürKomp otomatik olarak taranmaz.
+Katalogdaki doğrulanmamış besin alanları kasıtlı olarak `null`,
+`needsReview: true` ve düşük/orta güven düzeyindedir.
+
 ## Egzersiz veri tabanı
 
 Exercise data source:

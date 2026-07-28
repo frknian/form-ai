@@ -185,6 +185,7 @@ export function mapSupabaseFood(row: SupabaseFoodRow): FoodNutrition | null {
 }
 
 export function mapLocalFood(food: FoodSearchResult): FoodNutrition {
+  if (!food.nutritionPer100g) throw new Error("Besin değeri doğrulanmamış katalog kaydı hesaplamada kullanılamaz.");
   return {
     id: food.id,
     name: food.name,

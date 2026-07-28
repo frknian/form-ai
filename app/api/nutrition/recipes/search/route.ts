@@ -15,6 +15,17 @@ export async function GET(request: Request) {
   if (query.length < 2 || query.length > 80) {
     return Response.json({ error: "Arama metni 2–80 karakter olmalıdır." }, { status: 400 });
   }
-  const recipes = await searchStoredRecipes(request, query, limit);
+  const recipes = await searchStoredRecipes(request, query, limit, {
+    category: searchParams.get("category"),
+    subcategory: searchParams.get("subcategory"),
+    region: searchParams.get("region"),
+    province: searchParams.get("province"),
+    mainIngredient: searchParams.get("ingredient"),
+    dietaryType: searchParams.get("dietary"),
+    allergen: searchParams.get("allergen"),
+    cookingMethod: searchParams.get("method"),
+    lesserKnown: searchParams.get("lesserKnown") === "true" ? true : null,
+    nutritionVerified: searchParams.get("nutritionVerified") === "true" ? true : null,
+  });
   return Response.json({ recipes }, { headers: { "Cache-Control": "private, max-age=300" } });
 }

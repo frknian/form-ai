@@ -52,10 +52,12 @@ ekipman filtreleri, Türkçe hareket ve kas adları.
 - **Barkod** — ambalajı okut; barkod tamamen **cihazında** çözülür
 - **Yazarak** — "bir kase mercimek çorbası" yaz, gerisini o hesaplasın
 
-Ayrıca 309 kayıtlık yerleşik besin kataloğu: Türk mutfağı, Avrupa mutfağı,
-fast food, atıştırmalık, içecek ve tatlılar. Tarif katmanı; gram veya porsiyonla
-hesaplama, yöresel/tarif sürümleri ve 200 Türk yemeğinden oluşan doğrulama
-kuyruğunu destekler. Kaynağı doğrulanmayan tarifler kullanıcıya yayımlanmaz.
+Ayrıca 309 kayıtlık hesaplanabilir temel besin kataloğu ve Kültür Portalı
+kayıtlarıyla doğrulanan 500 yemeklik Türk mutfağı kataloğu bulunur. Türk
+kataloğu 81 ili, 7 bölgeyi ve 20 yemek kategorisini kapsar; 474 kayıt
+az bilinen veya güçlü biçimde yöresel olarak işaretlidir. Besin değeri henüz
+doğrulanmamış yemekler aranabilir, ancak `0 kcal` yerine açıkça “Besin değeri
+henüz doğrulanmadı” olarak gösterilir ve hesaplamaya alınmaz.
 
 ### İlerlemeni gör
 Vücut ölçümleri ve trend grafikleri, tahmini 1RM ile kişisel rekorlar, günlük
@@ -163,10 +165,12 @@ group and equipment, exercise and muscle names in both languages.
 - **Barcode** — scan the package; barcodes are decoded entirely **on your device**
 - **Text** — type "a bowl of lentil soup" and let it do the math
 
-Plus a built-in catalog of 309 foods: Turkish and European dishes, fast food,
-snacks, drinks and desserts. The recipe layer supports gram or serving-based
-calculations, regional/recipe versions, and a 200-dish Turkish review queue.
-Recipes without verified sources are never published to users.
+Plus a 309-item calculable staple catalog and a 500-dish Turkish catalog
+verified against Ministry of Culture portal records. The Turkish catalog spans
+81 provinces, all 7 regions and 20 categories; 474 entries are marked
+lesser-known or strongly regional. Records without verified nutrition remain
+searchable, but show “Nutrition not verified yet” instead of a misleading
+`0 kcal` and cannot be used in calculations.
 
 ### Watch yourself progress
 Body measurements with trend charts, personal records via estimated 1RM, daily

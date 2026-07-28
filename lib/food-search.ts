@@ -31,11 +31,22 @@ export type FoodSearchResult = {
   allergens?: string[];
   barcode?: string;
   servingGrams?: number;
-  nutritionPer100g: FoodNutrition;
+  nutritionPer100g: FoodNutrition | null;
   source: "Open Food Facts" | "USDA FoodData Central" | "FİT.AI temel besin listesi" | "FİT.AI besin veritabanı";
   verified?: boolean;
   dataQuality?: "verified" | "provider" | "estimated" | "user_entered" | "incomplete";
   imageUrl?: string;
+  category?: string;
+  subcategory?: string | null;
+  regions?: string[];
+  provinces?: string[];
+  mainIngredients?: string[];
+  cookingMethods?: string[];
+  dietaryType?: "meat" | "poultry" | "fish" | "vegetarian" | "vegan" | null;
+  isLesserKnown?: boolean;
+  parentRecipeSlug?: string | null;
+  variantReason?: string | null;
+  nutritionVerified?: boolean;
 };
 
 export type OpenFoodFactsSearchHit = {
