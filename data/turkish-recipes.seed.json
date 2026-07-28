@@ -2700,7 +2700,6 @@
       "normalizedName": "sor tuzlu balik",
       "slug": "sor-tuzlu-balik",
       "alternativeNames": [
-        "TUZLU",
         "TUZLU BALIK"
       ],
       "category": "Balık ve deniz ürünleri",
@@ -4563,7 +4562,7 @@
       "normalizedName": "alanya guluklu huluklu corba",
       "slug": "alanya-guluklu-huluklu-corba",
       "alternativeNames": [
-        "HÜLÜKLÜ"
+        "ALANYA HÜLÜKLÜ ÇORBA"
       ],
       "category": "Çorbalar",
       "subcategory": null,
@@ -13619,7 +13618,7 @@
     {
       "id": "tr-64e540944c9c75057da3",
       "sourceRecordId": "lor-lork",
-      "name": "LOR (LORİK))",
+      "name": "LOR (LORİK)",
       "normalizedName": "lor lorik",
       "slug": "lor-lorik",
       "alternativeNames": [
@@ -14552,7 +14551,7 @@
       "normalizedName": "cagirtlak ciger kebabi",
       "slug": "cagirtlak-ciger-kebabi",
       "alternativeNames": [
-        "CİĞER"
+        "CİĞER KEBABI"
       ],
       "category": "Kebaplar",
       "subcategory": null,
@@ -20044,7 +20043,7 @@
       "normalizedName": "sanliurfa pencer pazi boranisi",
       "slug": "sanliurfa-pencer-pazi-boranisi",
       "alternativeNames": [
-        "PAZI"
+        "ŞANLIURFA PAZI BORANISI"
       ],
       "category": "Mezeler ve ezmeler",
       "subcategory": null,
@@ -21476,7 +21475,7 @@
       "normalizedName": "urfa sanliurfa uzlemeli pilavi",
       "slug": "urfa-sanliurfa-uzlemeli-pilavi",
       "alternativeNames": [
-        "ŞANLIURFA"
+        "ŞANLIURFA ÜZLEMELİ PİLAVI"
       ],
       "category": "Pilavlar",
       "subcategory": null,
@@ -21788,7 +21787,7 @@
       "normalizedName": "cibez cibes salatasi",
       "slug": "cibez-cibes-salatasi",
       "alternativeNames": [
-        "CİBES"
+        "CİBES SALATASI"
       ],
       "category": "Salatalar",
       "subcategory": null,
@@ -22038,7 +22037,7 @@
       "normalizedName": "pirpar semizotu salatasi",
       "slug": "pirpar-semizotu-salatasi",
       "alternativeNames": [
-        "SEMİZOTU"
+        "SEMİZOTU SALATASI"
       ],
       "category": "Salatalar",
       "subcategory": null,
@@ -22979,9 +22978,7 @@
       "name": "GÖBELEK- KUZUGÖBEĞİ (MANTAR) YEMEĞİ",
       "normalizedName": "gobelek kuzugobegi mantar yemegi",
       "slug": "gobelek-kuzugobegi-mantar-yemegi",
-      "alternativeNames": [
-        "MANTAR"
-      ],
+      "alternativeNames": [],
       "category": "Sebze yemekleri",
       "subcategory": null,
       "region": [
@@ -23932,7 +23929,7 @@
       "normalizedName": "kurutulmus patlican badilcan yemegi",
       "slug": "kurutulmus-patlican-badilcan-yemegi",
       "alternativeNames": [
-        "BADILCAN"
+        "KURUTULMUŞ BADILCAN YEMEĞİ"
       ],
       "category": "Sebze yemekleri",
       "subcategory": null,
@@ -24506,7 +24503,7 @@
       "normalizedName": "urfa sanliurfa isot comlegi",
       "slug": "urfa-sanliurfa-isot-comlegi",
       "alternativeNames": [
-        "ŞANLIURFA"
+        "ŞANLIURFA İSOT ÇÖMLEĞİ"
       ],
       "category": "Sebze yemekleri",
       "subcategory": null,

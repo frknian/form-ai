@@ -174,8 +174,11 @@ olarak 500 kayıt ve `data/turkish-foods/quality-report.json` raporunu oluşturu
 
 Önce Supabase SQL Editor'de migration dosyalarını sırasıyla, özellikle
 `20260730_turkish_recipe_infrastructure.sql` ve
-`20260731_turkish_food_catalog_expansion.sql` dosyalarını çalıştırın. Ardından
-komutları proje kökünde (`package.json` dosyasının bulunduğu klasör) çalıştırın:
+`20260731_turkish_food_catalog_expansion.sql`, ardından
+`20260801_archive_duplicate_recipe_dishes.sql` dosyalarını çalıştırın. Son
+migration eski eşdeğer yemekleri silmeden arşivler ve arşivlenmiş tariflerin
+doğrudan okunmasını engeller. Ardından komutları proje kökünde (`package.json`
+dosyasının bulunduğu klasör) çalıştırın:
 
 ```bash
 npm run seed:foods:validate

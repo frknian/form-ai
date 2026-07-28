@@ -245,9 +245,7 @@
   ],
   "missingSources": [],
   "invalidRecords": [],
-  "warnings": [
-    "urfa-sanliurfa-isot-comlegi: alternatif ad ŞANLIURFA, urfa-sanliurfa-uzlemeli-pilavi ile çakışıyor."
-  ],
+  "warnings": [],
   "seedRun": {
     "inserted": 0,
     "updated": 0,

@@ -151,6 +151,7 @@ export async function getPublishedRecipe(request: Request, slug: string, version
     .from("recipe_dishes")
     .select("id,slug,name,alternative_names,category,subcategory,region,regions,provinces,description,main_ingredients,cooking_methods,dietary_type,allergens,is_lesser_known,parent_dish_id,variant_reason")
     .eq("slug", slug)
+    .neq("catalog_status", "archived")
     .maybeSingle();
   if (dishError || !dish) return null;
 

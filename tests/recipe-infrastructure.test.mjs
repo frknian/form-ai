@@ -210,6 +210,17 @@ test("eşdeğer yemek adları tek kayıtta birleşir, gerçek sucuk çeşitlerin
   assert.match(pestilSucugu.variantReason, /et ürünü değildir/);
 });
 
+test("parantezli açıklamalar bağlamlı alternatif ad üretir ve bozuk noktalama temizlenir", async () => {
+  const seed = JSON.parse(await readFile(new URL("../data/turkish-recipes.seed.json", import.meta.url), "utf8"));
+  const uzlemeli = seed.dishes.find((dish) => dish.slug === "urfa-sanliurfa-uzlemeli-pilavi");
+  const ciger = seed.dishes.find((dish) => dish.slug === "cagirtlak-ciger-kebabi");
+  const lor = seed.dishes.find((dish) => dish.slug === "lor-lorik");
+  assert.deepEqual(uzlemeli.alternativeNames, ["ŞANLIURFA ÜZLEMELİ PİLAVI"]);
+  assert.deepEqual(ciger.alternativeNames, ["CİĞER KEBABI"]);
+  assert.equal(lor.name, "LOR (LORİK)");
+  assert.deepEqual(lor.alternativeNames, ["LORİK"]);
+});
+
 test("kategori kotaları, yedi bölge ve 81 il doğrulaması geçer", async () => {
   const [seed, report] = await Promise.all([
     readFile(new URL("../data/turkish-recipes.seed.json", import.meta.url), "utf8").then(JSON.parse),
@@ -225,6 +236,7 @@ test("kategori kotaları, yedi bölge ve 81 il doğrulaması geçer", async () =
   assert.equal(report.representedProvinceCount, 81);
   assert.deepEqual(report.missingProvinces, []);
   assert.deepEqual(report.probableDuplicates, []);
+  assert.deepEqual(report.warnings, []);
   assert.equal(report.mergedEquivalentDishes.length, 3);
 });
 
@@ -249,13 +261,15 @@ test("vegan, alerjen ve ebeveyn-çeşit tutarlılığı doğrulanır", () => {
 });
 
 test("migration geniş veri modeli ve filtreleri; import idempotency ve manuel veri korumasını içerir", async () => {
-  const [baseMigration, expansionMigration, importer, searchRoute, barcodeRoute, detailRoute] = await Promise.all([
+  const [baseMigration, expansionMigration, archiveMigration, importer, searchRoute, barcodeRoute, detailRoute, recipeData] = await Promise.all([
     readFile(new URL("../db/migrations/20260730_turkish_recipe_infrastructure.sql", import.meta.url), "utf8"),
     readFile(new URL("../db/migrations/20260731_turkish_food_catalog_expansion.sql", import.meta.url), "utf8"),
+    readFile(new URL("../db/migrations/20260801_archive_duplicate_recipe_dishes.sql", import.meta.url), "utf8"),
     readFile(new URL("../scripts/import-turkish-recipes.mjs", import.meta.url), "utf8"),
     readFile(new URL("../app/api/nutrition/search/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/api/nutrition/barcode/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/api/nutrition/recipes/[slug]/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../lib/recipe-data.ts", import.meta.url), "utf8"),
   ]);
   for (const table of ["nutrition_sources", "recipe_dishes", "recipe_versions", "recipe_ingredients", "recipe_calculation_runs"]) {
     assert.match(baseMigration, new RegExp(`create table if not exists public\\.${table}`));
@@ -273,9 +287,13 @@ test("migration geniş veri modeli ve filtreleri; import idempotency ve manuel v
   assert.match(importer, /catalog_status: "archived"/);
   assert.match(importer, /argumentValue\("category"\)/);
   assert.match(importer, /argumentValue\("region"\)/);
+  assert.match(archiveMigration, /catalog_status = 'archived'/);
+  assert.match(archiveMigration, /catalog_status = 'hidden'/);
+  assert.match(archiveMigration, /child\.slug = 'sucuk-ici'/);
   assert.doesNotMatch(searchRoute, /searchOpenFoodFacts/);
   assert.match(searchRoute, /nutritionVerified/);
   assert.match(barcodeRoute, /findOpenFoodFactsBarcode/);
+  assert.match(recipeData, /\.neq\("catalog_status", "archived"\)/);
   assert.match(detailRoute, /const \{ slug \} = await params/);
   assert.match(detailRoute, /grams !== undefined && portions !== undefined/);
 });

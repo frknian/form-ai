@@ -38,6 +38,8 @@ Supabase SQL Editor'da:
 
 ```text
 db/migrations/20260730_turkish_recipe_infrastructure.sql
+db/migrations/20260731_turkish_food_catalog_expansion.sql
+db/migrations/20260801_archive_duplicate_recipe_dishes.sql
 ```
 
 Seed'i doğrulama:
@@ -61,7 +63,7 @@ npm run data:import-turkish-recipes
 İçe aktarıcı `slug`, `(dish_id, version)` ve hesaplama parmak izi çakışmalarını
 upsert eder. Aynı seed tekrar çalıştırıldığında yemek veya sürüm kopyalanmaz.
 
-Başlangıç dosyasındaki 200 kayıt bir inceleme kuyruğudur. Kaynak doğrulaması
+Başlangıç dosyasındaki 500 kayıt bir inceleme kuyruğudur. Kaynak doğrulaması
 olmayan makro veya malzeme gramajı uydurulmadığı için bu kayıtlar
 `needs_review` olarak gelir. Bir sürümün `published` olabilmesi için:
 

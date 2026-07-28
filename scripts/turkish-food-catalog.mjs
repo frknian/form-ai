@@ -132,12 +132,19 @@ function stableId(slug) {
 function alternativeNames(name) {
   const names = [];
   for (const match of name.matchAll(/\(([^)]+)\)/g)) {
+    const before = name.slice(0, match.index).trim();
+    const after = name.slice((match.index || 0) + match[0].length).replace(/^\)+/, "").trim();
+    const beforeParts = before.split(/\s+/).filter(Boolean);
+    const contextualPrefix = before.includes("-") ? "" : beforeParts.slice(0, -1).join(" ");
     for (const part of match[1].split(/\s*(?:\/|;|\s-\s)\s*/)) {
-      const value = part.trim();
+      const value = after
+        ? [contextualPrefix, part.trim(), after].filter(Boolean).join(" ")
+        : part.trim();
       if (value.length > 1 && normalizeTurkish(value) !== normalizeTurkish(name)) names.push(value);
     }
   }
-  return [...new Set(names)];
+  const overlyBroad = new Set(["mantar yemegi"]);
+  return [...new Set(names)].filter((value) => !overlyBroad.has(normalizeTurkish(value)));
 }
 
 function cookingMethods(name) {
