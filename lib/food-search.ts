@@ -1,4 +1,7 @@
 export type FoodMicronutrients = {
+  // Şeker gram ölçeğindedir (0-50 g), diğerleri gibi mg değil; Open Food Facts
+  // da sugars_100g alanını gram verir.
+  sugarG?: number;
   sodiumMg?: number;
   calciumMg?: number;
   ironMg?: number;
@@ -78,6 +81,8 @@ export function openFoodFactsHitToFood(hit: OpenFoodFactsSearchHit): FoodSearchR
   const iron = micronutrientMilligrams(nutrients, "iron");
   const potassium = micronutrientMilligrams(nutrients, "potassium");
   const vitaminC = micronutrientMilligrams(nutrients, "vitamin-c");
+  const sugar = numeric(nutrients["sugars_100g"]);
+  if (sugar) micros.sugarG = rounded(sugar);
   if (sodium) micros.sodiumMg = rounded(sodium);
   if (calcium) micros.calciumMg = rounded(calcium);
   if (iron) micros.ironMg = rounded(iron);

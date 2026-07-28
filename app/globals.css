@@ -1228,3 +1228,39 @@ input,select,textarea { color-scheme:inherit; }
 .swap-empty { color:var(--muted-text); font-size:11px; }
 .dark .swap-panel { background:#20231a; border-color:#46502c; }
 .dark .swap-options button { border-color:#46502c; }
+
+/* Sık yenen öğünler: tek dokunuşla tekrar ekleme */
+.frequent-meals { margin:0 0 18px; padding:16px 18px; border:1px solid var(--line); border-radius:11px; background:var(--surface-soft,#fbfbf7); }
+.frequent-meals-head { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:6px; margin-bottom:11px; }
+.frequent-meals-head span { color:var(--muted-text); font-size:10px; }
+.frequent-meals-list { display:grid; grid-template-columns:repeat(auto-fill,minmax(155px,1fr)); gap:8px; }
+.frequent-meals-list button { position:relative; min-height:60px; padding:11px 34px 11px 12px; border:1px solid var(--line); border-radius:9px; background:transparent; color:var(--ink); text-align:left; cursor:pointer; }
+.frequent-meals-list button:hover { border-color:#c6e55f; }
+.frequent-meals-list strong { display:block; font-size:12px; line-height:1.3; }
+.frequent-meals-list span { display:block; margin-top:3px; color:var(--muted-text); font-size:10px; }
+.frequent-meals-list small { position:absolute; top:10px; right:10px; padding:2px 6px; border-radius:999px; background:#e8f7b5; color:#5d6a33; font-size:9px; font-weight:800; }
+.dark .frequent-meals { background:#20231a; border-color:#46502c; }
+.dark .frequent-meals-list button { border-color:#46502c; }
+.dark .frequent-meals-list small { background:#33411f; color:#d9ed9e; }
+
+/* Su ve aralıklı oruç kartı */
+.hydration-card { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin:0 0 18px; padding:16px 18px; border:1px solid var(--line); border-radius:11px; background:var(--surface-soft,#fbfbf7); }
+.hydration-head { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:6px; margin-bottom:9px; }
+.hydration-head strong { font-size:13px; font-variant-numeric:tabular-nums; }
+.hydration-bar { height:8px; border-radius:999px; background:rgba(0,0,0,.09); overflow:hidden; }
+.hydration-bar i { display:block; height:100%; border-radius:999px; background:#cce969; transition:width .25s ease; }
+.hydration-actions { display:flex; flex-wrap:wrap; gap:7px; margin-top:11px; }
+.hydration-actions button { min-height:36px; padding:0 12px; border:1px solid var(--line); border-radius:999px; background:transparent; color:var(--ink); font-size:11px; font-weight:700; cursor:pointer; }
+.hydration-actions .hydration-undo { color:var(--muted-text); font-weight:400; }
+.hydration-targets { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+.hydration-targets button { min-height:34px; padding:0 11px; border:1px solid var(--line); border-radius:999px; background:transparent; color:var(--muted-text); font-size:11px; font-weight:700; cursor:pointer; }
+.hydration-targets button.active { background:#e8f7b5; border-color:#c6e55f; color:var(--ink); }
+.hydration-toggle { min-height:40px; width:100%; margin-top:11px; border:0; border-radius:9px; background:#1d1d1b; color:#d9f76b; font-size:12px; font-weight:700; cursor:pointer; }
+.hydration-note { margin:9px 0 0; color:var(--muted-text); font-size:11px; line-height:1.45; }
+.hydration-note.hydration-done { color:#4f7a1f; font-weight:700; }
+@media (max-width:600px) { .hydration-card { grid-template-columns:1fr; gap:20px; } }
+.dark .hydration-card { background:#20231a; border-color:#46502c; }
+.dark .hydration-bar { background:rgba(255,255,255,.1); }
+.dark .hydration-actions button,.dark .hydration-targets button { border-color:#46502c; }
+.dark .hydration-targets button.active { background:#33411f; border-color:#5d7030; color:#d9ed9e; }
+.dark .hydration-note.hydration-done { color:#c3e08a; }

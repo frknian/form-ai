@@ -4,6 +4,8 @@ import { Barcode, Camera, ChevronLeft, ChevronRight, ImagePlus, Plus, Search, Sp
 import Image from "next/image";
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { NutritionGoalsPanel } from "@/components/NutritionGoalsPanel";
+import { HydrationFasting } from "@/components/HydrationFasting";
+import { frequentMeals } from "@/lib/frequent-meals";
 import { emptyFoodNutrition, scaleFoodNutrition, type FoodMicronutrients, type FoodNutrition, type FoodSearchResult } from "@/lib/food-search";
 import { calculateNutritionGoal, calculateWeeklyWeightTrend, inferNutritionGoal, sanitizeNutritionGoal, type NutritionGoal, type NutritionGoalType, type WeightTrend } from "@/lib/nutrition-goals";
 import { isNativeApp, mobileImpact, takeFoodPhoto } from "@/lib/mobile";
@@ -45,6 +47,7 @@ const initialEntries: FoodEntry[] = [
 ];
 
 function microLabel(t: Dictionary, key: keyof FoodMicronutrients): string {
+  if (key === "sugarG") return t.calorieTracker.microSugar;
   if (key === "sodiumMg") return t.calorieTracker.microSodium;
   if (key === "calciumMg") return t.calorieTracker.microCalcium;
   if (key === "ironMg") return t.calorieTracker.microIron;
@@ -253,6 +256,17 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
     });
     return () => { cancelled = true; controls?.stop(); };
   }, [isScanning, t]);
+
+  // Tek dokunuşla tekrar ekleme önerileri; AI kullanmaz, yalnızca kendi geçmişin.
+  const regulars = useMemo(() => frequentMeals(entries, { today: localDateKey() }), [entries]);
+
+  async function addFrequentMeal(key: string) {
+    const found = regulars.find((item) => item.key === key);
+    if (!found) return;
+    const { name, meal: mealType, calories, protein, carbs, fat, fiber, grams, micros, source } = found.entry;
+    await addEntry({ name, meal: mealType, calories, protein, carbs, fat, fiber, grams, micros, source });
+    setMessage(t.frequentMeals.added(name));
+  }
 
   const selectedDate = useMemo(() => { const date = new Date(); date.setDate(date.getDate() + dateOffset); return localDateKey(date); }, [dateOffset]);
   const dailyEntries = useMemo(() => entries.filter((entry) => localDateKey(new Date(entry.consumedAt)) === selectedDate), [entries, selectedDate]);
@@ -478,6 +492,15 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
 
     <NutritionGoalsPanel key={`${nutritionGoal.goalType}-${nutritionGoal.calorieTarget}-${nutritionGoal.proteinGrams}-${nutritionGoal.carbsGrams}-${nutritionGoal.fatGrams}`} goal={nutritionGoal} recommendedGoals={recommendedGoals} totals={totals} trend={weightTrend} trendProgress={trendProgress} saving={goalSaving} saveMessage={goalMessage} onSave={saveNutritionGoal} />
 
+    {regulars.length > 0 && <section className="frequent-meals">
+      <div className="frequent-meals-head"><div className="eyebrow">{t.frequentMeals.eyebrow}</div><span>{t.frequentMeals.hint}</span></div>
+      <div className="frequent-meals-list">{regulars.map((item) => <button type="button" key={item.key} onClick={() => void addFrequentMeal(item.key)}>
+        <strong>{item.entry.name}</strong>
+        <span>{item.entry.calories} kcal · {translateMeal(t, item.entry.meal as Meal)}</span>
+        <small>{t.frequentMeals.countLabel(item.count)}</small>
+      </button>)}</div>
+    </section>}
+
     <section className="food-entry-panel">
       <div className="section-title"><div><div className="eyebrow">{t.calorieTracker.addMealEyebrow}</div><h2>{t.calorieTracker.addMealTitle}</h2></div><span className="food-entry-note"><Sparkles size={14} /> {t.calorieTracker.quickAndPractical}</span></div>
       <div className="food-methods">
@@ -514,6 +537,8 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
       <div className="calorie-hero-copy"><span>{t.calorieTracker.dailyGoal}</span><strong>{nutritionGoal.calorieTarget} kcal</strong><p>{overBy ? t.calorieTracker.overMessage(overBy) : remaining ? t.calorieTracker.remainingMessage(remaining) : t.calorieTracker.goalReached}</p><div className="macro-row"><span><i className="protein" />{t.calorieTracker.macroProtein} <b>{totals.protein}/{nutritionGoal.proteinGrams}g</b></span><span><i className="carbs" />{t.calorieTracker.macroCarbs} <b>{totals.carbs}/{nutritionGoal.carbsGrams}g</b></span><span><i className="fat" />{t.calorieTracker.macroFat} <b>{totals.fat}/{nutritionGoal.fatGrams}g</b></span></div></div>
       <div className={overBy ? "calorie-remaining over" : "calorie-remaining"}><span>{overBy ? t.calorieTracker.overLabel : t.calorieTracker.remainingLabel}</span><strong>{overBy ? `+${overBy}` : remaining}</strong><small>kcal</small></div>
     </section>
+
+    <HydrationFasting userId={userId} weightKg={weightKg} />
 
     <section className="meal-ai-advice" aria-labelledby="meal-ai-advice-title">
       <div className="meal-ai-icon" aria-hidden="true">✦</div><div><span>{t.calorieTracker.mealAdviceEyebrow}</span><h2 id="meal-ai-advice-title">{t.calorieTracker.mealAdviceTitle}</h2><p>{mealAdviceLoading ? t.calorieTracker.mealAdviceLoading : mealAdvice || t.calorieTracker.mealAdvicePreparing}</p><small>{mealAdviceSource === "ai" ? t.calorieTracker.mealAdviceAiNote : t.calorieTracker.mealAdviceFallbackNote} {t.calorieTracker.mealAdviceDisclaimer}</small></div><button type="button" disabled={mealAdviceLoading} onClick={() => setAdviceRevision((value) => value + 1)}>{mealAdviceLoading ? t.calorieTracker.refreshing : t.calorieTracker.refresh}</button>
