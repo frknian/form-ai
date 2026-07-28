@@ -59,3 +59,50 @@ export function summarizePersonalRecords(rows: SetLogInput[]): PersonalRecord[] 
 
   return records.sort((a, b) => b.estimatedOneRepMaxKg - a.estimatedOneRepMaxKg);
 }
+
+export type NewPersonalRecord = {
+  exerciseKey: string;
+  exerciseName: string;
+  weightKg: number;
+  reps: number;
+  estimatedOneRepMaxKg: number;
+  /** Önceki en iyi tahmini 1RM; ilk kez kayıt giriliyorsa 0. */
+  previousOneRepMaxKg: number;
+  isFirstRecord: boolean;
+};
+
+// Rekor sayılması için gereken en küçük artış. Tartı yuvarlaması ve Epley
+// formülünün ondalıkları yüzünden 0.1 kg'lık farklar "yeni rekor" gibi
+// görünebiliyor; bu da kutlamayı anlamsızlaştırırdı.
+const RECORD_MARGIN_KG = 0.5;
+
+/**
+ * Bu seansta kırılan kişisel rekorları döndürür.
+ *
+ * `priorSets` seanstan ÖNCEKİ tüm ağırlıklı setlerdir; karşılaştırma tahmini
+ * 1RM üzerinden yapılır, böylece "daha az ağırlıkla daha çok tekrar" da rekor
+ * sayılabilir. Vücut ağırlığı hareketlerinde (ağırlık girilmemiş) rekor
+ * hesaplanmaz — orada 1RM'in anlamı yoktur.
+ */
+export function detectNewPersonalRecords(sessionSets: SetLogInput[], priorSets: SetLogInput[]): NewPersonalRecord[] {
+  const priorBest = new Map<string, number>();
+  for (const record of summarizePersonalRecords(priorSets)) {
+    priorBest.set(record.exerciseKey, record.estimatedOneRepMaxKg);
+  }
+
+  const records: NewPersonalRecord[] = [];
+  for (const record of summarizePersonalRecords(sessionSets)) {
+    const previous = priorBest.get(record.exerciseKey) ?? 0;
+    if (record.estimatedOneRepMaxKg < previous + RECORD_MARGIN_KG) continue;
+    records.push({
+      exerciseKey: record.exerciseKey,
+      exerciseName: record.exerciseName,
+      weightKg: record.bestWeightKg,
+      reps: record.bestReps,
+      estimatedOneRepMaxKg: record.estimatedOneRepMaxKg,
+      previousOneRepMaxKg: previous,
+      isFirstRecord: previous === 0,
+    });
+  }
+  return records.sort((a, b) => b.estimatedOneRepMaxKg - a.estimatedOneRepMaxKg);
+}

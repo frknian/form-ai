@@ -903,6 +903,22 @@ export const en: typeof tr = {
     aggressive: "That's more than 1% of your body weight per week. Consider slowing down to keep it safe and sustainable.",
     disclaimer: "This is an estimate, not a promise; real change shifts with sleep, stress and water.",
   },
+  personalRecordCelebration: {
+    eyebrow: "NEW RECORD",
+    title: (count: number) => count > 1 ? `${count} new personal records!` : "New personal record!",
+    firstRecord: (name: string) => `Your first entry for ${name} is in.`,
+    beatenRecord: (name: string, previous: string, next: string) => `${name}: ${previous} → ${next} estimated 1RM.`,
+    setDetail: (weight: string, reps: number) => `${weight} × ${reps} reps`,
+    dismiss: "Close",
+  },
+  exerciseSwap: {
+    trigger: "Swap",
+    title: "Alternatives for the same area",
+    hint: "Swap it if the machine is busy or this movement doesn't suit you today.",
+    empty: "No suitable alternative found for this area.",
+    cancel: "Cancel",
+    swapped: (name: string) => `Exercise swapped for ${name}.`,
+  },
   dashboard: {
     todaysPlan: "TODAY'S PLAN · 01",
     greeting: (name: string) => `${name}, `,

@@ -901,6 +901,22 @@ export const tr = {
     aggressive: "Bu hız haftada vücut ağırlığının %1'inden fazla. Sürdürülebilir ve güvenli olması için yavaşlatmayı düşün.",
     disclaimer: "Tahmindir, kesinlik iddiası taşımaz; gerçek değişim uyku, stres ve suya göre oynar.",
   },
+  personalRecordCelebration: {
+    eyebrow: "YENİ REKOR",
+    title: (count: number) => count > 1 ? `${count} yeni kişisel rekor!` : "Yeni kişisel rekor!",
+    firstRecord: (name: string) => `${name} için ilk kaydın oluştu.`,
+    beatenRecord: (name: string, previous: string, next: string) => `${name}: ${previous} → ${next} tahmini 1RM.`,
+    setDetail: (weight: string, reps: number) => `${weight} × ${reps} tekrar`,
+    dismiss: "Kapat",
+  },
+  exerciseSwap: {
+    trigger: "Değiştir",
+    title: "Aynı bölgeyi çalıştıran alternatifler",
+    hint: "Makine doluysa veya bugün bu hareket sana uymuyorsa değiştir.",
+    empty: "Bu bölge için uygun alternatif bulunamadı.",
+    cancel: "Vazgeç",
+    swapped: (name: string) => `Hareket ${name} ile değiştirildi.`,
+  },
   dashboard: {
     todaysPlan: "BUGÜNÜN PLANI · 01",
     greeting: (name: string) => `${name}, `,

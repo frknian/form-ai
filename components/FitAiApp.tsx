@@ -30,6 +30,7 @@ import { getExerciseById, getExercisesForAI } from "@/lib/exercise-service";
 import { trustedExerciseMedia } from "@/lib/trusted-exercise-media";
 import { translateExerciseLabel, turkishExerciseInstructions } from "@/lib/exercise-translations";
 import { extractSessionMinutes, extractWeeklyDays, planProgressionBlock } from "@/lib/training-profile";
+import { alternativeExercises } from "@/lib/exercise-alternatives";
 import { applyPreviousPerformance, buildCompletedExerciseLog, createWorkoutSetDrafts, exerciseLogKey, type CompletedExerciseLog, type PreviousExercisePerformance, type WorkoutSetDraft } from "@/lib/workout-log";
 import { localTimeKey } from "@/lib/workout-calendar";
 import { localDateKey } from "@/lib/streak";
@@ -39,8 +40,8 @@ import type { Exercise } from "@/types/exercise";
 import { calculateAge, isValidBirthDate, type AccountStatus, type EditableProfile } from "@/lib/profile";
 import { isVerifiedAuthUser } from "@/lib/auth";
 import { saveProfileWithHistory, signedAvatarUrl } from "@/lib/profile-service";
-import { summarizePersonalRecords, type PersonalRecord, type SetLogInput } from "@/lib/personal-records";
-import { formatWeight, unitToKg } from "@/lib/units";
+import { detectNewPersonalRecords, summarizePersonalRecords, type NewPersonalRecord, type PersonalRecord, type SetLogInput } from "@/lib/personal-records";
+import { formatWeight, unitToKg, type WeightUnit } from "@/lib/units";
 import { useWeightUnit } from "@/lib/preferences";
 import { authorizedFetch } from "@/lib/api-client";
 
@@ -646,6 +647,24 @@ const dateLocale = locale === "en" ? "en-US" : "tr-TR";
 return <div className="subview"><div className="eyebrow">{t.progress.eyebrow}</div><h1>{t.progress.title(name || t.progress.defaultName)}<em>{t.progress.titleEm}</em></h1><p className="lead">{t.progress.lead}</p><div className="progress-cards"><div><span>{t.progress.thisWeek}</span><strong>{weeklySessions.length}</strong><small>{t.progress.completedWorkouts}</small></div><div><span>{t.progress.totalDuration}</span><strong>{Math.round(totalSeconds / 60)} {locale === "en" ? "min" : "dk"}</strong><small>{sessions.length ? t.progress.allRecords : t.progress.awaitingFirst}</small></div><div><span>{t.progress.energyBurned}</span><strong>{totalCalories} kcal</strong><small>{t.progress.metEstimate}</small></div></div><WeeklyAiReview userId={userId} goalText={goalText} referenceTime={referenceTime} /><PersonalRecordsCard userId={userId} /><BodyMeasurements userId={userId} referenceTime={referenceTime} /><section className="monthly-report"><div><div className="eyebrow">{t.progress.monthlyReportEyebrow}</div><h2>{t.progress.monthlySummary(new Intl.DateTimeFormat(dateLocale, { month: "long" }).format(referenceDate))}</h2><p>{t.progress.monthlyDisclaimer}</p><div className="monthly-numbers"><span><strong>{monthlySessions.length}</strong>{t.progress.workoutUnit}</span><span><strong>{monthlyMinutes}</strong>{t.progress.minuteUnit}</span><span><strong>{monthlyCalories}</strong>{t.progress.kcalUnit}</span><span><strong>%{completionRate}</strong>{t.progress.completionUnit}</span></div></div><div className="month-bars" aria-label={t.progress.fourWeekChartLabel}>{weekBuckets.map((count, index) => <div key={index}><span style={{ height: `${Math.max(8, (count / maxWeek) * 100)}%` }} /><small>{t.progress.weekShort(index + 1)}</small><b>{count}</b></div>)}</div></section>{energyMetrics && <div className="energy-reference"><div><span>{t.progress.bmrRef}</span><strong>{energyMetrics.bmr} kcal</strong><small>{t.progress.bmrHint}</small></div><div><span>{t.progress.tdeeRef}</span><strong>{energyMetrics.tdee} kcal</strong><small>{t.progress.tdeeCoefficient(energyMetrics.activityLabel)}</small></div><p>{t.progress.equationNote}</p></div>}<div className="progress-panel"><div className="section-title"><div><div className="eyebrow">{t.progress.logEyebrow}</div><h2>{sessions.length ? t.progress.recentWorkouts : t.progress.createFirst}</h2></div><span className="progress-status">{sessions.length ? t.progress.recordsCount(sessions.length) : t.progress.ready}</span></div>{sessions.length ? <div className="session-list">{sessions.slice(0, 6).map((session) => <article key={session.id}><div><strong>{session.exerciseNames.slice(0, 3).join(" · ") || t.progress.personalWorkout}</strong><small>{new Intl.DateTimeFormat(dateLocale, { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }).format(new Date(session.completedAt))}</small>{session.difficulty && <div className="session-feedback"><span>{translateDifficulty(t, session.difficulty)}</span><span>{t.progress.fatigueLabel(session.fatigue || 3)}</span>{session.painAreas?.filter((area) => area !== "Yok").map((area) => <span className="pain" key={area}>{translatePainArea(t, area)}</span>)}</div>}</div><div><b>{Math.max(1, Math.round(session.durationSeconds / 60))} {locale === "en" ? "min" : "dk"}</b><span>{session.calories} kcal · {session.completedExercises}/{session.totalExercises} {t.progress.movementUnit}</span></div></article>)}</div> : <div className="empty-progress"><span>✦</span><p>{t.progress.emptyBody}</p></div>}</div></div>;
 }
 
+function PersonalRecordCelebration({ records, unit, onDismiss }: { records: NewPersonalRecord[]; unit: WeightUnit; onDismiss: () => void }) {
+  const t = useTranslations();
+  if (!records.length) return null;
+  return <section className="pr-celebration" role="status">
+    <div className="pr-celebration-head">
+      <div><div className="eyebrow">{t.personalRecordCelebration.eyebrow}</div><h2>{t.personalRecordCelebration.title(records.length)}</h2></div>
+      <button type="button" aria-label={t.personalRecordCelebration.dismiss} onClick={onDismiss}>×</button>
+    </div>
+    <ul>{records.map((record) => <li key={record.exerciseKey}>
+      <strong>{record.exerciseName}</strong>
+      <span>{t.personalRecordCelebration.setDetail(formatWeight(record.weightKg, unit, { withUnit: true }), record.reps)}</span>
+      <small>{record.isFirstRecord
+        ? t.personalRecordCelebration.firstRecord(record.exerciseName)
+        : t.personalRecordCelebration.beatenRecord(record.exerciseName, formatWeight(record.previousOneRepMaxKg, unit, { withUnit: true }), formatWeight(record.estimatedOneRepMaxKg, unit, { withUnit: true }))}</small>
+    </li>)}</ul>
+  </section>;
+}
+
 function LibraryView({ onOpenWorkout, onAddWorkout }: { onOpenWorkout: (exercise: AiWorkout) => void; onAddWorkout: (exercise: AiWorkout) => void }) {
   return <ExerciseLibrary onOpenWorkout={(exercise) => onOpenWorkout(databaseExerciseAsWorkout(exercise))} onAddWorkout={(exercise) => onAddWorkout(databaseExerciseAsWorkout(exercise))} />;
 }
@@ -710,6 +729,8 @@ export default function Home() {
   const [workoutPhase, setWorkoutPhase] = useState<WorkoutPhase>("work");
   const [currentSet, setCurrentSet] = useState(1);
   const [exerciseSetDrafts, setExerciseSetDrafts] = useState<Record<number, WorkoutSetDraft[]>>({});
+  const [newRecords, setNewRecords] = useState<NewPersonalRecord[]>([]);
+  const [swapOpen, setSwapOpen] = useState(false);
   const [previousPerformances, setPreviousPerformances] = useState<Record<string, PreviousExercisePerformance | null>>({});
   const requestedPerformanceKeys = useRef(new Set<string>());
   const [completedExercises, setCompletedExercises] = useState<number[]>([]);
@@ -1051,6 +1072,27 @@ export default function Home() {
     return () => window.clearInterval(interval);
   }, [activeWorkout, aiAnalysis?.intensity, currentSet, currentWorkout, isRunning, weight, workoutPhase]);
 
+  // Kullanıcının ekipmanına ve ağrı kısıtlarına uyan, aynı bölgeyi çalıştıran
+  // alternatifler (bkz. lib/exercise-alternatives.ts).
+  const swapOptions = useMemo(() => {
+    if (!currentWorkout) return [];
+    const allowed = exerciseLibrary.filter((exercise) => isExerciseSafeForProfile(exercise, gym, equipmentText, history));
+    return alternativeExercises({ name: currentWorkout.name, area: currentWorkout.area, bodyweight: Boolean(currentWorkout.bodyweight), requires: [] }, allowed);
+  }, [currentWorkout, equipmentText, gym, history]);
+
+  function swapCurrentExercise(name: string) {
+    const replacement = exerciseLibrary.find((exercise) => exercise.name === name);
+    if (!replacement || activeWorkout === null) return;
+    // Set/tekrar/dinlenme reçetesi kullanıcının planından gelir; yalnızca hareket
+    // değişir, yük şeması korunur.
+    const swapped: AiWorkout = { ...replacement, level: replacement.area, sets: currentWorkout?.sets ?? "3 set · 10 tekrar", rest: currentWorkout?.rest ?? "60 sn dinlenme", seconds: currentWorkout?.seconds ?? 45 };
+    const prescription = workoutPrescription(swapped);
+    setPlayerQueue((queue) => queue.map((item, index) => index === activeWorkout ? swapped : item));
+    // Taslaklar hareketin kendisine bağlı; değişince sıfırdan kurulmalı.
+    setExerciseSetDrafts((current) => ({ ...current, [activeWorkout]: createWorkoutSetDrafts(prescription.totalSets, prescription.target) }));
+    setSwapOpen(false);
+  }
+
   function openWorkout(index: number, queue: AiWorkout[] = workouts) {
     const nextWorkout = queue[index];
     if (!nextWorkout) return;
@@ -1206,6 +1248,40 @@ export default function Home() {
         await supabase.from("workout_exercise_logs").delete().in("id", exerciseRows.map((row) => row.id));
         return;
       }
+
+      // Kişisel rekor kutlaması: bu seansın setleri, AYNI hareketlerin daha
+      // önceki setleriyle karşılaştırılır. Sorgu bu seansı hariç tutar, aksi
+      // halde yeni eklenen setler kendi kendinin rekoru sayılırdı.
+      void (async () => {
+        const exerciseKeys = exerciseLogs.map((log) => log.exerciseKey);
+        if (!exerciseKeys.length) return;
+        const { data: priorRows } = await supabase
+          .from("workout_set_logs")
+          .select("weight_kg, reps, workout_exercise_logs!inner(exercise_key, exercise_name, completed_at)")
+          .eq("user_id", user.id)
+          .neq("session_id", record.id)
+          .in("workout_exercise_logs.exercise_key", exerciseKeys);
+        const priorSets = (priorRows || []).flatMap((row) => {
+          const log = (row as { workout_exercise_logs?: { exercise_key?: string; exercise_name?: string; completed_at?: string } }).workout_exercise_logs;
+          if (!log?.exercise_key) return [];
+          return [{
+            exerciseKey: String(log.exercise_key),
+            exerciseName: String(log.exercise_name || log.exercise_key),
+            completedAt: String(log.completed_at || record.completedAt),
+            weightKg: row.weight_kg === null ? null : Number(row.weight_kg),
+            reps: row.reps === null ? null : Number(row.reps),
+          }];
+        });
+        const sessionSets = exerciseLogs.flatMap((log) => log.sets.map((set) => ({
+          exerciseKey: log.exerciseKey,
+          exerciseName: log.exerciseName,
+          completedAt: record.completedAt,
+          weightKg: set.weightKg === null ? null : unitToKg(set.weightKg, weightUnit),
+          reps: set.reps,
+        })));
+        const records = detectNewPersonalRecords(sessionSets, priorSets);
+        if (records.length) setNewRecords(records);
+      })();
 
       setPreviousPerformances((current) => {
         const next = { ...current };
@@ -1463,12 +1539,13 @@ export default function Home() {
         </section>
       ) : (
         <section className="dashboard">
-<WorkoutCalendar active={activeView === "calendar"} userId={authUser?.id} onStartWorkout={() => setActiveView("workout")} />{activeView === "calendar" ? null : activeView === "profile" ? <ProfileManager user={authUser} profile={{ displayName: name, birthDate, gender, heightCm: Number(height) || null, weightKg: Number(weight) || null, goalText, environment: gym === "Salon" ? "Salon" : "Evde", equipmentText, requestedExercises, avatarPath }} avatarUrl={avatarUrl} onSaved={applySavedProfile} onFrozen={() => setAccountStatus("frozen")} onDeleted={clearDeletedAccount} onProgressReset={resetSavedProgress} onSignOut={handleSignOut} /> : activeView === "progress" ? <ProgressView name={name} sessions={sessionHistory} referenceTime={progressReferenceTime} energyMetrics={energyMetrics} userId={authUser?.id} goalText={goalText || planGoal} /> : activeView === "nutrition" ? <CalorieTracker userId={authUser?.id} bmr={energyMetrics?.bmr} tdee={energyMetrics?.tdee} weightKg={Number(weight) || undefined} activityFactor={energyMetrics?.activityFactor} workoutDays={inferWorkoutDays(history[1] || history[3])} profileGoal={goalText || planGoal} /> : activeView === "library" ? <LibraryView onOpenWorkout={(exercise) => openWorkout(0, [exercise])} onAddWorkout={(exercise) => setAiWorkouts((current) => current.some((item) => item.id === exercise.id) ? current : [...current, exercise])} /> : <>
+<WorkoutCalendar active={activeView === "calendar"} userId={authUser?.id} onStartWorkout={() => setActiveView("workout")} />{activeView === "calendar" ? null : activeView === "profile" ? <ProfileManager user={authUser} profile={{ displayName: name, birthDate, gender, heightCm: Number(height) || null, weightKg: Number(weight) || null, goalText, environment: gym === "Salon" ? "Salon" : "Evde", equipmentText, requestedExercises, avatarPath }} avatarUrl={avatarUrl} onSaved={applySavedProfile} onFrozen={() => setAccountStatus("frozen")} onDeleted={clearDeletedAccount} onProgressReset={resetSavedProgress} onSignOut={handleSignOut} /> : activeView === "progress" ? <><PersonalRecordCelebration records={newRecords} unit={weightUnit} onDismiss={() => setNewRecords([])} /><ProgressView name={name} sessions={sessionHistory} referenceTime={progressReferenceTime} energyMetrics={energyMetrics} userId={authUser?.id} goalText={goalText || planGoal} /></> : activeView === "nutrition" ? <CalorieTracker userId={authUser?.id} bmr={energyMetrics?.bmr} tdee={energyMetrics?.tdee} weightKg={Number(weight) || undefined} activityFactor={energyMetrics?.activityFactor} workoutDays={inferWorkoutDays(history[1] || history[3])} profileGoal={goalText || planGoal} /> : activeView === "library" ? <LibraryView onOpenWorkout={(exercise) => openWorkout(0, [exercise])} onAddWorkout={(exercise) => setAiWorkouts((current) => current.some((item) => item.id === exercise.id) ? current : [...current, exercise])} /> : <>
           {activeView === "workout" && activeWorkout !== null && currentWorkout && currentGuide && currentPrescription ? <div className="workout-player">
             <button className="back-btn" type="button" onClick={() => { setIsRunning(false); setActiveWorkout(null); }}>{t.workoutPlayer.backToPlan}</button>
             <div className="workout-session-progress" aria-label={t.workoutPlayer.progressLabel}>{playerQueue.map((exercise, index) => <span key={`${exercise.name}-${index}`} className={completedExercises.includes(index) ? "complete" : skippedExercises.includes(index) ? "skipped" : index === activeWorkout ? "active" : ""} />)}</div>
             <ExerciseAnimation exercise={currentWorkout} />
-            <div className="player-title-row"><div><div className="eyebrow">{t.workoutPlayer.movementLabel(activeWorkout + 1, playerQueue.length)}</div><h1>{currentWorkout.name}</h1></div><span className={`phase-badge ${workoutPhase}`}>{workoutPhase === "rest" ? t.workoutPlayer.phaseRest : workoutPhase === "done" ? t.workoutPlayer.phaseDone : t.workoutPlayer.phaseSet(currentSet, currentPrescription.totalSets)}</span></div>
+            <div className="player-title-row"><div><div className="eyebrow">{t.workoutPlayer.movementLabel(activeWorkout + 1, playerQueue.length)}</div><h1>{currentWorkout.name}</h1></div><span className={`phase-badge ${workoutPhase}`}>{workoutPhase === "rest" ? t.workoutPlayer.phaseRest : workoutPhase === "done" ? t.workoutPlayer.phaseDone : t.workoutPlayer.phaseSet(currentSet, currentPrescription.totalSets)}</span><button type="button" className="swap-trigger" onClick={() => setSwapOpen((open) => !open)} aria-expanded={swapOpen}>{t.exerciseSwap.trigger}</button></div>
+            {swapOpen && <div className="swap-panel"><div className="eyebrow">{t.exerciseSwap.title}</div><p>{t.exerciseSwap.hint}</p>{swapOptions.length ? <div className="swap-options">{swapOptions.map((option) => <button type="button" key={option.name} onClick={() => swapCurrentExercise(option.name)}>{option.name} <small>{option.area}</small></button>)}</div> : <p className="swap-empty">{t.exerciseSwap.empty}</p>}<button type="button" className="swap-cancel" onClick={() => setSwapOpen(false)}>{t.exerciseSwap.cancel}</button></div>}
             <div className="movement-guide"><div className="guide-heading"><span>{t.workoutPlayer.guideHeading}</span><strong>{currentGuide.focus}</strong></div><ol><li>{currentGuide.start}</li><li>{currentWorkout.instructions}</li><li>{currentGuide.finish}</li></ol></div>
             <div className="form-cues"><div><span>{t.workoutPlayer.breatheLabel}</span><strong>{currentGuide.breathe}</strong></div><div className="warning"><span>{t.workoutPlayer.mistakeLabel}</span><strong>{currentGuide.mistake}</strong></div></div>
             <div className={`timer-card phase-${workoutPhase}`}><span>{isRunning ? workoutPhase === "rest" ? t.workoutPlayer.timerActiveRest : t.workoutPlayer.timerActiveSet : workoutPhase === "done" ? t.workoutPlayer.timerDoneLabel : workoutPhase === "rest" ? t.workoutPlayer.timerReadyRest : t.workoutPlayer.timerReady}</span><strong>{formatClock(timer)}</strong><small>{workoutPhase === "rest" ? t.workoutPlayer.nextSet(Math.min(currentSet + 1, currentPrescription.totalSets)) : t.workoutPlayer.targetSummary(currentPrescription.target, displayedSessionCalories)}</small></div>
