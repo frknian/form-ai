@@ -30,7 +30,7 @@ import { getExerciseById, getExercisesForAI } from "@/lib/exercise-service";
 import { trustedExerciseMedia } from "@/lib/trusted-exercise-media";
 import { translateExerciseLabel, turkishExerciseInstructions } from "@/lib/exercise-translations";
 import { extractSessionMinutes, extractWeeklyDays, planProgressionBlock } from "@/lib/training-profile";
-import { buildCompletedExerciseLog, createWorkoutSetDrafts, exerciseLogKey, type CompletedExerciseLog, type PreviousExercisePerformance, type WorkoutSetDraft } from "@/lib/workout-log";
+import { applyPreviousPerformance, buildCompletedExerciseLog, createWorkoutSetDrafts, exerciseLogKey, type CompletedExerciseLog, type PreviousExercisePerformance, type WorkoutSetDraft } from "@/lib/workout-log";
 import { localTimeKey } from "@/lib/workout-calendar";
 import { localDateKey } from "@/lib/streak";
 import { inferWorkoutDays } from "@/lib/nutrition-goals";
@@ -932,6 +932,16 @@ export default function Home() {
       if (cancelled) return;
       settled = true;
       setPreviousPerformances((current) => ({ ...current, [currentWorkoutKey]: performance }));
+      // Taslaklar bu hareket açılırken kuruluyor, geçmiş ise sonradan geliyor;
+      // bu yüzden otomatik doldurma veri ELDE EDİLDİĞİNDE uygulanır. Dolu veya
+      // tamamlanmış alanlara dokunulmaz (bkz. applyPreviousPerformance).
+      if (performance && activeWorkout !== null) {
+        setExerciseSetDrafts((current) => {
+          const drafts = current[activeWorkout];
+          if (!drafts) return current;
+          return { ...current, [activeWorkout]: applyPreviousPerformance(drafts, performance) };
+        });
+      }
     }
 
     async function loadPreviousPerformance() {
@@ -981,7 +991,7 @@ export default function Home() {
       cancelled = true;
       if (!settled) requestedKeys.delete(currentWorkoutKey);
     };
-  }, [authUser, currentWorkout, currentWorkoutKey]);
+  }, [activeWorkout, authUser, currentWorkout, currentWorkoutKey]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });

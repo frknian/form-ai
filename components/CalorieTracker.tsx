@@ -232,7 +232,7 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
     // decodeFromVideoDevice hem kamera akışını açar hem de video elementine
     // bağlar hem de her kareyi sürekli tarar; tüm tarayıcılarda (Chromium,
     // Safari, Firefox) aynı şekilde çalışır, ağ isteği veya AI çağrısı yapmaz.
-    reader.decodeFromVideoDevice(undefined, barcodeVideo.current ?? undefined, (result, error) => {
+    reader.decodeFromVideoDevice(undefined, barcodeVideo.current ?? undefined, (result) => {
       if (cancelled) return;
       if (result) {
         setBarcode(result.getText());
@@ -240,11 +240,14 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
         setMessage(t.calorieTracker.barcodeScanned);
         return;
       }
-      // NotFoundException her boş karede fırlar; bu normal tarama gürültüsüdür.
-      if (error && error.name !== "NotFoundException" && error.name !== "ChecksumException" && error.name !== "FormatException") {
-        setMessage(t.calorieTracker.cameraAccessFailed);
-        setIsScanning(false);
-      }
+      // Buradaki hatalar KARE BAŞINA tarama gürültüsüdür: ZXing, barkod
+      // göremediği her karede NotFoundException verir. Bunları hata adına
+      // bakarak elemek üretimde çalışmaz — ts-custom-error `name`'i yapıcı
+      // fonksiyonun adından alır ve küçültücü sınıfı yeniden adlandırdığı için
+      // ad "NotFoundException" değil, "t" gibi bir şey olur. Sonuç: ilk boş
+      // karede tarayıcı kendini kapatıyordu. Gerçek kamera/izin arızaları
+      // decodeFromVideoDevice sözünü reddeder ve aşağıdaki catch'te ele alınır,
+      // bu yüzden kare hatalarını sessizce yok sayıyoruz.
     }).then((value) => { if (!cancelled) controls = value; else value.stop(); }).catch(() => {
       if (!cancelled) { setMessage(t.calorieTracker.cameraAccessFailed); setIsScanning(false); }
     });

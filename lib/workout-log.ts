@@ -72,6 +72,27 @@ export function createWorkoutSetDrafts(totalSets: number, target: string): Worko
   }));
 }
 
+/**
+ * Geçen seferin ağırlık/tekrar değerlerini set taslaklarına önceden yazar.
+ *
+ * Yalnızca kullanıcının HENÜZ DOKUNMADIĞI alanlar doldurulur: tamamlanmış set
+ * veya elle girilmiş bir değer asla ezilmez, aksi halde otomatik doldurma
+ * kullanıcının kaydını silerdi. Önceki seansta olmayan bir set numarası için
+ * son bilinen set referans alınır (ör. geçen hafta 3 set, bu hafta 4 set).
+ */
+export function applyPreviousPerformance(drafts: WorkoutSetDraft[], previous: PreviousExercisePerformance | null | undefined): WorkoutSetDraft[] {
+  if (!previous || !previous.sets.length) return drafts;
+  return drafts.map((draft) => {
+    if (draft.completed) return draft;
+    const match = previous.sets.find((set) => set.setNumber === draft.setNumber) ?? previous.sets[previous.sets.length - 1];
+    if (!match) return draft;
+    const weightKg = draft.weightKg.trim() === "" && match.weightKg !== null ? String(match.weightKg) : draft.weightKg;
+    const reps = draft.reps.trim() === "" && match.reps !== null ? String(match.reps) : draft.reps;
+    const durationSeconds = draft.durationSeconds.trim() === "" && match.durationSeconds !== null ? String(match.durationSeconds) : draft.durationSeconds;
+    return { ...draft, weightKg, reps, durationSeconds };
+  });
+}
+
 export function normalizeWorkoutSet(draft: WorkoutSetDraft): LoggedWorkoutSet | null {
   const weightKg = nonNegativeNumber(draft.weightKg);
   const reps = positiveInteger(draft.reps);
