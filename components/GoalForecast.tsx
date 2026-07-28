@@ -13,7 +13,7 @@ import { useLocale } from "@/lib/i18n/locale";
  * ölçümlerinden, ölçüm yetersizse beslenme hedefindeki kalori farkından
  * türetilir (bkz. lib/goal-forecast.ts). Veri yetersizse tarih uydurulmaz.
  */
-export function GoalForecast({ userId, currentWeightKg }: { userId?: string; currentWeightKg?: number | null }) {
+export function GoalForecast({ userId, currentWeightKg, gender = "" }: { userId?: string; currentWeightKg?: number | null; gender?: string }) {
   const t = useTranslations();
   const locale = useLocale();
   const unit = useWeightUnit();
@@ -109,7 +109,7 @@ export function GoalForecast({ userId, currentWeightKg }: { userId?: string; cur
           min="1"
           step="0.1"
           value={draft}
-          placeholder={t.goalForecast.targetPlaceholder}
+          placeholder={t.goalForecast.targetPlaceholder(gender)}
           onChange={(event) => setDraft(event.target.value)}
           onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); saveTarget(); } }}
         />

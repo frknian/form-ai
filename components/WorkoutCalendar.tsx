@@ -108,8 +108,12 @@ export function WorkoutCalendar({ active, userId, onStartWorkout }: WorkoutCalen
         await supabase.from("reminder_preferences").update({ timezone: detectedTimezone, updated_at: new Date().toISOString() }).eq("user_id", userId);
       }
     }
+    // Takvim her görünümde mount kalır; ilerleme sıfırlandığında tamamlanmış
+    // günler "planlandı"ya döner, haber verilmezse eski durumu göstermeye devam eder.
+    function reload() { void loadCalendar(); }
     void loadCalendar();
-    return () => { cancelled = true; };
+    window.addEventListener("fit-ai-progress-reset", reload);
+    return () => { cancelled = true; window.removeEventListener("fit-ai-progress-reset", reload); };
   }, [userId, t]);
 
   useEffect(() => {

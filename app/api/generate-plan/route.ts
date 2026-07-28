@@ -101,7 +101,7 @@ export function profileSignals(payload: Record<string, unknown>) {
   const frequencyText = history[1] || "1–2 gün";
   const weeklyDays = extractWeeklyDays(frequencyText);
   const beginner = /yeni|hayır|0 gün/i.test(`${experience} ${history[0] || ""}`);
-  const intensity = beginner || history[7] === "Düşük" ? "Düşük-orta" : primaryGoal === "Kondisyon" ? "Orta-yüksek" : "Orta";
+  const intensity = beginner || (history[7] || "").includes("Düşük") ? "Düşük-orta" : primaryGoal === "Kondisyon" ? "Orta-yüksek" : "Orta";
   const exerciseCount = sessionMinutes <= 15 ? 3 : sessionMinutes >= 60 ? 6 : sessionMinutes >= 45 ? 5 : 4;
   const setRange = beginner ? "2–3" : sessionMinutes >= 45 ? "3–4" : "3";
   const restRange = primaryGoal === "Kondisyon" || primaryGoal === "Kilo verme" ? "30–60 sn" : beginner ? "60–90 sn" : "75–120 sn";

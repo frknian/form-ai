@@ -29,9 +29,18 @@ export function ActivityStreak({ userId }: { userId?: string }) {
       if (Number.isFinite(nextStreak) && nextStreak > 0) setStreak(nextStreak);
       void load();
     }
+    // İlerleme sıfırlandığında serinin satırı silinir; bu bileşen görünüm
+    // değişse de mount kaldığı için haber verilmezse eski seriyi göstermeye
+    // devam eder.
+    function reload() { void load(); }
     void load();
     window.addEventListener("fit-ai-activity-recorded", refresh);
-    return () => { cancelled = true; window.removeEventListener("fit-ai-activity-recorded", refresh); };
+    window.addEventListener("fit-ai-progress-reset", reload);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("fit-ai-activity-recorded", refresh);
+      window.removeEventListener("fit-ai-progress-reset", reload);
+    };
   }, [userId]);
 
   return <section className="activity-streak" aria-labelledby="activity-streak-title"><div><span>✦</span><div><small>{t.streak.label}</small><strong id="activity-streak-title">{t.streak.days(streak)}</strong><p>{lastActivity ? t.streak.sameDayNote : t.streak.freshNote}</p></div></div></section>;

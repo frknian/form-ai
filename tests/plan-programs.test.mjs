@@ -68,3 +68,37 @@ test("hareket kütüphanesi kartı harekete girilmeden animasyon oynatmaz", asyn
   // Detayda ise oynamalı; orada autoplay kapatılmamış olmalı.
   assert.doesNotMatch(detail, /<ExerciseAnimation[^/]*autoplay=\{false\}/);
 });
+
+test("profil testinde tüm seçenekli sorular çoklu seçimdir", () => {
+  // Tek seçim, otomatik ilerleme ve sakatlığa özel dal kaldırıldı.
+  assert.match(appSource, /function toggleAnswer\(answer: string\)/);
+  assert.doesNotMatch(appSource, /function setAnswer\(/);
+  assert.doesNotMatch(appSource, /toggleInjury/);
+  // Seçili durum birleşik değerden okunmalı, tam eşitlikle değil.
+  assert.match(appSource, /\(history\[questionIndex\] \|\| ""\)\.split\(" · "\)\.includes\(answer\)/);
+  // "Yok" gibi dışlayıcı cevaplar diğerleriyle birlikte işaretlenemez.
+  assert.match(appSource, /EXCLUSIVE_ANSWERS = new Set\(\["Yok", "Hayır", "0 gün"\]\)/);
+});
+
+test("birleşik cevaplar aşağı akışta tam eşitlikle okunmaz", () => {
+  // "Yeni başlıyorum · Orta seviye" gibi değerler tam eşitliği kaçırırdı.
+  assert.doesNotMatch(appSource, /history\[2\] === "Yeni başlıyorum"/);
+  assert.match(appSource, /history\[2\]\.includes\("Yeni başlıyorum"\)/);
+});
+
+test("profil testi soruları telefon genişliğine uyarlanmıştır", async () => {
+  const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  // Sabit 650px, 375px ekranda yatay taşma yapıyordu.
+  assert.doesNotMatch(css, /\.history-step \{ width:650px; \}/);
+  assert.match(css, /\.history-step \{ width:100%; max-width:650px; \}/);
+  assert.match(css, /@media \(max-width:600px\)[^]*?\.answer-grid \{ display:grid/);
+});
+
+test("kalori halkasındaki metin diskin ortasında toplanır", async () => {
+  const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  // place-items yalnız satır içinde ortalar; align-content olmadan satır izleri
+  // gerilip metni diskin kenarlarına, yani halkanın yayına yapıştırıyordu.
+  assert.match(css, /\.calorie-progress > div \{ display:grid; place-items:center; align-content:center;/);
+  // İç disk kart arka planıyla (#22221f) aynı renkte olmamalı, yoksa görünmez.
+  assert.doesNotMatch(css, /\.calorie-progress > div \{[^}]*background:#22221f/);
+});

@@ -146,7 +146,10 @@ test("keeps the AI plan and movement library wired into the product", async () =
   assert.match(page, /t\.dashboard\.howTo/);
   assert.match(page, /Yerde Dambıl Göğüs Presi/);
   assert.ok((page.match(/^  \["/gm) ?? []).length >= 100, "exercise library should contain 100+ additional movements");
-  assert.match(page, /toggleInjury/);
+  // Çoklu seçim artık yalnız sakatlık sorusunda değil, seçenekli tüm sorularda.
+  assert.match(page, /function toggleAnswer\(answer: string\)/);
+  assert.match(page, /EXCLUSIVE_ANSWERS/);
+  assert.doesNotMatch(page, /toggleInjury/);
   assert.match(page, /personalizeAiWorkouts/);
   assert.match(page, /isExerciseSafeForProfile/);
   assert.match(page, /exerciseCatalog/);

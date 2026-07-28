@@ -475,16 +475,6 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
 
     <NutritionGoalsPanel key={`${nutritionGoal.goalType}-${nutritionGoal.calorieTarget}-${nutritionGoal.proteinGrams}-${nutritionGoal.carbsGrams}-${nutritionGoal.fatGrams}`} goal={nutritionGoal} recommendedGoals={recommendedGoals} totals={totals} trend={weightTrend} trendProgress={trendProgress} saving={goalSaving} saveMessage={goalMessage} onSave={saveNutritionGoal} />
 
-    <section className="calorie-hero">
-      <div className={overBy ? "calorie-progress over" : "calorie-progress"} style={{ "--progress": `${progress}%` } as React.CSSProperties}><div><small>{t.calorieTracker.todayIntake}</small><strong>{totals.calories}<em> kcal</em></strong><span>{t.calorieTracker.percentOfGoal(rawProgress)}</span></div></div>
-      <div className="calorie-hero-copy"><span>{t.calorieTracker.dailyGoal}</span><strong>{nutritionGoal.calorieTarget} kcal</strong><p>{overBy ? t.calorieTracker.overMessage(overBy) : remaining ? t.calorieTracker.remainingMessage(remaining) : t.calorieTracker.goalReached}</p><div className="macro-row"><span><i className="protein" />{t.calorieTracker.macroProtein} <b>{totals.protein}/{nutritionGoal.proteinGrams}g</b></span><span><i className="carbs" />{t.calorieTracker.macroCarbs} <b>{totals.carbs}/{nutritionGoal.carbsGrams}g</b></span><span><i className="fat" />{t.calorieTracker.macroFat} <b>{totals.fat}/{nutritionGoal.fatGrams}g</b></span></div></div>
-      <div className={overBy ? "calorie-remaining over" : "calorie-remaining"}><span>{overBy ? t.calorieTracker.overLabel : t.calorieTracker.remainingLabel}</span><strong>{overBy ? `+${overBy}` : remaining}</strong><small>kcal</small></div>
-    </section>
-
-    <section className="meal-ai-advice" aria-labelledby="meal-ai-advice-title">
-      <div className="meal-ai-icon" aria-hidden="true">✦</div><div><span>{t.calorieTracker.mealAdviceEyebrow}</span><h2 id="meal-ai-advice-title">{t.calorieTracker.mealAdviceTitle}</h2><p>{mealAdviceLoading ? t.calorieTracker.mealAdviceLoading : mealAdvice || t.calorieTracker.mealAdvicePreparing}</p><small>{mealAdviceSource === "ai" ? t.calorieTracker.mealAdviceAiNote : t.calorieTracker.mealAdviceFallbackNote} {t.calorieTracker.mealAdviceDisclaimer}</small></div><button type="button" disabled={mealAdviceLoading} onClick={() => setAdviceRevision((value) => value + 1)}>{mealAdviceLoading ? t.calorieTracker.refreshing : t.calorieTracker.refresh}</button>
-    </section>
-
     <section className="food-entry-panel">
       <div className="section-title"><div><div className="eyebrow">{t.calorieTracker.addMealEyebrow}</div><h2>{t.calorieTracker.addMealTitle}</h2></div><span className="food-entry-note"><Sparkles size={14} /> {t.calorieTracker.quickAndPractical}</span></div>
       <div className="food-methods">
@@ -514,6 +504,16 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
         </>}
         {message && <p className="food-message">{message}</p>}
       </div>
+    </section>
+
+    <section className="calorie-hero">
+      <div className={overBy ? "calorie-progress over" : "calorie-progress"} style={{ "--progress": `${progress}%` } as React.CSSProperties}><div><small>{t.calorieTracker.todayIntake}</small><strong>{totals.calories}<em> kcal</em></strong><span>{t.calorieTracker.percentOfGoal(rawProgress)}</span></div></div>
+      <div className="calorie-hero-copy"><span>{t.calorieTracker.dailyGoal}</span><strong>{nutritionGoal.calorieTarget} kcal</strong><p>{overBy ? t.calorieTracker.overMessage(overBy) : remaining ? t.calorieTracker.remainingMessage(remaining) : t.calorieTracker.goalReached}</p><div className="macro-row"><span><i className="protein" />{t.calorieTracker.macroProtein} <b>{totals.protein}/{nutritionGoal.proteinGrams}g</b></span><span><i className="carbs" />{t.calorieTracker.macroCarbs} <b>{totals.carbs}/{nutritionGoal.carbsGrams}g</b></span><span><i className="fat" />{t.calorieTracker.macroFat} <b>{totals.fat}/{nutritionGoal.fatGrams}g</b></span></div></div>
+      <div className={overBy ? "calorie-remaining over" : "calorie-remaining"}><span>{overBy ? t.calorieTracker.overLabel : t.calorieTracker.remainingLabel}</span><strong>{overBy ? `+${overBy}` : remaining}</strong><small>kcal</small></div>
+    </section>
+
+    <section className="meal-ai-advice" aria-labelledby="meal-ai-advice-title">
+      <div className="meal-ai-icon" aria-hidden="true">✦</div><div><span>{t.calorieTracker.mealAdviceEyebrow}</span><h2 id="meal-ai-advice-title">{t.calorieTracker.mealAdviceTitle}</h2><p>{mealAdviceLoading ? t.calorieTracker.mealAdviceLoading : mealAdvice || t.calorieTracker.mealAdvicePreparing}</p><small>{mealAdviceSource === "ai" ? t.calorieTracker.mealAdviceAiNote : t.calorieTracker.mealAdviceFallbackNote} {t.calorieTracker.mealAdviceDisclaimer}</small></div><button type="button" disabled={mealAdviceLoading} onClick={() => setAdviceRevision((value) => value + 1)}>{mealAdviceLoading ? t.calorieTracker.refreshing : t.calorieTracker.refresh}</button>
     </section>
 
     <section className="food-log"><div className="section-title"><div><div className="eyebrow">{t.calorieTracker.dailySummaryEyebrow}</div><h2>{t.calorieTracker.yourMeals}</h2></div><span className="log-total"><Utensils size={14} /> {t.calorieTracker.recordCount(dailyEntries.length)}</span></div>{meals.map((mealName) => { const group = dailyEntries.filter((entry) => entry.meal === mealName); const groupCalories = group.reduce((sum, entry) => sum + entry.calories, 0); return <div className="meal-group" key={mealName}><div className="meal-group-head"><strong>{translateMeal(t, mealName)}</strong><span>{groupCalories} kcal</span></div>{group.length ? group.map((entry) => <article className="food-log-item" key={entry.id}><div className="food-icon">{entry.meal === "Kahvaltı" ? "☀" : entry.meal === "Öğle yemeği" ? "◒" : entry.meal === "Akşam yemeği" ? "◐" : "✦"}</div><div><strong>{entry.name}</strong><small>{entry.time} · {translateFoodSource(t, entry.source)}</small><span>P {entry.protein}g · K {entry.carbs}g · Y {entry.fat}g</span></div><b>{entry.calories} <small>kcal</small></b><button type="button" aria-label={t.calorieTracker.deleteEntry(entry.name)} onClick={() => void deleteEntry(entry.id)}><Trash2 size={15} /></button></article>) : <p className="empty-meal">{t.calorieTracker.noRecordsYet}</p>}</div>; })}</section>

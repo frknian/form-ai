@@ -136,12 +136,24 @@ export const en: typeof tr = {
     gymHint: "Gym equipment",
     equipmentLabel: "YOUR EQUIPMENT",
     optionalHint: "Optional",
-    equipmentPlaceholder: "E.g. 2 dumbbells (5 kg each), a yoga mat, and a resistance band",
+    equipmentPlaceholder: (gender: string) => gender === "Erkek"
+      ? "E.g. A pull-up bar at home and two 8 kg dumbbells"
+      : gender === "Kadın"
+        ? "E.g. A yoga mat, a resistance band and two 3 kg dumbbells"
+        : "E.g. A yoga mat and two small dumbbells, nothing else",
     goalLabel: "YOUR GOAL",
     goalHint: "Makes the program more personal",
-    goalPlaceholder: "E.g. I want to get stronger and follow programs I can finish in 30 minutes.",
+    goalPlaceholder: (gender: string) => gender === "Erkek"
+      ? "E.g. I want to lose the belly and feel less tired in the evenings."
+      : gender === "Kadın"
+        ? "E.g. I want to lose a little weight and tone my arms and legs."
+        : "E.g. I want to lose weight and have more energy during the day.",
     requestedExercisesLabel: "EXERCISES YOU SPECIFICALLY WANT",
-    requestedExercisesPlaceholder: "E.g. Floor dumbbell chest press, goblet squat",
+    requestedExercisesPlaceholder: (gender: string) => gender === "Erkek"
+      ? "E.g. Push-ups, pull-ups, goblet squat"
+      : gender === "Kadın"
+        ? "E.g. Squat, plank, glute bridge"
+        : "E.g. Push-ups, plank, squat",
     step3Eyebrow: "OPTIONAL BODY ANALYSIS",
     step3TitleLine1: "Let's better understand",
     step3TitleEm: "your body.",
@@ -167,7 +179,7 @@ export const en: typeof tr = {
     sideNoteBody: "Every plan adapts to your goals and daily life.",
     historyQuestions: [
       "Have you exercised regularly before?",
-      "In the last 3 months, how many days a week did you move?",
+      "In the last 3 months, how many days a week did you do sport?",
       "What level would you say you're at?",
       "Write the time you can devote to training and the days that work for you.",
       "What's your main goal right now?",
@@ -865,7 +877,7 @@ export const en: typeof tr = {
     eyebrow: "GOAL FORECAST",
     title: "How far is your goal?",
     targetLabel: (unit: string) => `Your target weight (${unit})`,
-    targetPlaceholder: "e.g. 90",
+    targetPlaceholder: (gender: string) => gender === "Erkek" ? "e.g. 80" : gender === "Kadın" ? "e.g. 62" : "e.g. 72",
     save: "Save",
     clear: "Clear",
     needsWeight: "Add your current weight to your profile first — the forecast builds on it.",

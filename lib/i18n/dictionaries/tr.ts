@@ -134,12 +134,24 @@ export const tr = {
     gymHint: "Salon ekipmanları",
     equipmentLabel: "EKİPMANLARIN",
     optionalHint: "İsteğe bağlı",
-    equipmentPlaceholder: "Örn. 2 adet 5 kg dambıl, yoga matı ve direnç bandı",
+    equipmentPlaceholder: (gender: string): string => gender === "Erkek"
+      ? "Örn. Evde bir barfiks demiri ve iki tane 8 kg dambıl var"
+      : gender === "Kadın"
+        ? "Örn. Yoga matı, direnç bandı ve iki tane 3 kg dambıl var"
+        : "Örn. Bir yoga matı ve iki küçük dambıl var, başka bir şey yok",
     goalLabel: "HEDEFİN",
     goalHint: "Programı daha kişisel yapar",
-    goalPlaceholder: "Örn. Daha güçlü olmak ve 30 dakikada tamamlanan programlar yapmak istiyorum.",
+    goalPlaceholder: (gender: string): string => gender === "Erkek"
+      ? "Örn. Göbeğimi eritmek ve akşamları daha dinç olmak istiyorum."
+      : gender === "Kadın"
+        ? "Örn. Biraz kilo verip kollarımı ve bacaklarımı sıkılaştırmak istiyorum."
+        : "Örn. Kilo verip gün içinde daha enerjik olmak istiyorum.",
     requestedExercisesLabel: "ÖZELLİKLE İSTEDİĞİN HAREKETLER",
-    requestedExercisesPlaceholder: "Örn. Yerde Dambıl Göğüs Presi, Goblet Squat",
+    requestedExercisesPlaceholder: (gender: string): string => gender === "Erkek"
+      ? "Örn. Şınav, barfiks, goblet squat"
+      : gender === "Kadın"
+        ? "Örn. Squat, plank, kalça köprüsü"
+        : "Örn. Şınav, plank, squat",
     step3Eyebrow: "İSTEĞE BAĞLI VÜCUT ANALİZİ",
     step3TitleLine1: "Vücudunu daha iyi",
     step3TitleEm: "anlayalım.",
@@ -154,7 +166,7 @@ export const tr = {
     step4TitleEm: "daha tanıyalım.",
     step4Lead: "Cevapların programın yoğunluğunu, hareket seçimini ve ilerleme hızını belirleyecek.",
     multiSelectNote: "Birden fazla bölge seçebilirsin.",
-    durationNotePlaceholder: "Örn. Hafta içi üç gün, 30 dakika ayırabilirim.",
+    durationNotePlaceholder: "Örn. Hafta içi akşamları yarım saat ayırabilirim.",
     freeNotePlaceholder: "Buraya yazabilirsin...",
     durationNoteLabel: "Antrenman süresi ve uygun günler",
     freeNoteLabel: "Program notu",
@@ -165,7 +177,7 @@ export const tr = {
     sideNoteBody: "Her plan, hedeflerine ve günlük hayatına uyum sağlar.",
     historyQuestions: [
       "Daha önce düzenli olarak spor yaptın mı?",
-      "Son 3 ayda haftada kaç gün hareket ettin?",
+      "Son 3 ayda haftada kaç gün spor yaptın?",
       "Kendini hangi seviyede görüyorsun?",
       "Antrenmana ayırabileceğin zamanı ve uygun olduğun günleri yaz.",
       "Şu anki ana hedefin nedir?",
@@ -863,7 +875,7 @@ export const tr = {
     eyebrow: "HEDEF TAHMİNİ",
     title: "Hedefine ne kadar kaldı?",
     targetLabel: (unit: string) => `Hedef kilon (${unit})`,
-    targetPlaceholder: "Örn. 90",
+    targetPlaceholder: (gender: string): string => gender === "Erkek" ? "Örn. 80" : gender === "Kadın" ? "Örn. 62" : "Örn. 72",
     save: "Kaydet",
     clear: "Temizle",
     needsWeight: "Önce profiline güncel kilonu gir; tahmin bunun üzerine kurulur.",

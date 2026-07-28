@@ -50,6 +50,10 @@ import { authorizedFetch } from "@/lib/api-client";
 // GÖSTERİLEN metin `t.onboarding.historyQuestions/answerOptions` ile çevrilir.
 const answerOptions = tr.onboarding.answerOptions;
 
+// Diğer seçeneklerle birlikte işaretlenmesi anlamsız olan cevaplar. Bunlardan
+// biri seçilince diğerleri temizlenir (ör. "Yok" ile birlikte "Diz" olamaz).
+const EXCLUSIVE_ANSWERS = new Set(["Yok", "Hayır", "0 gün"]);
+
 const coreExerciseLibrary = [
   { name: "Goblet Squat", english: "Goblet Squat", area: "Bacak", tone: "orange", icon: "◒", requires: ["dambıl", "kettlebell"], bodyweight: false, goals: ["güç", "kas", "kilo"], instructions: "Ayaklarını omuz genişliğinde aç. Ağırlığı göğsünde tut, kalçanı geriye ve aşağıya indir; topuklardan güç alarak kalk." },
   { name: "Eğimli Şınav", english: "Incline Push-up", area: "Göğüs", tone: "blue", icon: "✦", requires: ["bench", "sehpa"], bodyweight: false, goals: ["güç", "kondisyon", "kilo"], instructions: "Ellerini sağlam bir yükseltiye koy. Vücudunu düz bir çizgide tut, göğsünü kontrollü indir ve yüksel." },
@@ -268,7 +272,9 @@ const subscribeToNothing = () => () => {};
 function createPersonalPlan(gym: string, equipmentText: string, history: string[], goalText: string, requestedExercises = "", completedSessions = 0, dayIndex = 0) {
   const profileText = `${equipmentText} ${goalText} ${requestedExercises} ${history.join(" ")}`.toLowerCase();
   const goal = profileText.includes("kilo") || profileText.includes("yağ") ? "kilo" : profileText.includes("kas") ? "kas" : profileText.includes("kondisyon") ? "kondisyon" : "güç";
-  const isBeginner = history[2] === "Yeni başlıyorum" || !history[2];
+  // Çoklu seçimde "Yeni başlıyorum · Orta seviye" gelebilir; en güvenli
+  // varsayım, başlangıç seviyesi işaretliyse acemi kabul etmektir.
+  const isBeginner = !history[2] || history[2].includes("Yeni başlıyorum");
   const wantsGym = gym === "Salon";
   const equipment = equipmentText.toLowerCase();
   const durationText = history[3] || goalText.match(/(15|30|45|60)/)?.[1] || "30";
@@ -784,22 +790,30 @@ export default function Home() {
     }
   }
 
-  function setAnswer(answer: string) {
-    setHistory((current) => current.map((value, index) => index === questionIndex ? answer : value));
-    if (questionIndex < 9 && questionIndex !== 6) window.setTimeout(() => setQuestionIndex((current) => current + 1), 220);
+  // Tüm seçenekli sorular çoklu seçimdir: insanların cevabı çoğu zaman tek
+  // kutuya sığmıyor (ör. hem kuvvet hem kardiyo, hem bel hem diz). Seçimler
+  // " · " ile birleştirilir; aşağı akıştaki okuyucular bu biçimi bekler.
+  // Çoklu seçimde otomatik ilerleme yapılmaz; kullanıcı "Sonraki" ile geçer.
+  function toggleAnswer(answer: string) {
+    setHistory((current) => {
+      const selected = current[questionIndex] ? current[questionIndex].split(" · ").filter(Boolean) : [];
+      let next: string[];
+      if (selected.includes(answer)) {
+        next = selected.filter((value) => value !== answer);
+      } else if (EXCLUSIVE_ANSWERS.has(answer)) {
+        // "Yok" / "0 gün" gibi cevaplar yalnız başına anlamlıdır.
+        next = [answer];
+      } else {
+        next = [...selected.filter((value) => !EXCLUSIVE_ANSWERS.has(value)), answer];
+      }
+      return current.map((value, index) => index === questionIndex ? next.join(" · ") : value);
+    });
   }
 
   function setFreeAnswer(answer: string) {
     setHistory((current) => current.map((value, index) => index === questionIndex ? answer : value));
   }
 
-  function toggleInjury(answer: string) {
-    setHistory((current) => {
-      const selected = current[6] ? current[6].split(" · ").filter(Boolean) : [];
-      const next = answer === "Yok" ? ["Yok"] : [...selected.filter((value) => value !== "Yok"), ...(selected.includes(answer) ? [] : [answer])];
-      return current.map((value, index) => index === 6 ? next.join(" · ") : value);
-    });
-  }
 
   useEffect(() => {
     const supabase = createClient();
@@ -1308,6 +1322,11 @@ export default function Home() {
     setPendingSession(null);
     setPendingExerciseLogs([]);
     setExerciseSetDrafts({});
+    // Serimiz ve takvim, görünüm değişse de mount kalır ve kendi çektikleri
+    // veriyi tutar; yalnız buradaki state'i temizlemek onları eski kayıtları
+    // göstermeye devam ederken bırakıyordu (ör. sıfırlama sonrası hâlâ görünen
+    // son antrenman). Sunucudan yeniden okumaları için haber veriyoruz.
+    window.dispatchEvent(new CustomEvent("fit-ai-progress-reset"));
   }
 
   function handleSignedIn(user: User) {
@@ -1413,9 +1432,9 @@ export default function Home() {
           {step === 2 && <div className="step-content equipment-step">
             <div className="eyebrow">{t.onboarding.step2Eyebrow}</div><h1>{t.onboarding.step2TitleLine1}<br /><em>{t.onboarding.step2TitleEm}</em></h1><p className="lead">{t.onboarding.step2Lead}</p>
             <TrainingPlaceSwitch value={gym === "Salon" ? "Salon" : "Evde"} onChange={setGym} label={t.onboarding.trainingPlaceLabel} homeLabel={t.onboarding.homeLabel} homeHint={t.onboarding.homeHint} gymLabel={t.onboarding.gymLabel} gymHint={t.onboarding.gymHint} />
-            <label className="textarea-label">{t.onboarding.equipmentLabel} <small>{t.onboarding.optionalHint}</small><textarea value={equipmentText} onChange={(e) => setEquipmentText(e.target.value)} placeholder={t.onboarding.equipmentPlaceholder} /></label>
-            <label className="textarea-label">{t.onboarding.goalLabel} <small>{t.onboarding.goalHint}</small><textarea value={goalText} onChange={(e) => setGoalText(e.target.value)} placeholder={t.onboarding.goalPlaceholder} /></label>
-            <label className="textarea-label">{t.onboarding.requestedExercisesLabel} <small>{t.onboarding.optionalHint}</small><textarea value={requestedExercises} onChange={(e) => setRequestedExercises(e.target.value)} placeholder={t.onboarding.requestedExercisesPlaceholder} /></label>
+            <label className="textarea-label">{t.onboarding.equipmentLabel} <small>{t.onboarding.optionalHint}</small><textarea value={equipmentText} onChange={(e) => setEquipmentText(e.target.value)} placeholder={t.onboarding.equipmentPlaceholder(gender)} /></label>
+            <label className="textarea-label">{t.onboarding.goalLabel} <small>{t.onboarding.goalHint}</small><textarea value={goalText} onChange={(e) => setGoalText(e.target.value)} placeholder={t.onboarding.goalPlaceholder(gender)} /></label>
+            <label className="textarea-label">{t.onboarding.requestedExercisesLabel} <small>{t.onboarding.optionalHint}</small><textarea value={requestedExercises} onChange={(e) => setRequestedExercises(e.target.value)} placeholder={t.onboarding.requestedExercisesPlaceholder(gender)} /></label>
             <div className="action-row"><button className="back-btn" type="button" onClick={() => setStep(1)}>{t.common.back}</button><button className="primary-btn" type="button" onClick={() => setStep(3)}>{t.common.continueLabel} <span>→</span></button></div>
           </div>}
 
@@ -1427,7 +1446,7 @@ export default function Home() {
 
           {step === 4 && <div className="step-content history-step">
             <div className="eyebrow">{t.onboarding.step4Eyebrow(questionIndex + 1, 10)}</div><h1>{t.onboarding.step4TitleLine1}<br /><em>{t.onboarding.step4TitleEm}</em></h1><p className="lead">{t.onboarding.step4Lead}</p>
-            <div className="question-card"><span className="question-number">{String(questionIndex + 1).padStart(2, "0")}</span><h2>{t.onboarding.historyQuestions[questionIndex]}</h2>{questionIndex === 6 && <p className="multi-select-note">{t.onboarding.multiSelectNote}</p>}<div className="answer-grid">{(answerOptions[questionIndex] ?? []).map((answer, answerIndex) => { const label = (t.onboarding.answerOptions[questionIndex] ?? [])[answerIndex] ?? answer; const selected = questionIndex === 6 ? history[6].split(" · ").includes(answer) : history[questionIndex] === answer; return <button type="button" key={answer} aria-pressed={selected} className={selected ? "answer selected" : "answer"} onClick={() => questionIndex === 6 ? toggleInjury(answer) : setAnswer(answer)}>{label}</button>; })}</div>{(questionIndex === 3 || questionIndex === 9) && <textarea className="question-note" aria-label={questionIndex === 3 ? t.onboarding.durationNoteLabel : t.onboarding.freeNoteLabel} value={history[questionIndex]} onChange={(e) => setFreeAnswer(e.target.value)} placeholder={questionIndex === 3 ? t.onboarding.durationNotePlaceholder : t.onboarding.freeNotePlaceholder} />}</div>
+            <div className="question-card"><span className="question-number">{String(questionIndex + 1).padStart(2, "0")}</span><h2>{t.onboarding.historyQuestions[questionIndex]}</h2>{(answerOptions[questionIndex] ?? []).length > 0 && <p className="multi-select-note">{t.onboarding.multiSelectNote}</p>}<div className="answer-grid">{(answerOptions[questionIndex] ?? []).map((answer, answerIndex) => { const label = (t.onboarding.answerOptions[questionIndex] ?? [])[answerIndex] ?? answer; const selected = (history[questionIndex] || "").split(" · ").includes(answer); return <button type="button" key={answer} aria-pressed={selected} className={selected ? "answer selected" : "answer"} onClick={() => toggleAnswer(answer)}>{label}</button>; })}</div>{(questionIndex === 3 || questionIndex === 9) && <textarea className="question-note" aria-label={questionIndex === 3 ? t.onboarding.durationNoteLabel : t.onboarding.freeNoteLabel} value={history[questionIndex]} onChange={(e) => setFreeAnswer(e.target.value)} placeholder={questionIndex === 3 ? t.onboarding.durationNotePlaceholder : t.onboarding.freeNotePlaceholder} />}</div>
             {saving && <AiScanFigure status="scanning" stage={aiStage} />}<div className="action-row"><button className="back-btn" type="button" onClick={() => questionIndex ? setQuestionIndex(questionIndex - 1) : setStep(3)}>{t.common.back}</button>{questionIndex < 9 ? <button className="primary-btn" type="button" onClick={() => setQuestionIndex(questionIndex + 1)}>{t.onboarding.next} <span>→</span></button> : <button className="primary-btn" type="button" onClick={createPlan} disabled={saving}>{saving ? t.onboarding.buildingPlan : t.onboarding.buildPlan}</button>}</div>
           </div>}
           <aside className="side-note"><div className="orb"><span>✦</span></div><p><strong>{t.onboarding.sideNoteTitle}</strong><br />{t.onboarding.sideNoteBody}</p></aside>
@@ -1459,7 +1478,7 @@ export default function Home() {
           <div className="stats-row"><div><span>{t.dashboard.bmiLabel}</span><strong>{bmi}</strong><small>{t.dashboard.bmiHint}</small></div><div><span>{t.dashboard.goalLabel}</span><strong>{goalText ? t.dashboard.goalPersonal : t.dashboard.goalDefault}</strong><small>{t.dashboard.goalHint}</small></div><div><span>{t.dashboard.environmentLabel}</span><strong>{gym === "Salon" ? t.onboarding.gymLabel : t.onboarding.homeLabel}</strong><small>{equipmentText || t.dashboard.noEquipment}</small></div></div>
           <button type="button" className="activity-open" onClick={() => setActivityOpen(true)}><span className="activity-open-icon">🏃</span><span className="activity-open-text"><span className="eyebrow">{t.dashboard.activityEyebrow}</span><strong>{t.dashboard.activityTitle}</strong><small>{t.dashboard.activityBody}</small></span><span className="activity-open-cta">{t.dashboard.activityOpen} →</span></button>
           {activityOpen && <div className="activity-overlay" role="dialog" aria-modal="true" aria-label={t.dashboard.activityDialogLabel} onClick={(event) => { if (event.target === event.currentTarget) setActivityOpen(false); }}><div className="activity-modal"><button type="button" className="activity-modal-close" onClick={() => setActivityOpen(false)} aria-label={t.dashboard.activityCloseLabel}>×</button><ActivityLogger userId={authUser.id} weightKg={Number(weight) || 70} /></div></div>}
-          <GoalForecast userId={authUser?.id} currentWeightKg={Number(weight) || null} />
+          <GoalForecast userId={authUser?.id} currentWeightKg={Number(weight) || null} gender={gender} />
           <div className="wellness-row"><div className="wellness-card calorie-card"><div><span>{t.dashboard.todaysEnergy}</span><strong>{displayedSessionCalories} <small>kcal</small></strong><p>{t.dashboard.todaysEnergyBody}</p></div><div className="calorie-ring"><i>{displayedSessionCalories}</i></div><div className="calorie-note"><span>{t.dashboard.trackingLabel}</span><strong>{t.dashboard.trackingValue}</strong><small>{t.dashboard.trackingHint}</small></div></div></div>
           {energyMetrics && <div className="energy-dashboard"><article><span>{t.dashboard.bmrLabel}</span><strong>{energyMetrics.bmr} <small>kcal/gün</small></strong><p>{t.dashboard.bmrBody}</p></article><article><span>{t.dashboard.tdeeLabel}</span><strong>{energyMetrics.tdee} <small>kcal/gün</small></strong><p>{t.dashboard.tdeeBody(energyMetrics.activityLabel)}</p></article><div><strong>{t.dashboard.approxTitle}</strong><p>{t.dashboard.approxBody}</p></div></div>}</>}
           </>}
