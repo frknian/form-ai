@@ -23,6 +23,61 @@ const validParsedMeal = {
   warnings: [],
 };
 
+const foodsByQuery = {
+  yumurta: { name: "Yumurta, haşlanmış", calories: 155, protein: 13, carbs: 1.1, fat: 11, fiber: 0 },
+  "tam buğday ekmeği": { name: "Tam buğday ekmeği", calories: 247, protein: 13, carbs: 41, fat: 3.4, fiber: 7 },
+  bezelye: { name: "Bezelye", calories: 84, protein: 5.4, carbs: 15, fat: 0.4, fiber: 5.5 },
+  makarna: { name: "Makarna, pişmiş", calories: 157, protein: 5.8, carbs: 31, fat: 0.9, fiber: 1.8 },
+};
+
+const mockSearchFirst = async (_request, query) => {
+  const food = foodsByQuery[query];
+  if (!food) return null;
+  return {
+    id: crypto.randomUUID(),
+    name: food.name,
+    nutritionPer100g: {
+      calories: food.calories,
+      protein: food.protein,
+      carbs: food.carbs,
+      fat: food.fat,
+      fiber: food.fiber,
+      micros: {},
+    },
+    source: "FİT.AI besin veritabanı",
+  };
+};
+
+function supabaseFoodRows(query) {
+  const food = foodsByQuery[query];
+  if (!food) return [];
+  return [{
+    id: crypto.randomUUID(),
+    canonical_name: food.name,
+    display_name_tr: food.name,
+    source: "admin",
+    source_id: `test-${query}`,
+    calories_per_100g: food.calories,
+    protein_per_100g: food.protein,
+    carbs_per_100g: food.carbs,
+    fat_per_100g: food.fat,
+    fiber_per_100g: food.fiber,
+    data_quality: "verified",
+    aliases: [],
+    match_score: 1,
+    personalized: false,
+  }];
+}
+
+function nutritionApiFetch(url, init) {
+  if (String(url).includes("/rpc/search_foods")) {
+    const body = JSON.parse(String(init?.body || "{}"));
+    return Response.json(supabaseFoodRows(body.p_query));
+  }
+  if (String(url).includes("/food_query_synonyms")) return Response.json([]);
+  return null;
+}
+
 test("100 gram ve ondalık porsiyon besin değerleri tek formülle hesaplanır", () => {
   assert.equal(valueForPortion(165, 100), 165);
   assert.equal(valueForPortion(12.6, 62.5), 7.9);
@@ -110,7 +165,7 @@ test("Supabase cache hit ortak modele güvenli biçimde dönüştürülür", () 
   assert.equal(product?.verified, true);
 });
 
-test("Kimi JSON şeması çoklu besinleri kabul eder ve katalogla çözümler", () => {
+test("Kimi JSON şeması çoklu besinleri kabul eder ve katalogla çözümler", async () => {
   const parsed = validateParsedMeal({
     items: [
       validParsedMeal.items[0],
@@ -119,13 +174,13 @@ test("Kimi JSON şeması çoklu besinleri kabul eder ve katalogla çözümler", 
     warnings: [],
   });
   assert.ok(parsed);
-  const resolved = resolveParsedMeal(parsed);
+  const resolved = await resolveParsedMeal(new Request("http://localhost"), parsed, mockSearchFirst);
   assert.equal(resolved.items.length, 2);
   assert.ok(resolved.items.every((item) => item.food));
   assert.ok(resolved.totals.calories > 0);
 });
 
-test("fotoğraftaki hazırlanma ifadesi en yakın temel besine yaklaşık eşlenir", () => {
+test("fotoğraftaki hazırlanma ifadesi en yakın temel besine yaklaşık eşlenir", async () => {
   const parsed = validateParsedMeal({
     items: [
       { ...validParsedMeal.items[0], query: "bezelye", originalText: "bezelye", estimatedGrams: 120 },
@@ -134,7 +189,7 @@ test("fotoğraftaki hazırlanma ifadesi en yakın temel besine yaklaşık eşlen
     warnings: [],
   });
   assert.ok(parsed);
-  const resolved = resolveParsedMeal(parsed);
+  const resolved = await resolveParsedMeal(new Request("http://localhost"), parsed, mockSearchFirst);
   assert.equal(resolved.items[0].matchKind, "exact");
   assert.equal(resolved.items[1].matchKind, "approximate");
   assert.match(resolved.items[1].food?.name || "", /makarna/i);
@@ -168,9 +223,8 @@ test("manuel kayıt doğrulaması tutarsız kaloriyi engellemeden uyarır", () =
   assert.equal(validateNutritionLogInput({}), null);
 });
 
-test("tarif seçilmemiş fotoğraf ve barkod kayıtları eski veritabanı şemasıyla uyumludur", () => {
+test("fotoğraf ve barkod kayıtları yeni besin şemasıyla uyumludur", () => {
   const row = toFoodEntryRow({
-    recipeVersionId: null,
     foodName: "Bezelye",
     portionGrams: 120,
     calories: 101,
@@ -199,6 +253,8 @@ test("doğal dil route'u Kimi sonucunu katalogdan hesaplar; model makrosu kullan
   let kimiRequest = null;
   globalThis.fetch = withAuthenticatedFetch((url, init) => {
     if (String(url).includes("/rpc/increment_usage_counter")) return Response.json({ allowed: true, current_count: 1, effective_limit: 5 });
+    const nutritionResponse = nutritionApiFetch(url, init);
+    if (nutritionResponse) return nutritionResponse;
     if (String(url).includes("/chat/completions")) {
       kimiRequest = JSON.parse(String(init?.body || "{}"));
       return Response.json({ choices: [{ message: { role: "assistant", content: JSON.stringify(validParsedMeal) }, finish_reason: "stop" }], usage: {} });
@@ -239,8 +295,10 @@ test("fotoğraf route'u bulunan besinleri seçilebilir satırlar olarak döndür
     ],
     warnings: [],
   };
-  globalThis.fetch = withAuthenticatedFetch((url) => {
+  globalThis.fetch = withAuthenticatedFetch((url, init) => {
     if (String(url).includes("/rpc/increment_usage_counter")) return Response.json({ allowed: true, current_count: 1, effective_limit: 5 });
+    const nutritionResponse = nutritionApiFetch(url, init);
+    if (nutritionResponse) return nutritionResponse;
     if (String(url).includes("/chat/completions")) {
       return Response.json({ choices: [{ message: { role: "assistant", content: JSON.stringify(photoMeal) }, finish_reason: "stop" }], usage: {} });
     }

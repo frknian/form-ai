@@ -82,7 +82,7 @@ export async function POST(request: Request) {
     const parsed = await parseWithOneRepair(query);
     if (!parsed) return Response.json({ error: "Öğün güvenle ayrıştırılamadı; lütfen alanları elle düzenle." }, { status: 422 });
     if (containsPromptInjection(query)) parsed.warnings.unshift("Öğün metnindeki talimat benzeri içerik yok sayıldı.");
-    return Response.json({ ...resolveParsedMeal(parsed), usage: { used: usage.used, limit: usage.limit } });
+    return Response.json({ ...await resolveParsedMeal(request, parsed), usage: { used: usage.used, limit: usage.limit } });
   } catch (error) {
     console.error("[nutrition-parse] Kimi request failed", error instanceof Error ? error.name : "unknown");
     return Response.json({ error: "Öğün analizi zamanında tamamlanamadı; alanları elle düzenleyebilirsin." }, { status: 502 });

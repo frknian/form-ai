@@ -23,8 +23,8 @@ export async function GET(request: Request) {
       notFound: true,
       alternatives: ["manual", "search"],
     }, { status: 404 });
-    await cacheProviderFood(found.food, found.raw);
-    return Response.json({ ...foodToSearchResult(found.food), cacheHit: false });
+    const cached = await cacheProviderFood(found.food, found.raw);
+    return Response.json({ ...foodToSearchResult(cached || found.food), cacheHit: false });
   } catch {
     return Response.json({ error: "Ürün kataloğuna şu an erişilemiyor.", retryable: true }, { status: 503 });
   }

@@ -1,64 +1,76 @@
-import { searchLocalFoods } from "./food-search.ts";
-import { calculatePortionNutrition } from "./nutrition-calculation.ts";
-import { mapLocalFood, type FoodNutrition, type PortionNutrition } from "./nutrition-model.ts";
+import { scaleFoodNutrition, type FoodSearchResult } from "./food-search.ts";
+import { searchFoodCatalog } from "./nutrition-data.ts";
+import type { PortionNutrition } from "./nutrition-model.ts";
 import type { ParsedMeal, ParsedMealItem } from "./nutrition-parser.ts";
 
 export type ResolvedMealItem = ParsedMealItem & {
-  food: FoodNutrition | null;
+  food: FoodSearchResult | null;
   nutrition: PortionNutrition | null;
   isEstimated: boolean;
   matchKind: "exact" | "approximate" | "unmatched";
 };
 
 const PREPARATION_TERMS = new Set([
-  "firin",
-  "firinda",
-  "firinlanmis",
-  "haslama",
-  "haslanmis",
-  "izgara",
-  "izgarada",
-  "kizartma",
-  "kizartilmis",
-  "sotelenmis",
-  "sote",
-  "pisirilmis",
-  "pismis",
-  "yemegi",
+  "firin", "firinda", "firinlanmis", "haslama", "haslanmis", "izgara", "izgarada",
+  "kizartma", "kizartilmis", "sotelenmis", "sote", "pisirilmis", "pismis", "yemegi",
 ]);
 
-function searchWithoutPreparation(query: string) {
-  const simplified = query
+function withoutPreparation(query: string) {
+  return query
     .toLocaleLowerCase("tr-TR")
     .replace(/[^\p{L}\p{N}\s]/gu, " ")
     .split(/\s+/)
     .filter((term) => term && !PREPARATION_TERMS.has(
       term.normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/ı/g, "i"),
     ))
-    .join(" ");
-  if (simplified.length < 2 || simplified.toLocaleLowerCase("tr-TR") === query.trim().toLocaleLowerCase("tr-TR")) return null;
-  return searchLocalFoods(simplified, 1)[0] || null;
+    .join(" ")
+    .trim();
 }
 
-export function resolveMealItem(item: ParsedMealItem): ResolvedMealItem {
-  const exactMatch = searchLocalFoods(item.query, 1)[0];
-  const match = exactMatch || searchWithoutPreparation(item.query);
-  if (!match) return { ...item, food: null, nutrition: null, isEstimated: true, matchKind: "unmatched" };
-  const matchKind = exactMatch ? "exact" : "approximate";
-  const food = mapLocalFood(match);
+async function firstMatch(request: Request, query: string) {
+  const result = await searchFoodCatalog(request, query, 1);
+  return result.results[0] || null;
+}
+
+type SearchFirst = (request: Request, query: string) => Promise<FoodSearchResult | null>;
+
+export async function resolveMealItem(
+  request: Request,
+  item: ParsedMealItem,
+  searchFirst: SearchFirst = firstMatch,
+): Promise<ResolvedMealItem> {
+  let match = await searchFirst(request, item.query);
+  let matchKind: ResolvedMealItem["matchKind"] = match ? "exact" : "unmatched";
+  if (!match) {
+    const simplified = withoutPreparation(item.query);
+    if (simplified.length >= 2 && simplified !== item.query.toLocaleLowerCase("tr-TR")) {
+      match = await searchFirst(request, simplified);
+      if (match) matchKind = "approximate";
+    }
+  }
+  if (!match?.nutritionPer100g) {
+    return { ...item, food: null, nutrition: null, isEstimated: true, matchKind: "unmatched" };
+  }
+  const scaled = scaleFoodNutrition(match.nutritionPer100g, item.estimatedGrams);
   return {
     ...item,
     confidence: matchKind === "approximate" ? Math.min(item.confidence, 0.55) : item.confidence,
     needsConfirmation: item.needsConfirmation || matchKind === "approximate",
-    food,
-    nutrition: calculatePortionNutrition(food, item.estimatedGrams),
-    isEstimated: item.needsConfirmation || matchKind === "approximate" || food.dataQuality === "estimated",
+    food: match,
+    nutrition: {
+      calories: scaled.calories,
+      protein: scaled.protein,
+      carbohydrates: scaled.carbs,
+      fat: scaled.fat,
+      fiber: scaled.fiber,
+    },
+    isEstimated: item.needsConfirmation || matchKind === "approximate",
     matchKind,
   };
 }
 
-export function resolveParsedMeal(meal: ParsedMeal) {
-  const items = meal.items.map(resolveMealItem);
+export async function resolveParsedMeal(request: Request, meal: ParsedMeal, searchFirst: SearchFirst = firstMatch) {
+  const items = await Promise.all(meal.items.map((item) => resolveMealItem(request, item, searchFirst)));
   const totals = items.reduce<PortionNutrition>((sum, item) => ({
     calories: sum.calories + (item.nutrition?.calories || 0),
     protein: sum.protein + (item.nutrition?.protein || 0),
@@ -77,8 +89,8 @@ export function resolveParsedMeal(meal: ParsedMeal) {
     },
     warnings: [
       ...meal.warnings,
-      ...(items.some((item) => item.matchKind === "approximate") ? ["Bazı besinler hazırlanma biçimi çıkarılarak en yakın katalog kaydıyla yaklaşık hesaplandı."] : []),
-      ...(items.some((item) => !item.food) ? ["Bazı besinler doğrulanmış katalogda bulunamadı; değerlerini elle tamamlayın."] : []),
+      ...(items.some((item) => item.matchKind === "approximate") ? ["Bazı besinler hazırlanma biçimi çıkarılarak en yakın katalog kaydıyla yaklaşık eşleştirildi."] : []),
+      ...(items.some((item) => !item.food) ? ["Bazı besinler katalogda bulunamadı; değerlerini elle tamamlayın."] : []),
     ],
   };
 }

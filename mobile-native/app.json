@@ -1,0 +1,16 @@
+{
+  "expo": {
+    "name": "form.ai",
+    "slug": "form-ai",
+    "scheme": "formai",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "ai.form.mobile"
+    }
+  }
+}

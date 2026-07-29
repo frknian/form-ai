@@ -1,16 +1,14 @@
-import type { FoodNutrition as LegacyFoodNutrition, FoodSearchResult } from "./food-search.ts";
+import type { FoodNutrition as LegacyFoodNutrition } from "./food-search.ts";
 
 export const FOOD_SOURCES = [
   "open_food_facts",
   "usda",
-  "local",
-  "user_created",
-  "admin_created",
-  "ai_estimated",
+  "admin",
+  "user",
 ] as const;
 
 export type FoodSource = (typeof FOOD_SOURCES)[number];
-export type FoodDataQuality = "verified" | "provider" | "estimated" | "user_entered" | "incomplete";
+export type FoodDataQuality = "verified" | "provider" | "user_entered";
 
 export type FoodNutrition = {
   id: string;
@@ -29,6 +27,10 @@ export type FoodNutrition = {
   fiberPer100g: number;
   verified: boolean;
   dataQuality: FoodDataQuality;
+  category?: string | null;
+  aliases?: string[];
+  matchScore?: number;
+  personalized?: boolean;
 };
 
 export type PortionNutrition = {
@@ -71,7 +73,9 @@ export type SupabaseFoodRow = {
   barcode?: string | null;
   source: FoodSource;
   source_id?: string | null;
+  source_url?: string | null;
   image_url?: string | null;
+  category?: string | null;
   calories_per_100g: number | string;
   protein_per_100g: number | string;
   carbs_per_100g: number | string;
@@ -81,6 +85,9 @@ export type SupabaseFoodRow = {
   serving_label?: string | null;
   verified?: boolean | null;
   data_quality?: FoodDataQuality | null;
+  aliases?: string[] | null;
+  match_score?: number | string | null;
+  personalized?: boolean | null;
 };
 
 function finiteNonNegative(value: unknown) {
@@ -164,13 +171,14 @@ export function mapSupabaseFood(row: SupabaseFoodRow): FoodNutrition | null {
   const calories = finiteNonNegative(row.calories_per_100g);
   if (!name || calories <= 0) return null;
   const serving = finiteNonNegative(row.serving_size_grams);
+  const dataQuality = row.data_quality || (row.verified ? "verified" : "provider");
   return {
     id: row.id,
     name,
     brand: row.brand?.trim() || null,
     barcode: row.barcode?.trim() || null,
     imageUrl: row.image_url || null,
-    source: FOOD_SOURCES.includes(row.source) ? row.source : "local",
+    source: FOOD_SOURCES.includes(row.source) ? row.source : "admin",
     sourceId: row.source_id || null,
     servingSizeGrams: serving > 0 ? serving : null,
     servingLabel: row.serving_label || null,
@@ -179,30 +187,12 @@ export function mapSupabaseFood(row: SupabaseFoodRow): FoodNutrition | null {
     carbohydratesPer100g: finiteNonNegative(row.carbs_per_100g),
     fatPer100g: finiteNonNegative(row.fat_per_100g),
     fiberPer100g: finiteNonNegative(row.fiber_per_100g),
-    verified: Boolean(row.verified),
-    dataQuality: row.data_quality || (row.verified ? "verified" : "provider"),
-  };
-}
-
-export function mapLocalFood(food: FoodSearchResult): FoodNutrition {
-  if (!food.nutritionPer100g) throw new Error("Besin değeri doğrulanmamış katalog kaydı hesaplamada kullanılamaz.");
-  return {
-    id: food.id,
-    name: food.name,
-    brand: food.brand || null,
-    barcode: food.barcode || null,
-    imageUrl: null,
-    source: food.source === "Open Food Facts" ? "open_food_facts" : "local",
-    sourceId: food.id,
-    servingSizeGrams: food.servingGrams || null,
-    servingLabel: food.servingGrams ? `${food.servingGrams} g` : null,
-    caloriesPer100g: food.nutritionPer100g.calories,
-    proteinPer100g: food.nutritionPer100g.protein,
-    carbohydratesPer100g: food.nutritionPer100g.carbs,
-    fatPer100g: food.nutritionPer100g.fat,
-    fiberPer100g: food.nutritionPer100g.fiber,
-    verified: food.source !== "Open Food Facts",
-    dataQuality: food.source === "Open Food Facts" ? "provider" : "verified",
+    verified: dataQuality === "verified" || dataQuality === "provider",
+    dataQuality,
+    category: row.category || null,
+    aliases: row.aliases || [],
+    matchScore: finiteNonNegative(row.match_score),
+    personalized: Boolean(row.personalized),
   };
 }
 

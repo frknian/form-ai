@@ -72,7 +72,7 @@ export async function POST(request: Request) {
     });
     const parsed = validateParsedMeal(generated);
     if (!parsed) return Response.json({ error: "Fotoğraf sonucu güvenle doğrulanamadı; alanları elle düzenleyebilirsin." }, { status: 422 });
-    const resolved = resolveParsedMeal(parsed);
+    const resolved = await resolveParsedMeal(request, parsed);
     const matched = resolved.items.filter((item) => item.food && item.nutrition);
     const totalGrams = resolved.items.reduce((sum, item) => sum + item.estimatedGrams, 0);
     const confidence = resolved.items.some((item) => item.confidence < 0.55)

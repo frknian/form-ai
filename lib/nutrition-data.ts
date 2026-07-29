@@ -1,10 +1,19 @@
 import { createClient } from "@supabase/supabase-js";
 import { bearerToken } from "./api-auth.ts";
-import { normalizeSupabaseUrl } from "./supabase/url.ts";
-import { mapOpenFoodFactsProduct, mapSupabaseFood, mapUsdaFood, type FoodNutrition, type OpenFoodFactsProduct, type SupabaseFoodRow } from "./nutrition-model.ts";
+import { mergeFoodResults, normalizeFoodSearchText, type FoodSearchResult } from "./food-search.ts";
+import {
+  mapOpenFoodFactsProduct,
+  mapSupabaseFood,
+  mapUsdaFood,
+  type FoodNutrition,
+  type OpenFoodFactsProduct,
+  type SupabaseFoodRow,
+} from "./nutrition-model.ts";
 import { searchUsdaFoodData } from "./providers/usda-food-data.ts";
+import { normalizeSupabaseUrl } from "./supabase/url.ts";
 
-const FOOD_SELECT = "id,canonical_name,display_name_tr,brand,barcode,source,source_id,image_url,calories_per_100g,protein_per_100g,carbs_per_100g,fat_per_100g,fiber_per_100g,serving_size_grams,serving_label,verified,data_quality";
+const FOOD_SELECT = "id,canonical_name,display_name_tr,brand,barcode,category,source,source_id,source_url,image_url,calories_per_100g,protein_per_100g,carbs_per_100g,fat_per_100g,fiber_per_100g,serving_size_grams,serving_label,data_quality";
+const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1_000;
 
 function userClient(request: Request) {
   const url = normalizeSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL);
@@ -28,29 +37,48 @@ export async function findStoredFoodByBarcode(request: Request, barcode: string)
   const client = userClient(request);
   if (!client) return null;
   const { data, error } = await client.from("foods").select(FOOD_SELECT).eq("barcode", barcode).maybeSingle();
-  if (error || !data) return null;
-  return mapSupabaseFood(data as unknown as SupabaseFoodRow);
+  return error || !data ? null : mapSupabaseFood(data as unknown as SupabaseFoodRow);
 }
 
-export async function searchStoredFoods(request: Request, query: string, limit = 8) {
+export async function searchStoredFoods(request: Request, query: string, limit = 12) {
   const client = userClient(request);
   if (!client) return [];
-  const { data, error } = await client.rpc("search_foods", { p_query: query, p_limit: Math.min(10, Math.max(1, limit)) });
+  const { data, error } = await client.rpc("search_foods", {
+    p_query: query,
+    p_limit: Math.min(30, Math.max(1, limit)),
+  });
   if (error || !Array.isArray(data)) return [];
-  return data.map((row) => mapSupabaseFood(row as SupabaseFoodRow)).filter((food): food is FoodNutrition => Boolean(food));
+  return data
+    .map((row) => mapSupabaseFood(row as SupabaseFoodRow))
+    .filter((food): food is FoodNutrition => Boolean(food));
 }
 
-export async function cacheProviderFood(food: FoodNutrition, rawSourceData: unknown) {
-  if (food.source !== "open_food_facts" && food.source !== "usda") return;
-  const client = serviceClient();
-  if (!client) return;
-  const row = {
+export async function externalQueryFor(request: Request, query: string) {
+  const normalized = normalizeFoodSearchText(query);
+  const client = userClient(request);
+  if (!client) return query;
+  const { data } = await client
+    .from("food_query_synonyms")
+    .select("external_query")
+    .eq("normalized_query", normalized)
+    .maybeSingle();
+  return typeof data?.external_query === "string" ? data.external_query : query;
+}
+
+function providerRow(food: FoodNutrition, rawSourceData: unknown) {
+  return {
     canonical_name: food.name,
     display_name_tr: food.name,
     brand: food.brand,
     barcode: food.barcode,
+    category: food.category || null,
     source: food.source,
-    source_id: food.sourceId,
+    source_id: food.sourceId || food.barcode || food.id,
+    source_url: food.source === "usda" && food.sourceId
+      ? `https://fdc.nal.usda.gov/food-details/${food.sourceId}/nutrients`
+      : food.source === "open_food_facts" && food.barcode
+        ? `https://world.openfoodfacts.org/product/${food.barcode}`
+        : null,
     image_url: food.imageUrl,
     calories_per_100g: food.caloriesPer100g,
     protein_per_100g: food.proteinPer100g,
@@ -59,20 +87,72 @@ export async function cacheProviderFood(food: FoodNutrition, rawSourceData: unkn
     fiber_per_100g: food.fiberPer100g,
     serving_size_grams: food.servingSizeGrams,
     serving_label: food.servingLabel,
-    verified: true,
-    data_quality: "provider",
+    data_quality: food.dataQuality === "verified" ? "verified" : "provider",
     raw_source_data: rawSourceData,
+    status: "active",
     updated_at: new Date().toISOString(),
   };
-  const lookup = food.barcode
-    ? client.from("foods").select("id").eq("barcode", food.barcode).maybeSingle()
-    : client.from("foods").select("id").eq("source", food.source).eq("source_id", food.sourceId || "").maybeSingle();
-  const { data: existing } = await lookup;
-  const operation = existing?.id
-    ? client.from("foods").update(row).eq("id", existing.id)
-    : client.from("foods").insert(row);
-  const { error } = await operation;
-  if (error) console.error("[nutrition-cache] food upsert failed", error.code);
+}
+
+export async function cacheProviderFood(food: FoodNutrition, rawSourceData: unknown, queryAlias?: string) {
+  if (food.source !== "open_food_facts" && food.source !== "usda") return null;
+  const client = serviceClient();
+  if (!client) return null;
+  const { data, error } = await client
+    .from("foods")
+    .upsert(providerRow(food, rawSourceData), { onConflict: "source,source_id" })
+    .select(FOOD_SELECT)
+    .single();
+  if (error || !data) {
+    console.error("[nutrition-cache] food upsert failed", error?.code || "unknown");
+    return null;
+  }
+  if (queryAlias && normalizeFoodSearchText(queryAlias) !== normalizeFoodSearchText(food.name)) {
+    await client.from("food_aliases").upsert({
+      food_id: data.id,
+      alias: queryAlias.trim().slice(0, 160),
+      language: "tr",
+      source: "user_query",
+      priority: 10,
+    }, { onConflict: "food_id,normalized_alias,language" });
+  }
+  return mapSupabaseFood(data as unknown as SupabaseFoodRow);
+}
+
+export async function cacheProviderFoods(foods: FoodNutrition[], queryAlias: string) {
+  const cached = await Promise.all(foods.map((food) => cacheProviderFood(food, null, queryAlias)));
+  return cached.filter((food): food is FoodNutrition => Boolean(food));
+}
+
+export async function readSearchCache(query: string, locale = "tr") {
+  const client = serviceClient();
+  if (!client) return null;
+  const normalized = normalizeFoodSearchText(query);
+  const { data, error } = await client
+    .from("food_search_cache")
+    .select("payload,expires_at")
+    .eq("provider", "usda")
+    .eq("normalized_query", normalized)
+    .eq("locale", locale)
+    .gt("expires_at", new Date().toISOString())
+    .maybeSingle();
+  if (error || !data || !Array.isArray(data.payload)) return null;
+  return data.payload as FoodSearchResult[];
+}
+
+export async function writeSearchCache(query: string, results: FoodSearchResult[], locale = "tr") {
+  const client = serviceClient();
+  if (!client) return;
+  const normalized = normalizeFoodSearchText(query);
+  await client.from("food_search_cache").upsert({
+    provider: "usda",
+    normalized_query: normalized,
+    locale,
+    payload: results,
+    result_count: results.length,
+    expires_at: new Date(Date.now() + (results.length > 0 ? CACHE_TTL_MS : 6 * 60 * 60 * 1_000)).toISOString(),
+    updated_at: new Date().toISOString(),
+  }, { onConflict: "provider,normalized_query,locale" });
 }
 
 async function fetchWithRetry(url: string, init: RequestInit, attempts = 2) {
@@ -94,7 +174,7 @@ export async function findOpenFoodFactsBarcode(barcode: string) {
   const fields = "code,product_name,product_name_tr,brands,serving_size,image_front_url,nutriments";
   const response = await fetchWithRetry(
     `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(barcode)}.json?fields=${fields}`,
-    { headers: { "User-Agent": "form.ai nutrition tracker/1.0" } },
+    { headers: { "User-Agent": "form.ai nutrition tracker/2.0" } },
   );
   if (!response.ok) return null;
   const payload = await response.json() as { status?: number; product?: OpenFoodFactsProduct };
@@ -103,36 +183,20 @@ export async function findOpenFoodFactsBarcode(barcode: string) {
   return food ? { food, raw: payload.product } : null;
 }
 
-export async function searchOpenFoodFacts(query: string, limit = 8) {
-  const response = await fetchWithRetry("https://search.openfoodfacts.org/search", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "User-Agent": "form.ai nutrition tracker/1.0" },
-    body: JSON.stringify({
-      q: query,
-      page: 1,
-      page_size: Math.min(20, limit),
-      langs: ["tr", "en"],
-      boost_phrase: true,
-      fields: ["code", "product_name", "product_name_tr", "brands", "serving_size", "image_front_url", "nutriments"],
-    }),
-  });
-  if (!response.ok) return [];
-  const payload = await response.json() as { hits?: OpenFoodFactsProduct[] };
-  return (payload.hits || []).map(mapOpenFoodFactsProduct).filter((food): food is FoodNutrition => Boolean(food));
-}
-
-export async function searchUsdaFoods(query: string, limit = 5) {
+export async function searchUsdaFoods(query: string, limit = 10) {
   const foods = await searchUsdaFoodData(query, limit);
   return foods.map(mapUsdaFood).filter((food): food is FoodNutrition => Boolean(food));
 }
 
-export function foodToSearchResult(food: FoodNutrition) {
+export function foodToSearchResult(food: FoodNutrition, options: { cacheHit?: boolean } = {}): FoodSearchResult {
   return {
     id: food.id,
     name: food.name,
     brand: food.brand || undefined,
+    aliases: food.aliases,
     barcode: food.barcode || undefined,
     imageUrl: food.imageUrl || undefined,
+    category: food.category || undefined,
     servingGrams: food.servingSizeGrams || undefined,
     nutritionPer100g: {
       calories: food.caloriesPer100g,
@@ -147,7 +211,40 @@ export function foodToSearchResult(food: FoodNutrition) {
       : food.source === "usda"
         ? "USDA FoodData Central"
         : "FİT.AI besin veritabanı",
-    verified: food.verified,
+    verified: food.dataQuality === "verified" || food.dataQuality === "provider",
     dataQuality: food.dataQuality,
-  } as const;
+    matchScore: food.matchScore,
+    personalized: food.personalized,
+    cacheHit: options.cacheHit,
+  };
+}
+
+export async function searchFoodCatalog(request: Request, query: string, limit = 12, locale = "tr") {
+  const local = await searchStoredFoods(request, query, limit);
+  const localResults = local.map((food) => foodToSearchResult(food));
+  if (localResults.length >= limit) {
+    return { results: localResults, cacheHit: false, providerQueried: false };
+  }
+
+  const cached = await readSearchCache(query, locale);
+  if (cached) {
+    return {
+      results: mergeFoodResults(localResults, cached.map((result) => ({ ...result, cacheHit: true })), limit),
+      cacheHit: true,
+      providerQueried: false,
+    };
+  }
+
+  const externalQuery = await externalQueryFor(request, query);
+  const providerFoods = await searchUsdaFoods(externalQuery, limit);
+  const storedProviderFoods = await cacheProviderFoods(providerFoods, query);
+  const providerResults = (storedProviderFoods.length > 0 ? storedProviderFoods : providerFoods)
+    .map((food) => foodToSearchResult(food));
+  await writeSearchCache(query, providerResults, locale);
+  const refreshed = await searchStoredFoods(request, query, limit);
+  return {
+    results: mergeFoodResults(refreshed.map((food) => foodToSearchResult(food)), providerResults, limit),
+    cacheHit: false,
+    providerQueried: true,
+  };
 }

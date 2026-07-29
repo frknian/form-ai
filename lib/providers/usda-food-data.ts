@@ -1,23 +1,7 @@
-import type { IngredientNutritionBasis } from "../recipe-nutrition.ts";
 import type { UsdaFood } from "../nutrition-model.ts";
-
-const USDA_NUTRIENTS = {
-  calories: [1008, "Energy"],
-  protein: [1003, "Protein"],
-  carbohydrates: [1005, "Carbohydrate, by difference"],
-  fat: [1004, "Total lipid (fat)"],
-  fiber: [1079, "Fiber, total dietary"],
-} as const;
 
 function apiKey() {
   return process.env.USDA_FDC_API_KEY?.trim() || null;
-}
-
-function nutrient(food: UsdaFood, key: keyof typeof USDA_NUTRIENTS) {
-  const [id, name] = USDA_NUTRIENTS[key];
-  const match = food.foodNutrients?.find((item) => item.nutrientId === id || item.nutrientName === name);
-  const value = Number(match?.value);
-  return Number.isFinite(value) && value >= 0 ? value : null;
 }
 
 async function usdaRequest(path: string, init?: RequestInit) {
@@ -60,23 +44,4 @@ export async function getUsdaFoodData(fdcId: number): Promise<UsdaFood | null> {
   if (!Number.isInteger(fdcId) || fdcId <= 0 || !apiKey()) return null;
   const response = await usdaRequest(`/food/${fdcId}`);
   return response ? response.json() as Promise<UsdaFood> : null;
-}
-
-export function usdaFoodToIngredientBasis(food: UsdaFood): IngredientNutritionBasis | null {
-  if (!food.fdcId || !food.description?.trim()) return null;
-  const protein = nutrient(food, "protein");
-  const carbohydrates = nutrient(food, "carbohydrates");
-  const fat = nutrient(food, "fat");
-  const fiber = nutrient(food, "fiber");
-  if ([protein, carbohydrates, fat, fiber].some((value) => value === null)) return null;
-  return {
-    caloriesPer100g: nutrient(food, "calories"),
-    proteinPer100g: protein,
-    carbohydratesPer100g: carbohydrates,
-    fatPer100g: fat,
-    fiberPer100g: fiber,
-    source: "usda_fdc",
-    sourceId: String(food.fdcId),
-    confidence: "high",
-  };
 }

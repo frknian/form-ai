@@ -23,7 +23,7 @@ npm run lint
 - `AI_API_KEY`, `AI_BASE_URL`, `AI_MODEL` — AI plan üretimi, sohbet, metinle öğün ekleme ve haftalık değerlendirme. OpenAI-uyumlu herhangi bir sağlayıcıyla çalışır (OpenRouter, Together, Fireworks, kendi vLLM/Ollama sunucunuz). Anahtar yoksa uygulama her yerde güvenli bir yerel yedeğe düşer. Varsayılan `kimi-k2.5`, resmi Moonshot API'sinde maliyet için düşünme kapalı (instant) modda kullanılır.
 - `GEMINI_API_KEY`, `GEMINI_VISION_MODEL` — öğün fotoğrafı analizini ekonomik Gemini Flash-Lite modeline yönlendirir. Gemini kullanılamazsa ana AI sağlayıcısı yedek olarak denenir.
 - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` — hesap ve veri katmanı. Tanımlı değilse giriş ekranı "yapılandırılmamış" durumunu gösterir.
-- `SUPABASE_SECRET_KEY` — yalnız sunucu tarafındaki hesap silme işlemi için; `NEXT_PUBLIC_` öneki eklemeyin.
+- `SUPABASE_SECRET_KEY` — sunucuda hesap silme ve besin sağlayıcı cache yazımı için; `NEXT_PUBLIC_` öneki eklemeyin.
 - `USDA_FDC_API_KEY` — isteğe bağlı USDA FoodData Central arama yedeği; yalnız sunucuda kullanılır.
 - `AI_VISION_ENABLED` — fotoğraf AI özelliğini tamamen kapatmak için `false`; fotoğraf akışı kullanıcıyı güvenli biçimde yazarak eklemeye yönlendirir.
 - `CAPACITOR_SERVER_URL` — Capacitor geliştirmesinde yerel sunucu adresi.
@@ -38,15 +38,19 @@ migration dosyalarında tanımlıdır, dolayısıyla profil değişiklik geçmi�
 Supabase SQL Editor'de sırasıyla:
 
 1. `db/supabase-schema.sql` — temel tablolar, RLS politikaları ve indeksler.
-2. `db/migrations/*.sql` — **dosya adına göre artan sırada** hepsi. Migration'lar
-   `create table if not exists` / `add column if not exists` / `drop policy if exists`
-   kalıplarını kullandığı için tekrar çalıştırmak güvenlidir.
+2. `db/migrations/*.sql` — **dosya adına göre artan sırada** hepsi.
+
+`20260802_rebuild_food_search.sql` eski besin ve tarif kataloglarını bilerek
+siler ve yeni arama şemasını kurar; üretimde yalnız bir kez çalıştırılmalıdır.
+Kullanıcı öğün satırlarını silmez, ancak eski katalog kimliği bağlantılarını
+boşaltır. Diğer migration'ların çoğu tekrar çalıştırılabilir olsa da bütün
+klasörü üretimde ikinci kez topluca çalıştırmayın.
 
 ```bash
 ls db/migrations/*.sql | sort
 ```
 
-Yeni bir migration eklerken tarih önekli adlandırmayı koruyun ve ifadeleri idempotent yazın.
+Yeni bir migration eklerken tarih önekli adlandırmayı koruyun.
 
 ## Kimlik doğrulama (Supabase)
 
@@ -165,44 +169,11 @@ Gizlilik politikası taslağı ve veri güvenliği formu cevapları için
 
 Bilinen kabul edilen risk: `shadcn` CLI aracından gelen 3 orta seviye uyarı, yalnızca geliştirme aracını etkiler ve çalışma zamanı paketine girmez; düzeltmesi büyük sürüm düşürme gerektirdiği için uygulanmamıştır.
 
-## Türk yemeği kataloğu
+## Besin araması
 
-Kaynak manifesti `data/turkish-foods/source-manifest.json`, üretilen kategori
-dosyaları `data/turkish-foods/*.json`, birleşik seed ise
-`data/turkish-recipes.seed.json` içindedir. Üretici aynı girdiden deterministik
-olarak 500 kayıt ve `data/turkish-foods/quality-report.json` raporunu oluşturur.
-
-Önce Supabase SQL Editor'de migration dosyalarını sırasıyla, özellikle
-`20260730_turkish_recipe_infrastructure.sql` ve
-`20260731_turkish_food_catalog_expansion.sql`, ardından
-`20260801_archive_duplicate_recipe_dishes.sql` dosyalarını çalıştırın. Son
-migration eski eşdeğer yemekleri silmeden arşivler ve arşivlenmiş tariflerin
-doğrudan okunmasını engeller. Ardından komutları proje kökünde (`package.json`
-dosyasının bulunduğu klasör) çalıştırın:
-
-```bash
-npm run seed:foods:validate
-npm run seed:foods:report
-npm run seed:foods:dry-run
-npm run seed:foods
-```
-
-Belirli bir bölüm için doğrudan importer filtreleri de kullanılabilir:
-
-```bash
-npm run data:import-turkish-recipes -- --category="Çorbalar"
-npm run data:import-turkish-recipes -- --region="Karadeniz"
-```
-
-Seed slug üzerinden upsert eder, mevcut kullanıcı öğünlerini silmez ve
-yayımlanmış/elle hesaplanmış tarif sürümlerinin besin değerlerini ezmez. REST
-üzerinden çok tablolı tek transaction bulunmadığı için kayıtlar ayrı ayrı
-işlenir; hatalar topluca raporlanır ve diğer kayıtların işlenmesini kesmez.
-
-Kültür Portalı bu katalogda yemek adı, il ve kategori doğrulaması için
-kullanılır; kaynak metinleri kopyalanmaz. TürKomp otomatik olarak taranmaz.
-Katalogdaki doğrulanmamış besin alanları kasıtlı olarak `null`,
-`needsReview: true` ve düşük/orta güven düzeyindedir.
+Eski sabit yemek ve tarif kataloglarının yerine Supabase `pg_trgm` tabanlı tek
+bir kanonik besin kataloğu kullanılır. Kurulum, ortam değişkenleri, API akışı ve
+React Native örneği için `docs/food-search.md` dosyasına bakın.
 
 ## Egzersiz veri tabanı
 

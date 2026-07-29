@@ -52,12 +52,12 @@ ekipman filtreleri, Türkçe hareket ve kas adları.
 - **Barkod** — ambalajı okut; barkod tamamen **cihazında** çözülür
 - **Yazarak** — "bir kase mercimek çorbası" yaz, gerisini o hesaplasın
 
-Ayrıca 309 kayıtlık hesaplanabilir temel besin kataloğu ve Kültür Portalı
-kayıtlarıyla doğrulanan 500 yemeklik Türk mutfağı kataloğu bulunur. Türk
-kataloğu 81 ili, 7 bölgeyi ve 20 yemek kategorisini kapsar; 474 kayıt
-az bilinen veya güçlü biçimde yöresel olarak işaretlidir. Besin değeri henüz
-doğrulanmamış yemekler aranabilir, ancak `0 kcal` yerine açıkça “Besin değeri
-henüz doğrulanmadı” olarak gösterilir ve hesaplamaya alınmaz.
+Besin araması Türkçe karakterleri, yaygın yazım hatalarını ve alternatif adları
+tolere eder. Önce Supabase'deki kanonik katalog aranır; sonuç yetersizse USDA
+FoodData Central sorgulanır ve yanıt sonraki aramalar için önbelleğe alınır.
+Open Food Facts yalnızca barkodlu paketli ürünlerde kullanılır. Aynı ürünler
+tek kayıtta birleştirilir ve sık yaptığın seçimler zamanla sıralamayı sana göre
+uyarlar.
 
 ### İlerlemeni gör
 Vücut ölçümleri ve trend grafikleri, tahmini 1RM ile kişisel rekorlar, günlük
