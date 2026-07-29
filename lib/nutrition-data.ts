@@ -125,7 +125,44 @@ export async function externalQueryFor(request: Request, query: string) {
     .select("external_query")
     .eq("normalized_query", normalized)
     .maybeSingle();
-  return typeof data?.external_query === "string" ? data.external_query : query;
+  return typeof data?.external_query === "string" ? data.external_query : inferUsdaQuery(query);
+}
+
+const USDA_QUERY_RULES: Array<[RegExp, string]> = [
+  [/\bsucuklu? yumurta\b|\bsucuk yumurta\b/, "eggs with sausage"],
+  [/\bmercimek corba/, "lentil soup"],
+  [/\btavuk corba/, "chicken soup"],
+  [/\bdomates corba/, "tomato soup"],
+  [/\byogurt corba|\byayla corba/, "yogurt rice soup"],
+  [/\bkuru fasulye/, "white bean stew"],
+  [/\bnohut yemegi/, "chickpea stew"],
+  [/\btaze fasulye/, "green bean stew"],
+  [/\bbezelye/, "pea stew"],
+  [/\bbulgur pilav/, "cooked bulgur"],
+  [/\bp(i|ı)rinc pilav|\bsehriyeli pilav/, "cooked white rice"],
+  [/\bfirin makarna/, "baked pasta"],
+  [/\bmanti/, "turkish meat dumplings"],
+  [/\blahmacun/, "turkish flatbread with ground meat"],
+  [/\bpide/, "turkish pide"],
+  [/\bbaklava/, "baklava"],
+  [/\bsutlac/, "rice pudding"],
+  [/\bcacik/, "yogurt cucumber dip"],
+  [/\bayran/, "yogurt drink"],
+  [/\bsarma|yaprak dolma/, "stuffed grape leaves"],
+  [/\bdolma/, "stuffed vegetables with rice"],
+  [/\bicli kofte/, "stuffed bulgur meatball"],
+  [/\bmercimek kofte/, "lentil patties"],
+  [/\bkofte/, "cooked meatballs"],
+  [/\btavuk kebap|\btavuk sis/, "grilled chicken kebab"],
+  [/\bkebap|\bdoner/, "cooked beef and lamb kebab"],
+  [/\bborek|\bgozleme/, "savory stuffed pastry"],
+  [/\bcorba/, "vegetable soup"],
+  [/\bpilav/, "cooked rice"],
+];
+
+export function inferUsdaQuery(query: string) {
+  const normalized = normalizeFoodSearchText(query);
+  return USDA_QUERY_RULES.find(([pattern]) => pattern.test(normalized))?.[1] || query;
 }
 
 function providerRow(food: FoodNutrition, rawSourceData: unknown) {

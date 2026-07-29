@@ -6,6 +6,7 @@ import {
   openFoodFactsHitToFood,
   scaleFoodNutrition,
 } from "../lib/food-search.ts";
+import { inferUsdaQuery } from "../lib/nutrition-data.ts";
 
 const result = (overrides = {}) => ({
   id: crypto.randomUUID(),
@@ -90,4 +91,23 @@ test("aynı adlı doğrulanmış besin, inceleme bekleyen tariften önce gelir",
     matchScore: 1,
   });
   assert.equal(mergeFoodResults([pending], [verified])[0].id, "verified");
+});
+
+test("farklı adlı doğrulanmış sağlayıcı sonucu da inceleme tarifinden önce sıralanır", () => {
+  const pending = result({
+    id: "pending",
+    name: "Sucuklu Yumurta Ev Tarifi",
+    nutritionPer100g: null,
+    nutritionPerServing: { calories: 320, protein: 18, carbs: 4, fat: 25, fiber: 0, micros: {} },
+    matchScore: 1,
+  });
+  const provider = result({ id: "provider", name: "Eggs with sausage", matchScore: 0.4 });
+  assert.equal(mergeFoodResults([pending], [provider])[0].id, "provider");
+});
+
+test("Türk yemek adları USDA için güvenli İngilizce temel sorguya çevrilir", () => {
+  assert.equal(inferUsdaQuery("Sucuklu yumurta"), "eggs with sausage");
+  assert.equal(inferUsdaQuery("Ev yapımı mercimek çorbası"), "lentil soup");
+  assert.equal(inferUsdaQuery("Fırın makarna"), "baked pasta");
+  assert.equal(inferUsdaQuery("Antep usulü kuru dolma"), "stuffed vegetables with rice");
 });

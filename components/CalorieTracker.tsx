@@ -26,7 +26,7 @@ const barcodeHints = new Map([[DecodeHintType.POSSIBLE_FORMATS, [
 ]]]);
 
 type Meal = "Kahvaltı" | "Öğle yemeği" | "Akşam yemeği" | "Atıştırmalık";
-type FoodEntry = { id: string; name: string; meal: Meal; calories: number; protein: number; carbs: number; fat: number; fiber?: number; grams?: number; micros?: FoodMicronutrients; time: string; consumedAt: string; source: "Barkod" | "Fotoğraf" | "Manuel"; isEstimated?: boolean };
+type FoodEntry = { id: string; name: string; meal: Meal; calories: number; protein: number; carbs: number; fat: number; fiber?: number; grams?: number; portionCount?: number; amountBasis?: "grams" | "serving"; micros?: FoodMicronutrients; time: string; consumedAt: string; source: "Barkod" | "Fotoğraf" | "Manuel"; isEstimated?: boolean };
 type PhotoDetectedItem = {
   name: string;
   catalogName: string | null;
@@ -134,6 +134,7 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
   const [meal, setMeal] = useState<Meal>("Atıştırmalık");
   const [foodName, setFoodName] = useState("");
   const [grams, setGrams] = useState("100");
+  const [amountBasis, setAmountBasis] = useState<"grams" | "serving">("grams");
   const [nutrition, setNutrition] = useState<FoodNutrition>(emptyFoodNutrition);
   const [selectedProduct, setSelectedProduct] = useState<FoodSearchResult | null>(null);
   const [searchResults, setSearchResults] = useState<FoodSearchResult[]>([]);
@@ -371,7 +372,7 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
             loggedDate: selectedDate,
             mealType: record.meal,
             foodName: record.name,
-            portionGrams: record.grams || 100,
+            portionGrams: record.amountBasis === "serving" ? null : record.grams || 100,
             calories: record.calories,
             protein: record.protein,
             carbohydrates: record.carbs,
@@ -385,6 +386,8 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
               micros: record.micros || {},
               searchPersonalized: Boolean(selectedProduct?.personalized),
               searchScore: selectedProduct?.matchScore || null,
+              amountBasis: record.amountBasis || "grams",
+              portions: record.portionCount || null,
             },
           }),
         });
@@ -409,18 +412,18 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
         setMessage(t.calorieTracker.syncedLocallyOnly);
       }
     }
-    setFoodName(""); setGrams("100"); setNutrition(emptyFoodNutrition()); setSelectedProduct(null); setSearchResults([]); setBarcode(""); setPhotoPreview(null); setPhotoDetectedItems([]); setAiEstimate(null);
+    setFoodName(""); setGrams("100"); setAmountBasis("grams"); setNutrition(emptyFoodNutrition()); setSelectedProduct(null); setSearchResults([]); setBarcode(""); setPhotoPreview(null); setPhotoDetectedItems([]); setAiEstimate(null);
   }
 
   async function submitManual() {
     if (isSubmitting || !foodName.trim()) { if (!foodName.trim()) setMessage(t.calorieTracker.fillNameAndCalories); return; }
-    const portionGrams = Number(grams.replace(",", "."));
-    const validation = validateManualNutrition({ portionGrams, calories: nutrition.calories, protein: nutrition.protein, carbohydrates: nutrition.carbs, fat: nutrition.fat, fiber: nutrition.fiber });
+    const amount = Number(grams.replace(",", "."));
+    const validation = validateManualNutrition({ portionGrams: amountBasis === "serving" ? Math.min(5_000, amount * 100) : amount, calories: nutrition.calories, protein: nutrition.protein, carbohydrates: nutrition.carbs, fat: nutrition.fat, fiber: nutrition.fiber });
     if (!validation.valid) { setMessage(validation.error || t.calorieTracker.fillNameAndCalories); return; }
     if (validation.warning) setMessage(validation.warning);
     setIsSubmitting(true);
     try {
-      await addEntry({ name: foodName.trim(), meal, calories: nutrition.calories, protein: nutrition.protein, carbs: nutrition.carbs, fat: nutrition.fat, fiber: nutrition.fiber, grams: portionGrams, micros: nutrition.micros, source: activeMethod === "photo" ? "Fotoğraf" : selectedProduct?.barcode ? "Barkod" : "Manuel", isEstimated: Boolean(aiEstimate) }, { productBarcode: selectedProduct?.barcode });
+      await addEntry({ name: foodName.trim(), meal, calories: nutrition.calories, protein: nutrition.protein, carbs: nutrition.carbs, fat: nutrition.fat, fiber: nutrition.fiber, grams: amountBasis === "grams" ? amount : undefined, portionCount: amountBasis === "serving" ? amount : undefined, amountBasis, micros: nutrition.micros, source: activeMethod === "photo" ? "Fotoğraf" : selectedProduct?.barcode ? "Barkod" : "Manuel", isEstimated: Boolean(aiEstimate || selectedProduct?.needsReview) }, { productBarcode: selectedProduct?.barcode });
       setMessage(validation.warning ? `${t.calorieTracker.entryAdded} ${validation.warning}` : t.calorieTracker.entryAdded);
     } finally {
       setIsSubmitting(false);
@@ -474,6 +477,7 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
     const serving = result.servingGrams || 100;
     setFoodName(result.name);
     setGrams(String(serving));
+    setAmountBasis("grams");
     setNutrition(scaleFoodNutrition(result.nutritionPer100g, serving));
     setSelectedProduct({ id: result.id || `barcode-${barcode}`, name: result.name, brand: result.brand, barcode: result.barcode || barcode, servingGrams: serving, nutritionPer100g: result.nutritionPer100g, source: result.source || "Open Food Facts", verified: result.verified, dataQuality: result.dataQuality });
     setAiEstimate(null);
@@ -657,11 +661,29 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
       setNutrition(scaleFoodNutrition(selectedProduct.nutritionPer100g, next));
       return;
     }
+    if (selectedProduct?.nutritionPerServing && amountBasis === "serving") {
+      setNutrition(scaleFoodNutrition(selectedProduct.nutritionPerServing, next * 100));
+      return;
+    }
     if (Number.isFinite(previous) && previous > 0) setNutrition((current) => scaleFoodNutrition(current, (next / previous) * 100));
   }
 
   function selectProduct(product: FoodSearchResult) {
     if (!product.nutritionPer100g) {
+      if (product.nutritionPerServing) {
+        setFoodName(product.name);
+        setGrams("1");
+        setAmountBasis("serving");
+        setNutrition(product.nutritionPerServing);
+        setSelectedProduct(product);
+        setSearchResults([]);
+        setSearchState("idle");
+        setSearchNotice("");
+        setMessage(locale === "en"
+          ? "Source serving values loaded. Check the portion count; this record is low confidence."
+          : "Kaynak porsiyon değerleri yüklendi. Porsiyon adedini kontrol edin; kayıt düşük güvenlidir.");
+        return;
+      }
       setFoodName(product.name);
       setSelectedProduct(null);
       setMessage(product.nutritionPerServing
@@ -676,6 +698,7 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
     const serving = product.servingGrams || 100;
     setFoodName(product.name);
     setGrams(String(serving));
+    setAmountBasis("grams");
     setNutrition(scaleFoodNutrition(product.nutritionPer100g, serving));
     setSelectedProduct(product);
     setSearchResults([]);
@@ -750,8 +773,8 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
         </div>}
         {(activeMethod === "manual" || (photoPreview && photoDetectedItems.length === 0 && !analyzingPhoto)) && <>
           <div className="manual-fields">
-            <label className="food-name">{t.calorieTracker.foodNameLabel}<input value={foodName} onChange={(event) => { setFoodName(event.target.value); setSelectedProduct(null); setAiEstimate(null); }} placeholder={t.calorieTracker.foodNamePlaceholder} autoComplete="off" /></label>
-            <label>{t.calorieTracker.portionLabel}<input inputMode="decimal" value={grams} onChange={(event) => updateGrams(event.target.value)} placeholder="100" /></label>
+            <label className="food-name">{t.calorieTracker.foodNameLabel}<input value={foodName} onChange={(event) => { setFoodName(event.target.value); setAmountBasis("grams"); setSelectedProduct(null); setAiEstimate(null); }} placeholder={t.calorieTracker.foodNamePlaceholder} autoComplete="off" /></label>
+            <label>{amountBasis === "serving" ? (locale === "en" ? "Portions" : "Porsiyon adedi") : t.calorieTracker.portionLabel}<input inputMode="decimal" value={grams} onChange={(event) => updateGrams(event.target.value)} placeholder={amountBasis === "serving" ? "1" : "100"} /></label>
             {nutritionFields.map((field) => <label key={field.key}>{field.label} ({field.unit})<input inputMode="decimal" value={formatAmount(nutrition[field.key], dateLocale)} onChange={(event) => updateNutrition(field.key, event.target.value)} placeholder="0" /></label>)}
             {aiEstimate && <div className={`ai-estimate-card ${aiEstimate.confidence}`}><span>{t.calorieTracker.aiEstimateLabel}</span><strong>{t.calorieTracker.aiEstimateGrams(aiEstimate.grams)}</strong>{aiEstimate.items.length > 0 && <small>{aiEstimate.items.join(" · ")}</small>}<p>{aiEstimate.confidence === "low" ? t.calorieTracker.aiConfidenceLow : aiEstimate.confidence === "high" ? t.calorieTracker.aiConfidenceHigh : t.calorieTracker.aiConfidenceMedium}</p></div>}
             <button type="button" className="primary-btn add-food" disabled={isSubmitting} onClick={() => void submitManual()}><Plus size={16} /> {t.calorieTracker.addToLog}</button>
@@ -761,7 +784,7 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
             {searchState === "loading" && <div className="food-search-loading"><i /><i /><i /> {t.calorieTracker.preparingResults}</div>}
             {searchState === "ready" && <div className="food-search-results">{searchResults.map((product) => <button type="button" key={product.id} onClick={() => selectProduct(product)} title={product.variantSummary}><span><strong>{product.name}</strong><small>{[product.brand, product.category, product.canonicalFamily, product.personalized ? (locale === "en" ? "For you" : "Sana özel") : "", product.needsReview ? (locale === "en" ? "Review required" : "İnceleme gerekli") : ""].filter(Boolean).join(" · ")}</small>{product.variantSummary && <small>{product.variantSummary}</small>}</span>{product.nutritionPer100g ? <b>{product.nutritionPer100g.calories} kcal<small>/100 g</small></b> : product.nutritionPerServing ? <b>{product.nutritionPerServing.calories} kcal<small>/{product.portionLabel || "porsiyon"}</small></b> : <b className="nutrition-pending">{locale === "en" ? "Nutrition unavailable" : "Besin değeri bulunamadı"}</b>}</button>)}</div>}
             {(searchState === "empty" || searchState === "error") && <div className="food-search-empty"><strong>{searchState === "error" ? t.calorieTracker.catalogUnavailable : t.calorieTracker.noResultsFound}</strong><span>{searchNotice || t.calorieTracker.manualFallbackNote}</span><button type="button" className="ai-estimate-btn" disabled={estimating} onClick={() => void estimateFromText()}><Sparkles size={14} /> {estimating ? t.calorieTracker.estimating : t.calorieTracker.estimateWithAi}</button></div>}
-            {selectedProduct && <div className="selected-food-summary"><span><strong>{selectedProduct.name}</strong><small>{t.calorieTracker.perGram(formatAmount(Number(grams) || 0, dateLocale))}</small></span><b>{nutrition.calories} kcal</b><p>{t.calorieTracker.fiberLabel(formatAmount(nutrition.fiber, dateLocale))}{Object.entries(nutrition.micros).filter(([, value]) => Number(value) > 0).slice(0, 3).map(([key, value]) => ` · ${microLabel(t, key as keyof FoodMicronutrients)} ${formatAmount(Number(value), dateLocale)} mg`).join("")}</p></div>}
+            {selectedProduct && <div className="selected-food-summary"><span><strong>{selectedProduct.name}</strong><small>{amountBasis === "serving" ? `${formatAmount(Number(grams) || 0, dateLocale)} ${locale === "en" ? "serving" : "porsiyon"}` : t.calorieTracker.perGram(formatAmount(Number(grams) || 0, dateLocale))}</small></span><b>{nutrition.calories} kcal</b><p>{t.calorieTracker.fiberLabel(formatAmount(nutrition.fiber, dateLocale))}{Object.entries(nutrition.micros).filter(([, value]) => Number(value) > 0).slice(0, 3).map(([key, value]) => ` · ${microLabel(t, key as keyof FoodMicronutrients)} ${formatAmount(Number(value), dateLocale)} mg`).join("")}</p></div>}
           </div>}
         </>}
         {message && <p className="food-message">{message}</p>}

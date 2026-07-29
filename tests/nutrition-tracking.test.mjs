@@ -249,6 +249,29 @@ test("manuel kayıt doğrulaması tutarsız kaloriyi engellemeden uyarır", () =
   assert.equal(validateNutritionLogInput({}), null);
 });
 
+test("kaynak porsiyonu gram uydurmadan öğün günlüğüne kabul edilir", () => {
+  const input = validateNutritionLogInput({
+    foodId: null,
+    loggedDate: "2026-07-29",
+    mealType: "Akşam yemeği",
+    foodName: "Kaynak porsiyonlu tarif",
+    portionGrams: null,
+    calories: 320,
+    protein: 18,
+    carbohydrates: 4,
+    fat: 25,
+    fiber: 1,
+    inputMethod: "search",
+    confidence: 0.45,
+    isEstimated: true,
+    metadata: { amountBasis: "serving", portions: 1 },
+  });
+  assert.ok(input);
+  const row = toFoodEntryRow(input);
+  assert.equal("grams" in row, false);
+  assert.equal(row.calories, 320);
+});
+
 test("fotoğraf ve barkod kayıtları yeni besin şemasıyla uyumludur", () => {
   const row = toFoodEntryRow({
     foodName: "Bezelye",

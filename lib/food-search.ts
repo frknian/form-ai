@@ -172,7 +172,8 @@ export function mergeFoodResults(primary: FoodSearchResult[], secondary: FoodSea
     }
   }
   return [...unique.values()]
-    .sort((left, right) => Number(Boolean(right.personalized)) - Number(Boolean(left.personalized))
+    .sort((left, right) => Number(Boolean(right.nutritionPer100g)) - Number(Boolean(left.nutritionPer100g))
+      || Number(Boolean(right.personalized)) - Number(Boolean(left.personalized))
       || (right.matchScore || 0) - (left.matchScore || 0))
     .slice(0, limit);
 }

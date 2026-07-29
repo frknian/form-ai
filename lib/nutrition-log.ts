@@ -11,7 +11,7 @@ export type NutritionLogInput = {
   loggedDate: string;
   mealType: (typeof MEAL_TYPES)[number];
   foodName: string;
-  portionGrams: number;
+  portionGrams: number | null;
   calories: number;
   protein: number;
   carbohydrates: number;
@@ -51,10 +51,20 @@ export function validateNutritionLogInput(value: unknown, partial = false): Part
     if (!name) return null;
     result.foodName = name;
   }
-  for (const [key, maximum] of [["portionGrams", 5_000], ["calories", 20_000], ["protein", 2_000], ["carbohydrates", 5_000], ["fat", 2_000], ["fiber", 1_000]] as const) {
+  if (required("portionGrams")) {
+    const amountBasis = (input.metadata as Record<string, unknown> | undefined)?.amountBasis;
+    if (input.portionGrams === null && amountBasis === "serving") {
+      result.portionGrams = null;
+    } else {
+      const parsed = boundedNumber(input.portionGrams, 5_000);
+      if (!Number.isFinite(parsed) || parsed <= 0) return null;
+      result.portionGrams = parsed;
+    }
+  }
+  for (const [key, maximum] of [["calories", 20_000], ["protein", 2_000], ["carbohydrates", 5_000], ["fat", 2_000], ["fiber", 1_000]] as const) {
     if (!required(key)) continue;
     const parsed = boundedNumber(input[key], maximum);
-    if (!Number.isFinite(parsed) || (key === "portionGrams" && parsed <= 0)) return null;
+    if (!Number.isFinite(parsed)) return null;
     result[key] = parsed;
   }
   if (required("inputMethod")) {
@@ -82,7 +92,7 @@ export function validateNutritionLogInput(value: unknown, partial = false): Part
   if (!partial) {
     const full = result as NutritionLogInput;
     const validation = validateManualNutrition({
-      portionGrams: full.portionGrams,
+      portionGrams: full.portionGrams ?? 100,
       calories: full.calories,
       protein: full.protein,
       carbohydrates: full.carbohydrates,
@@ -117,7 +127,7 @@ export function toFoodEntryRow(input: Partial<NutritionLogInput>) {
   if ("loggedDate" in input) row.logged_date = input.loggedDate;
   if ("mealType" in input) row.meal = input.mealType;
   if ("foodName" in input) row.name = input.foodName;
-  if ("portionGrams" in input) row.grams = input.portionGrams;
+  if ("portionGrams" in input && input.portionGrams !== null) row.grams = input.portionGrams;
   if ("calories" in input) row.calories = Math.round(input.calories || 0);
   if ("protein" in input) row.protein_g = input.protein;
   if ("carbohydrates" in input) row.carbs_g = input.carbohydrates;
