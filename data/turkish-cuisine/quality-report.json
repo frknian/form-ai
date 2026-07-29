@@ -1,0 +1,19 @@
+{
+  "generatedAt": "2026-07-29T13:46:25.482Z",
+  "target": 1000,
+  "records": 1000,
+  "completeSourceMacros": 56,
+  "pendingIngredientCalculation": 944,
+  "completePer100g": 0,
+  "needsReview": 1000,
+  "explicitCookedWeight": 0,
+  "explicitIngredientGramCoverage": 15.12,
+  "source": "https://huggingface.co/datasets/mmkocak/turkish-recipes-175K",
+  "license": "Apache-2.0",
+  "warnings": [
+    "Kaynak besin değerleri porsiyon başınadır; pişmiş ağırlık doğrulanmadan 100 gram değerine çevrilmez.",
+    "Kaynakta dört makrosu bulunmayan kayıtlar USDA malzeme hesabı tamamlanana kadar yayınlanmaz.",
+    "Tarif talimatları ve kaynak açıklamaları telif riskini azaltmak için kataloğa kopyalanmaz.",
+    "TürKomp verisi otomatik çekilmez."
+  ]
+}

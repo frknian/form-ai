@@ -78,3 +78,16 @@ test("kişiselleştirilmiş sonuç üstte tutulur", () => {
   const preferred = result({ id: "preferred", name: "Ev Yoğurdu", brand: undefined, matchScore: 0.7, personalized: true });
   assert.equal(mergeFoodResults([ordinary, preferred], [])[0].id, "preferred");
 });
+
+test("aynı adlı doğrulanmış besin, inceleme bekleyen tariften önce gelir", () => {
+  const verified = result({ id: "verified", name: "Mercimek Çorbası", brand: undefined, matchScore: 0.7 });
+  const pending = result({
+    id: "pending",
+    name: "Mercimek Çorbası",
+    brand: undefined,
+    nutritionPer100g: null,
+    nutritionPerServing: { calories: 180, protein: 8, carbs: 25, fat: 5, fiber: 6, micros: {} },
+    matchScore: 1,
+  });
+  assert.equal(mergeFoodResults([pending], [verified])[0].id, "verified");
+});

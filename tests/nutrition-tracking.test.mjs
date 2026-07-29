@@ -198,6 +198,32 @@ test("fotoğraftaki hazırlanma ifadesi en yakın temel besine yaklaşık eşlen
   assert.match(resolved.warnings.join(" "), /yaklaşık/i);
 });
 
+test("fotoğraf eşleşen fakat makrosu incelemede olan Türk yemeğini kaybetmez", async () => {
+  const parsed = validateParsedMeal({
+    items: [{ ...validParsedMeal.items[0], query: "sucuklu yumurta", originalText: "sucuklu yumurta" }],
+    warnings: [],
+  });
+  assert.ok(parsed);
+  const pendingRecipe = {
+    id: "recipe-11111111-1111-4111-8111-111111111111",
+    name: "Sucuklu Yumurta",
+    kind: "recipe",
+    recipeSlug: "sucuklu-yumurta",
+    nutritionPer100g: null,
+    needsReview: true,
+    source: "FİT.AI besin veritabanı",
+  };
+  const resolved = await resolveParsedMeal(
+    new Request("http://localhost"),
+    parsed,
+    async () => pendingRecipe,
+  );
+  assert.equal(resolved.items[0].food?.name, "Sucuklu Yumurta");
+  assert.equal(resolved.items[0].nutrition, null);
+  assert.equal(resolved.items[0].needsConfirmation, true);
+  assert.match(resolved.warnings.join(" "), /inceleme/i);
+});
+
 test("belirsiz ölçüler onay gerektirir ve güven skoru düşürülür", () => {
   const parsed = validateParsedMeal({
     ...validParsedMeal,

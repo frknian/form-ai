@@ -64,6 +64,12 @@ export function FoodSearchScreen({
   }, [options, query]);
 
   async function choose(food: FoodSearchResult) {
+    if (!food.nutritionPer100g) {
+      setError(food.nutritionPerServing
+        ? "Kaynak porsiyonu var; gram ağırlığı doğrulanmadan günlüğe eklenemez."
+        : "Bu tarifin besin hesabı henüz doğrulanmadı.");
+      return;
+    }
     const portion = Math.min(5000, Math.max(1, Number(grams) || food.servingGrams || 100));
     onSelect?.(food, portion);
     setRecent(await saveRecentFood(food, portion));
@@ -114,10 +120,11 @@ export function FoodSearchScreen({
                 {item.personalized ? <Text style={styles.badge}>Sana özel</Text> : null}
               </View>
               <Text numberOfLines={1} style={styles.meta}>
-                {[item.brand, item.category].filter(Boolean).join(" · ") || "Besin"}
+                {[item.brand, item.category, item.canonicalFamily, item.needsReview ? "İnceleme gerekli" : ""].filter(Boolean).join(" · ") || "Besin"}
               </Text>
+              {item.variantSummary ? <Text numberOfLines={2} style={styles.variant}>{item.variantSummary}</Text> : null}
             </View>
-            <Text style={styles.calories}>{item.nutritionPer100g?.calories ?? "—"} kcal</Text>
+            <Text style={styles.calories}>{item.nutritionPer100g?.calories ?? item.nutritionPerServing?.calories ?? "—"} kcal</Text>
           </Pressable>
         )}
       />
@@ -144,5 +151,6 @@ const styles = StyleSheet.create({
   name: { color: "#f5f7ee", flexShrink: 1, fontSize: 16, fontWeight: "700" },
   badge: { backgroundColor: "#d9f76b", borderRadius: 8, color: "#1d1d1b", fontSize: 10, fontWeight: "800", paddingHorizontal: 7, paddingVertical: 3 },
   meta: { color: "#929689", fontSize: 12, marginTop: 5 },
+  variant: { color: "#777c70", fontSize: 11, marginTop: 4 },
   calories: { color: "#d9f76b", fontWeight: "800" },
 });

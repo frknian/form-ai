@@ -19,11 +19,20 @@ export type FoodNutrition = {
 export type FoodSearchResult = {
   id: string;
   name: string;
+  kind?: "food" | "recipe";
   brand?: string;
   aliases?: string[];
   barcode?: string;
   servingGrams?: number;
+  portionLabel?: string;
   nutritionPer100g: FoodNutrition | null;
+  nutritionPerServing?: FoodNutrition | null;
+  recipeSlug?: string;
+  canonicalFamily?: string;
+  variantSummary?: string;
+  allergens?: string[];
+  confidence?: "low" | "medium" | "high";
+  needsReview?: boolean;
   source: "Open Food Facts" | "USDA FoodData Central" | "FİT.AI besin veritabanı";
   verified?: boolean;
   dataQuality?: "verified" | "provider" | "user_entered";
@@ -153,7 +162,12 @@ export function mergeFoodResults(primary: FoodSearchResult[], secondary: FoodSea
   for (const result of [...primary, ...secondary]) {
     const key = result.barcode || normalizeFoodSearchText(`${result.name} ${result.brand || ""}`);
     const existing = unique.get(key);
-    if (!existing || (result.personalized && !existing.personalized) || (result.matchScore || 0) > (existing.matchScore || 0)) {
+    const resultHasVerifiedBasis = Boolean(result.nutritionPer100g);
+    const existingHasVerifiedBasis = Boolean(existing?.nutritionPer100g);
+    if (!existing
+      || (resultHasVerifiedBasis && !existingHasVerifiedBasis)
+      || (resultHasVerifiedBasis === existingHasVerifiedBasis && result.personalized && !existing.personalized)
+      || (resultHasVerifiedBasis === existingHasVerifiedBasis && (result.matchScore || 0) > (existing.matchScore || 0))) {
       unique.set(key, result);
     }
   }

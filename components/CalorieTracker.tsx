@@ -30,6 +30,18 @@ type FoodEntry = { id: string; name: string; meal: Meal; calories: number; prote
 type PhotoDetectedItem = {
   name: string;
   catalogName: string | null;
+  catalogId: string | null;
+  recipeSlug: string | null;
+  variantSummary: string | null;
+  needsReview: boolean;
+  candidates: Array<{
+    id: string;
+    name: string;
+    recipeSlug: string | null;
+    variantSummary: string | null;
+    needsReview: boolean;
+    nutritionPer100g: FoodNutrition | null;
+  }>;
   grams: number;
   preparation: string | null;
   confidence: number;
@@ -338,14 +350,18 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
     return () => { controller.abort(); window.clearTimeout(timer); };
   }, [adviceRevision, dailyEntries, nutritionGoal.calorieTarget, nutritionGoal.carbsGrams, nutritionGoal.fatGrams, nutritionGoal.proteinGrams, selectedDate, totals, t, locale]);
 
-  async function addEntry(entry: Omit<FoodEntry, "id" | "time" | "consumedAt">, productBarcode?: string) {
+  async function addEntry(
+    entry: Omit<FoodEntry, "id" | "time" | "consumedAt">,
+    options: { productBarcode?: string; foodId?: string | null; confidence?: number | null } = {},
+  ) {
     const now = new Date();
     const temporaryId = crypto.randomUUID();
     const record = { ...entry, id: temporaryId, time: new Intl.DateTimeFormat(dateLocale, { hour: "2-digit", minute: "2-digit" }).format(now), consumedAt: now.toISOString() };
     setEntries((current) => [record, ...current]);
     if (userId) {
       const inputMethod = record.source === "Barkod" ? "barcode" : record.source === "Fotoğraf" ? "photo" : selectedProduct ? "search" : aiEstimate ? "natural_language" : "manual";
-      const foodId = selectedProduct && /^[0-9a-f-]{36}$/i.test(selectedProduct.id) ? selectedProduct.id : null;
+      const selectedFoodId = selectedProduct && /^[0-9a-f-]{36}$/i.test(selectedProduct.id) ? selectedProduct.id : null;
+      const foodId = options.foodId && /^[0-9a-f-]{36}$/i.test(options.foodId) ? options.foodId : selectedFoodId;
       try {
         const response = await authorizedFetch("/api/nutrition/logs", {
           method: "POST",
@@ -362,10 +378,10 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
             fat: record.fat,
             fiber: record.fiber || 0,
             inputMethod,
-            confidence: aiEstimate ? (aiEstimate.confidence === "high" ? 0.9 : aiEstimate.confidence === "medium" ? 0.7 : 0.45) : null,
+            confidence: options.confidence ?? (aiEstimate ? (aiEstimate.confidence === "high" ? 0.9 : aiEstimate.confidence === "medium" ? 0.7 : 0.45) : null),
             isEstimated: Boolean(record.isEstimated || aiEstimate),
             metadata: {
-              barcode: productBarcode || null,
+              barcode: options.productBarcode || null,
               micros: record.micros || {},
               searchPersonalized: Boolean(selectedProduct?.personalized),
               searchScore: selectedProduct?.matchScore || null,
@@ -375,6 +391,18 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
         const result = await response.json().catch(() => ({})) as { log?: { id?: string } };
         if (!response.ok) setMessage(t.calorieTracker.syncedLocallyOnly);
         else if (result.log?.id) setEntries((current) => current.map((item) => item.id === temporaryId ? { ...item, id: result.log!.id! } : item));
+        if (foodId) {
+          void authorizedFetch("/api/nutrition/selections", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              foodId,
+              query: record.name,
+              grams: record.grams || null,
+              mealType: record.meal,
+            }),
+          }).catch(() => undefined);
+        }
       } catch {
         // Ağ geçici olarak kesilse bile yukarıdaki iyimser kayıt cihazda
         // ve localStorage'da kalır; kullanıcı ekleme işlemini kaybetmez.
@@ -392,7 +420,7 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
     if (validation.warning) setMessage(validation.warning);
     setIsSubmitting(true);
     try {
-      await addEntry({ name: foodName.trim(), meal, calories: nutrition.calories, protein: nutrition.protein, carbs: nutrition.carbs, fat: nutrition.fat, fiber: nutrition.fiber, grams: portionGrams, micros: nutrition.micros, source: activeMethod === "photo" ? "Fotoğraf" : selectedProduct?.barcode ? "Barkod" : "Manuel", isEstimated: Boolean(aiEstimate) }, selectedProduct?.barcode);
+      await addEntry({ name: foodName.trim(), meal, calories: nutrition.calories, protein: nutrition.protein, carbs: nutrition.carbs, fat: nutrition.fat, fiber: nutrition.fiber, grams: portionGrams, micros: nutrition.micros, source: activeMethod === "photo" ? "Fotoğraf" : selectedProduct?.barcode ? "Barkod" : "Manuel", isEstimated: Boolean(aiEstimate) }, { productBarcode: selectedProduct?.barcode });
       setMessage(validation.warning ? `${t.calorieTracker.entryAdded} ${validation.warning}` : t.calorieTracker.entryAdded);
     } finally {
       setIsSubmitting(false);
@@ -441,13 +469,13 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
     if (!barcode.trim()) { setMessage(t.calorieTracker.enterOrScanBarcode); return; }
     setMessage(t.calorieTracker.searchingCatalogMessage);
     const response = await authorizedFetch(`/api/nutrition/barcode?code=${encodeURIComponent(barcode)}`);
-    const result = await response.json().catch(() => ({})) as { error?: string; name?: string; brand?: string; barcode?: string; servingGrams?: number; source?: FoodSearchResult["source"]; verified?: boolean; dataQuality?: FoodSearchResult["dataQuality"]; nutritionPer100g?: FoodNutrition };
+    const result = await response.json().catch(() => ({})) as { id?: string; error?: string; name?: string; brand?: string; barcode?: string; servingGrams?: number; source?: FoodSearchResult["source"]; verified?: boolean; dataQuality?: FoodSearchResult["dataQuality"]; nutritionPer100g?: FoodNutrition };
     if (!response.ok || !result.name || !result.nutritionPer100g) { setMessage(result.error || t.calorieTracker.productNotFound); return; }
     const serving = result.servingGrams || 100;
     setFoodName(result.name);
     setGrams(String(serving));
     setNutrition(scaleFoodNutrition(result.nutritionPer100g, serving));
-    setSelectedProduct({ id: `barcode-${barcode}`, name: result.name, brand: result.brand, barcode: result.barcode || barcode, servingGrams: serving, nutritionPer100g: result.nutritionPer100g, source: result.source || "Open Food Facts", verified: result.verified, dataQuality: result.dataQuality });
+    setSelectedProduct({ id: result.id || `barcode-${barcode}`, name: result.name, brand: result.brand, barcode: result.barcode || barcode, servingGrams: serving, nutritionPer100g: result.nutritionPer100g, source: result.source || "Open Food Facts", verified: result.verified, dataQuality: result.dataQuality });
     setAiEstimate(null);
     setActiveMethod("manual");
     setMessage(t.calorieTracker.productFoundMessage);
@@ -533,6 +561,33 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
     syncPhotoSummary(next);
   }
 
+  function choosePhotoCandidate(index: number, candidate: PhotoDetectedItem["candidates"][number]) {
+    const next = photoDetectedItems.map((item, itemIndex) => {
+      if (itemIndex !== index) return item;
+      const candidateNutrition = candidate.nutritionPer100g
+        ? scaleFoodNutrition(candidate.nutritionPer100g, item.grams)
+        : null;
+      return {
+        ...item,
+        catalogId: candidate.id,
+        catalogName: candidate.name,
+        recipeSlug: candidate.recipeSlug,
+        variantSummary: candidate.variantSummary,
+        needsReview: candidate.needsReview,
+        nutrition: candidateNutrition ? {
+          calories: candidateNutrition.calories,
+          protein: candidateNutrition.protein,
+          carbs: candidateNutrition.carbs,
+          fat: candidateNutrition.fat,
+          fiber: candidateNutrition.fiber,
+        } : null,
+        selected: Boolean(candidateNutrition),
+      };
+    });
+    setPhotoDetectedItems(next);
+    syncPhotoSummary(next);
+  }
+
   function updatePhotoItemGrams(index: number, value: string) {
     const nextGrams = Number(value.replace(",", "."));
     if (!Number.isFinite(nextGrams) || nextGrams <= 0 || nextGrams > 5_000) return;
@@ -566,7 +621,7 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
       for (const item of selectedItems) {
         const itemNutrition = item.nutrition!;
         await addEntry({
-          name: item.name,
+          name: item.catalogName || item.name,
           meal,
           calories: itemNutrition.calories,
           protein: itemNutrition.protein,
@@ -577,6 +632,9 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
           micros: {},
           source: "Fotoğraf",
           isEstimated: true,
+        }, {
+          foodId: item.catalogId && /^[0-9a-f-]{36}$/i.test(item.catalogId) ? item.catalogId : null,
+          confidence: item.confidence,
         });
       }
       setMessage(t.calorieTracker.photoEntriesAdded(selectedItems.length, translateMeal(t, meal)));
@@ -606,9 +664,13 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
     if (!product.nutritionPer100g) {
       setFoodName(product.name);
       setSelectedProduct(null);
-      setMessage(locale === "en"
-        ? "Nutrition has not been verified yet. You can enter the portion and values manually."
-        : "Besin değeri henüz doğrulanmadı. Porsiyon ve değerleri elle girebilirsiniz.");
+      setMessage(product.nutritionPerServing
+        ? (locale === "en"
+          ? "A source serving is available, but its gram weight is not verified. Enter the gram weight and values manually."
+          : "Kaynak porsiyon makroları var; ancak gram ağırlığı doğrulanmadı. Gramı ve değerleri elle girebilirsiniz.")
+        : (locale === "en"
+          ? "Nutrition has not been verified yet. You can enter the portion and values manually."
+          : "Besin değeri henüz doğrulanmadı. Porsiyon ve değerleri elle girebilirsiniz."));
       return;
     }
     const serving = product.servingGrams || 100;
@@ -620,13 +682,6 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
     setSearchState("idle");
     setSearchNotice("");
     setMessage(t.calorieTracker.productLoadedMessage);
-    if (/^[0-9a-f-]{36}$/i.test(product.id)) {
-      void authorizedFetch("/api/nutrition/selections", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ foodId: product.id, query: foodName.trim() || product.name, grams: serving, mealType: meal }),
-      }).catch(() => undefined);
-    }
   }
 
   async function chooseFoodPhoto() {
@@ -686,7 +741,8 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
         {activeMethod === "photo" && photoDetectedItems.length > 0 && <div className="photo-analysis-card" aria-live="polite">
           <div className="photo-analysis-head"><div><span>{t.calorieTracker.photoDetectedTitle}</span><strong>{t.calorieTracker.photoDetectedCount(photoDetectedItems.length)}</strong></div><small>{t.calorieTracker.photoSelectedMeal(translateMeal(t, meal))}</small></div>
           <div className="photo-detected-list">{photoDetectedItems.map((item, index) => <div className={`photo-detected-item ${item.selected ? "selected" : ""} ${item.matchKind}`} key={`${item.name}-${index}`}>
-            <label className="photo-item-toggle"><input type="checkbox" checked={item.selected} disabled={!item.nutrition} onChange={(event) => togglePhotoItem(index, event.target.checked)} /><span><strong>{item.name}</strong><small>{item.matchKind === "approximate" ? t.calorieTracker.photoItemApproximate(item.catalogName || item.name) : item.matchKind === "unmatched" ? t.calorieTracker.photoItemUnavailable : item.preparation || ""}</small></span></label>
+            <label className="photo-item-toggle"><input type="checkbox" checked={item.selected} disabled={!item.nutrition} onChange={(event) => togglePhotoItem(index, event.target.checked)} /><span><strong>{item.catalogName || item.name}</strong><small>{item.matchKind === "approximate" ? t.calorieTracker.photoItemApproximate(item.catalogName || item.name) : item.matchKind === "unmatched" ? t.calorieTracker.photoItemUnavailable : item.needsReview && !item.nutrition ? (locale === "en" ? "Nutrition review required" : "Besin hesabı inceleme bekliyor") : item.preparation || ""}</small>{item.variantSummary && <small>{item.variantSummary}</small>}</span></label>
+            {item.candidates.length > 1 && <label><span>{locale === "en" ? "Catalog match" : "Katalog eşleşmesi"}</span><select value={item.catalogId || ""} onChange={(event) => { const candidate = item.candidates.find((option) => option.id === event.target.value); if (candidate) choosePhotoCandidate(index, candidate); }}>{item.candidates.map((candidate) => <option key={candidate.id} value={candidate.id}>{candidate.name}{candidate.nutritionPer100g ? "" : ` · ${locale === "en" ? "review" : "inceleme"}`}</option>)}</select></label>}
             {item.nutrition && <label className="photo-item-grams"><span>{t.calorieTracker.photoItemGrams}</span><input inputMode="decimal" value={formatAmount(item.grams, dateLocale)} onChange={(event) => updatePhotoItemGrams(index, event.target.value)} /></label>}
             <b>{item.nutrition ? `${formatAmount(item.nutrition.calories, dateLocale)} kcal` : "—"}</b>
           </div>)}</div>
@@ -703,7 +759,7 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
           {activeMethod === "manual" && foodName.trim().length >= 2 && <div className={`food-search-panel ${searchState}`} aria-live="polite">
             <div className="food-search-heading"><strong>{t.calorieTracker.productSearchLabel}</strong><span>{searchState === "loading" ? t.calorieTracker.searchingCatalog : selectedProduct ? t.calorieTracker.productSelected : t.calorieTracker.typeProductName}</span></div>
             {searchState === "loading" && <div className="food-search-loading"><i /><i /><i /> {t.calorieTracker.preparingResults}</div>}
-            {searchState === "ready" && <div className="food-search-results">{searchResults.map((product) => <button type="button" key={product.id} onClick={() => selectProduct(product)}><span><strong>{product.name}</strong><small>{[product.brand, product.category, product.personalized ? (locale === "en" ? "For you" : "Sana özel") : ""].filter(Boolean).join(" · ")}</small></span>{product.nutritionPer100g ? <b>{product.nutritionPer100g.calories} kcal<small>/100 g</small></b> : <b className="nutrition-pending">{locale === "en" ? "Nutrition unavailable" : "Besin değeri bulunamadı"}</b>}</button>)}</div>}
+            {searchState === "ready" && <div className="food-search-results">{searchResults.map((product) => <button type="button" key={product.id} onClick={() => selectProduct(product)} title={product.variantSummary}><span><strong>{product.name}</strong><small>{[product.brand, product.category, product.canonicalFamily, product.personalized ? (locale === "en" ? "For you" : "Sana özel") : "", product.needsReview ? (locale === "en" ? "Review required" : "İnceleme gerekli") : ""].filter(Boolean).join(" · ")}</small>{product.variantSummary && <small>{product.variantSummary}</small>}</span>{product.nutritionPer100g ? <b>{product.nutritionPer100g.calories} kcal<small>/100 g</small></b> : product.nutritionPerServing ? <b>{product.nutritionPerServing.calories} kcal<small>/{product.portionLabel || "porsiyon"}</small></b> : <b className="nutrition-pending">{locale === "en" ? "Nutrition unavailable" : "Besin değeri bulunamadı"}</b>}</button>)}</div>}
             {(searchState === "empty" || searchState === "error") && <div className="food-search-empty"><strong>{searchState === "error" ? t.calorieTracker.catalogUnavailable : t.calorieTracker.noResultsFound}</strong><span>{searchNotice || t.calorieTracker.manualFallbackNote}</span><button type="button" className="ai-estimate-btn" disabled={estimating} onClick={() => void estimateFromText()}><Sparkles size={14} /> {estimating ? t.calorieTracker.estimating : t.calorieTracker.estimateWithAi}</button></div>}
             {selectedProduct && <div className="selected-food-summary"><span><strong>{selectedProduct.name}</strong><small>{t.calorieTracker.perGram(formatAmount(Number(grams) || 0, dateLocale))}</small></span><b>{nutrition.calories} kcal</b><p>{t.calorieTracker.fiberLabel(formatAmount(nutrition.fiber, dateLocale))}{Object.entries(nutrition.micros).filter(([, value]) => Number(value) > 0).slice(0, 3).map(([key, value]) => ` · ${microLabel(t, key as keyof FoodMicronutrients)} ${formatAmount(Number(value), dateLocale)} mg`).join("")}</p></div>}
           </div>}

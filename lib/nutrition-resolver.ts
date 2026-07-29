@@ -28,8 +28,8 @@ function withoutPreparation(query: string) {
 }
 
 async function firstMatch(request: Request, query: string) {
-  const result = await searchFoodCatalog(request, query, 1);
-  return result.results[0] || null;
+  const result = await searchFoodCatalog(request, query, 5);
+  return result.results.find((food) => food.nutritionPer100g) || result.results[0] || null;
 }
 
 type SearchFirst = (request: Request, query: string) => Promise<FoodSearchResult | null>;
@@ -48,8 +48,18 @@ export async function resolveMealItem(
       if (match) matchKind = "approximate";
     }
   }
-  if (!match?.nutritionPer100g) {
+  if (!match) {
     return { ...item, food: null, nutrition: null, isEstimated: true, matchKind: "unmatched" };
+  }
+  if (!match.nutritionPer100g) {
+    return {
+      ...item,
+      food: match,
+      nutrition: null,
+      isEstimated: true,
+      needsConfirmation: true,
+      matchKind,
+    };
   }
   const scaled = scaleFoodNutrition(match.nutritionPer100g, item.estimatedGrams);
   return {
@@ -91,6 +101,7 @@ export async function resolveParsedMeal(request: Request, meal: ParsedMeal, sear
       ...meal.warnings,
       ...(items.some((item) => item.matchKind === "approximate") ? ["Bazı besinler hazırlanma biçimi çıkarılarak en yakın katalog kaydıyla yaklaşık eşleştirildi."] : []),
       ...(items.some((item) => !item.food) ? ["Bazı besinler katalogda bulunamadı; değerlerini elle tamamlayın."] : []),
+      ...(items.some((item) => item.food && !item.nutrition) ? ["Bazı katalog eşleşmelerinin besin hesabı inceleme bekliyor; doğrulanmadan öğüne eklenemez."] : []),
     ],
   };
 }

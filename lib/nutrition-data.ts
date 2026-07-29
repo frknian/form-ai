@@ -53,6 +53,69 @@ export async function searchStoredFoods(request: Request, query: string, limit =
     .filter((food): food is FoodNutrition => Boolean(food));
 }
 
+type CuisineRecipeRow = {
+  id: string;
+  slug: string;
+  name: string;
+  alternative_names?: string[] | null;
+  category?: string | null;
+  canonical_family?: string | null;
+  variant_summary?: string | null;
+  confidence?: "low" | "medium" | "high" | null;
+  needs_review?: boolean | null;
+  allergens?: string[] | null;
+  nutrition_per_serving?: {
+    calories?: number;
+    protein?: number;
+    carbohydrates?: number;
+    fat?: number;
+    fiber?: number;
+  } | null;
+  match_score?: number | string | null;
+};
+
+export async function searchStoredCuisine(request: Request, query: string, limit = 12) {
+  const client = userClient(request);
+  if (!client) return [];
+  const { data, error } = await client.rpc("search_cuisine_recipes", {
+    p_query: query,
+    p_limit: Math.min(30, Math.max(1, limit)),
+  });
+  if (error || !Array.isArray(data)) return [];
+  return data.map((raw) => {
+    const row = raw as CuisineRecipeRow;
+    const source = row.nutrition_per_serving;
+    const nutritionPerServing = source && Number(source.calories) > 0 ? {
+      calories: Number(source.calories),
+      protein: Number(source.protein) || 0,
+      carbs: Number(source.carbohydrates) || 0,
+      fat: Number(source.fat) || 0,
+      fiber: Number(source.fiber) || 0,
+      micros: {},
+    } : null;
+    return {
+      id: `recipe-${row.id}`,
+      name: row.name,
+      kind: "recipe" as const,
+      aliases: row.alternative_names || [],
+      category: row.category || "Türk mutfağı",
+      nutritionPer100g: null,
+      nutritionPerServing,
+      portionLabel: nutritionPerServing ? "Kaynak porsiyonu" : undefined,
+      recipeSlug: row.slug,
+      canonicalFamily: row.canonical_family || undefined,
+      variantSummary: row.variant_summary || undefined,
+      allergens: row.allergens || [],
+      confidence: row.confidence || "low",
+      needsReview: Boolean(row.needs_review),
+      source: "FİT.AI besin veritabanı" as const,
+      verified: false,
+      dataQuality: "provider" as const,
+      matchScore: Number(row.match_score) || 0,
+    };
+  });
+}
+
 export async function externalQueryFor(request: Request, query: string) {
   const normalized = normalizeFoodSearchText(query);
   const client = userClient(request);
@@ -220,9 +283,12 @@ export function foodToSearchResult(food: FoodNutrition, options: { cacheHit?: bo
 }
 
 export async function searchFoodCatalog(request: Request, query: string, limit = 12, locale = "tr") {
-  const local = await searchStoredFoods(request, query, limit);
-  const localResults = local.map((food) => foodToSearchResult(food));
-  if (localResults.length >= limit) {
+  const [local, cuisine] = await Promise.all([
+    searchStoredFoods(request, query, limit),
+    searchStoredCuisine(request, query, limit),
+  ]);
+  const localResults = mergeFoodResults(local.map((food) => foodToSearchResult(food)), cuisine, limit);
+  if (localResults.filter((result) => result.nutritionPer100g).length >= limit) {
     return { results: localResults, cacheHit: false, providerQueried: false };
   }
 
@@ -243,7 +309,11 @@ export async function searchFoodCatalog(request: Request, query: string, limit =
   await writeSearchCache(query, providerResults, locale);
   const refreshed = await searchStoredFoods(request, query, limit);
   return {
-    results: mergeFoodResults(refreshed.map((food) => foodToSearchResult(food)), providerResults, limit),
+    results: mergeFoodResults(
+      mergeFoodResults(refreshed.map((food) => foodToSearchResult(food)), cuisine, limit),
+      providerResults,
+      limit,
+    ),
     cacheHit: false,
     providerQueried: true,
   };

@@ -59,6 +59,14 @@ Open Food Facts yalnızca barkodlu paketli ürünlerde kullanılır. Aynı ürü
 tek kayıtta birleştirilir ve sık yaptığın seçimler zamanla sıralamayı sana göre
 uyarlar.
 
+Depoda ayrıca ilk aşama için **1.000 benzersiz adlı Türk yemeği/tarif adayı**
+bulunur. Kaynak porsiyon makrosu, malzeme gramajı veya pişmiş ağırlığı eksik
+kayıtlar `inceleme gerekli` olarak görünür ve doğrulanmadan 100 gram değeri
+üretilmez. Aynı yemek ailesindeki gerekli tarif farklılıkları ayrı sürüm
+açıklamasıyla tutulur. Fotoğraf analizi olası katalog eşleşmelerini listeler;
+kullanıcı doğru yemeği seçip mevcut öğüne ekleyebilir. Barkod akışı ise yalnız
+gerçek barkodlu paketli ürünleri eşleştirir.
+
 ### İlerlemeni gör
 Vücut ölçümleri ve trend grafikleri, tahmini 1RM ile kişisel rekorlar, günlük
 seri takibi, koşu/yürüyüş/bisiklet/yüzme gibi aktivite kayıtları ve haftalık
@@ -165,12 +173,11 @@ group and equipment, exercise and muscle names in both languages.
 - **Barcode** — scan the package; barcodes are decoded entirely **on your device**
 - **Text** — type "a bowl of lentil soup" and let it do the math
 
-Plus a 309-item calculable staple catalog and a 500-dish Turkish catalog
-verified against Ministry of Culture portal records. The Turkish catalog spans
-81 provinces, all 7 regions and 20 categories; 474 entries are marked
-lesser-known or strongly regional. Records without verified nutrition remain
-searchable, but show “Nutrition not verified yet” instead of a misleading
-`0 kcal` and cannot be used in calculations.
+The repository also includes a first-stage catalog of **1,000 uniquely named
+Turkish dish/recipe candidates**. Records missing a source serving macro,
+ingredient weight, or cooked yield stay in review and never receive an invented
+per-100 g value. Necessary variants are grouped into a dish family and include
+a short explanation of what distinguishes them.
 
 ### Watch yourself progress
 Body measurements with trend charts, personal records via estimated 1RM, daily

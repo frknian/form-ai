@@ -13,6 +13,11 @@ export type FoodSearchResult = {
   category?: string;
   servingGrams?: number;
   nutritionPer100g: Nutrition | null;
+  nutritionPerServing?: Nutrition | null;
+  portionLabel?: string;
+  variantSummary?: string;
+  canonicalFamily?: string;
+  needsReview?: boolean;
   personalized?: boolean;
 };
 

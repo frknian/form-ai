@@ -3,6 +3,7 @@ import { authenticateRequest } from "../../../../lib/api-auth.ts";
 import { generatePhotoAiObject, hasPhotoAiProvider, parseImageDataUrl } from "../../../../lib/ai-provider.ts";
 import { validateParsedMeal, type ParsedMeal } from "../../../../lib/nutrition-parser.ts";
 import { resolveParsedMeal } from "../../../../lib/nutrition-resolver.ts";
+import { searchFoodCatalog } from "../../../../lib/nutrition-data.ts";
 import { rateLimit, tooManyRequests } from "../../../../lib/rate-limit.ts";
 import { checkAndConsumeUsage, usageLimitExceeded } from "../../../../lib/usage-limits.ts";
 
@@ -73,19 +74,34 @@ export async function POST(request: Request) {
     const parsed = validateParsedMeal(generated);
     if (!parsed) return Response.json({ error: "Fotoğraf sonucu güvenle doğrulanamadı; alanları elle düzenleyebilirsin." }, { status: 422 });
     const resolved = await resolveParsedMeal(request, parsed);
+    const catalogMatches = await Promise.all(
+      resolved.items.map((item) => searchFoodCatalog(request, item.query, 5).then((result) => result.results)),
+    );
     const matched = resolved.items.filter((item) => item.food && item.nutrition);
     const totalGrams = resolved.items.reduce((sum, item) => sum + item.estimatedGrams, 0);
     const confidence = resolved.items.some((item) => item.confidence < 0.55)
       ? "low"
       : resolved.items.every((item) => item.confidence >= 0.8) ? "high" : "medium";
-    const detectedItems = resolved.items.map((item) => ({
+    const detectedItems = resolved.items.map((item, index) => ({
       name: item.query,
       catalogName: item.food?.name || null,
+      catalogId: item.food?.id || null,
+      recipeSlug: item.food?.recipeSlug || null,
+      variantSummary: item.food?.variantSummary || null,
+      needsReview: Boolean(item.food?.needsReview),
       grams: Math.round(item.estimatedGrams),
       preparation: item.preparation,
       confidence: item.confidence,
       needsConfirmation: item.needsConfirmation,
       matchKind: item.matchKind,
+      candidates: catalogMatches[index].map((candidate) => ({
+        id: candidate.id,
+        name: candidate.name,
+        recipeSlug: candidate.recipeSlug || null,
+        variantSummary: candidate.variantSummary || null,
+        needsReview: Boolean(candidate.needsReview),
+        nutritionPer100g: candidate.nutritionPer100g,
+      })),
       nutrition: item.nutrition ? {
         calories: item.nutrition.calories,
         protein: item.nutrition.protein,
