@@ -1,5 +1,5 @@
 import { authenticateRequest } from "@/lib/api-auth";
-import { nutritionUserClient, toFoodEntryRow, validateNutritionLogInput } from "@/lib/nutrition-log";
+import { nutritionUserClient, toCompatibleFoodEntryRow, validateNutritionLogInput } from "@/lib/nutrition-log";
 import { rateLimit, tooManyRequests } from "@/lib/rate-limit";
 
 export const runtime = "edge";
@@ -19,8 +19,21 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (!input || Object.keys(input).length === 0) return Response.json({ error: "Güncellenecek geçerli alan bulunamadı." }, { status: 400 });
   const client = nutritionUserClient(request);
   if (!client) return Response.json({ error: "Beslenme günlüğü yapılandırılmamış." }, { status: 503 });
+  if ("portionGrams" in input || "fiber" in input || "metadata" in input) {
+    const { data: current, error: currentError } = await client.from("food_entries")
+      .select("metadata")
+      .eq("id", id)
+      .eq("user_id", auth.user.id)
+      .maybeSingle();
+    if (currentError) return Response.json({ error: "Beslenme kaydı güncellenemedi." }, { status: 500 });
+    if (!current) return Response.json({ error: "Beslenme kaydı bulunamadı." }, { status: 404 });
+    const currentMetadata = current.metadata && typeof current.metadata === "object" && !Array.isArray(current.metadata)
+      ? current.metadata as Record<string, unknown>
+      : {};
+    input.metadata = { ...currentMetadata, ...(input.metadata || {}) };
+  }
   const { data, error } = await client.from("food_entries")
-    .update(toFoodEntryRow(input))
+    .update(toCompatibleFoodEntryRow(input))
     .eq("id", id)
     .eq("user_id", auth.user.id)
     .select("*")

@@ -46,6 +46,8 @@ test("kalori takibi yemek adı ve gramajı yapay zekâya gönderir", async () =>
   const source = await readFile(new URL("../components/CalorieTracker.tsx", import.meta.url), "utf8");
   assert.match(source, /\/api\/nutrition\/parse-text/);
   assert.match(source, /JSON\.stringify\(\{ query, grams: portionGrams/);
+  assert.match(source, /await estimateFromText\(true\)/);
+  assert.match(source, /record\.isEstimated \|\| aiEstimate/);
   assert.doesNotMatch(source, /\/api\/nutrition\/barcode/);
   assert.doesNotMatch(source, /BrowserMultiFormatReader/);
 });

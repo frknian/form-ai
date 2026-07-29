@@ -1,5 +1,5 @@
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
-import { asSchema, generateObject, generateText, type FlexibleSchema, type ModelMessage } from "ai";
+import { asSchema, generateObject, generateText, type FlexibleSchema, type JSONValue, type ModelMessage } from "ai";
 
 // Tek bir OpenAI-uyumlu uç nokta üzerinden çalışır. Bu sayede sağlayıcı
 // (Moonshot/Kimi, OpenRouter, Together, Fireworks, kendi vLLM sunucunuz) veya
@@ -82,6 +82,8 @@ export type AiTextRequest = {
   system?: string;
   image?: ImageInput;
   model?: string;
+  minimumOutputTokens?: number;
+  providerOptions?: Record<string, Record<string, JSONValue>>;
   maxOutputTokens?: number;
   temperature?: number;
   abortSignal?: AbortSignal;
@@ -94,8 +96,9 @@ export async function generateAiText(request: AiTextRequest): Promise<string> {
     ...(request.messages
       ? { messages: request.messages }
       : { prompt: [{ role: "user" as const, content: userContent(request.prompt, request.image) }] }),
-    maxOutputTokens: Math.max(request.maxOutputTokens ?? 0, MIN_OUTPUT_TOKENS),
+    maxOutputTokens: Math.max(request.maxOutputTokens ?? 0, request.minimumOutputTokens ?? MIN_OUTPUT_TOKENS),
     temperature: useTemperature ? request.temperature : undefined,
+    providerOptions: request.providerOptions,
     abortSignal: request.abortSignal,
   }));
   return text;
@@ -106,6 +109,8 @@ export type AiObjectRequest<T> = {
   prompt: string;
   image?: ImageInput;
   model?: string;
+  minimumOutputTokens?: number;
+  providerOptions?: Record<string, Record<string, JSONValue>>;
   schema: FlexibleSchema<T>;
   maxOutputTokens?: number;
   temperature?: number;
@@ -134,8 +139,9 @@ export async function generateAiObject<T>(request: AiObjectRequest<T>): Promise<
     system,
     prompt: [{ role: "user", content: userContent(request.prompt, request.image) }],
     schema: request.schema,
-    maxOutputTokens: Math.max(request.maxOutputTokens ?? 0, MIN_OUTPUT_TOKENS),
+    maxOutputTokens: Math.max(request.maxOutputTokens ?? 0, request.minimumOutputTokens ?? MIN_OUTPUT_TOKENS),
     temperature: useTemperature ? request.temperature : undefined,
+    providerOptions: request.providerOptions,
     abortSignal: request.abortSignal,
   }));
   return object;

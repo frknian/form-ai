@@ -1,5 +1,5 @@
 import { authenticateRequest } from "@/lib/api-auth";
-import { nutritionUserClient, toFoodEntryRow, validateNutritionLogInput } from "@/lib/nutrition-log";
+import { nutritionUserClient, toCompatibleFoodEntryRow, validateNutritionLogInput } from "@/lib/nutrition-log";
 import { rateLimit, tooManyRequests } from "@/lib/rate-limit";
 
 export const runtime = "edge";
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     id,
     user_id: auth.user.id,
     consumed_at: consumedAt,
-    ...toFoodEntryRow(input),
+    ...toCompatibleFoodEntryRow(input),
   }).select("*").single();
   if (error) {
     console.error("[nutrition-logs] insert failed", error.code);

@@ -133,3 +133,24 @@ export function toFoodEntryRow(input: Partial<NutritionLogInput>) {
   row.updated_at = new Date().toISOString();
   return row;
 }
+
+// Bazı kurulu veritabanlarında eski food_entries tablosunda grams ve fiber_g
+// sütunları henüz bulunmuyor. Porsiyon ayrıntılarını mevcut metadata sütununda
+// saklayarak aynı API'nin hem eski hem yeni şemada güvenle çalışmasını sağlar.
+export function toCompatibleFoodEntryRow(input: Partial<NutritionLogInput>) {
+  const row = toFoodEntryRow(input);
+  const shouldPersistMetadata = "metadata" in input || "portionGrams" in input || "fiber" in input;
+  const metadata = row.metadata && typeof row.metadata === "object" && !Array.isArray(row.metadata)
+    ? { ...(row.metadata as Record<string, unknown>) }
+    : {};
+  if ("grams" in row) {
+    metadata.portionGrams = row.grams;
+    delete row.grams;
+  }
+  if ("fiber_g" in row) {
+    metadata.fiber = row.fiber_g;
+    delete row.fiber_g;
+  }
+  if (shouldPersistMetadata) row.metadata = metadata;
+  return row;
+}

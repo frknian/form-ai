@@ -110,7 +110,26 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
       if (!supabase) return;
       const { data } = await supabase.from("food_entries").select("*").order("consumed_at", { ascending: false }).limit(100);
       if (cancelled || !data) return;
-      setEntries(data.map((entry) => ({ id: String(entry.id), name: String(entry.name), meal: entry.meal as Meal, calories: Number(entry.calories), protein: Number(entry.protein_g), carbs: Number(entry.carbs_g), fat: Number(entry.fat_g), fiber: Number(entry.fiber_g || 0), grams: Number(entry.grams || 0) || undefined, micros: entry.micros && typeof entry.micros === "object" ? entry.micros as FoodMicronutrients : undefined, time: new Intl.DateTimeFormat(dateLocale, { hour: "2-digit", minute: "2-digit" }).format(new Date(String(entry.consumed_at))), consumedAt: String(entry.consumed_at), source: entry.source as FoodEntry["source"] })));
+      setEntries(data.map((entry) => {
+        const metadata = entry.metadata && typeof entry.metadata === "object" ? entry.metadata as Record<string, unknown> : {};
+        return {
+          id: String(entry.id),
+          name: String(entry.name),
+          meal: entry.meal as Meal,
+          calories: Number(entry.calories),
+          protein: Number(entry.protein_g),
+          carbs: Number(entry.carbs_g),
+          fat: Number(entry.fat_g),
+          fiber: Number(entry.fiber_g ?? metadata.fiber ?? 0),
+          grams: Number(entry.grams ?? metadata.portionGrams ?? 0) || undefined,
+          micros: entry.micros && typeof entry.micros === "object"
+            ? entry.micros as FoodMicronutrients
+            : metadata.micros && typeof metadata.micros === "object" ? metadata.micros as FoodMicronutrients : undefined,
+          time: new Intl.DateTimeFormat(dateLocale, { hour: "2-digit", minute: "2-digit" }).format(new Date(String(entry.consumed_at))),
+          consumedAt: String(entry.consumed_at),
+          source: entry.source as FoodEntry["source"],
+        };
+      }));
     }
     void loadEntries();
     return () => { cancelled = true; };
@@ -201,7 +220,7 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
     const record = { ...entry, id: temporaryId, time: new Intl.DateTimeFormat(dateLocale, { hour: "2-digit", minute: "2-digit" }).format(now), consumedAt: now.toISOString() };
     setEntries((current) => [record, ...current]);
     if (userId) {
-      const inputMethod = record.source === "Fotoğraf" ? "photo" : aiEstimate ? "natural_language" : "manual";
+      const inputMethod = record.source === "Fotoğraf" ? "photo" : record.isEstimated || aiEstimate ? "natural_language" : "manual";
       const response = await authorizedFetch("/api/nutrition/logs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -231,6 +250,13 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
 
   async function submitManual() {
     if (isSubmitting || !foodName.trim()) { if (!foodName.trim()) setMessage(t.calorieTracker.fillNameAndCalories); return; }
+    const hasManualNutrition = nutrition.calories > 0 || nutrition.protein > 0 || nutrition.carbs > 0 || nutrition.fat > 0 || nutrition.fiber > 0;
+    // Kullanıcı yalnızca yemek adı ve gramaj girdiyse ikinci bir düğmeye
+    // basmasını bekleme: AI ile hesapla ve doğrudan günlüğe ekle.
+    if (activeMethod === "manual" && !aiEstimate && !hasManualNutrition) {
+      await estimateFromText(true);
+      return;
+    }
     const portionGrams = Number(grams.replace(",", "."));
     const validation = validateManualNutrition({ portionGrams, calories: nutrition.calories, protein: nutrition.protein, carbohydrates: nutrition.carbs, fat: nutrition.fat, fiber: nutrition.fiber });
     if (!validation.valid) { setMessage(validation.error || t.calorieTracker.fillNameAndCalories); return; }
@@ -244,10 +270,9 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
     }
   }
 
-  // Katalogda karşılığı olmayan serbest metinler için AI tahmini. Porsiyonu da
-  // metinden çıkarır ("2 dilim", "1 kase"), böylece kullanıcı gramajı elle
-  // hesaplamak zorunda kalmaz.
-  async function estimateFromText() {
+  // Yemek adı + tartılmış gramajı AI ile hesaplar. İstenirse aynı işlem
+  // tamamlandığında öğünü tek dokunuşla günlüğe de ekler.
+  async function estimateFromText(addToLog = false) {
     const query = foodName.trim();
     if (query.length < 2) { setMessage(t.calorieTracker.fillNameAndCalories); return; }
     setEstimating(true);
@@ -272,11 +297,34 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
       const totalGrams = items.reduce((sum, item) => sum + item.estimatedGrams, 0);
       const averageConfidence = items.reduce((sum, item) => sum + item.confidence, 0) / items.length;
       const confidence = averageConfidence >= 0.8 && items.every((item) => !item.needsConfirmation) ? "high" : averageConfidence >= 0.55 ? "medium" : "low";
-      setFoodName(items.map((item) => item.query).join(", "));
+      const estimatedName = items.map((item) => item.query).join(", ");
       setGrams(String(Math.round(totalGrams)));
+      setFoodName(estimatedName);
       setNutrition({ calories: totals.calories, protein: totals.protein, carbs: totals.carbohydrates, fat: totals.fat, fiber: totals.fiber, micros: {} });
       setAiEstimate({ grams: Math.round(totalGrams), items: items.map((item) => item.query), confidence });
-      setMessage([confidence === "low" ? t.calorieTracker.estimateLowConfidence : t.calorieTracker.estimateReady, ...(result.warnings || [])].join(" "));
+      if (addToLog) {
+        setIsSubmitting(true);
+        try {
+          await addEntry({
+            name: estimatedName,
+            meal,
+            calories: totals.calories,
+            protein: totals.protein,
+            carbs: totals.carbohydrates,
+            fat: totals.fat,
+            fiber: totals.fiber,
+            grams: Math.round(totalGrams),
+            micros: {},
+            source: "Manuel",
+            isEstimated: true,
+          });
+          setMessage(t.calorieTracker.entryAdded);
+        } finally {
+          setIsSubmitting(false);
+        }
+      } else {
+        setMessage([confidence === "low" ? t.calorieTracker.estimateLowConfidence : t.calorieTracker.estimateReady, ...(result.warnings || [])].join(" "));
+      }
     } catch {
       setMessage(t.calorieTracker.estimateFailed);
     } finally {
@@ -380,7 +428,7 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
             {nutritionFields.map((field) => <label key={field.key}>{field.label} ({field.unit})<input inputMode="decimal" value={formatAmount(nutrition[field.key], dateLocale)} onChange={(event) => updateNutrition(field.key, event.target.value)} placeholder="0" /></label>)}
             {aiEstimate && <div className={`ai-estimate-card ${aiEstimate.confidence}`}><span>{t.calorieTracker.aiEstimateLabel}</span><strong>{t.calorieTracker.aiEstimateGrams(aiEstimate.grams)}</strong>{aiEstimate.items.length > 0 && <small>{aiEstimate.items.join(" · ")}</small>}<p>{aiEstimate.confidence === "low" ? t.calorieTracker.aiConfidenceLow : aiEstimate.confidence === "high" ? t.calorieTracker.aiConfidenceHigh : t.calorieTracker.aiConfidenceMedium}</p></div>}
             {activeMethod === "manual" && <button type="button" className="ai-estimate-btn" disabled={estimating || foodName.trim().length < 2} onClick={() => void estimateFromText()}><Sparkles size={14} /> {estimating ? t.calorieTracker.estimating : t.calorieTracker.estimateWithAi}</button>}
-            <button type="button" className="primary-btn add-food" disabled={isSubmitting} onClick={() => void submitManual()}><Plus size={16} /> {t.calorieTracker.addToLog}</button>
+            <button type="button" className="primary-btn add-food" disabled={isSubmitting || estimating} onClick={() => void submitManual()}><Plus size={16} /> {estimating ? t.calorieTracker.estimating : t.calorieTracker.addToLog}</button>
           </div>
         </>}
         {message && <p className="food-message">{message}</p>}

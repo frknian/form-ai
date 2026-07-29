@@ -24,8 +24,9 @@
 
 # editor / local tooling state
 /.idea/
-/.claude/settings.local.json
+/.claude/
 /.codex/
+/.openai/
 /.agents/
 /.cursor/
 /.aider*

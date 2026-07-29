@@ -1,5 +1,5 @@
 import { authenticateRequest } from "../../../../lib/api-auth.ts";
-import { estimateAiNutrition } from "../../../../lib/ai-nutrition-estimator.ts";
+import { estimateAiTextNutrition } from "../../../../lib/ai-nutrition-estimator.ts";
 import { hasAiProvider } from "../../../../lib/ai-provider.ts";
 import { containsPromptInjection } from "../../../../lib/nutrition-parser.ts";
 import { rateLimit, tooManyRequests } from "../../../../lib/rate-limit.ts";
@@ -31,30 +31,34 @@ export async function POST(request: Request) {
   if (!usage.allowed) return usageLimitExceeded("chat", usage.used, usage.limit);
 
   try {
-    const result = await estimateAiNutrition({
-      prompt: `<untrusted_food_name>${query}</untrusted_food_name>\nKullanıcının tarttığı toplam yenebilir porsiyon: ${grams} gram. Tek bir toplam yemek olarak hesapla ve items dizisinde bir item döndür. item.grams tam olarak ${grams} olmalı.`,
-      timeoutMs: 20_000,
-    });
-    if (!result) return Response.json({ error: "Besin değerleri güvenle hesaplanamadı; alanları elle düzenleyebilirsin." }, { status: 422 });
-    if (containsPromptInjection(query)) result.warnings.unshift("Yemek adındaki talimat benzeri içerik yok sayıldı.");
-    const item = result.items[0];
+    const item = await estimateAiTextNutrition({ foodName: query, grams, timeoutMs: 20_000 });
+    if (!item) return Response.json({ error: "Besin değerleri güvenle hesaplanamadı; tekrar deneyebilirsin." }, { status: 422 });
+    const warnings = [
+      "Değerler tarife ve markaya göre değişebilen yapay zekâ tahminidir.",
+      ...(containsPromptInjection(query) ? ["Yemek adındaki talimat benzeri içerik yok sayıldı."] : []),
+    ];
     return Response.json({
-      items: result.items.map((entry) => ({
-        query: entry.name,
-        estimatedGrams: entry.grams,
-        confidence: entry.confidence,
-        needsConfirmation: entry.confidence < 0.75,
+      items: [{
+        query: item.name,
+        estimatedGrams: item.grams,
+        confidence: item.confidence,
+        needsConfirmation: item.confidence < 0.75,
         nutrition: {
-          calories: entry.calories,
-          protein: entry.protein,
-          carbohydrates: entry.carbohydrates,
-          fat: entry.fat,
-          fiber: entry.fiber,
+          calories: item.calories,
+          protein: item.protein,
+          carbohydrates: item.carbohydrates,
+          fat: item.fat,
+          fiber: item.fiber,
         },
-        assumptions: entry.assumptions,
-      })),
-      totals: result.totals,
-      warnings: result.warnings,
+      }],
+      totals: {
+        calories: item.calories,
+        protein: item.protein,
+        carbohydrates: item.carbohydrates,
+        fat: item.fat,
+        fiber: item.fiber,
+      },
+      warnings,
       confidence: item.confidence,
       isEstimated: true,
       usage: { used: usage.used, limit: usage.limit },

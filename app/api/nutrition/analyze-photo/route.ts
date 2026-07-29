@@ -36,7 +36,7 @@ export async function POST(request: Request) {
     const resolved = await estimateAiNutrition({
       prompt,
       image,
-      timeoutMs: 25_000,
+      timeoutMs: 45_000,
     });
     if (!resolved) return Response.json({ error: "Fotoğraf sonucu güvenle doğrulanamadı; alanları elle düzenleyebilirsin." }, { status: 422 });
     const totalGrams = resolved.items.reduce((sum, item) => sum + item.grams, 0);
