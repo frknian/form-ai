@@ -14,6 +14,10 @@ const isCodexSeatbeltSandbox = process.env.CODEX_SANDBOX === "seatbelt";
 const localBindingConfig = {
   main: "./worker/index.ts",
   compatibility_flags: ["nodejs_compat"],
+  // worker/index.ts görsel optimizasyonunda env.IMAGES kullanıyor. Binding
+  // burada bildirilmezse üretilen wrangler.json'a girmez ve `wrangler deploy`
+  // onu worker'dan kaldırır; /_vinext/image o anda 500 vermeye başlar.
+  images: { binding: "IMAGES" },
   d1_databases: d1
     ? [
         {
