@@ -41,7 +41,15 @@ export async function checkAndConsumeUsage(request: Request, feature: UsageFeatu
   const isPremium = Boolean(profile?.is_premium);
   const limit = isPremium ? DAILY_LIMITS.premium[feature] : DAILY_LIMITS.free[feature];
 
-  const { data, error } = await client.rpc("increment_usage_counter", { p_feature: feature, p_limit: limit }).single();
+  let { data, error } = await client.rpc("increment_usage_counter", { p_feature: feature, p_limit: limit }).single();
+  // text_nutrition sayacı yeni sürümle eklendi. Üretim migration'ı henüz
+  // uygulanmamış eski kurulumlarda fonksiyon "invalid feature" döndürür.
+  // AI öğün analizini tamamen kilitlemek yerine geçici olarak mevcut chat
+  // sayacını aynı (daha düşük) besin limitiyle kullanırız. Migration
+  // uygulandığında ilk çağrı doğrudan ayrı sayaca geçer.
+  if (feature === "text_nutrition" && error && isLegacyTextNutritionCounter(error)) {
+    ({ data, error } = await client.rpc("increment_usage_counter", { p_feature: "chat", p_limit: limit }).single());
+  }
   if (error && isMissingInfrastructure(error)) return unlimited(feature, "increment_usage_counter");
   if (error || !data) {
     console.error("[usage-limits] rpc failed", error?.code);
@@ -66,6 +74,11 @@ const MISSING_INFRA_CODES = new Set([
 
 function isMissingInfrastructure(error: { code?: string | null }) {
   return Boolean(error.code && MISSING_INFRA_CODES.has(error.code));
+}
+
+function isLegacyTextNutritionCounter(error: { code?: string | null; message?: string | null; details?: string | null }) {
+  if (error.code && ["P0001", "23514", "22P02"].includes(error.code)) return true;
+  return /invalid feature|usage_counters_feature_check/i.test(`${error.message || ""} ${error.details || ""}`);
 }
 
 function unlimited(feature: UsageFeature, missing: string): UsageCheckResult {
