@@ -107,7 +107,10 @@ export function nutritionUserClient(request: Request) {
 
 export function sourceForInputMethod(inputMethod: NutritionLogInput["inputMethod"]) {
   if (inputMethod === "photo") return "Fotoğraf";
-  return "AI analizi";
+  // Üretimdeki eski food_entries kısıtı yalnızca "Manuel" değerini kabul
+  // ediyor. Gerçek kaynak input_method=natural_language alanında tutulur;
+  // arayüz bu eski teknik etiketi kullanıcıya daima "AI analizi" gösterir.
+  return "Manuel";
 }
 
 export function toFoodEntryRow(input: Partial<NutritionLogInput>) {

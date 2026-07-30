@@ -97,7 +97,7 @@ test("öğün kaydı eski veritabanı şemasında gramaj ve lifi metadata içind
 
 test("kalori kaydı yalnızca AI metin ve fotoğraf kaynaklarını kabul eder", () => {
   assert.deepEqual(INPUT_METHODS, ["natural_language", "photo"]);
-  assert.equal(sourceForInputMethod("natural_language"), "AI analizi");
+  assert.equal(sourceForInputMethod("natural_language"), "Manuel");
   assert.equal(sourceForInputMethod("photo"), "Fotoğraf");
 });
 
