@@ -5,10 +5,13 @@ import Link from "next/link";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { isVerifiedAuthUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/client";
+import { classifyAuthFailure, parseAuthCallback } from "@/lib/auth-callback";
 
 export default function AuthCallbackPage() {
   const [error, setError] = useState("");
   const [completed, setCompleted] = useState(false);
+  // Teşhis için sağlayıcının döndürdüğü ham mesaj; kullanıcıya küçük punto gösterilir.
+  const [detail, setDetail] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -26,7 +29,8 @@ export default function AuthCallbackPage() {
     }
 
     async function completeAuthentication() {
-      const params = new URLSearchParams(window.location.search);
+      // Supabase hatayı sorgu dizesine de hash'e de koyabiliyor; ikisi de okunur.
+      const params = parseAuthCallback(window.location.search, window.location.hash);
       const supabase = createClient();
       if (!supabase) {
         if (active) setError("Güvenli giriş servisine ulaşılamadı.");
@@ -40,13 +44,19 @@ export default function AuthCallbackPage() {
         return;
       }
 
-      const callbackError = params.get("error_description") || params.get("error");
-      if (callbackError) {
-        if (active) setError("Giriş bağlantısı tamamlanamadı. Yeni bir doğrulama bağlantısı isteyip tekrar deneyebilirsin.");
+      const failure = classifyAuthFailure(params);
+      if (failure !== "none") {
+        if (!active) return;
+        // Sağlayıcı yapılandırması bozuksa tekrar denemek hep aynı sonucu verir;
+        // kullanıcıyı boşuna "yeni bağlantı iste" döngüsüne sokmayız.
+        setError(failure === "provider-config"
+          ? "Google ile giriş şu an tamamlanamıyor. Sorun hesabında değil, giriş sağlayıcısı bağlantısında; e-posta ve parolayla giriş yapabilirsin."
+          : "Giriş bağlantısı tamamlanamadı. Yeni bir doğrulama bağlantısı isteyip tekrar deneyebilirsin.");
+        setDetail(params.errorDescription || params.error || "");
         return;
       }
 
-      const code = params.get("code");
+      const code = params.code;
       if (code) {
         const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
         if (exchangeError) {
@@ -77,5 +87,5 @@ export default function AuthCallbackPage() {
     };
   }, []);
 
-  return <main className="auth-shell auth-loading"><section className="auth-status-card"><div className="auth-loading-mark">↗</div>{error ? <><h1>Doğrulama tamamlanamadı</h1><p>{error}</p><Link href="/">Giriş ekranına dön</Link></> : completed ? <><h1>E-posta doğrulandı</h1><p>Güvenli oturumun açıldı. Uygulamaya yönlendiriliyorsun…</p></> : <><h1>Hesabın doğrulanıyor</h1><p>Lütfen bu pencereyi kapatma…</p></>}</section></main>;
+  return <main className="auth-shell auth-loading"><section className="auth-status-card"><div className="auth-loading-mark">↗</div>{error ? <><h1>Doğrulama tamamlanamadı</h1><p>{error}</p>{detail && <p className="auth-error-detail">{detail}</p>}<Link href="/">Giriş ekranına dön</Link></> : completed ? <><h1>E-posta doğrulandı</h1><p>Güvenli oturumun açıldı. Uygulamaya yönlendiriliyorsun…</p></> : <><h1>Hesabın doğrulanıyor</h1><p>Lütfen bu pencereyi kapatma…</p></>}</section></main>;
 }

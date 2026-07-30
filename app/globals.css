@@ -1269,3 +1269,7 @@ input,select,textarea { color-scheme:inherit; }
 .dark .hydration-actions button,.dark .hydration-targets button { border-color:#46502c; }
 .dark .hydration-targets button.active { background:#33411f; border-color:#5d7030; color:#d9ed9e; }
 .dark .hydration-note.hydration-done { color:#c3e08a; }
+
+/* Callback sayfasında sağlayıcının döndürdüğü ham hata; teşhis içindir,
+   kullanıcı mesajının önüne geçmemesi için küçük ve soluk tutulur. */
+.auth-error-detail { margin:8px 0 0; color:var(--muted-text); font-size:10px; line-height:1.45; word-break:break-word; }
