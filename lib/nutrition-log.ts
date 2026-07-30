@@ -4,7 +4,7 @@ import { normalizeSupabaseUrl } from "./supabase/url.ts";
 import { validateManualNutrition } from "./nutrition-calculation.ts";
 
 export const MEAL_TYPES = ["Kahvaltı", "Öğle yemeği", "Akşam yemeği", "Atıştırmalık"] as const;
-export const INPUT_METHODS = ["barcode", "search", "natural_language", "manual", "photo", "recent", "favorite"] as const;
+export const INPUT_METHODS = ["natural_language", "photo"] as const;
 
 export type NutritionLogInput = {
   foodId: string | null;
@@ -106,9 +106,8 @@ export function nutritionUserClient(request: Request) {
 }
 
 export function sourceForInputMethod(inputMethod: NutritionLogInput["inputMethod"]) {
-  if (inputMethod === "barcode") return "Barkod";
   if (inputMethod === "photo") return "Fotoğraf";
-  return "Manuel";
+  return "AI analizi";
 }
 
 export function toFoodEntryRow(input: Partial<NutritionLogInput>) {

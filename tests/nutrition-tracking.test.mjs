@@ -4,7 +4,7 @@ import test from "node:test";
 import { summarizeAiNutrition, validateAiNutrition, validateAiTextNutrition } from "../lib/ai-nutrition-estimator.ts";
 import { calculatePortionNutrition, validateManualNutrition, valueForPortion } from "../lib/nutrition-calculation.ts";
 import { containsPromptInjection } from "../lib/nutrition-parser.ts";
-import { toCompatibleFoodEntryRow, validateNutritionLogInput } from "../lib/nutrition-log.ts";
+import { INPUT_METHODS, sourceForInputMethod, toCompatibleFoodEntryRow, validateNutritionLogInput } from "../lib/nutrition-log.ts";
 import { authorizedRequest, withAuthenticatedFetch, withSupabaseAuthEnv } from "./helpers/auth.mjs";
 
 const validAiNutrition = {
@@ -95,6 +95,12 @@ test("öğün kaydı eski veritabanı şemasında gramaj ve lifi metadata içind
   assert.deepEqual(row.metadata, { micros: { sodium: 20 }, portionGrams: 250, fiber: 8 });
 });
 
+test("kalori kaydı yalnızca AI metin ve fotoğraf kaynaklarını kabul eder", () => {
+  assert.deepEqual(INPUT_METHODS, ["natural_language", "photo"]);
+  assert.equal(sourceForInputMethod("natural_language"), "AI analizi");
+  assert.equal(sourceForInputMethod("photo"), "Fotoğraf");
+});
+
 test("makro dışındaki kısmi güncelleme metadata alanını ezmez", () => {
   const row = toCompatibleFoodEntryRow({ foodName: "Güncellenen öğün" });
   assert.equal("metadata" in row, false);
@@ -165,6 +171,7 @@ test("kalori model yönlendirmesi metni K2'ye, fotoğrafı K3'e yollar", async (
   assert.match(source, /AI_NUTRITION_TEXT_MODEL \|\| "kimi-k2\.6"/);
   assert.match(source, /AI_NUTRITION_VISION_MODEL \|\| "kimi-k3"/);
   assert.match(source, /thinking: \{ type: "disabled" \}/);
+  assert.match(source, /name alanını mutlaka doğal Türkçe yaz/);
 });
 
 test("gramaj verilmeden AI besin çağrısı yapılmaz", { concurrency: false }, async () => {

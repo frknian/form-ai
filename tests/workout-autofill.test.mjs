@@ -47,7 +47,12 @@ test("kalori takibi yemek adı ve gramajı yapay zekâya gönderir", async () =>
   assert.match(source, /\/api\/nutrition\/parse-text/);
   assert.match(source, /JSON\.stringify\(\{ query, grams: portionGrams/);
   assert.match(source, /await estimateFromText\(true\)/);
-  assert.match(source, /record\.isEstimated \|\| aiEstimate/);
+  assert.match(source, /source: "AI analizi"/);
+  assert.match(source, /ai-nutrition-values/);
+  assert.match(source, /<option key=\{option\} value=\{option\}>\{option\}<\/option>/);
   assert.doesNotMatch(source, /\/api\/nutrition\/barcode/);
   assert.doesNotMatch(source, /BrowserMultiFormatReader/);
+  assert.doesNotMatch(source, /updateNutrition/);
+  assert.doesNotMatch(source, /translateMeal/);
+  assert.doesNotMatch(source, /"manual"/);
 });

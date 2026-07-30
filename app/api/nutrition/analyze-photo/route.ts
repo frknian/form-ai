@@ -10,7 +10,8 @@ const prompt = `Bu bir yemek fotoğrafı. Görseldeki yenebilir besinleri ayrı 
 belirle; her biri için yaklaşık gramajı ve o gramajın kalori, protein,
 karbonhidrat, yağ ve lif değerlerini hesapla. Görünmeyen yağ, sos ve pişirme
 yöntemi varsayımlarını assumptions alanına yaz. Fotoğraftan porsiyon kesin
-ölçülemediği için uygun confidence ve Türkçe warnings üret.`;
+ölçülemediği için uygun confidence ve Türkçe warnings üret. Tüm yemek adlarını
+Türkçe yaz; İngilizce alternatif veya seçenek listesi üretme.`;
 
 export async function POST(request: Request) {
   const auth = await authenticateRequest(request);
@@ -38,7 +39,7 @@ export async function POST(request: Request) {
       image,
       timeoutMs: 45_000,
     });
-    if (!resolved) return Response.json({ error: "Fotoğraf sonucu güvenle doğrulanamadı; alanları elle düzenleyebilirsin." }, { status: 422 });
+    if (!resolved) return Response.json({ error: "Fotoğraf sonucu güvenle doğrulanamadı; başka bir fotoğrafla veya yazarak tekrar deneyebilirsin." }, { status: 422 });
     const totalGrams = resolved.items.reduce((sum, item) => sum + item.grams, 0);
     const confidence = resolved.items.some((item) => item.confidence < 0.55)
       ? "low"
