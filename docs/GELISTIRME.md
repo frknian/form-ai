@@ -1,4 +1,4 @@
-# form.ai — Geliştirici rehberi
+# Hedefit — Geliştirici rehberi
 
 Kurulum, ortam değişkenleri, veritabanı, dağıtım, Android yayını, güvenlik ve
 veri kaynakları. Uygulamanın tanıtımı için [README](../README.md).
@@ -80,14 +80,14 @@ Anahtar deposu **repoya girmez** ve kaybedilirse aynı uygulamaya bir daha
 güncelleme yayınlanamaz — güvenli bir yerde yedekleyin.
 
 ```bash
-keytool -genkeypair -v -keystore fitai-upload.jks -keyalg RSA -keysize 2048 \
-        -validity 10000 -alias fitai-upload
+keytool -genkeypair -v -keystore hedefit-upload.jks -keyalg RSA -keysize 2048 \
+        -validity 10000 -alias hedefit-upload
 ```
 
 `android/keystore.properties.example` dosyasını `keystore.properties` olarak
 kopyalayıp doldurun (`.gitignore`'dadır). CI için alternatif olarak
-`FITAI_KEYSTORE_FILE`, `FITAI_KEYSTORE_PASSWORD`, `FITAI_KEY_ALIAS`,
-`FITAI_KEY_PASSWORD` ortam değişkenleri kullanılabilir. İmzalama
+`HEDEFIT_KEYSTORE_FILE`, `HEDEFIT_KEYSTORE_PASSWORD`, `HEDEFIT_KEY_ALIAS`,
+`HEDEFIT_KEY_PASSWORD` ortam değişkenleri kullanılabilir. İmzalama
 yapılandırılmadan `bundleRelease` bilinçli olarak durur.
 
 ### 2. Üretim adresi

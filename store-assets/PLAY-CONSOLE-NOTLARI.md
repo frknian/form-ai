@@ -44,12 +44,12 @@ hiçbir görüntü sunucuya gönderilmez — bunu ayrıca beyan etmenize gerek y
 | Varlık | Durum | Yol |
 |---|---|---|
 | Uygulama ikonu 512×512 | ✔ hazır | `store-assets/play-icon-512.png` |
-| Feature graphic 1024×500 | ⚠ marka işareti hazır, **başlık metni eklenmeli** | `store-assets/feature-graphic-1024x500.png` |
+| Feature graphic 1024×500 | ✔ Hedefit marka ve sloganıyla hazır | `store-assets/feature-graphic-1024x500.png` |
 | Telefon ekran görüntüsü (min 2) | ✖ eksik | Emülatörden alınmalı |
 | Tablet ekran görüntüsü | ✖ (isteğe bağlı) | — |
 
-Feature graphic'te yazı yok: üretici saf Node ile çalıştığı için font
-rasterleme yapamıyor. Tasarım aracında "form.ai" ve kısa bir slogan ekleyin.
+Feature graphic üzerinde “Hedefit” ve “Hedefin için fit plan.” metni bulunur;
+“f” beyaz, “it” yeşil marka ayrımı kullanılır.
 
 Görselleri yeniden üretmek için:
 ```bash

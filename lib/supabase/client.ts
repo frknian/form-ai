@@ -27,7 +27,7 @@ async function proxiedRequest(source: Request, configuredUrl: string) {
 }
 
 function isUnexpectedAuthResponse(response: Response) {
-  return response.headers.get("x-form-ai-proxy") !== "supabase"
+  return response.headers.get("x-hedefit-proxy") !== "supabase"
     || !response.headers.get("content-type")?.toLocaleLowerCase("en-US").includes("application/json");
 }
 

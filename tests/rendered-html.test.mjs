@@ -36,14 +36,14 @@ test("buffers Supabase proxy bodies for Safari and Cloudflare compatibility", as
   assert.match(browserClient, /await source\.arrayBuffer\(\)/);
   assert.match(browserClient, /new XMLHttpRequest\(\)/);
   assert.match(browserClient, /sendAuthProxyRequest\(proxy\.url, proxy\.init\)/);
-  assert.match(browserClient, /x-form-ai-proxy/);
+  assert.match(browserClient, /x-hedefit-proxy/);
   // Normalizasyon artık lib/supabase/url.ts'te; sunucu tarafı da aynı yardımcıyı
   // kullanmalı (bkz. tests/supabase-url.test.mjs), yoksa geçerli oturumlar
   // "Oturum doğrulanamadı." ile reddediliyordu.
   assert.match(browserClient, /import \{ normalizeSupabaseUrl \} from "\.\/url"/);
   assert.match(browserClient, /normalizeSupabaseUrl\(rawConfiguredUrl\)/);
   assert.match(workerProxy, /await request\.arrayBuffer\(\)/);
-  assert.match(workerProxy, /X-Form-AI-Proxy", "supabase"/);
+  assert.match(workerProxy, /X-Hedefit-Proxy", "supabase"/);
   assert.doesNotMatch(workerProxy, /body:\s*request\.body/);
   // env.ASSETS bu dağıtımda yalnızca /_vinext/image yolunda bağlıdır. Her isteğin
   // başında env.ASSETS.fetch çağırmak, binding tanımsız olduğu için worker'ı
@@ -57,14 +57,14 @@ test("buffers Supabase proxy bodies for Safari and Cloudflare compatibility", as
   assert.ok(workerEntry.indexOf("handleSupabaseProxy(request)") < workerEntry.indexOf("await getAppRouterHandler()"));
 });
 
-test("server-renders the secure form.ai account entry", async () => {
+test("server-renders the secure Hedefit account entry", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
   assert.equal(response.headers.get("cross-origin-opener-policy"), "same-origin-allow-popups");
 
   const html = await response.text();
-  assert.match(html, /<title>form\.ai — Sana özel antrenman<\/title>/i);
+  assert.match(html, /<title>Hedefit — Hedefin için fit plan\.<\/title>/i);
   assert.match(html, /Güvenli hesabın hazırlanıyor/i);
   assert.doesNotMatch(html, /class="topbar"/);
   assert.doesNotMatch(html, />Antrenmanım</);
@@ -121,14 +121,14 @@ test("keeps email verification and Google authentication wired into profile crea
   assert.match(supabaseClient, /target\.pathname\.startsWith\("\/auth\/v1\/"\)/);
   assert.match(supabaseClient, /const proxy = await proxiedRequest\(request, configuredUrl\)/);
   assert.doesNotMatch(supabaseClient, /return await fetch\(request\)/);
-  assert.match(mobileRuntime, /com\.fitai\.app:\/\/auth\/callback/);
+  assert.match(mobileRuntime, /com\.hedefit\.app:\/\/auth\/callback/);
   assert.match(mobileRuntime, /exchangeCodeForSession/);
   assert.match(mobileRuntime, /LocalNotifications\.schedule/);
   assert.match(mobileRuntime, /Camera\.getPhoto/);
-  assert.match(mobileConfig, /appId: "com\.fitai\.app"/);
+  assert.match(mobileConfig, /appId: "com\.hedefit\.app"/);
   assert.doesNotMatch(mobileConfig, /AI_API_KEY|SUPABASE_ANON_KEY/);
-  assert.match(androidManifest, /android:scheme="com\.fitai\.app"/);
-  assert.match(iosInfo, /<string>com\.fitai\.app<\/string>/);
+  assert.match(androidManifest, /android:scheme="com\.hedefit\.app"/);
+  assert.match(iosInfo, /<string>com\.hedefit\.app<\/string>/);
   assert.match(iosInfo, /NSCameraUsageDescription/);
 });
 
@@ -210,10 +210,10 @@ test("keeps the AI plan and movement library wired into the product", async () =
   assert.match(weeklyRoute, /enforceWeeklySafety/);
   assert.match(weeklyRoute, /JSON\.stringify\(safeSummary\)/);
   assert.doesNotMatch(weeklyRoute, /payload\.(email|name|userId)/);
-  assert.match(layout, /form\.ai — Sana özel antrenman/);
+  assert.match(layout, /Hedefit — Hedefin için fit plan\./);
   assert.match(layout, /export const metadata/);
   assert.match(layout, /og\.png/);
-  assert.match(layout, /form-ai\.frknian\.workers\.dev/);
+  assert.match(layout, /hedefit\.frknian\.workers\.dev/);
   assert.doesNotMatch(page, /gymvisual|iframe/i);
   assert.doesNotMatch(page, /knowledge-sources|fitnessSources/);
   assert.doesNotMatch(route, /knowledge-sources|fitnessSources/);

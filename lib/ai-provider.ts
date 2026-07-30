@@ -29,8 +29,8 @@ function languageModel(modelId = aiModelId()) {
       // OpenRouter'ın kontrol panelinde uygulamayı tanımlamak için önerdiği
       // isteğe bağlı başlıklar; Moonshot dahil diğer sağlayıcılarda zararsızca
       // yok sayılır.
-      "HTTP-Referer": process.env.AI_SITE_URL || "https://form.ai",
-      "X-Title": "form.ai",
+      "HTTP-Referer": process.env.AI_SITE_URL || "https://hedefit.app",
+      "X-Title": "Hedefit",
     },
   });
   return provider.chatModel(modelId);

@@ -1,4 +1,4 @@
-package com.fitai.app;
+package com.hedefit.app;
 
 import com.getcapacitor.BridgeActivity;
 

@@ -74,7 +74,7 @@ export function ProfileManager({ user, profile, avatarUrl, onSaved, onFrozen, on
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `form-ai-verilerim-${new Date().toISOString().slice(0, 10)}.json`;
+      link.download = `hedefit-verilerim-${new Date().toISOString().slice(0, 10)}.json`;
       document.body.appendChild(link);
       link.click();
       link.remove();

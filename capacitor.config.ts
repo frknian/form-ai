@@ -4,7 +4,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
 // Yayın paketine geçici bir önizleme adresi gömmek, uygulamayı o adres kapandığı
 // anda tamamen çalışmaz hâle getirir ve düzeltmek yeni bir sürüm yayınlamayı
 // gerektirir. Bu yüzden yayın derlemelerinde adres açıkça verilmek zorundadır.
-const developmentFallbackUrl = "https://form-ai-fitness.furkaninansahsi.chatgpt.site";
+const developmentFallbackUrl = "https://hedefit.frknian.workers.dev";
 const isReleaseBuild = process.env.CAPACITOR_RELEASE === "1" || process.env.NODE_ENV === "production";
 const configuredUrl = process.env.CAPACITOR_SERVER_URL;
 
@@ -22,8 +22,8 @@ if (isReleaseBuild && !productionUrl.startsWith("https://")) {
 const productionHost = new URL(productionUrl).hostname;
 
 const config: CapacitorConfig = {
-  appId: "com.fitai.app",
-  appName: "FİT.AI",
+  appId: "com.hedefit.app",
+  appName: "Hedefit",
   webDir: "mobile-shell",
   backgroundColor: "#f7f7f2",
   server: {

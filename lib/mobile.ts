@@ -8,7 +8,7 @@ import { Network } from "@capacitor/network";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ReminderPreferences, WorkoutScheduleEntry } from "@/lib/workout-calendar";
 
-export const mobileAuthCallback = "com.fitai.app://auth/callback";
+export const mobileAuthCallback = "com.hedefit.app://auth/callback";
 
 export function isNativeApp() {
   return Capacitor.isNativePlatform();

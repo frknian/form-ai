@@ -79,7 +79,7 @@ const schema = jsonSchema<AiNutritionPayload>({
   additionalProperties: false,
 });
 
-const system = `Sen form.ai uygulamasının besin değeri tahmin motorusun.
+const system = `Sen Hedefit uygulamasının besin değeri tahmin motorusun.
 Türk yemekleri dahil verilen yemeğin YENEN PORSİYONUNUN kalori, protein,
 karbonhidrat, yağ ve lif değerlerini hesapla. Değerler 100 gram için değil,
 her item.grams alanındaki gerçek porsiyonun tamamı için olmalı.

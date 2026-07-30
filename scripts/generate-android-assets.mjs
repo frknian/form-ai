@@ -1,4 +1,4 @@
-// form.ai Android ikon/splash üreticisi.
+// Hedefit Android ikon/splash üreticisi.
 // Saf Node (zlib) ile PNG kodlar; harici bağımlılık veya tarayıcı gerektirmez,
 // böylece varlıklar her makinede birebir aynı şekilde yeniden üretilebilir.
 import { deflateSync } from "node:zlib";

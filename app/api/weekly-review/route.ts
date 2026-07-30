@@ -51,7 +51,7 @@ export async function POST(request: Request) {
   try {
     const output = await generateAiObject({
       schema: weeklyReviewSchema,
-      system: `Sen form.ai uygulamasının güvenli haftalık fitness değerlendirme asistanısın.
+      system: `Sen Hedefit uygulamasının güvenli haftalık fitness değerlendirme asistanısın.
 - Yalnızca verilen anonim özet metriklerini kullan; kişisel veri, tanı veya kesin sağlık iddiası üretme.
 ${outputLanguageInstruction}
 - positives olumlu gelişmeleri, cautions dikkat noktalarını, recommendations gelecek hafta için 2–4 uygulanabilir adımı içersin.

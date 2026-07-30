@@ -1,6 +1,6 @@
-# FİT.AI mobil uygulaması
+# Hedefit mobil uygulaması
 
-Paket kimliği: `com.fitai.app`
+Paket kimliği: `com.hedefit.app`
 
 ## Geliştirme
 
@@ -16,7 +16,7 @@ Android derlemesi için Android Studio/JDK, iOS derlemesi için macOS üzerinde 
 
 Supabase Auth → URL Configuration → Redirect URLs listesine aşağıdaki adresi ekle:
 
-`com.fitai.app://auth/callback`
+`com.hedefit.app://auth/callback`
 
 Google sağlayıcısı Supabase içinde etkin olmalı. Mobil OAuth, sistem tarayıcısında açılır ve doğrulamadan sonra deep link ile uygulamaya döner. Gemini anahtarı mobil projeye eklenmez; AI çağrıları yayınlanan sunucu API rotalarında kalır.
 
@@ -32,6 +32,6 @@ Google sağlayıcısı Supabase içinde etkin olmalı. Mobil OAuth, sistem taray
 ## Mağaza öncesi
 
 - Supabase bağlantı değişkenlerini yayın ortamına ekle ve SQL şemasını uygula.
-- Geçici uygulama ikonlarını ve açılış görsellerini nihai FİT.AI marka dosyalarıyla değiştir.
+- Uygulama ikonlarını ve açılış görsellerini nihai Hedefit marka dosyalarıyla doğrula.
 - Gizlilik politikası, destek URL'si ve mağaza veri güvenliği formlarını hazırla.
 - Gerçek cihazlarda e-posta doğrulama, Google girişi, kamera, bildirim ve antrenman kaydını test et.

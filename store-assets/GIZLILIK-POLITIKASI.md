@@ -1,4 +1,4 @@
-# FİT.AI (form.ai) Gizlilik Politikası
+# Hedefit Gizlilik Politikası
 
 **Son güncelleme:** 26 Temmuz 2026
 
@@ -9,7 +9,7 @@
 
 ## 1. Veri sorumlusu
 
-FİT.AI uygulamasını **[KURUM ADI]** işletir. Sorularınız için:
+Hedefit uygulamasını **[KURUM ADI]** işletir. Sorularınız için:
 **[İLETİŞİM E-POSTASI]**
 
 ## 2. Topladığımız veriler
@@ -96,7 +96,7 @@ toplamayız.
 
 ## 8. Sağlık uyarısı
 
-FİT.AI tıbbi cihaz değildir. Ürettiği plan, kalori hedefi ve değerlendirmeler
+Hedefit tıbbi cihaz değildir. Ürettiği plan, kalori hedefi ve değerlendirmeler
 tıbbi teşhis, tedavi veya beslenme reçetesi yerine geçmez. Hamilelik, emzirme,
 yeme bozukluğu öyküsü, diyabet, kalp veya böbrek rahatsızlığı gibi durumlarda
 uygulamayı kullanmadan önce bir sağlık uzmanına danışın. Antrenman sırasında

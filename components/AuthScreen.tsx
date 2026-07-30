@@ -391,7 +391,7 @@ export function AuthScreen({ status, onSignedIn }: { status: "loading" | "anonym
       <div className="toggle-row auth-toggle-row"><LanguageToggle /><ThemeToggle /></div>
       <section className="auth-layout">
         <div className="auth-story">
-          <div className="auth-brand"><span className="brand-mark">↗</span><span>form<span className="brand-dot">.</span>ai</span></div>
+          <div className="auth-brand"><span className="brand-mark">↗</span><span>Hedef<span className="brand-dot">it</span></span></div>
           <div><div className="eyebrow">{t.auth.eyebrow}</div><h1>{t.auth.heroTitleLine1}<br /><em>{t.auth.heroTitleEm}</em></h1><p>{t.auth.heroBody}</p></div>
           <div className="auth-benefits"><span>01</span><p><strong>{t.auth.benefit1Title}</strong><small>{t.auth.benefit1Body}</small></p><span>02</span><p><strong>{t.auth.benefit2Title}</strong><small>{t.auth.benefit2Body}</small></p></div>
         </div>

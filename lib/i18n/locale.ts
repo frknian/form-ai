@@ -4,7 +4,7 @@ import { useSyncExternalStore } from "react";
 
 export type Locale = "tr" | "en";
 
-const LOCALE_KEY = "fitai:locale";
+const LOCALE_KEY = "hedefit:locale";
 const listeners = new Set<() => void>();
 
 function detectDefaultLocale(): Locale {
@@ -18,7 +18,7 @@ function detectDefaultLocale(): Locale {
 
 function readLocale(): Locale {
   try {
-    const stored = typeof localStorage !== "undefined" ? localStorage.getItem(LOCALE_KEY) : null;
+    const stored = typeof localStorage !== "undefined" ? localStorage.getItem(LOCALE_KEY) || localStorage.getItem("fitai:locale") : null;
     return stored === "en" || stored === "tr" ? stored : detectDefaultLocale();
   } catch {
     return "tr";

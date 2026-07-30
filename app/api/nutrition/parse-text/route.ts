@@ -26,9 +26,9 @@ export async function POST(request: Request) {
     return Response.json({ error: "AI besin hesaplama servisi yapılandırılmamış." }, { status: 503 });
   }
 
-  const usage = await checkAndConsumeUsage(request, "chat");
+  const usage = await checkAndConsumeUsage(request, "text_nutrition");
   if ("error" in usage) return usage.error;
-  if (!usage.allowed) return usageLimitExceeded("chat", usage.used, usage.limit);
+  if (!usage.allowed) return usageLimitExceeded("text_nutrition", usage.used, usage.limit);
 
   try {
     const item = await estimateAiTextNutrition({ foodName: query, grams, timeoutMs: 20_000 });

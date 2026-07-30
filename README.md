@@ -1,17 +1,17 @@
 <div align="center">
 
-<img src="store-assets/play-icon-512.png" alt="form.ai" width="112" height="112">
+<img src="store-assets/play-icon-512.png" alt="Hedefit" width="112" height="112">
 
-# form.ai
+# Hedefit
 
-### Sana göre değişen yapay zeka antrenörün
+### Hedefin için fit plan.
 
-Planını sen yazma. form.ai profilini, ekipmanını ve her antrenmandan sonra
+Planını sen yazma. Hedefit profilini, ekipmanını ve her antrenmandan sonra
 verdiğin geri bildirimi okuyup programını kendisi ayarlar.
 
-**Türkçe** · [English](#formai--your-ai-trainer-that-adapts-to-you)
+**Türkçe** · [English](#hedefit--your-ai-trainer-that-adapts-to-you)
 
-<img src="store-assets/feature-graphic-1024x500.png" alt="form.ai" width="100%">
+<img src="store-assets/feature-graphic-1024x500.png" alt="Hedefit" width="100%">
 
 </div>
 
@@ -20,7 +20,7 @@ verdiğin geri bildirimi okuyup programını kendisi ayarlar.
 ## Nedir?
 
 Çoğu fitness uygulaması sana sabit bir program verir ve gerisini sana bırakır.
-form.ai tersini yapar: ilk gün seni tanır, sonra **her antrenmandan sonra
+Hedefit tersini yapar: ilk gün seni tanır, sonra **her antrenmandan sonra
 dinler**. Hareket zor geldiyse yükü düşürür, kolay geldiyse artırır, ağrı
 bildirdiğin bölgeyi programdan çıkarır.
 
@@ -68,10 +68,16 @@ Türkçe ve İngilizce · tüm verilerini tek JSON dosyası olarak indirme
 | | Ücretsiz | Premium |
 |---|---|---|
 | Antrenman planı, oynatıcı, hareket kütüphanesi | ✔ | ✔ |
-| AI kalori ve makro takibi | ✔ | ✔ |
+| Manuel öğün kaydı ve makro takibi | ✔ | ✔ |
 | Ölçümler, rekorlar, seri, takvim | ✔ | ✔ |
-| AI koç sohbeti | günde 5 soru | günde 15 soru |
-| Fotoğrafla besin ekleme | günde 5 fotoğraf | günde 10 fotoğraf |
+| AI koç sohbeti | günde 5 mesaj | günde 20 mesaj |
+| Fotoğrafla öğün analizi | günde 1 fotoğraf | günde 10 fotoğraf |
+| Yazarak AI besin tahmini | günde 3 öğün | günde 20 öğün |
+| Planı AI ile yeniden düzenleme | ayda 1 | adil kullanım kapsamında |
+| Haftalık AI değerlendirmesi | örnek özet | tam kişisel analiz |
+| Hedef tahmini ve gelişmiş içgörüler | — | ✔ |
+
+Premium: **₺89/ay** veya **₺799/yıl**.
 
 ## Gizliliğin
 
@@ -91,7 +97,7 @@ Web tarayıcısı · Android · iOS
 
 ## Sağlık uyarısı
 
-form.ai tıbbi bir cihaz değildir. Ürettiği plan, kalori hedefi ve
+Hedefit tıbbi bir cihaz değildir. Ürettiği plan, kalori hedefi ve
 değerlendirmeler tıbbi teşhis, tedavi veya beslenme reçetesi yerine geçmez.
 Hamilelik, emzirme, yeme bozukluğu öyküsü, diyabet, kalp veya böbrek
 rahatsızlığı gibi durumlarda uygulamayı kullanmadan önce bir sağlık uzmanına
@@ -104,14 +110,14 @@ yaşarsanız durun ve hekime başvurun.
 
 <div align="center">
 
-<img src="store-assets/play-icon-512.png" alt="form.ai" width="112" height="112">
+<img src="store-assets/play-icon-512.png" alt="Hedefit" width="112" height="112">
 
-# form.ai — your AI trainer that adapts to you
+# Hedefit — your AI trainer that adapts to you
 
-Stop writing your own program. form.ai reads your profile, your equipment and
+Stop writing your own program. Hedefit reads your profile, your equipment and
 the feedback you give after every session, then adjusts the plan itself.
 
-[Türkçe](#formai) · **English**
+[Türkçe](#hedefit) · **English**
 
 </div>
 
@@ -119,7 +125,7 @@ the feedback you give after every session, then adjusts the plan itself.
 
 ## What is it?
 
-Most fitness apps hand you a fixed program and leave the rest to you. form.ai
+Most fitness apps hand you a fixed program and leave the rest to you. Hedefit
 does the opposite: it gets to know you on day one, then **listens after every
 workout**. Too hard, and it backs the load off. Too easy, and it pushes. Report
 pain somewhere, and it routes around that area.
@@ -168,10 +174,16 @@ Turkish and English · export all your data as a single JSON file
 | | Free | Premium |
 |---|---|---|
 | Training plan, player, exercise library | ✔ | ✔ |
-| AI calorie and macro tracking | ✔ | ✔ |
+| Manual meal and macro tracking | ✔ | ✔ |
 | Measurements, records, streaks, calendar | ✔ | ✔ |
-| AI coach chat | 5 questions/day | 15 questions/day |
-| Add food by photo | 5 photos/day | 10 photos/day |
+| AI coach chat | 5 messages/day | 20 messages/day |
+| Meal photo analysis | 1 photo/day | 10 photos/day |
+| AI nutrition estimate from text | 3 meals/day | 20 meals/day |
+| AI plan regeneration | 1/month | fair-use access |
+| Weekly AI review | sample summary | full personal analysis |
+| Goal forecast and advanced insights | — | ✔ |
+
+Premium: **₺89/month** or **₺799/year** in Türkiye.
 
 ## Your privacy
 
@@ -191,7 +203,7 @@ Web browser · Android · iOS
 
 ## Health notice
 
-form.ai is not a medical device. The plans, calorie targets and reviews it
+Hedefit is not a medical device. The plans, calorie targets and reviews it
 produces are not a substitute for medical diagnosis, treatment or a prescribed
 diet. If you are pregnant or breastfeeding, have a history of eating disorders,
 or live with diabetes, heart or kidney conditions, consult a health

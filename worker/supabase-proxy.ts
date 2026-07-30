@@ -62,7 +62,7 @@ export async function handleSupabaseProxy(request: Request): Promise<Response | 
       if (value) responseHeaders.set(name, value);
     }
     responseHeaders.set("Cache-Control", "no-store");
-    responseHeaders.set("X-Form-AI-Proxy", "supabase");
+    responseHeaders.set("X-Hedefit-Proxy", "supabase");
 
     return new Response(BODYLESS_STATUSES.has(upstream.status) ? null : upstream.body, {
       status: upstream.status,
@@ -72,7 +72,7 @@ export async function handleSupabaseProxy(request: Request): Promise<Response | 
   } catch {
     return Response.json(
       { code: 502, error_code: "upstream_unavailable", msg: "Authentication service is temporarily unavailable." },
-      { status: 502, headers: { "Cache-Control": "no-store", "X-Form-AI-Proxy": "supabase" } },
+      { status: 502, headers: { "Cache-Control": "no-store", "X-Hedefit-Proxy": "supabase" } },
     );
   }
 }
