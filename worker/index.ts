@@ -48,13 +48,30 @@ const worker = {
 
     if (url.pathname === "/_vinext/image") {
       const allowedWidths = [...DEFAULT_DEVICE_SIZES, ...DEFAULT_IMAGE_SIZES];
-      return withSecurityHeaders(await handleImageOptimization(request, {
-        fetchAsset: (path) => env.ASSETS.fetch(new Request(new URL(path, request.url))),
-        transformImage: async (body, { width, format, quality }) => {
-          const result = await env.IMAGES.input(body).transform(width > 0 ? { width } : {}).output({ format, quality });
-          return result.response();
-        },
-      }, allowedWidths));
+      const fetchAsset = (path: string) => env.ASSETS.fetch(new Request(new URL(path, request.url)));
+      try {
+        return withSecurityHeaders(await handleImageOptimization(request, {
+          fetchAsset,
+          transformImage: async (body, { width, format, quality }) => {
+            const result = await env.IMAGES.input(body).transform(width > 0 ? { width } : {}).output({ format, quality });
+            const transformed = result.response();
+            // Gövde burada tüketilir. Dönüşüm tembel bir akış döndürdüğü için
+            // hata, yanıt gönderilmeye başladıktan SONRA — yani aşağıdaki
+            // catch'in dışında — fırlıyor ve Worker'ı 1101 ile düşürüyordu.
+            const bytes = await transformed.arrayBuffer();
+            return new Response(bytes, { headers: transformed.headers });
+          },
+        }, allowedWidths));
+      } catch (error) {
+        // Görsel dönüşümü hesapta Cloudflare Images etkin değilse fırlatıyor ve
+        // Worker'ı komple düşürüyordu (hata 1101, görsel hiç yüklenmiyordu).
+        // Optimizasyon bir iyileştirmedir, zorunluluk değil: başarısız olursa
+        // orijinal dosyayı servis etmek, kırık görsel göstermekten iyidir.
+        console.error("[image] optimization failed, serving original", error);
+        const source = url.searchParams.get("url");
+        if (!source || !source.startsWith("/")) return new Response("Not found", { status: 404 });
+        return withSecurityHeaders(await fetchAsset(source));
+      }
     }
 
     // API yanıtları kimlik doğrulamalı olduğu için hiçbir katmanda önbelleğe alınmaz.

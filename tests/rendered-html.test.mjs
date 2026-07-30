@@ -52,7 +52,11 @@ test("buffers Supabase proxy bodies for Safari and Cloudflare compatibility", as
   // Bu yüzden ASSETS yalnızca görsel işleyicisinin içinde kullanılmalı.
   const beforeImageHandler = workerEntry.slice(0, workerEntry.indexOf('url.pathname === "/_vinext/image"'));
   assert.doesNotMatch(beforeImageHandler, /env\.ASSETS/);
-  assert.match(workerEntry, /fetchAsset: \(path\) => env\.ASSETS\.fetch/);
+  assert.match(workerEntry, /const fetchAsset = \(path: string\) => env\.ASSETS\.fetch/);
+  // Görsel dönüşümü (hesapta Cloudflare Images kapalıysa) fırlatıp Worker'ı
+  // komple düşürüyordu; başarısızlıkta orijinal dosya servis edilmeli.
+  assert.match(workerEntry, /catch \(error\) \{[^]*?serving original/);
+  assert.match(workerEntry, /return withSecurityHeaders\(await fetchAsset\(source\)\);/);
   // Supabase proxy'si app router'dan önce çalışmalı (CPU limiti için).
   assert.ok(workerEntry.indexOf("handleSupabaseProxy(request)") < workerEntry.indexOf("await getAppRouterHandler()"));
 });

@@ -18,6 +18,11 @@ const localBindingConfig = {
   // burada bildirilmezse üretilen wrangler.json'a girmez ve `wrangler deploy`
   // onu worker'dan kaldırır; /_vinext/image o anda 500 vermeye başlar.
   images: { binding: "IMAGES" },
+  // Varlık dizinini vinext ayarlıyor ama BINDING'i eklemiyor. Binding olmadan
+  // dosyalar servis edilir, ancak worker onlara programatik erişemez: env.ASSETS
+  // undefined kalır ve env.ASSETS.fetch çağıran her yol (görsel optimizasyonu)
+  // "Cannot read properties of undefined" ile Worker'ı 1101'e düşürür.
+  assets: { binding: "ASSETS" },
   d1_databases: d1
     ? [
         {
