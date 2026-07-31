@@ -87,7 +87,7 @@ export function HydrationFasting({ userId, weightKg }: { userId?: string; weight
     setNow(new Date());
   }
 
-  if (unavailable) return <section className="hydration-card"><p className="hydration-note">{t.hydration.notConfigured}</p></section>;
+  if (unavailable) return <section className="hydration-card" id="hydration-card"><p className="hydration-note">{t.hydration.notConfigured}</p></section>;
 
   const percent = waterProgressPercent(waterMl, goalMl);
   const fast = openFast ? fastingState({ startedAt: openFast.startedAt, targetHours: openFast.targetHours }, now) : null;

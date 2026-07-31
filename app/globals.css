@@ -1290,3 +1290,19 @@ input,select,textarea { color-scheme:inherit; }
 .portion-unit-hint { display:block; margin-top:5px; color:var(--muted-text); font-size:9px; line-height:1.4; }
 .dark .portion-unit-switch { border-color:#46502c; }
 .dark .portion-unit-switch button.active { background:#33411f; color:#d9ed9e; }
+
+/* Ana ekran kısayolları */
+.quick-actions { margin:0 0 18px; padding:15px 17px; border:1px solid var(--line); border-radius:11px; background:var(--surface-soft,#fbfbf7); }
+.quick-actions-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:11px; }
+.quick-actions-edit { min-height:30px; padding:0 11px; border:1px solid var(--line); border-radius:999px; background:transparent; color:var(--muted-text); font-size:10px; font-weight:700; cursor:pointer; }
+.quick-actions-edit[aria-pressed="true"] { background:#e8f7b5; border-color:#c6e55f; color:#3f4a1d; }
+.quick-actions-hint { margin:0 0 10px; color:var(--muted-text); font-size:10px; line-height:1.45; }
+.quick-actions-list,.quick-actions-picker { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:8px; }
+.quick-actions-list button,.quick-actions-picker button { min-height:46px; min-width:0; padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:transparent; color:var(--ink); font-size:12px; font-weight:600; text-align:left; cursor:pointer; overflow-wrap:anywhere; }
+.quick-actions-list button:hover,.quick-actions-picker button:hover { border-color:#c6e55f; }
+.quick-actions-picker button { color:var(--muted-text); font-weight:500; }
+.quick-actions-picker button.active { background:#e8f7b5; border-color:#c6e55f; color:#3f4a1d; font-weight:700; }
+.dark .quick-actions { background:#20231a; border-color:#46502c; }
+.dark .quick-actions-edit,.dark .quick-actions-list button,.dark .quick-actions-picker button { border-color:#46502c; }
+.dark .quick-actions-edit[aria-pressed="true"],.dark .quick-actions-picker button.active { background:#33411f; border-color:#5d7030; color:#d9ed9e; }
+@media (prefers-reduced-motion: reduce) { .quick-actions-list button,.quick-actions-picker button { transition:none; } }

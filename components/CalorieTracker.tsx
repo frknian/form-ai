@@ -445,7 +445,7 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
       </button>)}</div>
     </section>}
 
-    <section className="food-entry-panel">
+    <section className="food-entry-panel" id="food-entry-panel">
       <div className="section-title"><div><div className="eyebrow">{t.calorieTracker.addMealEyebrow}</div><h2>{t.calorieTracker.addMealTitle}</h2></div><span className="food-entry-note"><Sparkles size={14} /> {t.calorieTracker.quickAndPractical}</span></div>
       <div className="food-methods">
         <button type="button" className={activeMethod === "photo" ? "active" : ""} onClick={() => selectMethod("photo")}><Camera /><strong>{t.calorieTracker.takePhoto}</strong><small>{t.calorieTracker.takePhotoHint}</small></button>
