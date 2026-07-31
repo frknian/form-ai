@@ -23,20 +23,43 @@ export async function openNativeBrowser(url: string) {
   await Browser.open({ url, presentationStyle: "popover" });
 }
 
+/**
+ * Öğün fotoğrafı çeker ve data URL döndürür.
+ *
+ * Sonuç DataUrl yerine Uri olarak istenir: kamera uygulaması öndeyken Android,
+ * bellek baskısı altında barındıran Activity'yi öldürebiliyor. DataUrl, kamera
+ * açık kaldığı sürece bellekte megabaytlarca base64 dizesi tutarak bu baskıyı
+ * artırıyor ve uygulama fotoğraftan sonra yeniden açılıp kaydı kaybediyordu.
+ * Uri hafiftir; dosyayı ancak uygulama yeniden ön plana geldikten sonra,
+ * güvenli anda data URL'ye çeviririz. (Manifest'teki largeHeap de aynı riski
+ * azaltır.)
+ */
 export async function takeFoodPhoto() {
   if (!isNativeApp()) return null;
   const photo = await Camera.getPhoto({
     quality: 72,
     width: 1280,
     allowEditing: false,
-    resultType: CameraResultType.DataUrl,
+    resultType: CameraResultType.Uri,
     source: CameraSource.Prompt,
     promptLabelHeader: "Öğün fotoğrafı",
     promptLabelPhoto: "Galeriden seç",
     promptLabelPicture: "Fotoğraf çek",
     promptLabelCancel: "Vazgeç",
   });
-  return photo.dataUrl || null;
+  if (photo.dataUrl) return photo.dataUrl;
+  if (!photo.webPath) return null;
+  try {
+    const blob = await fetch(photo.webPath).then((response) => response.blob());
+    return await new Promise<string | null>((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : null);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
 }
 
 export async function mobileImpact() {
