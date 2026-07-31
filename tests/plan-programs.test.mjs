@@ -2,33 +2,70 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";
 import { extractWeeklyDays } from "../lib/training-profile.ts";
+import { EQUIPMENT_PROFILES, buildReadyProgram } from "../lib/ready-programs.ts";
 
 const appSource = await readFile(new URL("../components/FitAiApp.tsx", import.meta.url), "utf8");
 
-function readyProgramNameLists() {
-  const start = appSource.indexOf("const readyPrograms = [");
-  const block = appSource.slice(start, appSource.indexOf("\n];", start));
-  return [...block.matchAll(/names: \[([^\]]+)\]/g)].map((match) =>
-    [...match[1].matchAll(/"([^"]+)"/g)].map((name) => name[1]),
-  );
+// Hazır programlar artık katalogdan üretiliyor, sabit liste değil. Bu yüzden
+// kaynağı regex'lemek yerine gerçek katalogla üretimi çalıştırıyoruz — böylece
+// test, kataloğa hareket eklendiğinde de anlamını koruyor.
+function parseCatalog() {
+  const block = (name) => {
+    const start = appSource.indexOf(`const ${name}`);
+    return appSource.slice(start, appSource.indexOf("\n];", start));
+  };
+  const core = [...block("coreExerciseLibrary").matchAll(
+    /name: "([^"]+)"[^}]*?area: "([^"]+)"[^}]*?requires: \[([^\]]*)\], bodyweight: (true|false)/g,
+  )];
+  const extra = [...block("additionalExerciseDefinitions").matchAll(
+    /^\s*\["([^"]+)", "[^"]+", "([^"]+)", "[^"]+", \[([^\]]*)\], (true|false)/gm,
+  )];
+  return [...core, ...extra].map((match) => ({
+    name: match[1],
+    area: match[2],
+    requires: [...match[3].matchAll(/"([^"]+)"/g)].map((r) => r[1]),
+    bodyweight: match[4] === "true",
+  }));
 }
 
-test("her hazır program tam olarak 5 hareket içerir", () => {
-  const lists = readyProgramNameLists();
-  assert.equal(lists.length, 3, "üç hazır program bekleniyor");
-  for (const names of lists) {
-    assert.equal(names.length, 5, `5 hareket bekleniyor, gelen: ${names.join(", ")}`);
-    assert.equal(new Set(names).size, 5, `aynı hareket iki kez: ${names.join(", ")}`);
+const catalog = parseCatalog();
+
+test("katalog testin okuyabileceği biçimde ayrıştırılabiliyor", () => {
+  // Bu bozulursa aşağıdaki testler sessizce boş listeyle geçer hâle gelirdi.
+  assert.ok(catalog.length > 100, `beklenenden az hareket: ${catalog.length}`);
+  assert.ok(catalog.some((exercise) => exercise.bodyweight));
+  assert.ok(catalog.some((exercise) => exercise.requires.includes("dambıl")));
+});
+
+test("her ekipman profili tam 5 benzersiz hareket üretir", () => {
+  for (const profile of EQUIPMENT_PROFILES) {
+    const names = buildReadyProgram(catalog, profile).map((exercise) => exercise.name);
+    assert.equal(names.length, 5, `${profile}: 5 bekleniyor, gelen ${names.length}`);
+    assert.equal(new Set(names).size, 5, `${profile}: aynı hareket iki kez`);
   }
 });
 
-test("hazır programlardaki hareketler uygulama kataloğunda gerçekten vardır", () => {
-  // İsim tutmazsa "Kullan" boş bir program uygular ve kullanıcı hiçbir şey göremez.
-  const catalog = new Set();
-  for (const name of appSource.matchAll(/name: "([^"]+)", english: "/g)) catalog.add(name[1]);
-  for (const entry of appSource.matchAll(/^\s*\["([^"]+)", "[^"]+", "/gm)) catalog.add(entry[1]);
-  for (const names of readyProgramNameLists()) {
-    for (const name of names) assert.ok(catalog.has(name), `katalogda yok: ${name}`);
+test("ekipmansız program hiçbir ekipmanlı hareket içermez", () => {
+  // Bildirilen hata: ekipmansız programda dambıl çıkıyordu.
+  for (const exercise of buildReadyProgram(catalog, "equipmentFree")) {
+    assert.equal(exercise.bodyweight, true, `ekipmanlı hareket sızdı: ${exercise.name}`);
+  }
+});
+
+test("ekipmanlı profiller kendi ekipmanıyla yapılabilir hareketler verir", () => {
+  // requires bir VEYA listesidir: ["dambıl","makine","salon"] olan bir hareket
+  // dambılla da yapılabilir, o yüzden "salon" kelimesinin geçmesi kusur değil.
+  // Aranan şey, ekipmansız olmayan her hareketin O profille yapılabilir olması.
+  const doableWith = (exercise, tokens) => exercise.requires.some((r) => tokens.some((token) => r.includes(token)));
+
+  const dumbbell = buildReadyProgram(catalog, "dumbbell");
+  assert.ok(dumbbell.some((exercise) => !exercise.bodyweight), "hiç dambıl hareketi yok");
+  for (const exercise of dumbbell.filter((e) => !e.bodyweight)) {
+    assert.ok(doableWith(exercise, ["dambıl", "kettlebell"]), `dambılla yapılamaz: ${exercise.name}`);
+  }
+
+  for (const exercise of buildReadyProgram(catalog, "band").filter((e) => !e.bodyweight)) {
+    assert.ok(doableWith(exercise, ["band", "lastik"]), `bantla yapılamaz: ${exercise.name}`);
   }
 });
 

@@ -34,6 +34,7 @@ import { translateExerciseLabel, turkishExerciseInstructions } from "@/lib/exerc
 import { extractSessionMinutes, extractWeeklyDays, planProgressionBlock } from "@/lib/training-profile";
 import { alternativeExercises } from "@/lib/exercise-alternatives";
 import { canPerformExercise, hasEquipment, usableEquipmentText } from "@/lib/equipment-match";
+import { EQUIPMENT_PROFILES, buildReadyProgram, isReplacementCompatible, type EquipmentProfile } from "@/lib/ready-programs";
 import { applyPreviousPerformance, buildCompletedExerciseLog, createWorkoutSetDrafts, exerciseLogKey, type CompletedExerciseLog, type PreviousExercisePerformance, type WorkoutSetDraft } from "@/lib/workout-log";
 import { localTimeKey } from "@/lib/workout-calendar";
 import { localDateKey } from "@/lib/streak";
@@ -417,6 +418,19 @@ function isExerciseSafeForAdaptivePain(exercise: AiWorkout, painAreas: string[])
   return true;
 }
 
+// AiWorkout ekipman gereksinimini taşımaz; ekipman kontrolü için katalogdaki
+// karşılığından okunur. Katalogda bulunamayan hareket (ör. AI'ın ürettiği bir
+// isim) vücut ağırlığı varsayılır, çünkü aksini iddia edecek verimiz yok.
+function catalogShape(workout: AiWorkout) {
+  const item = exerciseLibrary.find((exercise) => exercise.name === workout.name);
+  return {
+    name: workout.name,
+    area: workout.area,
+    requires: item?.requires ?? [],
+    bodyweight: item ? item.bodyweight : workout.bodyweight ?? true,
+  };
+}
+
 function adaptWorkoutsToHistory(workouts: AiWorkout[], adaptation: TrainingAdaptation, fallbackPlan: AiWorkout[]) {
   const adjusted = workouts.map((workout) => {
     const currentSets = Math.max(1, Number.parseInt(workout.sets, 10) || 3);
@@ -431,7 +445,13 @@ function adaptWorkoutsToHistory(workouts: AiWorkout[], adaptation: TrainingAdapt
   if (!adaptation.painAreas.length) return adjusted;
   const safeFallback = fallbackPlan.filter((exercise) => isExerciseSafeForAdaptivePain(exercise, adaptation.painAreas));
   const safeAdjusted = adjusted.filter((exercise) => isExerciseSafeForAdaptivePain(exercise, adaptation.painAreas));
-  const replacements = safeFallback.filter((exercise) => !safeAdjusted.some((current) => exerciseKey(current) === exerciseKey(exercise)));
+  // Ağrı yüzünden düşen hareketin yerine konan aday, plandaki ekipman
+  // gerçekliğine uymalı. Bu kontrol olmadan ekipmansız bir hazır programın
+  // boşluğu kişisel plandan gelen bir dambıl hareketiyle doldurulabiliyordu.
+  const planProfile = safeAdjusted.map(catalogShape);
+  const replacements = safeFallback
+    .filter((exercise) => !safeAdjusted.some((current) => exerciseKey(current) === exerciseKey(exercise)))
+    .filter((exercise) => isReplacementCompatible(catalogShape(exercise), planProfile));
   return [...safeAdjusted, ...replacements].slice(0, workouts.length);
 }
 
@@ -665,21 +685,21 @@ function LibraryView({ onOpenWorkout, onAddWorkout }: { onOpenWorkout: (exercise
   return <ExerciseLibrary onOpenWorkout={(exercise) => onOpenWorkout(databaseExerciseAsWorkout(exercise))} onAddWorkout={(exercise) => onAddWorkout(databaseExerciseAsWorkout(exercise))} />;
 }
 
-// Hazır programlar sabit, herkese aynı gelen "hemen başla" şablonlarıdır ve
-// üçü de 5 hareketten oluşur. Kişisel plan bunlardan farklı olmalı: aynı
-// hareketleri seçerse iki seçenek birbirinin kopyası gibi görünür. Bu yüzden
-// createPersonalPlan aşağıdaki isimleri son sıraya iter (bkz. READY_PROGRAM_NAMES).
-const readyPrograms = [
-  { id: "equipmentFree" as const, title: "Ekipmansız başlangıç", detail: "15 dk · Evde", names: ["Şınav", "Glute Bridge", "Dead Bug", "Reverse Lunge", "Plank"] },
-  { id: "dumbbell" as const, title: "Dambıl ile güç", detail: "30 dk · Evde", names: ["Goblet Squat", "Dambıl Row", "Dambıl Omuz Press", "Yerde Dambıl Göğüs Presi", "Plank"] },
-  { id: "gym" as const, title: "Salon full body", detail: "45 dk · Spor salonu", names: ["Leg Press", "Lat Pulldown", "Dambıl Omuz Press", "Bulgarian Split Squat", "Plank"] },
-];
+// Hazır programlar katalogdan ÜRETİLİR (bkz. lib/ready-programs.ts). Sabit isim
+// listeleri iki soruna yol açıyordu: kataloğa hareket eklenince güncellenmiyor
+// ve "ekipmansız" programa ekipmanlı hareket sızabiliyordu. Kişisel plan
+// bunlardan farklı olmalı, o yüzden seçilen isimler orada son sıraya itilir.
+const readyPrograms = EQUIPMENT_PROFILES.map((profile) => ({
+  id: profile,
+  names: buildReadyProgram(exerciseLibrary, profile).map((exercise) => exercise.name),
+}));
 
 const READY_PROGRAM_NAMES = new Set(readyPrograms.flatMap((program) => program.names));
 
-function readyProgramCopy(t: Dictionary, id: (typeof readyPrograms)[number]["id"]) {
+function readyProgramCopy(t: Dictionary, id: EquipmentProfile) {
   if (id === "equipmentFree") return { title: t.readyPrograms.equipmentFreeTitle, detail: t.readyPrograms.equipmentFreeDetail, tab: t.readyPrograms.equipmentFreeTab };
   if (id === "dumbbell") return { title: t.readyPrograms.dumbbellTitle, detail: t.readyPrograms.dumbbellDetail, tab: t.readyPrograms.dumbbellTab };
+  if (id === "band") return { title: t.readyPrograms.bandTitle, detail: t.readyPrograms.bandDetail, tab: t.readyPrograms.bandTab };
   return { title: t.readyPrograms.gymTitle, detail: t.readyPrograms.gymDetail, tab: t.readyPrograms.gymTab };
 }
 
@@ -1383,10 +1403,13 @@ export default function Home() {
     setAiProgression([t.readyPrograms.progressionLearn, t.readyPrograms.progressionConsistency, t.readyPrograms.progressionRest, t.readyPrograms.progressionLoad]);
     setAiFingerprint(t.readyPrograms.ready);
     setAiStatus("complete");
-    // "plan" görünümü ana sayfadır; hazır program kartı ise "workout"
-    // (Antrenmanım) görünümünde durur ve uygulanan program da orada listelenir.
-    // Buradan "plan"e geçmek kullanıcıyı seçimini göremeden ana sayfaya atıyordu.
+    // Kart zaten "workout" görünümünde durduğu için yalnız setActiveView çağırmak
+    // hiçbir görünür değişiklik yaratmıyordu: kullanıcı "Kullan" deyip aynı yerde
+    // kalıyordu. Uygulanan program listesine kaydırıyoruz ki sonucu görsün.
     setActiveView("workout");
+    window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
+      document.getElementById("workout-plan-list")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }));
   }
 
   async function saveCustomPlan(plan: EditableWorkout[]) {
