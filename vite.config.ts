@@ -1,12 +1,19 @@
 import vinext from "vinext";
 import { defineConfig } from "vite";
-import hostingConfig from "./.openai/hosting.json";
 import { sites } from "./build/sites-vite-plugin";
 
 const SITE_CREATOR_PLACEHOLDER_DATABASE_ID =
   "00000000-0000-4000-8000-000000000000";
 
-const { d1, r2 } = hostingConfig;
+// .openai/hosting.json is a site-creator scaffold file that is gitignored and
+// was never committed, so Cloudflare's build clone never had it: every CI
+// build failed at config-load time with an unresolved import. This project
+// doesn't use D1 or R2 (Supabase is the only data layer — see db/index.ts,
+// which throws if it's ever reached), so d1/r2 are hardcoded to null instead
+// of read from that file. Behaviour is unchanged: both bindings arrays below
+// were always empty in the generated wrangler.json regardless.
+const d1: string | null = null;
+const r2: string | null = null;
 
 // macOS Seatbelt blocks FSEvents, so Codex previews need polling for HMR.
 const isCodexSeatbeltSandbox = process.env.CODEX_SANDBOX === "seatbelt";
