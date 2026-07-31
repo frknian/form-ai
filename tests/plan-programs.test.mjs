@@ -43,13 +43,14 @@ test("plan hareket sayısı süreye ve haftalık sıklığa göre değişir", ()
   assert.match(appSource, /weeklyDays >= 5 \? -1 : weeklyDays <= 2 \? 1 : 0/);
 });
 
-test("plan her gün yenilenir ama sunucu render'ıyla uyumlu kalır", () => {
-  // dayIndex skora karışmazsa plan hep aynı kalır; doğrudan Date.now() okunursa
-  // sunucu ile istemci farklı plan üretip hydration uyuşmazlığı çıkarır.
-  assert.match(appSource, /seed \+ dayIndex \* 131/);
-  // Sunucu anlık görüntüsü sabit 0 olmalı; aksi halde sunucu ile istemci farklı
-  // plan üretir. useSyncExternalStore'un üçüncü argümanı tam olarak bunun içindir.
-  assert.match(appSource, /useSyncExternalStore\(subscribeToNothing, planDayIndex, \(\) => 0\)/);
+test("hareket seçimi sabittir, değişen yüktür", () => {
+  // Plan bir dönem her gün döndürülüyordu; aynı hareketteki ilerlemeyi izlemek
+  // imkânsızlaştığı için "stabil değil" hissi veriyordu. Seçim profile göre
+  // sabit kalmalı, zamanla yalnız set/tekrar/dinlenme ilerlemeli.
+  assert.doesNotMatch(appSource, /dayIndex/);
+  assert.doesNotMatch(appSource, /planDayIndex/);
+  assert.match(appSource, /const score = \(name: string\) => \[\.\.\.name\][^\n]*seed\) % 997/);
+  assert.match(appSource, /planProgressionBlock\(completedSessions\)/);
 });
 
 test("haftalık sıklık cevabı gün sayısına çevrilir", () => {

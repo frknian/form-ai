@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
@@ -31,6 +31,7 @@ import { trustedExerciseMedia } from "@/lib/trusted-exercise-media";
 import { translateExerciseLabel, turkishExerciseInstructions } from "@/lib/exercise-translations";
 import { extractSessionMinutes, extractWeeklyDays, planProgressionBlock } from "@/lib/training-profile";
 import { alternativeExercises } from "@/lib/exercise-alternatives";
+import { canPerformExercise, hasEquipment, usableEquipmentText } from "@/lib/equipment-match";
 import { applyPreviousPerformance, buildCompletedExerciseLog, createWorkoutSetDrafts, exerciseLogKey, type CompletedExerciseLog, type PreviousExercisePerformance, type WorkoutSetDraft } from "@/lib/workout-log";
 import { localTimeKey } from "@/lib/workout-calendar";
 import { localDateKey } from "@/lib/streak";
@@ -262,27 +263,19 @@ const additionalExerciseLibrary = additionalExerciseDefinitions.map(([name, engl
 
 const exerciseLibrary = [...coreExerciseLibrary, ...additionalExerciseLibrary];
 
-/** Bugünün gün numarası; planın her gün yenilenmesi için döndürme anahtarı. */
-export function planDayIndex(now = new Date()) {
-  return Math.floor(now.getTime() / 86_400_000);
-}
 
-/** Gün numarası oturum içinde değişmez; useSyncExternalStore için boş abonelik. */
-const subscribeToNothing = () => () => {};
-
-function createPersonalPlan(gym: string, equipmentText: string, history: string[], goalText: string, requestedExercises = "", completedSessions = 0, dayIndex = 0) {
+function createPersonalPlan(gym: string, equipmentText: string, history: string[], goalText: string, requestedExercises = "", completedSessions = 0) {
   const profileText = `${equipmentText} ${goalText} ${requestedExercises} ${history.join(" ")}`.toLowerCase();
   const goal = profileText.includes("kilo") || profileText.includes("yağ") ? "kilo" : profileText.includes("kas") ? "kas" : profileText.includes("kondisyon") ? "kondisyon" : "güç";
   // Çoklu seçimde "Yeni başlıyorum · Orta seviye" gelebilir; en güvenli
   // varsayım, başlangıç seviyesi işaretliyse acemi kabul etmektir.
   const isBeginner = !history[2] || history[2].includes("Yeni başlıyorum");
   const wantsGym = gym === "Salon";
-  const equipment = equipmentText.toLowerCase();
   const durationText = history[3] || goalText.match(/(15|30|45|60)/)?.[1] || "30";
   const duration = extractSessionMinutes(durationText);
   const weeklyDays = extractWeeklyDays(history[1]);
   const pain = history[6]?.toLowerCase() || "";
-  const matchesEquipment = (item: typeof exerciseLibrary[number]) => wantsGym || item.bodyweight || item.requires.some((requirement) => equipment.includes(requirement));
+  const matchesEquipment = (item: typeof exerciseLibrary[number]) => canPerformExercise(item, { isGym: wantsGym, equipmentText });
   const avoidKneeLoad = pain.includes("diz");
   const avoidShoulderLoad = pain.includes("omuz");
   const safeForPain = (item: typeof exerciseLibrary[number]) => !(avoidKneeLoad && ["Reverse Lunge", "Bulgarian Split Squat", "Step-up", "Mountain Climber", "Leg Press"].includes(item.name)) && !(avoidShoulderLoad && ["Şınav", "Eğimli Şınav", "Dambıl Omuz Press", "Lat Pulldown"].includes(item.name));
@@ -292,12 +285,14 @@ function createPersonalPlan(gym: string, equipmentText: string, history: string[
   const requestedItems = findRequestedLibraryExercises(requestedExercises, goalText, gym, equipmentText, history);
   // Evde antrenman yapan ve ekipman belirten kullanıcı için, sahip olduğu ekipmanı kullanan
   // hareketleri güvenli oldukları sürece plana öncelikli olarak dahil et.
-  const ownsHomeEquipment = !wantsGym && equipment.trim().length > 0;
-  const equipmentItems = ownsHomeEquipment ? exerciseLibrary.filter((item) => !item.bodyweight && safeForPain(item) && item.requires.some((requirement) => equipment.includes(requirement))) : [];
-  // Gün numarası skora karışır: kullanıcının özellikle istediği ve ekipmanına
-  // özel hareketler (öncelik 0/1) sabit kalırken, kalan slotlar her gün dönerek
-  // programı tekdüzelikten çıkarır.
-  const score = (name: string) => [...name].reduce((total, character) => total + character.charCodeAt(0), seed + dayIndex * 131) % 997;
+  const ownsHomeEquipment = !wantsGym && usableEquipmentText(equipmentText).length > 0;
+  const equipmentItems = ownsHomeEquipment ? exerciseLibrary.filter((item) => !item.bodyweight && safeForPain(item) && item.requires.some((requirement) => hasEquipment(equipmentText, requirement))) : [];
+  // Hareket seçimi PROFİLE göre sabittir. Bir dönem gün numarası skora
+  // karıştırılıp plan her gün döndürülüyordu; bu, aynı hareketteki ilerlemeyi
+  // izlemeyi imkânsız kıldığı için programı "stabil değil" hissettiriyordu.
+  // Zamanla değişmesi gereken hareketler değil, yüktür — onu da
+  // planProgressionBlock(completedSessions) yönetir.
+  const score = (name: string) => [...name].reduce((total, character) => total + character.charCodeAt(0), seed) % 997;
   // Hazır programlardaki hareketler en sona itilir; aksi halde kişisel plan ile
   // "hemen başla" şablonları neredeyse aynı listeyi gösteriyordu.
   const priority = (item: typeof exerciseLibrary[number]) => requestedItems.includes(item) ? 0 : equipmentItems.includes(item) ? 1 : READY_PROGRAM_NAMES.has(item.name) ? 3 : 2;
@@ -482,9 +477,8 @@ function fallbackAnalysis(gym: string, equipmentText: string, history: string[],
 
 function findRequestedLibraryExercises(requestedExercises: string, goalText: string, gym: string, equipmentText: string, history: string[]) {
   const requestedNames = `${requestedExercises} ${goalText}`.toLowerCase().split(/[\n,;]+/).map((value) => value.trim()).filter(Boolean);
-  const equipment = equipmentText.toLowerCase();
   const pain = history[6]?.toLowerCase() || "";
-  const matchesEquipment = (item: typeof exerciseLibrary[number]) => gym === "Salon" || item.bodyweight || item.requires.some((requirement) => equipment.includes(requirement));
+  const matchesEquipment = (item: typeof exerciseLibrary[number]) => canPerformExercise(item, { isGym: gym === "Salon", equipmentText });
   const safeForPain = (item: typeof exerciseLibrary[number]) => !(pain.includes("diz") && ["Reverse Lunge", "Bulgarian Split Squat", "Step-up", "Mountain Climber", "Leg Press"].includes(item.name)) && !(pain.includes("omuz") && ["Şınav", "Eğimli Şınav", "Dambıl Omuz Press", "Lat Pulldown"].includes(item.name));
   return exerciseLibrary.filter((item) => requestedNames.some((requested) => item.name.toLowerCase().includes(requested) || item.english.toLowerCase().includes(requested) || requested.includes("yerde") && item.name === "Yerde Dambıl Göğüs Presi") && matchesEquipment(item) && safeForPain(item));
 }
@@ -763,13 +757,8 @@ export default function Home() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [accountStatus, setAccountStatus] = useState<AccountStatus | "loading">("loading");
 
-  // Sunucu anlık görüntüsü 0, istemcininki gerçek gün numarasıdır: doğrudan
-  // Date.now() okunsaydı sunucu ile istemci farklı plan üretip hydration
-  // uyuşmazlığı çıkarırdı. Gün içinde değişmediği için abone olunacak bir
-  // kaynak yok; getSnapshot sayı döndürdüğünden değer olarak karşılaştırılır.
-  const dayIndex = useSyncExternalStore(subscribeToNothing, planDayIndex, () => 0);
 
-  const localPlan = useMemo(() => createPersonalPlan(gym, equipmentText, history, goalText, requestedExercises, sessionHistory.length, dayIndex), [gym, equipmentText, history, goalText, requestedExercises, sessionHistory.length, dayIndex]);
+  const localPlan = useMemo(() => createPersonalPlan(gym, equipmentText, history, goalText, requestedExercises, sessionHistory.length), [gym, equipmentText, history, goalText, requestedExercises, sessionHistory.length]);
   const adaptation = useMemo(() => summarizeTrainingAdaptation(sessionHistory), [sessionHistory]);
   const workouts = useMemo(() => adaptWorkoutsToHistory(aiWorkouts.length ? aiWorkouts : localPlan, adaptation, localPlan), [adaptation, aiWorkouts, localPlan]);
   const planExerciseOptions = useMemo(() => exerciseLibrary.filter((exercise) => isExerciseSafeForProfile(exercise, gym, equipmentText, history)).map((exercise) => ({ ...exercise, level: exercise.area, sets: `3 set · ${exercise.name === "Plank" || exercise.name === "Dead Bug" ? "30 sn" : "10 tekrar"}`, rest: "60 sn dinlenme", seconds: exercise.name === "Plank" || exercise.name === "Dead Bug" ? 30 : 45 })), [equipmentText, gym, history]);
