@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { fromGrams, parseAmount, toGrams } from "../lib/portion-unit.ts";
+import { readFile } from "node:fs/promises";
+import { detectPieceCount, fromGrams, parseAmount, referenceGrams, toGrams } from "../lib/portion-unit.ts";
 
 test("miktar ayrıştırma virgüllü ondalığı kabul eder", () => {
   assert.equal(parseAmount("1,5"), 1.5);
@@ -12,35 +13,63 @@ test("miktar ayrıştırma virgüllü ondalığı kabul eder", () => {
 });
 
 test("gram birimi olduğu gibi kullanılır", () => {
-  assert.equal(toGrams("250", "g", null), 250);
-  assert.equal(toGrams("250", "g", 60), 250, "gram modunda adet ağırlığı yok sayılır");
+  assert.equal(toGrams("250", "g", 1), 250);
+  assert.equal(toGrams("250", "g", 60), 250, "gram modunda referans ağırlık yok sayılır");
 });
 
-test("adet, bir adedin gramıyla çarpılır", () => {
+test("porsiyon ve adet referans ağırlıkla çarpılır", () => {
+  assert.equal(toGrams("2", "portion", 320), 640);
   assert.equal(toGrams("3", "piece", 60), 180);
-  assert.equal(toGrams("1,5", "piece", 200), 300);
+  assert.equal(toGrams("1,5", "portion", 200), 300);
 });
 
-test("adet ağırlığı bilinmiyorsa gram üretilmez", () => {
+test("referans bilinmiyorsa gram üretilmez", () => {
   // Uydurma bir ağırlıkla devam etmek sessizce yanlış kalori kaydeder.
-  assert.equal(toGrams("2", "piece", null), null);
+  assert.equal(toGrams("2", "portion", null), null);
   assert.equal(toGrams("2", "piece", 0), null);
 });
 
+test("adet sayısı yemek tarifinden okunur", () => {
+  assert.equal(detectPieceCount("3 yumurta"), 3);
+  assert.equal(detectPieceCount("2 dilim ekmek"), 2);
+  assert.equal(detectPieceCount("1,5 kase çorba"), 1.5);
+});
+
+test("ölçü birimli ifadeler adet sayılmaz", () => {
+  // "500 g tavuk" → 500 adet tavuk gibi saçma bir referans çıkarırdı.
+  assert.equal(detectPieceCount("500 g tavuk"), null);
+  assert.equal(detectPieceCount("250 ml süt"), null);
+  assert.equal(detectPieceCount("tavuklu pilav"), null);
+  assert.equal(detectPieceCount("100 gram yoğurt"), null);
+});
+
+test("porsiyon referansı analiz edilen miktarın tamamıdır", () => {
+  assert.equal(referenceGrams("portion", 320, "tavuklu pilav"), 320);
+  assert.equal(referenceGrams("g", 320, "tavuklu pilav"), 1);
+});
+
+test("adet referansı sayıya bölünür, sayı yoksa tamamı tek adettir", () => {
+  // "3 yumurta = 180 g" analiz edildiyse 1 adet 60 g'dır.
+  assert.equal(referenceGrams("piece", 180, "3 yumurta"), 60);
+  assert.equal(referenceGrams("piece", 180, "yumurta"), 180);
+  assert.equal(referenceGrams("piece", null, "3 yumurta"), null);
+});
+
 test("birim değişince miktar karşılığına çevrilir", () => {
-  assert.equal(fromGrams(180, "g", 60), "180");
+  assert.equal(fromGrams(180, "g", 1), "180");
   assert.equal(fromGrams(180, "piece", 60), "3");
-  assert.equal(fromGrams(300, "piece", 200), "1.5");
-  assert.equal(fromGrams(180, "piece", null), "", "ağırlık bilinmeden adet gösterilemez");
+  assert.equal(fromGrams(640, "portion", 320), "2");
+  assert.equal(fromGrams(300, "portion", 200), "1.5");
+  assert.equal(fromGrams(180, "piece", null), "", "referanssız birim gösterilemez");
 });
 
 test("gidiş dönüş dönüşümü tutarlıdır", () => {
-  const grams = toGrams(fromGrams(240, "piece", 80), "piece", 80);
-  assert.equal(grams, 240);
+  for (const unit of ["portion", "piece"]) {
+    assert.equal(toGrams(fromGrams(240, unit, 80), unit, 80), 240, unit);
+  }
 });
 
 test("öğün alanları mobilde ızgarayı taşırmaz", async () => {
-  const { readFile } = await import("node:fs/promises");
   const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
   // 1fr'in örtük alt sınırı auto'dur; uzun yemek adı sütunu kabın dışına
   // genişletip yatay kaydırma yaratıyordu. Tüm izler minmax(0,1fr) olmalı.

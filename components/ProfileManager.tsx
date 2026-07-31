@@ -26,6 +26,7 @@ type ProfileManagerProps = {
   onFrozen: () => void;
   onDeleted: () => void;
   onProgressReset: () => void;
+  onRetakeTest: () => void;
   onSignOut: () => Promise<void>;
 };
 
@@ -35,7 +36,7 @@ function numberOrNull(value: string) {
   return Number.isFinite(number) && number > 0 ? number : null;
 }
 
-export function ProfileManager({ user, profile, avatarUrl, onSaved, onFrozen, onDeleted, onProgressReset, onSignOut }: ProfileManagerProps) {
+export function ProfileManager({ user, profile, avatarUrl, onSaved, onFrozen, onDeleted, onProgressReset, onRetakeTest, onSignOut }: ProfileManagerProps) {
   const t = useTranslations();
   const locale = useLocale();
   const dateLocale = locale === "en" ? "en-US" : "tr-TR";
@@ -248,6 +249,8 @@ export function ProfileManager({ user, profile, avatarUrl, onSaved, onFrozen, on
     <div className="profile-preferences"><div><span>{t.profileManager.preferencesEyebrow}</span><strong>{t.profileManager.weightUnitTitle}</strong><small>{t.profileManager.weightUnitHint}</small></div><div className="segmented unit-segmented">{(["kg", "lb"] as WeightUnit[]).map((option) => <button type="button" key={option} aria-pressed={unit === option} className={unit === option ? "selected" : ""} onClick={() => setStoredWeightUnit(option)}>{option === "kg" ? t.profileManager.unitKg : t.profileManager.unitLb}</button>)}</div></div>
 
     <div className="profile-export"><div><span>{t.profileManager.dataEyebrow}</span><strong>{t.profileManager.exportTitle}</strong><p>{t.profileManager.exportBody}</p></div><button type="button" disabled={exporting} onClick={() => void exportData()}>{exporting ? t.profileManager.exportPreparing : t.profileManager.exportButton}</button></div>
+
+    <div className="profile-export retake-test-zone"><div><span>{t.profileManager.retakeTestEyebrow}</span><strong>{t.profileManager.retakeTestTitle}</strong><p>{t.profileManager.retakeTestBody}</p></div><button type="button" onClick={onRetakeTest}>{t.profileManager.retakeTestAction}</button></div>
 
     <div className="account-danger-zone progress-reset-zone"><div><span>{t.profileManager.progressResetEyebrow}</span><strong>{t.profileManager.progressResetTitle}</strong><p>{t.profileManager.progressResetBody}</p></div><div><button className="danger" type="button" disabled={saving || resettingProgress} onClick={() => setProgressResetOpen(true)}>{t.profileManager.progressResetButton}</button></div></div>
 

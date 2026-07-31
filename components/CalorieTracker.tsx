@@ -6,7 +6,7 @@ import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { NutritionGoalsPanel } from "@/components/NutritionGoalsPanel";
 import { HydrationFasting } from "@/components/HydrationFasting";
 import { frequentMeals } from "@/lib/frequent-meals";
-import { fromGrams, toGrams, type PortionUnit } from "@/lib/portion-unit";
+import { PORTION_UNITS, fromGrams, referenceGrams, toGrams, type PortionUnit } from "@/lib/portion-unit";
 import { emptyFoodNutrition, scaleFoodNutrition, type FoodMicronutrients, type FoodNutrition } from "@/lib/food-search";
 import { calculateNutritionGoal, calculateWeeklyWeightTrend, inferNutritionGoal, sanitizeNutritionGoal, type NutritionGoal, type NutritionGoalType, type WeightTrend } from "@/lib/nutrition-goals";
 import { isNativeApp, mobileImpact, takeFoodPhoto } from "@/lib/mobile";
@@ -29,6 +29,12 @@ interface CalorieTrackerProps {
 }
 
 const meals: Meal[] = ["Kahvaltı", "Öğle yemeği", "Akşam yemeği", "Atıştırmalık"];
+
+function portionUnitLabel(t: ReturnType<typeof useTranslations>, unit: PortionUnit) {
+  if (unit === "g") return t.calorieTracker.portionUnitGram;
+  if (unit === "portion") return t.calorieTracker.portionUnitPortion;
+  return t.calorieTracker.portionUnitPiece;
+}
 
 function normalizeFoodSource(value: unknown): FoodEntry["source"] {
   return value === "Fotoğraf" || value === "Photo" ? "Fotoğraf" : "AI analizi";
@@ -60,10 +66,11 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
   const [foodName, setFoodName] = useState("");
   const [grams, setGrams] = useState("100");
   const [portionUnit, setPortionUnit] = useState<PortionUnit>("g");
-  // Bir "adet", AI'ın analiz ettiği porsiyondur; bilinmeden adet seçeneği
-  // anlamlı bir gram üretemeyeceği için arayüzde de sunulmaz.
-  const [gramsPerPiece, setGramsPerPiece] = useState<number | null>(null);
-  const [pieceAmount, setPieceAmount] = useState("1");
+  // AI'ın analiz ettiği toplam gramaj. Porsiyon ve adet referansları bundan
+  // türetilir; bilinmeden bu birimler anlamlı bir gram üretemeyeceği için
+  // arayüzde de sunulmazlar.
+  const [analysedGrams, setAnalysedGrams] = useState<number | null>(null);
+  const [unitAmount, setUnitAmount] = useState("1");
   const [nutrition, setNutrition] = useState<FoodNutrition>(emptyFoodNutrition);
   const [aiEstimate, setAiEstimate] = useState<{ grams: number; items: string[]; confidence: "low" | "medium" | "high" } | null>(null);
   const [estimating, setEstimating] = useState(false);
@@ -247,7 +254,7 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
       else if (result.log?.id) setEntries((current) => current.map((item) => item.id === temporaryId ? { ...item, id: result.log!.id! } : item));
     }
     setFoodName(""); setGrams("100"); setNutrition(emptyFoodNutrition()); setPhotoPreview(null); setAiEstimate(null);
-    setPortionUnit("g"); setGramsPerPiece(null); setPieceAmount("1");
+    setPortionUnit("g"); setAnalysedGrams(null); setUnitAmount("1");
   }
 
   async function submitManual() {
@@ -305,8 +312,8 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
       setNutrition({ calories: totals.calories, protein: totals.protein, carbs: totals.carbohydrates, fat: totals.fat, fiber: totals.fiber, micros: {} });
       setAiEstimate({ grams: Math.round(totalGrams), items: items.map((item) => item.query), confidence });
       // Analiz edilen porsiyon "1 adet" kabul edilir; adet seçeneği buna dayanır.
-      setGramsPerPiece(Math.round(totalGrams) || null);
-      setPieceAmount("1");
+      setAnalysedGrams(Math.round(totalGrams) || null);
+      setUnitAmount("1");
       if (addToLog) {
         setIsSubmitting(true);
         try {
@@ -358,25 +365,31 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
     setGrams(String(result.grams || 100));
     setNutrition({ calories: result.calories || 0, protein: result.protein || 0, carbs: result.carbs || 0, fat: result.fat || 0, fiber: result.fiber || 0, micros: {} });
     setAiEstimate({ grams: result.grams || 100, items: result.itemNames || [], confidence: result.confidence || "medium" });
-    setGramsPerPiece(Math.round(result.grams || 0) || null);
-    setPieceAmount("1");
+    setAnalysedGrams(Math.round(result.grams || 0) || null);
+    setUnitAmount("1");
     const resultMessage = result.confidence === "low" ? t.calorieTracker.photoResultLowConfidence : t.calorieTracker.photoResultMessage;
     const confidenceNotice = result.needsManualNutrition ? ` ${t.calorieTracker.photoLowConfidenceRetry}` : "";
     setMessage(`${resultMessage}${confidenceNotice} ${(result.warnings || []).join(" ")}${result.usage ? ` ${t.calorieTracker.photoDailyUsage(result.usage.used, result.usage.limit)}` : ""}`.trim());
   }
 
   // Girdi seçili birimde okunur; iç matematik her zaman GRAM üzerinden yürür.
+  // Seçili birimin bir tanesinin kaç gram olduğu. Yemek adı da hesaba katılır:
+  // "3 yumurta" analiz edildiyse 1 adet, toplamın üçte biridir.
+  const unitGrams = referenceGrams(portionUnit, analysedGrams, foodName);
+
   function updatePortion(value: string) {
     if (portionUnit === "g") { updateGrams(value); return; }
-    setPieceAmount(value);
-    const nextGrams = toGrams(value, "piece", gramsPerPiece);
+    setUnitAmount(value);
+    const nextGrams = toGrams(value, portionUnit, unitGrams);
     if (nextGrams !== null) updateGrams(String(Math.round(nextGrams)));
   }
 
   function switchPortionUnit(unit: PortionUnit) {
     if (unit === portionUnit) return;
     setPortionUnit(unit);
-    if (unit === "piece") setPieceAmount(fromGrams(Number(grams.replace(",", ".")) || 0, "piece", gramsPerPiece) || "1");
+    if (unit === "g") return;
+    const reference = referenceGrams(unit, analysedGrams, foodName);
+    setUnitAmount(fromGrams(Number(grams.replace(",", ".")) || 0, unit, reference) || "1");
   }
 
   function updateGrams(value: string) {
@@ -404,8 +417,8 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
     setNutrition(emptyFoodNutrition());
     setAiEstimate(null);
     setPortionUnit("g");
-    setGramsPerPiece(null);
-    setPieceAmount("1");
+    setAnalysedGrams(null);
+    setUnitAmount("1");
     setPhotoPreview(null);
     setMessage("");
   }
@@ -457,13 +470,18 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
         {(activeMethod === "text" || photoPreview) && <>
           <div className="manual-fields">
             <label className="food-name">{t.calorieTracker.foodNameLabel}<input value={foodName} onChange={(event) => { setFoodName(event.target.value); setAiEstimate(null); setNutrition(emptyFoodNutrition()); }} placeholder={t.calorieTracker.foodNamePlaceholder} autoComplete="off" /></label>
-            <label>{portionUnit === "g" ? t.calorieTracker.portionLabel : t.calorieTracker.portionUnitPiece.toLocaleUpperCase("tr-TR")}
-              <input inputMode="decimal" value={portionUnit === "g" ? grams : pieceAmount} onChange={(event) => updatePortion(event.target.value)} placeholder={portionUnit === "g" ? "100" : "1"} />
-              {gramsPerPiece !== null && <span className="portion-unit-switch" role="group" aria-label={t.calorieTracker.portionUnitLabel}>
-                <button type="button" aria-pressed={portionUnit === "g"} className={portionUnit === "g" ? "active" : ""} onClick={() => switchPortionUnit("g")}>{t.calorieTracker.portionUnitGram}</button>
-                <button type="button" aria-pressed={portionUnit === "piece"} className={portionUnit === "piece" ? "active" : ""} onClick={() => switchPortionUnit("piece")}>{t.calorieTracker.portionUnitPiece}</button>
+            <label>{portionUnit === "g" ? t.calorieTracker.portionLabel : portionUnitLabel(t, portionUnit).toLocaleUpperCase("tr-TR")}
+              <input inputMode="decimal" value={portionUnit === "g" ? grams : unitAmount} onChange={(event) => updatePortion(event.target.value)} placeholder={portionUnit === "g" ? "100" : "1"} />
+              {analysedGrams !== null && <span className="portion-unit-switch" role="group" aria-label={t.calorieTracker.portionUnitLabel}>
+                {PORTION_UNITS.map((unit) => <button
+                  key={unit}
+                  type="button"
+                  aria-pressed={portionUnit === unit}
+                  className={portionUnit === unit ? "active" : ""}
+                  onClick={() => switchPortionUnit(unit)}
+                >{portionUnitLabel(t, unit)}</button>)}
               </span>}
-              {portionUnit === "piece" && gramsPerPiece !== null && <small className="portion-unit-hint">{t.calorieTracker.portionPieceHint(gramsPerPiece)}</small>}
+              {portionUnit !== "g" && unitGrams !== null && <small className="portion-unit-hint">{t.calorieTracker.portionUnitHint(portionUnitLabel(t, portionUnit), Math.round(unitGrams))}</small>}
             </label>
             {aiEstimate && <div className={`ai-estimate-card ${aiEstimate.confidence}`}><span>{t.calorieTracker.aiEstimateLabel}</span><strong>{foodName}</strong><small>{t.calorieTracker.aiEstimateGrams(aiEstimate.grams)}</small><div className="ai-nutrition-values"><b>{nutrition.calories}<small>kcal</small></b><b>{nutrition.protein}<small>{t.calorieTracker.macroProtein} (g)</small></b><b>{nutrition.carbs}<small>{t.calorieTracker.macroCarbs} (g)</small></b><b>{nutrition.fat}<small>{t.calorieTracker.macroFat} (g)</small></b><b>{nutrition.fiber}<small>{t.calorieTracker.fieldFiber} (g)</small></b></div>{aiEstimate.items.length > 1 && <small>{aiEstimate.items.join(" · ")}</small>}<p>{aiEstimate.confidence === "low" ? t.calorieTracker.aiConfidenceLow : aiEstimate.confidence === "high" ? t.calorieTracker.aiConfidenceHigh : t.calorieTracker.aiConfidenceMedium}</p></div>}
             {activeMethod === "text" && <button type="button" className="ai-estimate-btn" disabled={estimating || foodName.trim().length < 2} onClick={() => void estimateFromText()}><Sparkles size={14} /> {estimating ? t.calorieTracker.estimating : t.calorieTracker.estimateWithAi}</button>}

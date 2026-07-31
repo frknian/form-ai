@@ -1306,3 +1306,7 @@ input,select,textarea { color-scheme:inherit; }
 .dark .quick-actions-edit,.dark .quick-actions-list button,.dark .quick-actions-picker button { border-color:#46502c; }
 .dark .quick-actions-edit[aria-pressed="true"],.dark .quick-actions-picker button.active { background:#33411f; border-color:#5d7030; color:#d9ed9e; }
 @media (prefers-reduced-motion: reduce) { .quick-actions-list button,.quick-actions-picker button { transition:none; } }
+
+/* Profil testine geri dönüş bloğu (profil ekranı) */
+.retake-test-zone button { min-height:40px; padding:0 16px; border:1px solid #c6e55f; border-radius:9px; background:#e8f7b5; color:#3f4a1d; font-size:12px; font-weight:700; cursor:pointer; }
+.dark .retake-test-zone button { background:#33411f; border-color:#5d7030; color:#d9ed9e; }
