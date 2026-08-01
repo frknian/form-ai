@@ -42,7 +42,9 @@ test("geçersiz egzersiz kimliği güvenli biçimde reddedilir", () => {
 
 test("AI bağlamı yalnızca gerekli alanları içerir", () => {
   const [context] = getExercisesForAI({ muscle: "chest" });
-  assert.deepEqual(Object.keys(context).sort(), ["category", "equipment", "id", "level", "name", "primaryMuscles", "secondaryMuscles"].sort());
+  // secondaryMuscles ve category çıkarıldı: istemin ~%40'ını yiyorlardı ve
+  // model seçim yaparken kullanmıyordu (bkz. lib/exercise-service.ts).
+  assert.deepEqual(Object.keys(context).sort(), ["equipment", "id", "level", "name", "primaryMuscles"].sort());
   assert.equal("images" in context, false);
   assert.equal("instructions" in context, false);
 });

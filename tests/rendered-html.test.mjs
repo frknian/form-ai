@@ -165,7 +165,8 @@ test("keeps the AI plan and movement library wired into the product", async () =
   assert.match(page, /personalizeAiWorkouts/);
   assert.match(page, /isExerciseSafeForProfile/);
   assert.match(page, /exerciseCatalog/);
-  assert.match(page, /getExercisesForAI/);
+  // Katalog artık profile göre süzülerek gönderiliyor.
+  assert.match(page, /getExercisesForProfile/);
   assert.match(page, /getExerciseById/);
   assert.match(page, /ExerciseLibrary/);
   assert.match(page, /ExerciseAnimation/);

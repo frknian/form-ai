@@ -1292,6 +1292,8 @@ export const tr = {
     placeGym: "Salon",
     smartTitle: "Akıllı Program",
     smartBody: "Profil testine göre yapay zekânın senin için kurduğu program.",
+    smartFallbackBody: "Profiline göre yerel olarak kuruldu; yapay zekâ şu an yanıt vermedi.",
+    smartFallbackNote: "Bu program profilinden yerel olarak üretildi. Yapay zekâ analizi için profilinden \"Planı yenile\" deyebilirsin.",
     smartLocked: "Önce profil testi",
     smartEmptyBody: "Profil testini tamamladığında yapay zekânın kurduğu program burada görünecek.",
     fullBodyTitle: "Full Body",

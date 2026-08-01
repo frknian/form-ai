@@ -261,3 +261,44 @@ test("seans bitince süre, yakım ve çalışılan bölgeler gösterilir", () =>
 test("marka logosu ana ekrana döner", () => {
   assert.match(appSource, /<button type="button" className="brand"[^>]*onClick=\{\(\) => \{ setActiveView\("plan"\)/);
 });
+
+test("AI planı üretilemezse kullanıcı yine de program alır", async () => {
+  // Bildirilen hata: testi bitiren kullanıcıya program verilmedi. Sebep, AI
+  // başarısız olunca aiWorkouts'un boş kalması ve Akıllı Program kartının
+  // "Önce profil testi" deyip kilitlenmesiydi. localPlan profile göre yerel
+  // üretilir ve her zaman vardır.
+  assert.match(appSource, /smartWorkouts=\{aiWorkouts\.length \? aiWorkouts : localPlan\}/);
+  assert.match(appSource, /smartFallback=\{!aiWorkouts\.length && localPlan\.length > 0\}/);
+  const programs = await readFile(new URL("../components/TrainingPrograms.tsx", import.meta.url), "utf8");
+  // Yerel plan geldiğinde kullanıcıya bunun AI değil yerel olduğu söylenir.
+  assert.match(programs, /smartFallback \? t\.programs\.smartFallbackBody : t\.programs\.smartBody/);
+  assert.match(programs, /selection\.kind === "smart" && smartFallback &&/);
+});
+
+test("plan üretiminde akıl yürütme bütçesi içeriği aç bırakmaz", async () => {
+  // ÖLÇÜLDÜ: maxOutputTokens 3.000 iken modelin 2.997 token'ı düşünmeye gitti,
+  // içerik 0 karakter kaldı ve üretim her seferinde "length" ile kesildi.
+  const route = await readFile(new URL("../app/api/generate-plan/route.ts", import.meta.url), "utf8");
+  const budget = Number(route.match(/maxOutputTokens: ([\d_]+)/)?.[1].replace(/_/g, "") ?? 0);
+  assert.ok(budget >= 8000, `akıl yürütme payı için bütçe yetersiz: ${budget}`);
+  // Tek deneme: SDK'nın 2 yeniden denemesi süreyi üç katına çıkarıyordu.
+  const provider = await readFile(new URL("../lib/ai-provider.ts", import.meta.url), "utf8");
+  assert.match(provider, /maxRetries: 0/);
+});
+
+test("plan istemine yalnız yapılabilir hareketler gider", async () => {
+  // Tam katalog istemi şişirip üretimi yavaşlatıyordu; ayrıca model evdeki
+  // kullanıcıya salon aleti önerebiliyordu.
+  const { getExercisesForProfile } = await import("../lib/exercise-service.ts");
+  const home = getExercisesForProfile(false, "Dambıl · Yoga matı");
+  const gym = getExercisesForProfile(true, "Salon ekipmanı");
+  assert.ok(home.length > 0 && home.length < gym.length, `evde katalog daralmalı: ${home.length} / ${gym.length}`);
+  for (const exercise of home) {
+    const tag = (exercise.equipment || "").toLowerCase();
+    assert.ok(!["barbell", "cable", "machine"].includes(tag), `evdeki kataloğa salon aleti sızdı: ${exercise.name} (${tag})`);
+  }
+  // Ekipmansız kullanıcıya yalnız vücut ağırlığı gider.
+  const none = getExercisesForProfile(false, "Hiçbiri");
+  assert.ok(none.length > 0 && none.length < home.length);
+  assert.match(appSource, /getExercisesForProfile\(gym === "Salon", equipmentText\)/);
+});

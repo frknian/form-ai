@@ -35,7 +35,7 @@ import { BodyMetrics } from "@/components/onboarding/BodyMetrics";
 import { GoalPicker } from "@/components/onboarding/GoalPicker";
 import { DEFAULT_HEIGHT_CM, DEFAULT_WEIGHT_KG, WEIGHT_RANGE, readMeasure } from "@/lib/body-metrics";
 import { planGoal as buildGoalProjection } from "@/lib/goal-plan";
-import { getExerciseById, getExercisesForAI } from "@/lib/exercise-service";
+import { getExerciseById, getExercisesForProfile } from "@/lib/exercise-service";
 import { trustedExerciseMedia } from "@/lib/trusted-exercise-media";
 import { translateExerciseLabel, turkishExerciseInstructions } from "@/lib/exercise-translations";
 import { extractSessionMinutes, extractWeeklyDays, planProgressionBlock } from "@/lib/training-profile";
@@ -1449,10 +1449,14 @@ export default function Home() {
     }
     setAiStage("history");
     try {
-      const exerciseCatalog = getExercisesForAI();
+      // Kullanıcının yapamayacağı hareketleri göndermek istemi şişirip üretimi
+      // zaman aşımına düşürüyordu; ayrıca model evdeki kullanıcıya salon aleti
+      // önerebiliyordu. Katalog profile göre süzülür.
+      const exerciseCatalog = getExercisesForProfile(gym === "Salon", equipmentText);
       setAiStage("planning");
       const controller = new AbortController();
-      const timeout = window.setTimeout(() => controller.abort(), 45_000);
+      // Sunucu 60 sn'de vazgeçer; istemci ona biraz pay bırakır.
+      const timeout = window.setTimeout(() => controller.abort(), 70_000);
       const trainingHistory = sessionHistory.slice(0, 8).map((session) => ({ completedAt: session.completedAt, completedExercises: session.completedExercises, totalExercises: session.totalExercises, difficulty: session.difficulty, fatigue: session.fatigue, painAreas: session.painAreas, feedbackNote: session.feedbackNote }));
       const aiResponse = await authorizedFetch("/api/generate-plan", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, birthDate, age, gender, height, weight, environment: gym, equipment: equipmentText, goal: goalText, requestedExercises, history, trainingHistory, adaptation, exerciseCatalog, photoDataUrl, locale, goalPlan: storedGoalPlan }), signal: controller.signal }).finally(() => window.clearTimeout(timeout));
       if (aiResponse.ok) {
@@ -1709,14 +1713,19 @@ export default function Home() {
               üstte "hazır programlar", altta ayrı bir "günün antrenmanı"
               listesi vardı; ikisi farklı hareketler gösterip aynı şeyi
               anlatıyor gibi duruyordu. Günün antrenmanı kaldırıldı. */}
+          {/* AI başarısız olursa (zaman aşımı, kota, ağ) smartWorkouts boş kalır
+              ve kart "Önce profil testi" deyip kilitleniyordu — testi az önce
+              bitirmiş kullanıcı hiç program alamıyordu. localPlan profile göre
+              yerel olarak üretilir ve her zaman vardır; yedek odur. */}
           <TrainingPrograms
+            smartWorkouts={aiWorkouts.length ? aiWorkouts : localPlan}
+            smartFallback={!aiWorkouts.length && localPlan.length > 0}
             smartExtra={<>
               <div className="plan-explanation"><div><div className="eyebrow">{t.dashboard.planWhyEyebrow}</div><p>{aiRationale || t.dashboard.planWhyDefault}</p>{aiSafetyNote && <div className="ai-safety"><strong>{t.dashboard.safetyNoteLabel}</strong><span>{aiSafetyNote}</span></div>}{aiError && <div className="ai-error">{aiError}</div>}</div></div>
               <AdaptivePlanCard adaptation={adaptation} sessionCount={sessionHistory.length} />
               {aiAnalysis && <AiPlanInsights analysis={aiAnalysis} schedule={aiSchedule} progression={aiProgression} fingerprint={aiFingerprint} />}
             </>}
             equipmentText={equipmentText}
-            smartWorkouts={aiWorkouts}
             customPrograms={customPrograms}
             progress={programProgress}
             onStart={startProgram}

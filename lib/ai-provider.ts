@@ -136,6 +136,10 @@ export async function generateAiObject<T>(request: AiObjectRequest<T>): Promise<
   const system = await withSchemaInSystemPrompt(request.system, request.schema);
   const { object } = await withTemperatureFallback((useTemperature) => generateObject({
     model: languageModel(request.model),
+    // AI SDK varsayılanı 2 yeniden deneme, yani 3 tam üretim. Bu sağlayıcının
+    // akıl yürüten modellerinde tek üretim ~90 sn sürüyor; üç katı her zaman
+    // zaman aşımına düşüyordu. Tek deneme, verilen bütçenin tamamını kullanır.
+    maxRetries: 0,
     system,
     prompt: [{ role: "user", content: userContent(request.prompt, request.image) }],
     schema: request.schema,

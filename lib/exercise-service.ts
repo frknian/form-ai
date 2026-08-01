@@ -60,8 +60,16 @@ export const getExercisesByMuscle = (muscle: string) => filterExercises({ muscle
 export const getExercisesByEquipment = (equipment: string) => filterExercises({ equipment });
 export const getExercisesByLevel = (level: string) => filterExercises({ level });
 
+/**
+ * Plan üretimine gönderilen katalog.
+ *
+ * Yalnız modelin seçim yaparken gerçekten kullandığı alanlar gider.
+ * secondaryMuscles ve category isteme ~%40 fazladan token ekliyordu; katalog
+ * zaten istemin en büyük parçası ve model bir akıl yürütme modeli olduğu için
+ * bu, üretimi zaman aşımına kadar yavaşlatıyordu.
+ */
 export function getExercisesForAI(filters: ExerciseFilters = {}): AIExerciseContext[] {
-  return filterExercises(filters).map(({ id, name, level, equipment, primaryMuscles, secondaryMuscles, category }) => ({ id, name, level, equipment: equipment || undefined, primaryMuscles, secondaryMuscles, category }));
+  return filterExercises(filters).map(({ id, name, level, equipment, primaryMuscles }) => ({ id, name, level, equipment: equipment || undefined, primaryMuscles }));
 }
 
 // Her seçenek listesi, kendi boyutu dışındaki aktif filtrelere göre daraltılır.
@@ -77,4 +85,40 @@ export function getExerciseFilterOptions(filters: ExerciseFilters = {}) {
     levels: unique(excluding("level").map((exercise) => exercise.level)),
     categories: unique(excluding("category").map((exercise) => exercise.category)),
   };
+}
+
+// Katalogdaki İngilizce `equipment` etiketlerinin, kullanıcının seçebildiği
+// ekipmanlara karşılığı. Salon dışındaki bir kullanıcıya barbell/cable/machine
+// göndermenin anlamı yok: model onları seçemez, ama tokenini yer.
+const EQUIPMENT_TAG_SYNONYMS: Record<string, string[]> = {
+  "dumbbell": ["dambıl"],
+  "kettlebells": ["kettlebell", "dambıl"],
+  "bands": ["band", "lastik"],
+  "exercise ball": ["yoga matı", "mat"],
+  "medicine ball": ["dambıl"],
+  "e-z curl bar": ["barfiks", "salon"],
+  "barbell": ["salon"],
+  "cable": ["salon", "makine"],
+  "machine": ["salon", "makine"],
+};
+
+/** Ekipman gerektirmeyen etiketler; herkes yapabilir. */
+const BODYWEIGHT_TAGS = new Set(["body only", "", "other"]);
+
+/**
+ * Plan istemine giden kataloğu kullanıcının GERÇEKTEN yapabileceklerine indirir.
+ *
+ * Ölçüldü: tam katalog istemi o kadar büyütüyordu ki üretim zaman aşımına
+ * düşüyordu. Filtreleme hem istemi küçültür hem de plan kalitesini artırır —
+ * model evdeki kullanıcıya lat pulldown öneremez.
+ */
+export function getExercisesForProfile(isGym: boolean, equipmentText: string): AIExerciseContext[] {
+  const owned = equipmentText.toLocaleLowerCase("tr-TR");
+  return getExercisesForAI().filter((exercise) => {
+    const tag = (exercise.equipment || "").toLocaleLowerCase("en-US");
+    if (BODYWEIGHT_TAGS.has(tag)) return true;
+    if (isGym) return true;
+    const synonyms = EQUIPMENT_TAG_SYNONYMS[tag];
+    return synonyms ? synonyms.some((word) => owned.includes(word)) : false;
+  });
 }

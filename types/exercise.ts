@@ -26,6 +26,7 @@ export interface AIExerciseContext {
   level?: string;
   equipment?: string;
   primaryMuscles: string[];
-  secondaryMuscles: string[];
+  /** İkincil kaslar plan üretimine GÖNDERİLMEZ (token maliyeti). */
+  secondaryMuscles?: string[];
   category?: string;
 }

@@ -1289,6 +1289,8 @@ export const en: typeof tr = {
     placeGym: "Gym",
     smartTitle: "Smart Program",
     smartBody: "Built for you by AI from your profile test.",
+    smartFallbackBody: "Built locally from your profile; the AI did not respond this time.",
+    smartFallbackNote: "This program was built locally from your profile. Try \"Refresh plan\" in your profile for the AI version.",
     smartLocked: "Take the test first",
     smartEmptyBody: "Once you finish the profile test, the AI-built program appears here.",
     fullBodyTitle: "Full Body",

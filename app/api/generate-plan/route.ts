@@ -223,8 +223,17 @@ Tam olarak ${signals.exerciseCount} farklı hareket seç. Her workout için kata
       image,
       schema: responseSchema,
       temperature: 0.35,
-      maxOutputTokens: 3_000,
-      abortSignal: AbortSignal.timeout(30_000),
+      // Bu sağlayıcının modelleri "akıl yürütme" token'ı harcıyor ve bu da
+      // aynı bütçeden düşüyor. 3.000 ile ölçüldü: 2.997 token düşünmeye gitti,
+      // içerik 0 karakter kaldı ve üretim HER SEFERİNDE "length" ile kesildi —
+      // yani plan hiç üretilemiyordu. 8.000'de düşünme 1.212'de kalıyor ve
+      // plan tamamlanıyor.
+      maxOutputTokens: 8_000,
+      // ÖLÇÜM: bu sağlayıcının akıl yürüten modellerinde tam plan üretimi tek
+      // denemede bile 100 sn'yi aşıyor. Daha uzun beklemek kullanıcıyı boşuna
+      // oyalar; yerel plan zaten anında hazır ve profile göre üretiliyor.
+      // Bu yüzden AI'a makul bir pencere verilir, yetişmezse yedeğe düşülür.
+      abortSignal: AbortSignal.timeout(60_000),
     });
     if (result.workouts.length < 3) {
       return Response.json({ error: "Model yeterli hareket üretmedi" }, { status: 502 });

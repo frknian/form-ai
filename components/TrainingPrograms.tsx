@@ -27,7 +27,7 @@ type Selection =
 
 export function TrainingPrograms({
   equipmentText, smartWorkouts, customPrograms, progress,
-  onStart, onSaveCustom, onDeleteCustom, smartExtra,
+  onStart, onSaveCustom, onDeleteCustom, smartExtra, smartFallback = false,
 }: {
   equipmentText: string;
   /** Profil testinden AI'ın ürettiği program. Boşsa akıllı kart kilitli. */
@@ -39,6 +39,8 @@ export function TrainingPrograms({
   onDeleteCustom: (id: string) => void;
   /** Akıllı programın altında gösterilecek AI raporu / uyarlama kartı. */
   smartExtra?: React.ReactNode;
+  /** Program AI'dan değil, yerel yedekten geldi. */
+  smartFallback?: boolean;
 }) {
   const t = useTranslations();
   const [selection, setSelection] = useState<Selection | null>(null);
@@ -117,6 +119,7 @@ export function TrainingPrograms({
       <div className="section-title"><div className="eyebrow">{t.programs.eyebrow}</div><button type="button" className="back-btn" onClick={() => setSelection(null)}>{t.programs.backToPrograms}</button></div>
       <h2>{title}</h2>
       <p className="programs-note">{progressLabel(activeKey)}{selection.kind !== "smart" && selection.kind !== "custom" ? ` · ${selection.place === "gym" ? t.programs.placeGym : t.programs.placeHome}` : ""}</p>
+      {selection.kind === "smart" && smartFallback && <p className="programs-note programs-fallback">{t.programs.smartFallbackNote}</p>}
 
       {list.length ? <>
         <button type="button" className="start-btn" onClick={startSelection}>{t.programs.startSession} <span>→</span></button>
@@ -161,7 +164,7 @@ export function TrainingPrograms({
       <article className="program-card">
         <OnboardingIcon name="condition" />
         <h3>{t.programs.smartTitle}</h3>
-        <p>{t.programs.smartBody}</p>
+        <p>{smartFallback ? t.programs.smartFallbackBody : t.programs.smartBody}</p>
         <small>{progressLabel(programKey("smart"))}</small>
         <button type="button" disabled={!smartWorkouts.length} onClick={() => setSelection({ kind: "smart" })}>
           {smartWorkouts.length ? t.programs.open : t.programs.smartLocked} {smartWorkouts.length ? <span>→</span> : null}
