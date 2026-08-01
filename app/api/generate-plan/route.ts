@@ -1,6 +1,7 @@
 import { jsonSchema } from "ai";
 import { extractSessionMinutes, extractWeeklyDays } from "../../../lib/training-profile.ts";
 import { QUESTION, QUESTION_COUNT, labelledAnswers } from "../../../lib/onboarding-questions.ts";
+import { normalizeAnswers } from "../../../lib/goal-plan.ts";
 import { authenticateRequest } from "../../../lib/api-auth.ts";
 import { rateLimit, tooManyRequests } from "../../../lib/rate-limit.ts";
 import { generateAiObject, hasAiProvider, aiModelId, parseImageDataUrl } from "../../../lib/ai-provider.ts";
@@ -98,12 +99,16 @@ function text(value: unknown) {
 
 export function profileSignals(payload: Record<string, unknown>) {
   const history = Array.isArray(payload.history) ? payload.history.map(text) : [];
-  const sessionMinutes = extractSessionMinutes(history[QUESTION.sessionMinutes]);
+  // Hedef planı varsa haftalık gün ve seans süresi ORADAN gelir: kullanıcı o
+  // ekranda "haftada 3 gün, 45 dakika" diye taahhüt etmiştir; profil testindeki
+  // daha eski cevabın onu ezmesi planı taahhüdüyle çelişkiye düşürürdü.
+  const goalPlan = normalizeAnswers(payload.goalPlan);
+  const sessionMinutes = goalPlan ? goalPlan.sessionMinutes : extractSessionMinutes(history[QUESTION.sessionMinutes]);
   const experience = history[QUESTION.level] || "Yeni başlıyorum";
   const goal = `${history[QUESTION.goal] || ""} ${text(payload.goal)}`.toLocaleLowerCase("tr-TR");
   const primaryGoal = goal.includes("kilo") || goal.includes("yağ") ? "Kilo verme" : goal.includes("kas") ? "Kas geliştirme" : goal.includes("kondisyon") ? "Kondisyon" : "Güçlenme";
-  const frequencyText = history[QUESTION.availableDays] || history[QUESTION.recentFrequency] || "1–2 gün";
-  const weeklyDays = extractWeeklyDays(frequencyText);
+  const frequencyText = goalPlan ? `${goalPlan.weeklyDays} gün` : history[QUESTION.availableDays] || history[QUESTION.recentFrequency] || "1–2 gün";
+  const weeklyDays = goalPlan ? goalPlan.weeklyDays : extractWeeklyDays(frequencyText);
   const recentFrequency = history[QUESTION.recentFrequency] || "Belirtilmedi";
   // Son üç ayda hiç antrenman yapmamış biri kendini "ileri seviye" görebilir;
   // eski formu esas almak ilk haftada aşırı yükleme demek olurdu.
@@ -123,6 +128,7 @@ export function profileSignals(payload: Record<string, unknown>) {
     sessionMinutes, experience, primaryGoal, frequencyText, weeklyDays, intensity, exerciseCount, setRange, restRange,
     detrained,
     recentFrequency,
+    goalPlan,
     motivation: history[QUESTION.motivation] || "Belirtilmedi",
     pastBarrier: history[QUESTION.barrier] || "Belirtilmedi",
     trainingPlace: history[QUESTION.location] || "Belirtilmedi",
@@ -192,7 +198,8 @@ BU PROFİL İÇİN ZORUNLU PLAN PARAMETRELERİ:
 - Erişilebilir ekipman: ${signals.equipmentAccess}
 - Son 3 aydaki sıklık: ${signals.recentFrequency}${signals.detrained ? " (ARA VERMİŞ: ilk iki hafta yeniden alışma)" : ""}
 - Geçmişte durduran engel: ${signals.pastBarrier}
-- Hedefin kişisel nedeni: ${signals.motivation}
+- Hedefin kişisel nedeni: ${signals.motivation}${signals.goalPlan ? `
+- KULLANICININ HEDEF PLANI TAAHHÜDÜ: ${signals.goalPlan.targetWeightKg} kg hedefi, haftada ${signals.goalPlan.weeklyDays} gün, seans ${signals.goalPlan.sessionMinutes} dk, tempo "${signals.goalPlan.intensity}". Haftalık gün ve seans süresi BU taahhütten alındı; programı buna uydur.` : ""}
 - Günlük hareket: ${signals.movementLevel}
 - Uyku: ${signals.sleepQuality}
 - Serbest not: ${signals.note}

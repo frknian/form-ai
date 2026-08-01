@@ -13,6 +13,7 @@ export const SYNCED_PREFERENCE_KEYS = [
   "hedefit:quick-actions",
   "fitai:weight-unit",
   "fitai:target-weight-kg",
+  "hedefit:goal-plan",
 ] as const;
 
 export type PreferenceBag = Record<string, string>;

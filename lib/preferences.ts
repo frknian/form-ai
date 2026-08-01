@@ -63,6 +63,41 @@ export function setStoredTargetWeightKg(weightKg: number | null) {
   notifyPreferenceChange();
 }
 
+// Hedef planı cevapları (hedef kilo, haftalık gün, seans süresi, tempo).
+// Ağırlık birimiyle aynı depoda: PreferenceSync bu anahtarı da hesaba
+// eşitlediği için plan telefonda kurulup web'de görülebiliyor.
+const GOAL_PLAN_KEY = "hedefit:goal-plan";
+
+function readGoalPlanRaw(): string | null {
+  try {
+    return typeof localStorage !== "undefined" ? localStorage.getItem(GOAL_PLAN_KEY) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function setStoredGoalPlan(answers: unknown | null) {
+  try {
+    if (answers === null) localStorage.removeItem(GOAL_PLAN_KEY);
+    else localStorage.setItem(GOAL_PLAN_KEY, JSON.stringify(answers));
+  } catch {
+    // yerel depolama kapalıysa plan yalnızca bu oturumda geçerli olur
+  }
+  listeners.forEach((listener) => listener());
+  notifyPreferenceChange();
+}
+
+/** Ham JSON; çağıran normalizeAnswers ile doğrular. */
+export function useStoredGoalPlan(): unknown | null {
+  const raw = useSyncExternalStore(subscribe, readGoalPlanRaw, () => null);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
 export function useTargetWeightKg(): number | null {
   const raw = useSyncExternalStore(subscribe, readTargetWeightRaw, () => null);
   if (raw === null) return null;
