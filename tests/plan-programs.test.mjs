@@ -75,6 +75,29 @@ test("kişisel plan hazır program hareketlerini son sıraya iter", () => {
   assert.match(appSource, /READY_PROGRAM_NAMES\.has\(item\.name\) \? 3 : 2/);
 });
 
+test("antrenman ekranı hazır programları en üstte, hareket listesi olarak gösterir", () => {
+  // Eski tab tabanlı widget "Kullan" deyip kişisel planı değiştiriyordu;
+  // yeni ekran 3 kart + bölgesel tarama ile "hareket listesi"ne geçiş yapar.
+  assert.doesNotMatch(appSource, /function ReadyPrograms\(/, "eski widget kaldırılmalı");
+  assert.doesNotMatch(appSource, /function applyReadyProgram\(/, "eski 'Kullan' akışı kaldırılmalı");
+  assert.match(appSource, /activeView === "workout" \? <>\s*<div className="ready-programs" id="ready-programs">/, "hazır programlar workout sekmesinin en üstünde olmalı");
+  assert.match(appSource, /setBrowseProgram\(\{ title: t\.workoutBrowse\.aiCardTitle, profile: autoEquipmentProfile \}\)/);
+  assert.match(appSource, /setBrowseProgram\(\{ title: t\.readyPrograms\.gymTitle, profile: "gym" \}\)/);
+  assert.match(appSource, /setBrowseProgram\(\{ title: t\.readyPrograms\.equipmentFreeTitle, profile: "equipmentFree" \}\)/);
+});
+
+test("bölgesel çalış kataloğun gerçek bölgelerini kullanır ve ekipman filtresi uygular", () => {
+  assert.match(appSource, /const BODY_REGIONS = \["Göğüs", "Sırt", "Bacak", "Kalça", "Omuz", "Kol", "Core"\] as const;/);
+  assert.match(appSource, /matchesProfile\(item, browseProgram\.profile\)/, "bölgesel liste de ekipmana göre filtrelenmeli");
+});
+
+test("hareket detayından çıkmak seçilen programın listesine döner, başa değil", () => {
+  // setBrowseDetail(null) yalnız modali kapatmalı; browseProgram'a dokunmamalı,
+  // aksi halde kullanıcı program seçim ekranına geri fırlatılırdı.
+  assert.doesNotMatch(appSource, /onClick=\{\(\) => setBrowseDetail\(null\)\}[^}]*setBrowseProgram\(null\)/);
+  assert.match(appSource, /onClick=\{\(\) => setBrowseDetail\(null\)\}/);
+});
+
 test("plan hareket sayısı süreye ve haftalık sıklığa göre değişir", () => {
   // İndeksler artık lib/onboarding-questions.ts'te adlandırılır; sihirli sayı
   // kullanmak soru sırası değişince sessizce yanlış alanı okutuyordu.

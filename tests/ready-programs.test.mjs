@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { EQUIPMENT_PROFILES, buildReadyProgram, isReplacementCompatible, matchesProfile } from "../lib/ready-programs.ts";
+import { EQUIPMENT_PROFILES, buildReadyProgram, detectUserEquipmentProfile, isReplacementCompatible, matchesProfile } from "../lib/ready-programs.ts";
 
 const pushup = { name: "Şınav", area: "Göğüs", requires: [], bodyweight: true };
 const plank = { name: "Plank", area: "Core", requires: [], bodyweight: true };
@@ -73,6 +73,28 @@ test("program deterministiktir", () => {
 test("istenen sayıdan fazla hareket verilmez", () => {
   assert.equal(buildReadyProgram(library, "gym", 3).length, 3);
   assert.ok(buildReadyProgram(library, "band").length <= 5);
+});
+
+test("program girdideki ek alanları korur", () => {
+  // "Antrenman" ekranındaki bölgesel tarama, tam katalog kaydını (animasyon,
+  // talimat, ingilizce ad) gösterebilmek için bu alanların kaybolmaması gerekir.
+  const richLibrary = library.map((exercise) => ({ ...exercise, english: `${exercise.name}-en`, instructions: "adım adım" }));
+  const program = buildReadyProgram(richLibrary, "gym");
+  assert.ok(program.length > 0);
+  for (const exercise of program) {
+    assert.equal(exercise.english, `${exercise.name}-en`);
+    assert.equal(exercise.instructions, "adım adım");
+  }
+});
+
+test("AI Programı kartı kullanıcının gerçek ekipmanına göre profil seçer", () => {
+  assert.equal(detectUserEquipmentProfile(true, "hiçbir ekipmanım yok"), "gym", "salondaysa her zaman salon");
+  assert.equal(detectUserEquipmentProfile(false, "2 adet dambılım var"), "dumbbell");
+  assert.equal(detectUserEquipmentProfile(false, "dumbbell setim var"), "dumbbell", "ingilizce yazım da eşleşmeli");
+  assert.equal(detectUserEquipmentProfile(false, "kettlebell'im var, başka bir şey yok"), "dumbbell");
+  assert.equal(detectUserEquipmentProfile(false, "direnç bandım var"), "band");
+  assert.equal(detectUserEquipmentProfile(false, "hiçbir ekipmanım yok"), "equipmentFree");
+  assert.equal(detectUserEquipmentProfile(false, "dambılım yok"), "equipmentFree", "olumsuz cümle ekipman saydırmamalı");
 });
 
 test("ağrı yerine konan hareket plandaki ekipmanla uyumlu olmalı", () => {

@@ -1129,14 +1129,9 @@ input,select,textarea { color-scheme:inherit; }
 .dark .activity-chart-bar { fill:#8ba844; }
 .dark .activity-chart-bar.today { fill:#c7dd7e; }
 
-/* Hazır program sekmeleri: ekipmansız / dumbbell / salon */
-.ready-tabs { display:grid; grid-template-columns:repeat(3,1fr); gap:4px; margin-top:15px; padding:4px; border:1px solid var(--line); border-radius:9px; background:var(--surface-soft); }
-.ready-tabs button { padding:10px 8px; border:0; border-radius:6px; background:transparent; color:var(--muted-text); font-family:inherit; font-size:11px; font-weight:700; letter-spacing:-.1px; cursor:pointer; transition:background .15s ease, color .15s ease; }
-.ready-tabs button:hover:not(.active) { color:var(--ink); }
-.ready-tabs button.active { background:#dcee9d; color:#41501a; }
-.ready-tabs button:focus-visible { outline:2px solid #8ba844; outline-offset:1px; }
-.ready-programs .ready-card { margin-top:10px; }
-.dark .ready-tabs button.active { background:#3f4d21; color:#e2f2ad; }
+/* Antrenman ekranı: bölgesel çalış girişi ve hareket listesi başlığı */
+.region-launch-btn { display:block; width:100%; margin-top:14px; padding:12px; border:1px solid var(--line); border-radius:8px; background:var(--surface-soft); color:var(--ink); font-family:inherit; font-size:11px; font-weight:800; letter-spacing:.2px; cursor:pointer; }
+.region-launch-btn:hover { border-color:#a9bf57; }
 
 /* Antrenman planının kademeli ilerleme rozeti */
 .plan-stage { display:grid; gap:3px; padding:10px 13px; border:1px solid var(--line); border-radius:9px; background:var(--surface-soft); text-align:right; }
@@ -1317,3 +1312,219 @@ input,select,textarea { color-scheme:inherit; }
 .question-progress-bar i { display:block; height:100%; border-radius:999px; background:#cce969; transition:width .3s ease; }
 .dark .question-progress-bar { background:rgba(255,255,255,.12); }
 @media (prefers-reduced-motion: reduce) { .question-progress-bar i { transition:none; } }
+
+/* ==========================================================================
+   TASARIM KATMANI — 2026 yenilemesi
+   --------------------------------------------------------------------------
+   Palet DEĞİŞMEDİ: aşağıdaki her şey mevcut renk değişkenlerini kullanır
+   (--ink, --lime, --line, --surface*, --muted-text). Değişen; yarıçap,
+   boşluk, gölge, dokunma hedefi ve hareket. Bu blok dosyanın SONUNDA durur;
+   üstteki eski kurallarla aynı özgüllükte olduğu için kaynak sırasıyla kazanır
+   ve eski kuralları silmeden üzerine yazar.
+   ========================================================================== */
+
+:root {
+  --r-sm:10px; --r-md:14px; --r-lg:18px; --r-xl:24px; --r-pill:999px;
+  --shadow-1:0 1px 2px rgba(29,29,27,.05), 0 1px 3px rgba(29,29,27,.04);
+  --shadow-2:0 4px 12px rgba(29,29,27,.07), 0 2px 4px rgba(29,29,27,.04);
+  --shadow-3:0 14px 38px rgba(29,29,27,.11), 0 4px 10px rgba(29,29,27,.05);
+  --ease:cubic-bezier(.22,.61,.36,1);
+}
+.dark {
+  --shadow-1:0 1px 2px rgba(0,0,0,.32);
+  --shadow-2:0 4px 14px rgba(0,0,0,.40);
+  --shadow-3:0 16px 42px rgba(0,0,0,.52);
+}
+
+/* --- Dokunma ve odak: her etkileşimli öğe için tek kural ----------------- */
+button, [role="button"], input[type="range"] { touch-action:manipulation; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
+  outline:2px solid var(--focus-ring); outline-offset:2px; border-radius:var(--r-sm);
+}
+
+/* --- Düğme sistemi ------------------------------------------------------- */
+.primary-btn, .start-btn {
+  display:inline-flex; align-items:center; justify-content:center; gap:10px;
+  min-height:52px; padding:0 26px; border-radius:var(--r-md);
+  font-size:15px; font-weight:750; letter-spacing:-.1px; cursor:pointer;
+  box-shadow:var(--shadow-2); transition:transform .18s var(--ease), box-shadow .18s var(--ease), opacity .18s var(--ease);
+}
+.primary-btn span, .start-btn span { margin-left:0; font-size:17px; line-height:1; }
+.primary-btn:hover:not(:disabled), .start-btn:hover:not(:disabled) { transform:translateY(-1px); box-shadow:var(--shadow-3); }
+.primary-btn:active:not(:disabled), .start-btn:active:not(:disabled) { transform:translateY(0); box-shadow:var(--shadow-1); }
+.primary-btn:disabled, .start-btn:disabled { box-shadow:none; cursor:not-allowed; }
+.start-btn { width:100%; }
+
+/* Geri düğmesi görünmez bir metindi; artık gerçek bir ikincil düğme. */
+.back-btn {
+  display:inline-flex; align-items:center; justify-content:center;
+  min-height:52px; margin-top:0; padding:0 22px;
+  border:1px solid var(--line); border-radius:var(--r-md);
+  background:var(--surface); color:var(--muted-text);
+  font-size:14px; font-weight:650; cursor:pointer;
+  transition:border-color .18s var(--ease), color .18s var(--ease), background .18s var(--ease);
+}
+.back-btn:hover { border-color:var(--ink); color:var(--ink); background:var(--surface-elevated); }
+.action-row { display:flex; gap:12px; align-items:center; margin-top:32px; }
+.action-row .primary-btn { margin-top:0; margin-left:auto; }
+.action-row .back-btn { margin-right:auto; }
+
+/* Seçim çipleri (cevaplar, ekipman) */
+.answer, .equipment {
+  min-height:48px; padding:12px 18px; border-radius:var(--r-pill);
+  border:1.5px solid var(--line); background:var(--surface);
+  font-size:13.5px; font-weight:600; cursor:pointer;
+  transition:border-color .16s var(--ease), background .16s var(--ease), transform .16s var(--ease);
+}
+.answer:hover:not(.selected), .equipment:hover:not(.selected) { border-color:#a9bf57; transform:translateY(-1px); }
+.answer.selected, .equipment.selected { border-color:#b9dc5c; font-weight:750; }
+
+/* --- Form alanları ------------------------------------------------------- */
+.form-grid { gap:20px 16px; }
+.form-grid label, .textarea-label, .metric-legend {
+  font-size:11px; font-weight:800; letter-spacing:1.2px; text-transform:uppercase; color:var(--muted-text);
+}
+.form-grid input, .textarea-label textarea, .question-note {
+  min-height:54px; padding:15px 16px; border:1.5px solid var(--line); border-radius:var(--r-md);
+  background:var(--surface); font-size:15px; transition:border-color .16s var(--ease), box-shadow .16s var(--ease);
+}
+.textarea-label textarea, .question-note { min-height:92px; line-height:1.5; }
+.form-grid input:focus, .textarea-label textarea:focus, .question-note:focus {
+  border-color:#91aa3b; box-shadow:0 0 0 4px color-mix(in srgb, var(--lime) 22%, transparent);
+}
+.form-grid label small { display:block; margin-top:7px; font-size:11px; font-weight:500; letter-spacing:0; text-transform:none; }
+
+/* --- Adım göstergesi ----------------------------------------------------- */
+.progress-track { height:6px; border-radius:var(--r-pill); background:var(--line); overflow:hidden; }
+.progress-track span { border-radius:var(--r-pill); }
+.progress-row { font-size:11px; letter-spacing:1.4px; }
+
+/* --- Görsel seçim kartları (cinsiyet, hedef) ----------------------------- */
+.option-cards { display:grid; gap:10px; margin-top:12px; }
+.option-cards-3 { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.option-card {
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+  min-height:104px; padding:16px 10px; border:1.5px solid var(--line); border-radius:var(--r-lg);
+  background:var(--surface); color:var(--muted-text); cursor:pointer; text-align:center;
+  transition:border-color .18s var(--ease), transform .18s var(--ease), box-shadow .18s var(--ease), color .18s var(--ease);
+}
+.option-card span { font-size:12.5px; font-weight:700; line-height:1.25; }
+.option-card .onboarding-icon { width:28px; height:28px; opacity:.75; transition:opacity .18s var(--ease), transform .18s var(--ease); }
+.option-card:hover { border-color:#a9bf57; transform:translateY(-2px); box-shadow:var(--shadow-2); color:var(--ink); }
+.option-card.selected {
+  border-color:#b9dc5c; border-width:2px; padding:15px 9px; color:var(--ink);
+  background:color-mix(in srgb, var(--lime) 14%, var(--surface)); box-shadow:var(--shadow-2);
+}
+.option-card.selected .onboarding-icon { opacity:1; transform:scale(1.08); }
+
+/* --- Ölçü seçicileri (boy / kilo) ---------------------------------------- */
+.body-metrics { display:grid; gap:22px; margin-top:26px; }
+.metric-group { min-width:0; margin:0; padding:0; border:0; }
+.metric-legend { display:block; padding:0; }
+.measure-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+.measure-field { display:grid; gap:12px; padding:18px 16px; border:1px solid var(--line); border-radius:var(--r-lg); background:var(--surface); box-shadow:var(--shadow-1); }
+.measure-head { display:flex; align-items:center; justify-content:space-between; }
+.measure-label { display:inline-flex; align-items:center; gap:8px; font-size:11px; font-weight:800; letter-spacing:1.2px; text-transform:uppercase; color:var(--muted-text); }
+.measure-label .onboarding-icon { width:17px; height:17px; }
+
+/* Görsel destek: boy silueti ve kilo diski */
+/* Flex, grid değil: `place-items:end` altında satır yüksekliği içeriğe göre
+   belirlendiği için siluetin yüzde yüksekliği dairesel biçimde kendine
+   çözülüyor ve boy değişse de sabit kalıyordu. Flex'te yüzde, kabın kesin
+   104px yüksekliğine göre hesaplanır. */
+.measure-visual { display:flex; align-items:flex-end; justify-content:center; height:104px; border-radius:var(--r-md); background:var(--surface-soft); }
+/* Silüet: baş sabit, gövde kalan alanı doldurur. Gövdeye yüzde yükseklik
+   vermek grid satırına göre çözülüp görünmez kalıyordu; flex ile kalan alanı
+   almak boy değiştikçe güvenilir biçimde uzayıp kısalıyor. */
+/* Yüzde `height` üzerinde transition kullanılmaz: Chrome iki yüzde değeri
+   arasında geçişte hesaplanan yüksekliği eski değerde bırakıyor, silüet boy
+   değişse de kıpırdamıyordu. Kaydırıcı zaten sürekli hareket ettiği için
+   geçiş sadece gecikme katardı. */
+.measure-figure { display:flex; flex-direction:column; align-items:center; gap:3px; width:100%; }
+.measure-figure-head { flex:0 0 15px; width:15px; height:15px; border-radius:50%; background:var(--lime); }
+.measure-figure-body { flex:1 1 auto; width:23px; min-height:8px; border-radius:12px 12px 5px 5px; background:var(--lime); opacity:.55; }
+.measure-disc { display:grid; place-items:center; align-self:center; margin:auto 0; width:62px; height:62px; border-radius:50%; background:color-mix(in srgb, var(--lime) 30%, var(--surface-elevated)); color:var(--ink); transition:transform .2s var(--ease); }
+.measure-disc .onboarding-icon { width:26px; height:26px; }
+
+.measure-readout { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.measure-readout strong { display:flex; align-items:baseline; gap:4px; font-size:32px; font-weight:800; letter-spacing:-1.5px; font-variant-numeric:tabular-nums; }
+.measure-readout strong small { font-size:13px; font-weight:600; letter-spacing:0; color:var(--muted-text); }
+.measure-step {
+  display:grid; place-items:center; flex:0 0 42px; width:42px; height:42px;
+  border:1.5px solid var(--line); border-radius:50%; background:var(--surface-elevated);
+  color:var(--ink); font-size:20px; line-height:1; cursor:pointer;
+  transition:border-color .16s var(--ease), background .16s var(--ease);
+}
+.measure-step:hover { border-color:#a9bf57; background:color-mix(in srgb, var(--lime) 16%, var(--surface-elevated)); }
+
+/* Kaydırıcı: tarayıcı varsayılanı yerine tek görünüm */
+.measure-slider { position:relative; height:28px; }
+.measure-slider::before, .measure-slider::after { content:""; position:absolute; top:50%; height:6px; margin-top:-3px; border-radius:var(--r-pill); pointer-events:none; }
+.measure-slider::before { left:0; right:0; background:var(--line); }
+.measure-slider::after { left:0; width:var(--fill,0%); background:var(--lime); }
+.measure-slider input { position:relative; z-index:1; width:100%; height:28px; margin:0; padding:0; background:transparent; -webkit-appearance:none; appearance:none; cursor:pointer; }
+.measure-slider input::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:26px; height:26px; border:3px solid var(--surface-elevated); border-radius:50%; background:var(--ink); box-shadow:var(--shadow-2); cursor:grab; }
+.measure-slider input::-moz-range-thumb { width:20px; height:20px; border:3px solid var(--surface-elevated); border-radius:50%; background:var(--ink); box-shadow:var(--shadow-2); cursor:grab; }
+.measure-slider input:active::-webkit-slider-thumb { cursor:grabbing; }
+.measure-slider input::-moz-range-track { background:transparent; }
+.measure-scale { display:flex; justify-content:space-between; color:var(--muted-text); font-size:10px; font-variant-numeric:tabular-nums; }
+
+/* --- VKİ göstergesi ------------------------------------------------------ */
+.bmi-readout { display:grid; gap:10px; padding:18px 16px; border:1px solid var(--line); border-radius:var(--r-lg); background:var(--surface); box-shadow:var(--shadow-1); }
+.bmi-head { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.bmi-head strong { display:flex; align-items:baseline; gap:8px; font-size:26px; font-weight:800; letter-spacing:-1px; font-variant-numeric:tabular-nums; }
+.bmi-head strong small { font-size:12px; font-weight:700; letter-spacing:.3px; color:var(--muted-text); }
+.bmi-bar { position:relative; height:10px; border-radius:var(--r-pill); background:linear-gradient(90deg, color-mix(in srgb, var(--lime) 18%, var(--line)) 0%, var(--lime) 34%, color-mix(in srgb, var(--lime) 45%, var(--line)) 62%, var(--line) 100%); }
+.bmi-tick { position:absolute; top:-2px; width:1.5px; height:14px; background:var(--surface); opacity:.85; }
+.bmi-marker { position:absolute; top:50%; width:20px; height:20px; margin:-10px 0 0 -10px; border:3px solid var(--surface); border-radius:50%; background:var(--ink); box-shadow:var(--shadow-2); transition:left .2s var(--ease); }
+.bmi-note { margin:0; color:var(--muted-text); font-size:10.5px; line-height:1.5; }
+
+/* --- Hedef kartları ------------------------------------------------------ */
+.goal-picker { margin-top:26px; }
+.goal-picker + .textarea-label { margin-top:18px; }
+
+/* --- Kart yüzeyleri: eski keskin köşeler yerine yumuşak yükselti --------- */
+.question-card, .ready-card, .workout-card, .progress-cards > div, .progress-panel,
+.database-exercise-card, .library-card, .pr-item, .coach-card, .profile-editor {
+  border-radius:var(--r-lg);
+}
+.question-card, .ready-card, .workout-card, .database-exercise-card { box-shadow:var(--shadow-1); }
+.ready-card, .database-exercise-card { transition:transform .18s var(--ease), box-shadow .18s var(--ease), border-color .18s var(--ease); }
+.ready-card:hover, .database-exercise-card:hover { transform:translateY(-2px); box-shadow:var(--shadow-2); border-color:#a9bf57; }
+.ready-card button, .exercise-detail-button, .region-launch-btn { min-height:46px; border-radius:var(--r-md); font-size:12px; font-weight:750; }
+.ready-grid { gap:12px; }
+.upload-box { border-radius:var(--r-lg); border-width:2px; }
+.question-card h2 { font-size:25px; }
+
+/* --- Duyarlılık: telefonda tek sütun, büyük hedefler --------------------- */
+@media (max-width:760px) {
+  .measure-grid { grid-template-columns:1fr; }
+  .option-cards-3 { grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+  .option-card { min-height:92px; padding:13px 6px; gap:8px; }
+  .option-card span { font-size:11px; }
+  .option-card .onboarding-icon { width:24px; height:24px; }
+  .measure-readout strong { font-size:28px; }
+  .body-metrics { gap:16px; }
+  /* Eylem satırı ekranın altına sabitlenir: uzun formda "Devam"ı aramak
+     telefonda en sık şikâyet edilen şeydi. */
+  .step-content .action-row {
+    position:sticky; bottom:0; z-index:20; gap:10px;
+    margin:26px -20px 0; padding:12px 20px max(12px,env(safe-area-inset-bottom));
+    border-top:1px solid var(--line); background:var(--paper);
+  }
+  .step-content .action-row .primary-btn, .step-content .action-row .back-btn { flex:1; min-height:54px; margin:0; padding:0 16px; }
+  .step-content .action-row .back-btn { flex:0 0 auto; }
+}
+@media (max-width:420px) {
+  .option-cards-3 { grid-template-columns:1fr; }
+  .option-card { flex-direction:row; justify-content:flex-start; gap:14px; min-height:64px; padding:12px 16px; text-align:left; }
+  .option-card.selected { padding:11px 15px; }
+  .option-card span { font-size:13px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .primary-btn, .start-btn, .back-btn, .answer, .equipment, .option-card,
+  .measure-figure, .measure-disc, .bmi-marker, .ready-card, .database-exercise-card { transition:none; }
+  .primary-btn:hover:not(:disabled), .start-btn:hover:not(:disabled),
+  .option-card:hover, .ready-card:hover, .database-exercise-card:hover { transform:none; }
+}

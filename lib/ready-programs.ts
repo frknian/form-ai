@@ -3,6 +3,8 @@
 // ekipmanlı hareket sızabiliyordu. Artık ekipman profiline göre katalogdan
 // üretiliyorlar, böylece profil sözü kod tarafından garanti ediliyor.
 
+import { hasEquipment } from "./equipment-match.ts";
+
 export type EquipmentProfile = "equipmentFree" | "dumbbell" | "band" | "gym";
 
 export type CatalogExercise = {
@@ -33,6 +35,19 @@ export function matchesProfile(exercise: CatalogExercise, profile: EquipmentProf
   if (profile === "dumbbell") return requiresAny(exercise, DUMBBELL_TOKENS);
   if (profile === "band") return requiresAny(exercise, BAND_TOKENS);
   return requiresAny(exercise, [...GYM_TOKENS, ...DUMBBELL_TOKENS, ...BAND_TOKENS]);
+}
+
+/**
+ * Kullanıcının ortamı ve serbest metinle yazdığı ekipmandan "AI Programı"
+ * kartı için otomatik profil çıkarır. Salondaysa salon; değilse yazdığı
+ * metinde dambıl/kettlebell veya direnç bandı geçiyorsa o profil; hiçbiri
+ * yoksa ekipmansız kabul edilir.
+ */
+export function detectUserEquipmentProfile(isGym: boolean, equipmentText: string): EquipmentProfile {
+  if (isGym) return "gym";
+  if (hasEquipment(equipmentText, "dambıl") || hasEquipment(equipmentText, "kettlebell")) return "dumbbell";
+  if (hasEquipment(equipmentText, "band")) return "band";
+  return "equipmentFree";
 }
 
 // Profilin ASIL ekipmanı. Bir hareket profile uyuyor olabilir ama o ekipmanı
@@ -67,13 +82,13 @@ const PRIORITY_AREAS = ["Bacak", "Göğüs", "Sırt", "Omuz", "Core"];
  * doldurulur. Sıralama alfabetiktir: program her açılışta aynı kalmalı, aksi
  * halde kullanıcı dün yaptığı hareketi bugün bulamaz.
  */
-export function buildReadyProgram(library: CatalogExercise[], profile: EquipmentProfile, count = 5): CatalogExercise[] {
+export function buildReadyProgram<T extends CatalogExercise>(library: T[], profile: EquipmentProfile, count = 5): T[] {
   const eligible = library
     .filter((exercise) => matchesProfile(exercise, profile))
     .slice()
     .sort((a, b) => a.name.localeCompare(b.name, "tr"));
 
-  const chosen: CatalogExercise[] = [];
+  const chosen: T[] = [];
   for (const area of PRIORITY_AREAS) {
     if (chosen.length >= count) break;
     // Ekipmanlı profillerde o bölgenin ekipmanlı hareketi varsa onu tercih et;

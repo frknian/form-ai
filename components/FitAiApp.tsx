@@ -29,13 +29,16 @@ import { QuickActions } from "@/components/QuickActions";
 import type { AppView } from "@/lib/quick-actions";
 import { FrozenAccountScreen, ProfileManager } from "@/components/ProfileManager";
 import { TrainingPlaceSwitch } from "@/components/TrainingPlaceSwitch";
+import { BodyMetrics } from "@/components/onboarding/BodyMetrics";
+import { GoalPicker } from "@/components/onboarding/GoalPicker";
+import { DEFAULT_HEIGHT_CM, DEFAULT_WEIGHT_KG } from "@/lib/body-metrics";
 import { getExerciseById, getExercisesForAI } from "@/lib/exercise-service";
 import { trustedExerciseMedia } from "@/lib/trusted-exercise-media";
 import { translateExerciseLabel, turkishExerciseInstructions } from "@/lib/exercise-translations";
 import { extractSessionMinutes, extractWeeklyDays, planProgressionBlock } from "@/lib/training-profile";
 import { alternativeExercises } from "@/lib/exercise-alternatives";
 import { canPerformExercise, hasEquipment, usableEquipmentText } from "@/lib/equipment-match";
-import { EQUIPMENT_PROFILES, buildReadyProgram, isReplacementCompatible, type EquipmentProfile } from "@/lib/ready-programs";
+import { EQUIPMENT_PROFILES, buildReadyProgram, detectUserEquipmentProfile, isReplacementCompatible, matchesProfile, type EquipmentProfile } from "@/lib/ready-programs";
 import { FREE_TEXT_QUESTIONS, QUESTION, QUESTION_COUNT, emptyHistory, isHistoryComplete, normalizeHistory } from "@/lib/onboarding-questions";
 import { applyPreviousPerformance, buildCompletedExerciseLog, createWorkoutSetDrafts, exerciseLogKey, type CompletedExerciseLog, type PreviousExercisePerformance, type WorkoutSetDraft } from "@/lib/workout-log";
 import { localTimeKey } from "@/lib/workout-calendar";
@@ -411,6 +414,14 @@ function workoutPrescription(workout: AiWorkout) {
   return { totalSets, restSeconds, target, workSeconds: Math.max(10, workout.seconds || 45) };
 }
 
+// Antrenman ekranındaki hazır program/bölgesel tarama listelerinden tek bir
+// hareketi veya listenin tamamını antrenman oynatıcısında başlatmak için
+// katalog kaydını AiWorkout biçimine çevirir.
+function catalogItemToWorkout(item: typeof exerciseLibrary[number]): AiWorkout {
+  const isHold = item.name === "Plank" || item.name === "Dead Bug";
+  return { ...item, level: item.area, sets: `3 set · ${isHold ? "30 sn" : "10 tekrar"}`, rest: "60 sn dinlenme", seconds: isHold ? 30 : 45 };
+}
+
 function isExerciseSafeForAdaptivePain(exercise: AiWorkout, painAreas: string[]) {
   const text = `${exercise.name} ${exercise.english}`.toLocaleLowerCase("tr-TR");
   const pain = painAreas.join(" ").toLocaleLowerCase("tr-TR");
@@ -698,26 +709,26 @@ const readyPrograms = EQUIPMENT_PROFILES.map((profile) => ({
 
 const READY_PROGRAM_NAMES = new Set(readyPrograms.flatMap((program) => program.names));
 
-function readyProgramCopy(t: Dictionary, id: EquipmentProfile) {
-  if (id === "equipmentFree") return { title: t.readyPrograms.equipmentFreeTitle, detail: t.readyPrograms.equipmentFreeDetail, tab: t.readyPrograms.equipmentFreeTab };
-  if (id === "dumbbell") return { title: t.readyPrograms.dumbbellTitle, detail: t.readyPrograms.dumbbellDetail, tab: t.readyPrograms.dumbbellTab };
-  if (id === "band") return { title: t.readyPrograms.bandTitle, detail: t.readyPrograms.bandDetail, tab: t.readyPrograms.bandTab };
-  return { title: t.readyPrograms.gymTitle, detail: t.readyPrograms.gymDetail, tab: t.readyPrograms.gymTab };
+// "Antrenman" ekranındaki bölgesel çalış seçenekleri. Katalogdaki gerçek
+// `area` değerleridir; "Esneklik" ve "Kondisyon" bir vücut bölgesi olmadığı
+// için listede yok.
+const BODY_REGIONS = ["Göğüs", "Sırt", "Bacak", "Kalça", "Omuz", "Kol", "Core"] as const;
+
+function regionLabel(t: Dictionary, area: string): string {
+  if (area === "Göğüs") return t.workoutBrowse.regionChest;
+  if (area === "Sırt") return t.workoutBrowse.regionBack;
+  if (area === "Bacak") return t.workoutBrowse.regionLegs;
+  if (area === "Kalça") return t.workoutBrowse.regionHips;
+  if (area === "Omuz") return t.workoutBrowse.regionShoulders;
+  if (area === "Kol") return t.workoutBrowse.regionArms;
+  return t.workoutBrowse.regionCore;
 }
 
-// Ortamına göre seçilen hazır program. Varsayılan sekme kullanıcının profilindeki
-// antrenman yerine göre açılır, böylece salonda çalışan biri ekipmansız programla
-// karşılaşmaz.
-function ReadyPrograms({ onApply, environment }: { onApply: (program: typeof readyPrograms[number]) => void; environment: string }) {
-  const t = useTranslations();
-  const [selectedId, setSelectedId] = useState<(typeof readyPrograms)[number]["id"]>(environment === "Salon" ? "gym" : "equipmentFree");
-  const selected = readyPrograms.find((program) => program.id === selectedId) || readyPrograms[0];
-  const copy = readyProgramCopy(t, selected.id);
-  return <div className="ready-programs" id="ready-programs">
-    <div className="section-title"><div><div className="eyebrow">{t.readyPrograms.eyebrow}</div><h2>{t.readyPrograms.title}</h2></div><span className="ready-note">{t.readyPrograms.note}</span></div>
-    <div className="ready-tabs" role="tablist" aria-label={t.readyPrograms.tabsLabel}>{readyPrograms.map((program) => <button type="button" key={program.id} role="tab" id={`ready-tab-${program.id}`} aria-selected={program.id === selectedId} aria-controls="ready-tab-panel" className={program.id === selectedId ? "active" : ""} onClick={() => setSelectedId(program.id)}>{readyProgramCopy(t, program.id).tab}</button>)}</div>
-    <article className="ready-card" id="ready-tab-panel" role="tabpanel" aria-labelledby={`ready-tab-${selected.id}`}><div><h3>{copy.title}</h3><p>{copy.detail}</p><small>{selected.names.join(" · ")}</small></div><button type="button" onClick={() => onApply(selected)}>{t.readyPrograms.use} →</button></article>
-  </div>;
+function equipmentProfileLabel(t: Dictionary, profile: EquipmentProfile): string {
+  if (profile === "dumbbell") return t.readyPrograms.dumbbellTab;
+  if (profile === "band") return t.readyPrograms.bandTab;
+  if (profile === "gym") return t.readyPrograms.gymTab;
+  return t.readyPrograms.equipmentFreeTab;
 }
 
 export default function Home() {
@@ -780,6 +791,9 @@ export default function Home() {
   const [avatarPath, setAvatarPath] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [accountStatus, setAccountStatus] = useState<AccountStatus | "loading">("loading");
+  const [browseProgram, setBrowseProgram] = useState<{ title: string; profile: EquipmentProfile; area?: string } | null>(null);
+  const [regionPickerOpen, setRegionPickerOpen] = useState(false);
+  const [browseDetail, setBrowseDetail] = useState<typeof exerciseLibrary[number] | null>(null);
 
 
   const localPlan = useMemo(() => createPersonalPlan(gym, equipmentText, history, goalText, requestedExercises, sessionHistory.length), [gym, equipmentText, history, goalText, requestedExercises, sessionHistory.length]);
@@ -793,6 +807,19 @@ export default function Home() {
   const currentSetDrafts = activeWorkout === null ? [] : exerciseSetDrafts[activeWorkout] || [];
   const currentPreviousPerformance = currentWorkoutKey ? previousPerformances[currentWorkoutKey] : null;
   const currentIsBodyweight = currentWorkout ? isBodyweightWorkout(currentWorkout) : false;
+  // "" hâlâ "girilmedi" demektir (profil yüklemesi ve sıfırlama buna dayanır);
+  // ekranda ise her zaman geçerli bir başlangıç değeri gösterilir.
+  const shownHeight = height || String(DEFAULT_HEIGHT_CM);
+  const shownWeight = weight || String(DEFAULT_WEIGHT_KG);
+  const autoEquipmentProfile = useMemo(() => detectUserEquipmentProfile(gym === "Salon", equipmentText), [gym, equipmentText]);
+  const browseExercises = useMemo(() => {
+    if (!browseProgram) return [];
+    if (!browseProgram.area) return buildReadyProgram(exerciseLibrary, browseProgram.profile);
+    return exerciseLibrary
+      .filter((item) => item.area === browseProgram.area && matchesProfile(item, browseProgram.profile))
+      .slice()
+      .sort((a, b) => a.name.localeCompare(b.name, "tr"));
+  }, [browseProgram]);
   const age = useMemo(() => {
     const calculated = calculateAge(birthDate);
     return calculated === null ? "" : String(calculated);
@@ -1398,22 +1425,17 @@ export default function Home() {
     setStep(5);
   }
 
-  function applyReadyProgram(program: typeof readyPrograms[number]) {
-    const prepared = program.names.map((name) => exerciseLibrary.find((exercise) => exercise.name === name)).filter((exercise): exercise is typeof exerciseLibrary[number] => Boolean(exercise)).map((exercise) => ({ ...exercise, level: exercise.area, sets: `3 set · ${exercise.name === "Plank" || exercise.name === "Dead Bug" ? "30 sn" : "10 tekrar"}`, rest: "60 sn dinlenme", seconds: exercise.name === "Plank" || exercise.name === "Dead Bug" ? 30 : 45 }));
-    setAiWorkouts(prepared);
-    setAiRationale(t.readyPrograms.appliedRationale(readyProgramCopy(t, program.id).title));
-    setAiAnalysis(fallbackAnalysis(gym, equipmentText, history, goalText));
-    setAiSchedule([]);
-    setAiProgression([t.readyPrograms.progressionLearn, t.readyPrograms.progressionConsistency, t.readyPrograms.progressionRest, t.readyPrograms.progressionLoad]);
-    setAiFingerprint(t.readyPrograms.ready);
-    setAiStatus("complete");
-    // Kart zaten "workout" görünümünde durduğu için yalnız setActiveView çağırmak
-    // hiçbir görünür değişiklik yaratmıyordu: kullanıcı "Kullan" deyip aynı yerde
-    // kalıyordu. Uygulanan program listesine kaydırıyoruz ki sonucu görsün.
-    setActiveView("workout");
-    window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
-      document.getElementById("workout-plan-list")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }));
+  // Hazır program/bölgesel liste ekipman filtresine göre üretilir (bkz.
+  // browseExercises); burada yalnız o listeyi oynatıcıya kuyruk olarak veriyoruz.
+  // Kişisel plana (aiWorkouts) dokunmaz, bu yüzden oynatıcıdan çıkınca kullanıcı
+  // aynı listeye döner, kişisel planı bozulmaz.
+  function startBrowseSession() {
+    if (browseExercises.length) openWorkout(0, browseExercises.map(catalogItemToWorkout));
+  }
+
+  function startSingleExercise(item: typeof exerciseLibrary[number]) {
+    setBrowseDetail(null);
+    openWorkout(0, [catalogItemToWorkout(item)]);
   }
 
   async function saveCustomPlan(plan: EditableWorkout[]) {
@@ -1546,18 +1568,21 @@ export default function Home() {
             <div className="eyebrow">{t.onboarding.step1Eyebrow}</div><h1>{t.onboarding.step1TitleLine1}<br /><em>{t.onboarding.step1TitleEm}</em></h1><p className="lead">{t.onboarding.step1Lead}</p>
             <div className="form-grid">
               <label className="wide">{t.onboarding.nameLabel}<input value={name} onChange={(e) => setName(e.target.value)} placeholder={t.onboarding.namePlaceholder} /></label>
-              <label>{t.onboarding.birthDateLabel}<input type="date" min="1905-01-01" max={new Date().toISOString().slice(0, 10)} value={birthDate} onChange={(e) => setBirthDate(e.target.value)} /><small>{age ? t.onboarding.birthDateHintKnown(age) : t.onboarding.birthDateHintUnknown}</small></label>
-              <label>{t.onboarding.genderLabel}<div className="segmented"><button type="button" aria-pressed={gender === "Kadın"} className={gender === "Kadın" ? "selected" : ""} onClick={() => setGender("Kadın")}>{t.onboarding.genderFemale}</button><button type="button" aria-pressed={gender === "Erkek"} className={gender === "Erkek" ? "selected" : ""} onClick={() => setGender("Erkek")}>{t.onboarding.genderMale}</button></div></label>
-              <label>{t.onboarding.heightLabel}<input type="number" value={height} onChange={(e) => setHeight(e.target.value)} placeholder="168" /></label>
-              <label>{t.onboarding.weightLabel}<input type="number" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="62" /></label>
+              <label className="wide">{t.onboarding.birthDateLabel}<input type="date" min="1905-01-01" max={new Date().toISOString().slice(0, 10)} value={birthDate} onChange={(e) => setBirthDate(e.target.value)} /><small>{age ? t.onboarding.birthDateHintKnown(age) : t.onboarding.birthDateHintUnknown}</small></label>
             </div>
-            <button className="primary-btn" type="button" disabled={!name.trim() || !isValidBirthDate(birthDate) || !height || !weight} onClick={() => setStep(2)}>{t.common.continueLabel} <span>→</span></button>
+            <BodyMetrics gender={gender} onGenderChange={setGender} height={shownHeight} onHeightChange={setHeight} weight={shownWeight} onWeightChange={setWeight} />
+            {/* Kaydırıcı hiç dokunulmasa bile bir değer GÖSTERİR; ekranda 170 cm
+                yazarken devam düğmesinin kapalı kalması kullanıcıyı kilitliyordu.
+                Gösterilen değeri devam ederken yazıyoruz, böylece ekranda görünen
+                ile kaydedilen her zaman aynı olur. */}
+            <div className="action-row"><button className="primary-btn" type="button" disabled={!name.trim() || !isValidBirthDate(birthDate)} onClick={() => { setHeight(shownHeight); setWeight(shownWeight); setStep(2); }}>{t.common.continueLabel} <span>→</span></button></div>
           </div>}
 
           {step === 2 && <div className="step-content equipment-step">
             <div className="eyebrow">{t.onboarding.step2Eyebrow}</div><h1>{t.onboarding.step2TitleLine1}<br /><em>{t.onboarding.step2TitleEm}</em></h1><p className="lead">{t.onboarding.step2Lead}</p>
             <TrainingPlaceSwitch value={gym === "Salon" ? "Salon" : "Evde"} onChange={setGym} label={t.onboarding.trainingPlaceLabel} homeLabel={t.onboarding.homeLabel} homeHint={t.onboarding.homeHint} gymLabel={t.onboarding.gymLabel} gymHint={t.onboarding.gymHint} />
             <label className="textarea-label">{t.onboarding.equipmentLabel} <small>{t.onboarding.optionalHint}</small><textarea value={equipmentText} onChange={(e) => setEquipmentText(e.target.value)} placeholder={t.onboarding.equipmentPlaceholder(gender)} /></label>
+            <GoalPicker value={goalText} onChange={setGoalText} />
             <label className="textarea-label">{t.onboarding.goalLabel} <small>{t.onboarding.goalHint}</small><textarea value={goalText} onChange={(e) => setGoalText(e.target.value)} placeholder={t.onboarding.goalPlaceholder(gender)} /></label>
             <label className="textarea-label">{t.onboarding.requestedExercisesLabel} <small>{t.onboarding.optionalHint}</small><textarea value={requestedExercises} onChange={(e) => setRequestedExercises(e.target.value)} placeholder={t.onboarding.requestedExercisesPlaceholder(gender)} /></label>
             <div className="action-row"><button className="back-btn" type="button" onClick={() => setStep(1)}>{t.common.back}</button><button className="primary-btn" type="button" onClick={() => setStep(3)}>{t.common.continueLabel} <span>→</span></button></div>
@@ -1594,11 +1619,33 @@ export default function Home() {
             <div className="player-actions"><button className="start-btn" type="button" onClick={() => workoutPhase === "done" ? activeWorkout < playerQueue.length - 1 ? goToWorkout(activeWorkout + 1) : void finishWorkout() : setIsRunning((running) => !running)}>{workoutPhase === "done" ? activeWorkout < playerQueue.length - 1 ? t.workoutPlayer.nextExercise : t.workoutPlayer.saveWorkout : isRunning ? t.workoutPlayer.pause : workoutPhase === "rest" ? t.workoutPlayer.startRest : t.workoutPlayer.startSet} <span>→</span></button></div>
             <button className="finish-btn" type="button" onClick={() => void finishWorkout()}>{t.workoutPlayer.finishAndSave}</button>
           </div> : activeView === "workout" ? <>
+          <div className="ready-programs" id="ready-programs">
+            {browseProgram ? <>
+              <div className="section-title"><div><div className="eyebrow">{t.readyPrograms.eyebrow}</div><h2>{browseProgram.title}</h2></div><button type="button" className="back-btn" onClick={() => setBrowseProgram(null)}>{t.workoutBrowse.backToPrograms}</button></div>
+              <p className="ready-note">{equipmentProfileLabel(t, browseProgram.profile)}</p>
+              {browseExercises.length ? <>
+                <button type="button" className="start-btn" onClick={startBrowseSession}>{t.workoutBrowse.startSession} <span>→</span></button>
+                <div className="database-exercise-grid">{browseExercises.map((item) => <article className="database-exercise-card" key={item.name}><ExerciseAnimation exercise={item} compact autoplay={false} /><div className="database-card-copy"><div className="database-card-top"><span>{item.area}</span></div><h3>{item.name}</h3><div className="exercise-facts"><span>{item.bodyweight ? t.dashboard.noEquipment : (item.requires[0] || item.area)}</span></div><button type="button" className="exercise-detail-button" onClick={() => setBrowseDetail(item)}>{t.exerciseLibrary.viewDetails} →</button></div></article>)}</div>
+              </> : <div className="library-empty"><strong>{t.workoutBrowse.emptyTitle}</strong><p>{t.workoutBrowse.emptyBody}</p></div>}
+            </> : regionPickerOpen ? <>
+              <div className="section-title"><div><div className="eyebrow">{t.readyPrograms.eyebrow}</div><h2>{t.workoutBrowse.regionPickerTitle}</h2></div><button type="button" className="back-btn" onClick={() => setRegionPickerOpen(false)}>{t.workoutBrowse.regionPickerBack}</button></div>
+              <div className="equipment-list">{BODY_REGIONS.map((area) => <button type="button" key={area} className="equipment" onClick={() => { setRegionPickerOpen(false); setBrowseProgram({ title: regionLabel(t, area), profile: autoEquipmentProfile, area }); }}>{regionLabel(t, area)}</button>)}</div>
+            </> : <>
+              <div className="section-title"><div><div className="eyebrow">{t.readyPrograms.eyebrow}</div><h2>{t.readyPrograms.title}</h2></div><span className="ready-note">{t.readyPrograms.note}</span></div>
+              <div className="ready-grid">
+                <article className="ready-card"><div><h3>{t.workoutBrowse.aiCardTitle}</h3><p>{t.workoutBrowse.aiCardDetail(equipmentProfileLabel(t, autoEquipmentProfile))}</p></div><button type="button" onClick={() => setBrowseProgram({ title: t.workoutBrowse.aiCardTitle, profile: autoEquipmentProfile })}>{t.workoutBrowse.start} →</button></article>
+                <article className="ready-card"><div><h3>{t.readyPrograms.gymTitle}</h3><p>{t.readyPrograms.gymDetail}</p></div><button type="button" onClick={() => setBrowseProgram({ title: t.readyPrograms.gymTitle, profile: "gym" })}>{t.workoutBrowse.start} →</button></article>
+                <article className="ready-card"><div><h3>{t.readyPrograms.equipmentFreeTitle}</h3><p>{t.readyPrograms.equipmentFreeDetail}</p></div><button type="button" onClick={() => setBrowseProgram({ title: t.readyPrograms.equipmentFreeTitle, profile: "equipmentFree" })}>{t.workoutBrowse.start} →</button></article>
+              </div>
+              <button type="button" className="region-launch-btn" onClick={() => setRegionPickerOpen(true)}>{t.workoutBrowse.regionButton}</button>
+            </>}
+          </div>
+          {browseDetail && <div className="exercise-detail-overlay" role="dialog" aria-modal="true" aria-labelledby="workout-browse-detail-title" onMouseDown={(event) => event.target === event.currentTarget && setBrowseDetail(null)}><article className="exercise-detail"><button type="button" className="detail-close" aria-label={t.workoutBrowse.detailClose} onClick={() => setBrowseDetail(null)} autoFocus>×</button><ExerciseAnimation exercise={browseDetail} /><div className="detail-copy"><div className="eyebrow">{browseDetail.area}</div><h2 id="workout-browse-detail-title">{browseDetail.name}</h2><div className="detail-tags"><span>{browseDetail.area}</span><span>{browseDetail.bodyweight ? t.dashboard.noEquipment : browseDetail.requires.join(" · ")}</span></div><section className="detail-instructions"><h3>{t.dashboard.howTo}</h3><ol><li>{getMotionGuide(browseDetail).start}</li><li>{browseDetail.instructions}</li><li>{getMotionGuide(browseDetail).finish}</li></ol></section><div className="detail-actions"><button type="button" className="detail-open" onClick={() => startSingleExercise(browseDetail)}>{t.workoutBrowse.startSingle}</button></div></div></article></div>}
+          {!browseProgram && !regionPickerOpen && <>
           <div className="plan-explanation"><div><div className="eyebrow">{t.dashboard.planWhyEyebrow}</div><h2>{planLevel} · {planGoal}</h2><p>{aiRationale || t.dashboard.planWhyDefault}</p>{aiSafetyNote && <div className="ai-safety"><strong>{t.dashboard.safetyNoteLabel}</strong><span>{aiSafetyNote}</span></div>}{aiError && <div className="ai-error">{aiError}</div>}</div></div>
           <AdaptivePlanCard adaptation={adaptation} sessionCount={sessionHistory.length} />
           {aiAnalysis && <AiPlanInsights analysis={aiAnalysis} schedule={aiSchedule} progression={aiProgression} fingerprint={aiFingerprint} />}
-          <ReadyPrograms onApply={applyReadyProgram} environment={gym} />
-          <div className="workout-layout" id="workout-plan-list"><div className="workout-main"><div className="section-title"><div><div className="eyebrow">{t.dashboard.todayEyebrow}</div><h2>{t.dashboard.fullBody(planLevel)}</h2></div><div className="plan-stage"><span>{t.dashboard.stageLabel(progressionBlock + 1)}</span><strong>{[t.dashboard.stageIntro, t.dashboard.stageVolume, t.dashboard.stageStrength, t.dashboard.stageIntensity][progressionBlock]}</strong><small>{progressionBlock >= 3 ? t.dashboard.stageMaxHint : t.dashboard.stageHint([3, 7, 12][progressionBlock] - sessionHistory.length)}</small></div></div><PlanEditor workouts={aiWorkouts.length ? aiWorkouts : localPlan} exerciseOptions={planExerciseOptions} onSave={saveCustomPlan} onReset={resetCustomPlan} /><div className="workout-list">{workouts.map((workout, index) => { const guide = getMotionGuide(workout); return <article className="workout-card" key={workout.name}><ExerciseAnimation exercise={workout} compact autoplay={false} /><div className="exercise-info"><div className="exercise-labels"><div className="pill">{workout.level}</div><span>{guide.action}</span></div><h3>{workout.name} <small>{workout.english}</small></h3><p>{workout.sets} · {workout.rest}</p><details className="how-to"><summary>{t.dashboard.howTo}</summary><ol className="mini-steps"><li>{guide.start}</li><li>{workout.instructions}</li><li>{guide.finish}</li></ol></details></div><button className="play-btn" type="button" aria-label={t.dashboard.openWorkoutLabel(workout.name)} onClick={() => openWorkout(index)}><span>▶</span><small>{t.dashboard.openShort}</small></button></article>; })}</div><button className="start-btn" type="button" onClick={() => openWorkout(0)}>{t.dashboard.startWorkout} <span>→</span></button></div><aside className="coach-card"><div className="coach-top"><span className="spark">✦</span><span>{t.dashboard.coachBrand}</span></div><h2>{t.dashboard.coachTitleLine1}<br /><em>{t.dashboard.coachTitleEm}</em> {t.dashboard.coachTitleRest}</h2><p>{t.dashboard.coachBody}</p><div className="coach-line" /><small>{t.dashboard.coachSignoff(name || t.dashboard.defaultName)}</small></aside></div></>
+          <div className="workout-layout" id="workout-plan-list"><div className="workout-main"><div className="section-title"><div><div className="eyebrow">{t.dashboard.todayEyebrow}</div><h2>{t.dashboard.fullBody(planLevel)}</h2></div><div className="plan-stage"><span>{t.dashboard.stageLabel(progressionBlock + 1)}</span><strong>{[t.dashboard.stageIntro, t.dashboard.stageVolume, t.dashboard.stageStrength, t.dashboard.stageIntensity][progressionBlock]}</strong><small>{progressionBlock >= 3 ? t.dashboard.stageMaxHint : t.dashboard.stageHint([3, 7, 12][progressionBlock] - sessionHistory.length)}</small></div></div><PlanEditor workouts={aiWorkouts.length ? aiWorkouts : localPlan} exerciseOptions={planExerciseOptions} onSave={saveCustomPlan} onReset={resetCustomPlan} /><div className="workout-list">{workouts.map((workout, index) => { const guide = getMotionGuide(workout); return <article className="workout-card" key={workout.name}><ExerciseAnimation exercise={workout} compact autoplay={false} /><div className="exercise-info"><div className="exercise-labels"><div className="pill">{workout.level}</div><span>{guide.action}</span></div><h3>{workout.name} <small>{workout.english}</small></h3><p>{workout.sets} · {workout.rest}</p><details className="how-to"><summary>{t.dashboard.howTo}</summary><ol className="mini-steps"><li>{guide.start}</li><li>{workout.instructions}</li><li>{guide.finish}</li></ol></details></div><button className="play-btn" type="button" aria-label={t.dashboard.openWorkoutLabel(workout.name)} onClick={() => openWorkout(index)}><span>▶</span><small>{t.dashboard.openShort}</small></button></article>; })}</div><button className="start-btn" type="button" onClick={() => openWorkout(0)}>{t.dashboard.startWorkout} <span>→</span></button></div><aside className="coach-card"><div className="coach-top"><span className="spark">✦</span><span>{t.dashboard.coachBrand}</span></div><h2>{t.dashboard.coachTitleLine1}<br /><em>{t.dashboard.coachTitleEm}</em> {t.dashboard.coachTitleRest}</h2><p>{t.dashboard.coachBody}</p><div className="coach-line" /><small>{t.dashboard.coachSignoff(name || t.dashboard.defaultName)}</small></aside></div></>}</>
           : <>
           <div className="dashboard-head"><div><div className="eyebrow">{t.dashboard.todaysPlan}</div><h1>{t.dashboard.greeting(name || t.dashboard.defaultName)}<em>{t.dashboard.greetingEm}</em></h1></div><ActivityStreak userId={authUser.id} /></div>
           <div className="stats-row"><div><span>{t.dashboard.bmiLabel}</span><strong>{bmi}</strong><small>{t.dashboard.bmiHint}</small></div><div><span>{t.dashboard.goalLabel}</span><strong>{goalText ? t.dashboard.goalPersonal : t.dashboard.goalDefault}</strong><small>{t.dashboard.goalHint}</small></div><div><span>{t.dashboard.environmentLabel}</span><strong>{gym === "Salon" ? t.onboarding.gymLabel : t.onboarding.homeLabel}</strong><small>{equipmentText || t.dashboard.noEquipment}</small></div></div>
