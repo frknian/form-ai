@@ -1,5 +1,6 @@
 import { jsonSchema } from "ai";
 import { extractSessionMinutes, extractWeeklyDays } from "../../../lib/training-profile.ts";
+import { QUESTION } from "../../../lib/onboarding-questions.ts";
 import { authenticateRequest } from "../../../lib/api-auth.ts";
 import { rateLimit, tooManyRequests } from "../../../lib/rate-limit.ts";
 import { generateAiObject, hasAiProvider, aiModelId, parseImageDataUrl } from "../../../lib/ai-provider.ts";
@@ -94,20 +95,20 @@ function text(value: unknown) {
 
 export function profileSignals(payload: Record<string, unknown>) {
   const history = Array.isArray(payload.history) ? payload.history.map(text) : [];
-  const sessionMinutes = extractSessionMinutes(history[3]);
-  const experience = history[2] || "Yeni başlıyorum";
-  const goal = `${history[4] || ""} ${text(payload.goal)}`.toLocaleLowerCase("tr-TR");
+  const sessionMinutes = extractSessionMinutes(history[QUESTION.sessionMinutes]);
+  const experience = history[QUESTION.level] || "Yeni başlıyorum";
+  const goal = `${history[QUESTION.goal] || ""} ${text(payload.goal)}`.toLocaleLowerCase("tr-TR");
   const primaryGoal = goal.includes("kilo") || goal.includes("yağ") ? "Kilo verme" : goal.includes("kas") ? "Kas geliştirme" : goal.includes("kondisyon") ? "Kondisyon" : "Güçlenme";
-  const frequencyText = history[1] || "1–2 gün";
+  const frequencyText = history[QUESTION.availableDays] || history[QUESTION.recentFrequency] || "1–2 gün";
   const weeklyDays = extractWeeklyDays(frequencyText);
-  const beginner = /yeni|hayır|0 gün/i.test(`${experience} ${history[0] || ""}`);
-  const intensity = beginner || (history[7] || "").includes("Düşük") ? "Düşük-orta" : primaryGoal === "Kondisyon" ? "Orta-yüksek" : "Orta";
+  const beginner = /yeni|hayır|0 gün/i.test(`${experience} ${history[QUESTION.experience] || ""}`);
+  const intensity = beginner || (history[QUESTION.dailyMovement] || "").includes("Düşük") ? "Düşük-orta" : primaryGoal === "Kondisyon" ? "Orta-yüksek" : "Orta";
   const exerciseCount = sessionMinutes <= 15 ? 3 : sessionMinutes >= 60 ? 6 : sessionMinutes >= 45 ? 5 : 4;
   const setRange = beginner ? "2–3" : sessionMinutes >= 45 ? "3–4" : "3";
   const restRange = primaryGoal === "Kondisyon" || primaryGoal === "Kilo verme" ? "30–60 sn" : beginner ? "60–90 sn" : "75–120 sn";
   const raw = JSON.stringify({ age: payload.age, gender: payload.gender, height: payload.height, weight: payload.weight, environment: payload.environment, equipment: payload.equipment, goal: payload.goal, requestedExercises: payload.requestedExercises, history });
   const fingerprint = [...raw].reduce((hash, character) => (hash * 33 + character.charCodeAt(0)) % 1000003, 17).toString(36).toUpperCase();
-  return { history, sessionMinutes, experience, primaryGoal, frequencyText, weeklyDays, intensity, exerciseCount, setRange, restRange, painAreas: history[6] || "Yok", movementLevel: history[7] || "Belirtilmedi", sleepQuality: history[8] || "Belirtilmedi", preferredStyle: history[5] || "Karışık", note: history[9] || "Yok", fingerprint };
+  return { history, sessionMinutes, experience, primaryGoal, frequencyText, weeklyDays, intensity, exerciseCount, setRange, restRange, painAreas: history[QUESTION.injuries] || "Yok", movementLevel: history[QUESTION.dailyMovement] || "Belirtilmedi", sleepQuality: history[QUESTION.sleep] || "Belirtilmedi", preferredStyle: history[QUESTION.trainingStyles] || "Karışık", note: history[QUESTION.freeNote] || "Yok", fingerprint };
 }
 
 export async function POST(request: Request) {

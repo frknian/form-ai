@@ -76,7 +76,9 @@ test("kişisel plan hazır program hareketlerini son sıraya iter", () => {
 });
 
 test("plan hareket sayısı süreye ve haftalık sıklığa göre değişir", () => {
-  assert.match(appSource, /const weeklyDays = extractWeeklyDays\(history\[1\]\)/);
+  // İndeksler artık lib/onboarding-questions.ts'te adlandırılır; sihirli sayı
+  // kullanmak soru sırası değişince sessizce yanlış alanı okutuyordu.
+  assert.match(appSource, /extractWeeklyDays\(history\[QUESTION\.availableDays\]/);
   assert.match(appSource, /weeklyDays >= 5 \? -1 : weeklyDays <= 2 \? 1 : 0/);
 });
 
@@ -120,8 +122,10 @@ test("profil testinde tüm seçenekli sorular çoklu seçimdir", () => {
 
 test("birleşik cevaplar aşağı akışta tam eşitlikle okunmaz", () => {
   // "Yeni başlıyorum · Orta seviye" gibi değerler tam eşitliği kaçırırdı.
-  assert.doesNotMatch(appSource, /history\[2\] === "Yeni başlıyorum"/);
-  assert.match(appSource, /history\[2\]\.includes\("Yeni başlıyorum"\)/);
+  assert.doesNotMatch(appSource, /history\[\d+\] === "Yeni başlıyorum"/);
+  assert.match(appSource, /history\[QUESTION\.level\]\.includes\("Yeni başlıyorum"\)/);
+  // Hiçbir yerde çıplak sayısal indeks kalmamalı.
+  assert.doesNotMatch(appSource, /history\[\d+\]/);
 });
 
 test("profil testi soruları telefon genişliğine uyarlanmıştır", async () => {

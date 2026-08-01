@@ -1310,3 +1310,10 @@ input,select,textarea { color-scheme:inherit; }
 /* Profil testine geri dönüş bloğu (profil ekranı) */
 .retake-test-zone button { min-height:40px; padding:0 16px; border:1px solid #c6e55f; border-radius:9px; background:#e8f7b5; color:#3f4a1d; font-size:12px; font-weight:700; cursor:pointer; }
 .dark .retake-test-zone button { background:#33411f; border-color:#5d7030; color:#d9ed9e; }
+
+/* Profil testi ilerlemesi: 15 soruda kullanıcı nerede olduğunu görmeli */
+.question-progress { display:grid; gap:8px; margin-bottom:6px; }
+.question-progress-bar { height:5px; border-radius:999px; background:rgba(0,0,0,.09); overflow:hidden; }
+.question-progress-bar i { display:block; height:100%; border-radius:999px; background:#cce969; transition:width .3s ease; }
+.dark .question-progress-bar { background:rgba(255,255,255,.12); }
+@media (prefers-reduced-motion: reduce) { .question-progress-bar i { transition:none; } }

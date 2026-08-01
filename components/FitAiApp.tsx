@@ -35,6 +35,7 @@ import { extractSessionMinutes, extractWeeklyDays, planProgressionBlock } from "
 import { alternativeExercises } from "@/lib/exercise-alternatives";
 import { canPerformExercise, hasEquipment, usableEquipmentText } from "@/lib/equipment-match";
 import { EQUIPMENT_PROFILES, buildReadyProgram, isReplacementCompatible, type EquipmentProfile } from "@/lib/ready-programs";
+import { FREE_TEXT_QUESTIONS, QUESTION, QUESTION_COUNT, emptyHistory, isHistoryComplete, normalizeHistory } from "@/lib/onboarding-questions";
 import { applyPreviousPerformance, buildCompletedExerciseLog, createWorkoutSetDrafts, exerciseLogKey, type CompletedExerciseLog, type PreviousExercisePerformance, type WorkoutSetDraft } from "@/lib/workout-log";
 import { localTimeKey } from "@/lib/workout-calendar";
 import { localDateKey } from "@/lib/streak";
@@ -272,12 +273,12 @@ function createPersonalPlan(gym: string, equipmentText: string, history: string[
   const goal = profileText.includes("kilo") || profileText.includes("yağ") ? "kilo" : profileText.includes("kas") ? "kas" : profileText.includes("kondisyon") ? "kondisyon" : "güç";
   // Çoklu seçimde "Yeni başlıyorum · Orta seviye" gelebilir; en güvenli
   // varsayım, başlangıç seviyesi işaretliyse acemi kabul etmektir.
-  const isBeginner = !history[2] || history[2].includes("Yeni başlıyorum");
+  const isBeginner = !history[QUESTION.level] || history[QUESTION.level].includes("Yeni başlıyorum");
   const wantsGym = gym === "Salon";
-  const durationText = history[3] || goalText.match(/(15|30|45|60)/)?.[1] || "30";
+  const durationText = history[QUESTION.sessionMinutes] || goalText.match(/(15|30|45|60)/)?.[1] || "30";
   const duration = extractSessionMinutes(durationText);
-  const weeklyDays = extractWeeklyDays(history[1]);
-  const pain = history[6]?.toLowerCase() || "";
+  const weeklyDays = extractWeeklyDays(history[QUESTION.availableDays] || history[QUESTION.recentFrequency]);
+  const pain = history[QUESTION.injuries]?.toLowerCase() || "";
   const matchesEquipment = (item: typeof exerciseLibrary[number]) => canPerformExercise(item, { isGym: wantsGym, equipmentText });
   const avoidKneeLoad = pain.includes("diz");
   const avoidShoulderLoad = pain.includes("omuz");
@@ -491,15 +492,15 @@ function workoutMet(exercise: AiWorkout, phase: WorkoutPhase, intensity: string)
 }
 
 function fallbackAnalysis(gym: string, equipmentText: string, history: string[], goalText: string): AiPlanAnalysis {
-  const duration = extractSessionMinutes(history[3]);
-  const primaryGoal = history[4] || goalText || "Güçlenme";
-  const experienceLevel = history[2] || "Yeni başlıyorum";
-  return { experienceLevel, weeklyFrequency: history[1] || "1–2 gün", sessionMinutes: duration, primaryGoal, intensity: /ileri|yüksek/i.test(`${experienceLevel} ${history[7]}`) ? "Orta-yüksek" : "Düşük-orta", equipmentMode: gym === "Salon" ? "Spor salonu ekipmanları" : equipmentText || "Ekipmansız", focusAreas: primaryGoal.toLowerCase().includes("kilo") ? ["Tüm vücut", "Kondisyon"] : primaryGoal.toLowerCase().includes("kas") ? ["Direnç", "Kas grubu dengesi"] : ["Temel kuvvet", "Hareket kalitesi"], adaptations: [`${duration} dakikalık seansa göre hareket sayısı ayarlandı.`, `${experienceLevel} seviyesine göre set ve dinlenme seçildi.`, history[6] && history[6] !== "Yok" ? `${history[6]} bölgesi için riskli hareketler elendi.` : "Belirtilen ağrı bölgesi olmadığı için dengeli seçim yapıldı."] };
+  const duration = extractSessionMinutes(history[QUESTION.sessionMinutes]);
+  const primaryGoal = history[QUESTION.goal] || goalText || "Güçlenme";
+  const experienceLevel = history[QUESTION.level] || "Yeni başlıyorum";
+  return { experienceLevel, weeklyFrequency: history[QUESTION.availableDays] || history[QUESTION.recentFrequency] || "1–2 gün", sessionMinutes: duration, primaryGoal, intensity: /ileri|yüksek/i.test(`${experienceLevel} ${history[QUESTION.dailyMovement]}`) ? "Orta-yüksek" : "Düşük-orta", equipmentMode: gym === "Salon" ? "Spor salonu ekipmanları" : equipmentText || "Ekipmansız", focusAreas: primaryGoal.toLowerCase().includes("kilo") ? ["Tüm vücut", "Kondisyon"] : primaryGoal.toLowerCase().includes("kas") ? ["Direnç", "Kas grubu dengesi"] : ["Temel kuvvet", "Hareket kalitesi"], adaptations: [`${duration} dakikalık seansa göre hareket sayısı ayarlandı.`, `${experienceLevel} seviyesine göre set ve dinlenme seçildi.`, history[QUESTION.injuries] && history[QUESTION.injuries] !== "Yok" ? `${history[QUESTION.injuries]} bölgesi için riskli hareketler elendi.` : "Belirtilen ağrı bölgesi olmadığı için dengeli seçim yapıldı."] };
 }
 
 function findRequestedLibraryExercises(requestedExercises: string, goalText: string, gym: string, equipmentText: string, history: string[]) {
   const requestedNames = `${requestedExercises} ${goalText}`.toLowerCase().split(/[\n,;]+/).map((value) => value.trim()).filter(Boolean);
-  const pain = history[6]?.toLowerCase() || "";
+  const pain = history[QUESTION.injuries]?.toLowerCase() || "";
   const matchesEquipment = (item: typeof exerciseLibrary[number]) => canPerformExercise(item, { isGym: gym === "Salon", equipmentText });
   const safeForPain = (item: typeof exerciseLibrary[number]) => !(pain.includes("diz") && ["Reverse Lunge", "Bulgarian Split Squat", "Step-up", "Mountain Climber", "Leg Press"].includes(item.name)) && !(pain.includes("omuz") && ["Şınav", "Eğimli Şınav", "Dambıl Omuz Press", "Lat Pulldown"].includes(item.name));
   return exerciseLibrary.filter((item) => requestedNames.some((requested) => item.name.toLowerCase().includes(requested) || item.english.toLowerCase().includes(requested) || requested.includes("yerde") && item.name === "Yerde Dambıl Göğüs Presi") && matchesEquipment(item) && safeForPain(item));
@@ -525,13 +526,13 @@ function isBodyweightWorkout(exercise: AiWorkout) {
 }
 
 function profileGoal(goalText: string, history: string[]) {
-  const text = `${history[4] || ""} ${goalText}`.toLocaleLowerCase("tr-TR");
+  const text = `${history[QUESTION.goal] || ""} ${goalText}`.toLocaleLowerCase("tr-TR");
   return text.includes("kilo") || text.includes("yağ") ? "kilo" : text.includes("kas") ? "kas" : text.includes("kondisyon") ? "kondisyon" : "güç";
 }
 
 function isExerciseSafeForProfile(exercise: { id?: string; name: string; english: string }, gym: string, equipmentText: string, history: string[]) {
   const text = `${exercise.name} ${exercise.english}`.toLocaleLowerCase("tr-TR");
-  const pain = (history[6] || "").toLocaleLowerCase("tr-TR");
+  const pain = (history[QUESTION.injuries] || "").toLocaleLowerCase("tr-TR");
   const equipment = equipmentText.toLocaleLowerCase("tr-TR");
   if (pain.includes("diz") && /squat|lunge|jump|step|leg press|mountain climber|box jump|skater/.test(text)) return false;
   if (pain.includes("omuz") && /push|press|dip|shoulder|fly|overhead|lateral raise|pulldown|barfiks/.test(text)) return false;
@@ -735,7 +736,7 @@ export default function Home() {
   const [requestedExercises, setRequestedExercises] = useState("");
   const [photo, setPhoto] = useState<string | null>(null);
   const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null);
-  const [history, setHistory] = useState<string[]>(Array(10).fill(""));
+  const [history, setHistory] = useState<string[]>(emptyHistory);
   const [questionIndex, setQuestionIndex] = useState(0);
   const [saving, setSaving] = useState(false);
   const [activeWorkout, setActiveWorkout] = useState<number | null>(null);
@@ -795,11 +796,11 @@ export default function Home() {
     const calculated = calculateAge(birthDate);
     return calculated === null ? "" : String(calculated);
   }, [birthDate]);
-  const energyMetrics = useMemo(() => calculateEnergyMetrics(gender, age, height, weight, history[7]), [age, gender, height, history, weight]);
+  const energyMetrics = useMemo(() => calculateEnergyMetrics(gender, age, height, weight, history[QUESTION.dailyMovement]), [age, gender, height, history, weight]);
   const displayedSessionCalories = Math.round(sessionCalories);
   const progressionBlock = planProgressionBlock(sessionHistory.length);
-  const planLevel = history[2] || "Yeni başlıyorum";
-  const planGoal = history[4] || goalText || "Güçlenme";
+  const planLevel = history[QUESTION.level] || "Yeni başlıyorum";
+  const planGoal = history[QUESTION.goal] || goalText || "Güçlenme";
   const bmi = useMemo(() => {
     const h = Number(height) / 100;
     const w = Number(weight);
@@ -911,9 +912,11 @@ export default function Home() {
       if (cancelled) return;
       setAvatarUrl(nextAvatarUrl);
       setAccountStatus(profile.account_status === "frozen" ? "frozen" : "active");
-      const savedHistory = Array.isArray(profile.history_answers) ? profile.history_answers.map(String).slice(0, 10) : [];
-      if (savedHistory.length) setHistory([...savedHistory, ...Array(10).fill("")].slice(0, 10));
-      if (savedHistory.length === 10) setStep(5);
+      // Eski 10 soruluk kayıtlar yeni sıraya taşınır; taşımadan okumak
+      // kullanıcının hedefini "deneyim" sanmak gibi sessiz hatalar üretirdi.
+      const savedHistory = normalizeHistory(profile.history_answers);
+      if (Array.isArray(profile.history_answers) && profile.history_answers.length) setHistory(savedHistory);
+      if (isHistoryComplete(savedHistory)) setStep(5);
     }
     void loadProfile();
     return () => { cancelled = true; };
@@ -1476,7 +1479,7 @@ export default function Home() {
     setEquipmentText("");
     setGoalText("");
     setRequestedExercises("");
-    setHistory(Array(10).fill(""));
+    setHistory(emptyHistory());
     setSessionHistory([]);
     setExerciseSetDrafts({});
     setPreviousPerformances({});
@@ -1565,15 +1568,15 @@ export default function Home() {
           </div>}
 
           {step === 4 && <div className="step-content history-step">
-            <div className="eyebrow">{t.onboarding.step4Eyebrow(questionIndex + 1, 10)}</div><h1>{t.onboarding.step4TitleLine1}<br /><em>{t.onboarding.step4TitleEm}</em></h1><p className="lead">{t.onboarding.step4Lead}</p>
-            <div className="question-card"><span className="question-number">{String(questionIndex + 1).padStart(2, "0")}</span><h2>{t.onboarding.historyQuestions[questionIndex]}</h2>{(answerOptions[questionIndex] ?? []).length > 0 && <p className="multi-select-note">{t.onboarding.multiSelectNote}</p>}<div className="answer-grid">{(answerOptions[questionIndex] ?? []).map((answer, answerIndex) => { const label = (t.onboarding.answerOptions[questionIndex] ?? [])[answerIndex] ?? answer; const selected = (history[questionIndex] || "").split(" · ").includes(answer); return <button type="button" key={answer} aria-pressed={selected} className={selected ? "answer selected" : "answer"} onClick={() => toggleAnswer(answer)}>{label}</button>; })}</div>{(questionIndex === 3 || questionIndex === 9) && <textarea className="question-note" aria-label={questionIndex === 3 ? t.onboarding.durationNoteLabel : t.onboarding.freeNoteLabel} value={history[questionIndex]} onChange={(e) => setFreeAnswer(e.target.value)} placeholder={questionIndex === 3 ? t.onboarding.durationNotePlaceholder : t.onboarding.freeNotePlaceholder} />}</div>
-            {saving && <AiScanFigure status="scanning" stage={aiStage} />}<div className="action-row"><button className="back-btn" type="button" onClick={() => questionIndex ? setQuestionIndex(questionIndex - 1) : setStep(3)}>{t.common.back}</button>{questionIndex < 9 ? <button className="primary-btn" type="button" onClick={() => setQuestionIndex(questionIndex + 1)}>{t.onboarding.next} <span>→</span></button> : <button className="primary-btn" type="button" onClick={createPlan} disabled={saving}>{saving ? t.onboarding.buildingPlan : t.onboarding.buildPlan}</button>}</div>
+            <div className="question-progress"><div className="eyebrow">{t.onboarding.step4Eyebrow(questionIndex + 1, QUESTION_COUNT)}</div><div className="question-progress-bar" role="progressbar" aria-valuenow={questionIndex + 1} aria-valuemin={1} aria-valuemax={QUESTION_COUNT}><i style={{ width: `${((questionIndex + 1) / QUESTION_COUNT) * 100}%` }} /></div></div><h1>{t.onboarding.step4TitleLine1}<br /><em>{t.onboarding.step4TitleEm}</em></h1><p className="lead">{t.onboarding.step4Lead}</p>
+            <div className="question-card"><span className="question-number">{String(questionIndex + 1).padStart(2, "0")}</span><h2>{t.onboarding.historyQuestions[questionIndex]}</h2>{(answerOptions[questionIndex] ?? []).length > 0 && <p className="multi-select-note">{t.onboarding.multiSelectNote}</p>}<div className="answer-grid">{(answerOptions[questionIndex] ?? []).map((answer, answerIndex) => { const label = (t.onboarding.answerOptions[questionIndex] ?? [])[answerIndex] ?? answer; const selected = (history[questionIndex] || "").split(" · ").includes(answer); return <button type="button" key={answer} aria-pressed={selected} className={selected ? "answer selected" : "answer"} onClick={() => toggleAnswer(answer)}>{label}</button>; })}</div>{FREE_TEXT_QUESTIONS.includes(questionIndex) && <textarea className="question-note" aria-label={t.onboarding.historyQuestions[questionIndex]} value={history[questionIndex]} onChange={(e) => setFreeAnswer(e.target.value)} rows={4} />}</div>
+            {saving && <AiScanFigure status="scanning" stage={aiStage} />}<div className="action-row"><button className="back-btn" type="button" onClick={() => questionIndex ? setQuestionIndex(questionIndex - 1) : setStep(3)}>{t.common.back}</button>{questionIndex < QUESTION_COUNT - 1 ? <button className="primary-btn" type="button" onClick={() => setQuestionIndex(questionIndex + 1)}>{t.onboarding.next} <span>→</span></button> : <button className="primary-btn" type="button" onClick={createPlan} disabled={saving}>{saving ? t.onboarding.buildingPlan : t.onboarding.buildPlan}</button>}</div>
           </div>}
           <aside className="side-note"><div className="orb"><span>✦</span></div><p><strong>{t.onboarding.sideNoteTitle}</strong><br />{t.onboarding.sideNoteBody}</p></aside>
         </section>
       ) : (
         <section className="dashboard">
-<WorkoutCalendar active={activeView === "calendar"} userId={authUser?.id} onStartWorkout={() => setActiveView("workout")} />{activeView === "calendar" ? null : activeView === "profile" ? <ProfileManager user={authUser} profile={{ displayName: name, birthDate, gender, heightCm: Number(height) || null, weightKg: Number(weight) || null, goalText, environment: gym === "Salon" ? "Salon" : "Evde", equipmentText, requestedExercises, avatarPath }} avatarUrl={avatarUrl} onSaved={applySavedProfile} onFrozen={() => setAccountStatus("frozen")} onDeleted={clearDeletedAccount} onProgressReset={resetSavedProgress} onRetakeTest={retakeProfileTest} onSignOut={handleSignOut} /> : activeView === "progress" ? <><PersonalRecordCelebration records={newRecords} unit={weightUnit} onDismiss={() => setNewRecords([])} /><ProgressView name={name} sessions={sessionHistory} referenceTime={progressReferenceTime} energyMetrics={energyMetrics} userId={authUser?.id} goalText={goalText || planGoal} /></> : activeView === "nutrition" ? <CalorieTracker userId={authUser?.id} bmr={energyMetrics?.bmr} tdee={energyMetrics?.tdee} weightKg={Number(weight) || undefined} activityFactor={energyMetrics?.activityFactor} workoutDays={inferWorkoutDays(history[1] || history[3])} profileGoal={goalText || planGoal} /> : activeView === "library" ? <LibraryView onOpenWorkout={(exercise) => openWorkout(0, [exercise])} onAddWorkout={(exercise) => setAiWorkouts((current) => current.some((item) => item.id === exercise.id) ? current : [...current, exercise])} /> : <>
+<WorkoutCalendar active={activeView === "calendar"} userId={authUser?.id} onStartWorkout={() => setActiveView("workout")} />{activeView === "calendar" ? null : activeView === "profile" ? <ProfileManager user={authUser} profile={{ displayName: name, birthDate, gender, heightCm: Number(height) || null, weightKg: Number(weight) || null, goalText, environment: gym === "Salon" ? "Salon" : "Evde", equipmentText, requestedExercises, avatarPath }} avatarUrl={avatarUrl} onSaved={applySavedProfile} onFrozen={() => setAccountStatus("frozen")} onDeleted={clearDeletedAccount} onProgressReset={resetSavedProgress} onRetakeTest={retakeProfileTest} onSignOut={handleSignOut} /> : activeView === "progress" ? <><PersonalRecordCelebration records={newRecords} unit={weightUnit} onDismiss={() => setNewRecords([])} /><ProgressView name={name} sessions={sessionHistory} referenceTime={progressReferenceTime} energyMetrics={energyMetrics} userId={authUser?.id} goalText={goalText || planGoal} /></> : activeView === "nutrition" ? <CalorieTracker userId={authUser?.id} bmr={energyMetrics?.bmr} tdee={energyMetrics?.tdee} weightKg={Number(weight) || undefined} activityFactor={energyMetrics?.activityFactor} workoutDays={inferWorkoutDays(history[QUESTION.availableDays] || history[QUESTION.recentFrequency])} profileGoal={goalText || planGoal} /> : activeView === "library" ? <LibraryView onOpenWorkout={(exercise) => openWorkout(0, [exercise])} onAddWorkout={(exercise) => setAiWorkouts((current) => current.some((item) => item.id === exercise.id) ? current : [...current, exercise])} /> : <>
           {activeView === "workout" && activeWorkout !== null && currentWorkout && currentGuide && currentPrescription ? <div className="workout-player">
             <button className="back-btn" type="button" onClick={() => { setIsRunning(false); setActiveWorkout(null); }}>{t.workoutPlayer.backToPlan}</button>
             <div className="workout-session-progress" aria-label={t.workoutPlayer.progressLabel}>{playerQueue.map((exercise, index) => <span key={`${exercise.name}-${index}`} className={completedExercises.includes(index) ? "complete" : skippedExercises.includes(index) ? "skipped" : index === activeWorkout ? "active" : ""} />)}</div>

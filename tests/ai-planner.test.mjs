@@ -4,21 +4,43 @@ import test from "node:test";
 import { POST, profileSignals } from "../app/api/generate-plan/route.ts";
 import { extractSessionMinutes, planProgressionBlock } from "../lib/training-profile.ts";
 import { authorizedRequest, withAuthenticatedFetch, withSupabaseAuthEnv } from "./helpers/auth.mjs";
+import { QUESTION, emptyHistory } from "../lib/onboarding-questions.ts";
+
+// Cevaplar lib/onboarding-questions.ts'teki 15'lik sıraya göre kurulur.
+// Sıra bilgisini teste elle gömmek yerine adlandırılmış indeksleri kullanıyoruz;
+// şema değişirse test de sessizce yanlış alanı doldurmasın.
+function history(answers) {
+  const list = emptyHistory();
+  for (const [key, value] of Object.entries(answers)) list[QUESTION[key]] = value;
+  return list;
+}
 
 const scenarios = [
   {
     name: "24 yaşında, 180 cm erkek — dambılla kas geliştirme",
-    payload: { age: 24, gender: "Erkek", height: 180, weight: 80, environment: "Evde", equipment: "Ayarlanabilir dambıl", goal: "Kas geliştirmek", history: ["Düzenli", "3–4 gün", "Orta seviye", "45 dakika", "Kas geliştirmek", "Kuvvet", "Yok", "Orta", "İyi", ""] },
+    payload: { age: 24, gender: "Erkek", height: 180, weight: 80, environment: "Evde", equipment: "Ayarlanabilir dambıl", goal: "Kas geliştirmek", history: history({
+      goal: "Kas geliştirmek", experience: "Düzenli", level: "Orta seviye",
+      recentFrequency: "3–4 gün", availableDays: "3–4 gün", sessionMinutes: "45 dakika",
+      trainingStyles: "Kuvvet", injuries: "Yok", dailyMovement: "Orta", sleep: "İyi",
+    }) },
     expected: { primaryGoal: "Kas geliştirme", weeklyDays: 3, exerciseCount: 5 },
   },
   {
     name: "23 yaşında, 170 cm ve 90 kg kadın — diz hassasiyetiyle kilo verme",
-    payload: { age: 23, gender: "Kadın", height: 170, weight: 90, environment: "Evde", equipment: "", goal: "Kilo vermek", history: ["Hayır", "0 gün", "Yeni başlıyorum", "15 dakika", "Kilo vermek", "Kardiyo", "Diz", "Düşük", "Düzensiz", "Düşük etkili hareketler istiyorum"] },
+    payload: { age: 23, gender: "Kadın", height: 170, weight: 90, environment: "Evde", equipment: "", goal: "Kilo vermek", history: history({
+      goal: "Kilo vermek", experience: "Hayır", level: "Yeni başlıyorum",
+      recentFrequency: "0 gün", availableDays: "1–2 gün", sessionMinutes: "15 dakika",
+      trainingStyles: "Kardiyo", injuries: "Diz", dailyMovement: "Düşük", sleep: "Düzensiz",
+    }) },
     expected: { primaryGoal: "Kilo verme", weeklyDays: 2, exerciseCount: 3 },
   },
   {
     name: "30 yaşında, 175 cm ve 75 kg kullanıcı — salonda kas geliştirme",
-    payload: { age: 30, gender: "Erkek", height: 175, weight: 75, environment: "Salon", equipment: "Full ekipman", goal: "Kas geliştirmek", history: ["Düzenli", "5+ gün", "İleri seviye", "60+ dakika", "Kas geliştirmek", "Kuvvet", "Yok", "Yüksek", "İyi", "Serbest ağırlıklara öncelik"] },
+    payload: { age: 30, gender: "Erkek", height: 175, weight: 75, environment: "Salon", equipment: "Full ekipman", goal: "Kas geliştirmek", history: history({
+      goal: "Kas geliştirmek", experience: "Düzenli", level: "İleri seviye",
+      recentFrequency: "5+ gün", availableDays: "5+ gün", sessionMinutes: "60+ dakika",
+      trainingStyles: "Kuvvet", injuries: "Yok", dailyMovement: "Yüksek", sleep: "İyi",
+    }) },
     expected: { primaryGoal: "Kas geliştirme", weeklyDays: 5, exerciseCount: 6 },
   },
 ];
