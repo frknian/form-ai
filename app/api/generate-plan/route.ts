@@ -1,12 +1,15 @@
 import { jsonSchema } from "ai";
 import { extractSessionMinutes, extractWeeklyDays } from "../../../lib/training-profile.ts";
-import { QUESTION } from "../../../lib/onboarding-questions.ts";
+import { QUESTION, QUESTION_COUNT, labelledAnswers } from "../../../lib/onboarding-questions.ts";
 import { authenticateRequest } from "../../../lib/api-auth.ts";
 import { rateLimit, tooManyRequests } from "../../../lib/rate-limit.ts";
 import { generateAiObject, hasAiProvider, aiModelId, parseImageDataUrl } from "../../../lib/ai-provider.ts";
 
 const plannerRules = [
-  "Yaş, cinsiyet, boy, kilo, hedef metni, ortam, ekipman, istenen hareketler ve 10 test cevabının her birini değerlendir.",
+  "Yaş, cinsiyet, boy, kilo, hedef metni, ortam, ekipman, istenen hareketler ve test cevaplarının HER BİRİNİ tek tek değerlendir; hiçbirini yok sayma.",
+  "Kullanıcının belirttiği engeli programın kendisiyle çöz: zaman engeli varsa süperset ve kısa dinlenme, motivasyon engeli varsa erken görünür kazanım, sakatlık engeli varsa kademeli giriş kullan.",
+  "Son 3 aydaki sıklık ile kendi beyan ettiği seviye çelişiyorsa (ör. 'ileri seviye' ama '0 gün') düşük olanı esas al; ilk iki hafta yeniden alışma haftasıdır.",
+  "Kullanıcının hedefi için neden önemli olduğunu yazdığı metni profileSummary ve rationale alanlarında ona geri yansıt; genel geçer cümle kurma.",
   "Programın hareket sayısını, setini, tekrarını ve dinlenmesini kullanıcının seviyesi ile ayırdığı süreye göre değiştir.",
   "Yalnızca kullanıcının ortamında ve ekipmanıyla uygulanabilen katalog hareketlerini seç.",
   "Ağrı veya sakatlık belirtilen tüm bölgeleri aynı anda kısıt kabul et; riskli hareketleri çıkar.",
@@ -101,14 +104,36 @@ export function profileSignals(payload: Record<string, unknown>) {
   const primaryGoal = goal.includes("kilo") || goal.includes("yağ") ? "Kilo verme" : goal.includes("kas") ? "Kas geliştirme" : goal.includes("kondisyon") ? "Kondisyon" : "Güçlenme";
   const frequencyText = history[QUESTION.availableDays] || history[QUESTION.recentFrequency] || "1–2 gün";
   const weeklyDays = extractWeeklyDays(frequencyText);
-  const beginner = /yeni|hayır|0 gün/i.test(`${experience} ${history[QUESTION.experience] || ""}`);
-  const intensity = beginner || (history[QUESTION.dailyMovement] || "").includes("Düşük") ? "Düşük-orta" : primaryGoal === "Kondisyon" ? "Orta-yüksek" : "Orta";
+  const recentFrequency = history[QUESTION.recentFrequency] || "Belirtilmedi";
+  // Son üç ayda hiç antrenman yapmamış biri kendini "ileri seviye" görebilir;
+  // eski formu esas almak ilk haftada aşırı yükleme demek olurdu.
+  const detrained = /^0 gün/.test(recentFrequency);
+  const beginner = detrained || /yeni|hayır|0 gün/i.test(`${experience} ${history[QUESTION.experience] || ""}`);
+  // "Düşük" eski testin seçeneğiydi; taşınmış kayıtlarda hâlâ bulunabilir.
+  const sedentary = /masa başı|düşük/i.test(history[QUESTION.dailyMovement] || "");
+  const intensity = beginner || sedentary ? "Düşük-orta" : primaryGoal === "Kondisyon" ? "Orta-yüksek" : "Orta";
   const exerciseCount = sessionMinutes <= 15 ? 3 : sessionMinutes >= 60 ? 6 : sessionMinutes >= 45 ? 5 : 4;
   const setRange = beginner ? "2–3" : sessionMinutes >= 45 ? "3–4" : "3";
   const restRange = primaryGoal === "Kondisyon" || primaryGoal === "Kilo verme" ? "30–60 sn" : beginner ? "60–90 sn" : "75–120 sn";
   const raw = JSON.stringify({ age: payload.age, gender: payload.gender, height: payload.height, weight: payload.weight, environment: payload.environment, equipment: payload.equipment, goal: payload.goal, requestedExercises: payload.requestedExercises, history });
   const fingerprint = [...raw].reduce((hash, character) => (hash * 33 + character.charCodeAt(0)) % 1000003, 17).toString(36).toUpperCase();
-  return { history, sessionMinutes, experience, primaryGoal, frequencyText, weeklyDays, intensity, exerciseCount, setRange, restRange, painAreas: history[QUESTION.injuries] || "Yok", movementLevel: history[QUESTION.dailyMovement] || "Belirtilmedi", sleepQuality: history[QUESTION.sleep] || "Belirtilmedi", preferredStyle: history[QUESTION.trainingStyles] || "Karışık", note: history[QUESTION.freeNote] || "Yok", fingerprint };
+  return {
+    history,
+    answers: labelledAnswers(history),
+    sessionMinutes, experience, primaryGoal, frequencyText, weeklyDays, intensity, exerciseCount, setRange, restRange,
+    detrained,
+    recentFrequency,
+    motivation: history[QUESTION.motivation] || "Belirtilmedi",
+    pastBarrier: history[QUESTION.barrier] || "Belirtilmedi",
+    trainingPlace: history[QUESTION.location] || "Belirtilmedi",
+    equipmentAccess: history[QUESTION.equipment] || "Belirtilmedi",
+    painAreas: history[QUESTION.injuries] || "Yok",
+    movementLevel: history[QUESTION.dailyMovement] || "Belirtilmedi",
+    sleepQuality: history[QUESTION.sleep] || "Belirtilmedi",
+    preferredStyle: history[QUESTION.trainingStyles] || "Karışık",
+    note: history[QUESTION.freeNote] || "Yok",
+    fingerprint,
+  };
 }
 
 export async function POST(request: Request) {
@@ -140,7 +165,10 @@ export async function POST(request: Request) {
 HAM KULLANICI VERİLERİ:
 ${JSON.stringify(profile)}
 
-10 TEST CEVABININ ANALİZİ:
+PROFİL TESTİ (${QUESTION_COUNT} soru) — HER CEVAP SORUSUYLA BİRLİKTE:
+${JSON.stringify(signals.answers)}
+
+TEST CEVAPLARINDAN TÜRETİLEN SİNYALLER:
 ${JSON.stringify(signals)}
 
 ÖNCEKİ ANTRENMANLAR VE KULLANICI GERİ BİLDİRİMLERİ:
@@ -159,7 +187,12 @@ BU PROFİL İÇİN ZORUNLU PLAN PARAMETRELERİ:
 - Dinlenme aralığı: ${signals.restRange}
 - Yoğunluk: ${signals.intensity}
 - Ağrı/sakatlık kısıtları: ${signals.painAreas}
-- Tercih: ${signals.preferredStyle}
+- Tercih edilen antrenman türü: ${signals.preferredStyle}
+- Antrenman yeri: ${signals.trainingPlace}
+- Erişilebilir ekipman: ${signals.equipmentAccess}
+- Son 3 aydaki sıklık: ${signals.recentFrequency}${signals.detrained ? " (ARA VERMİŞ: ilk iki hafta yeniden alışma)" : ""}
+- Geçmişte durduran engel: ${signals.pastBarrier}
+- Hedefin kişisel nedeni: ${signals.motivation}
 - Günlük hareket: ${signals.movementLevel}
 - Uyku: ${signals.sleepQuality}
 - Serbest not: ${signals.note}

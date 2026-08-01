@@ -57,6 +57,56 @@ test("üç farklı kullanıcı profilini farklı plan parametrelerine dönüşt�
   assert.equal(fingerprints.size, scenarios.length, "her senaryo farklı analiz anahtarı üretmeli");
 });
 
+test("her cevap yapay zekâya sorusuyla birlikte gider", () => {
+  // Çıplak bir dizi gönderildiğinde model "Diz" cevabının hangi soruya ait
+  // olduğunu bilemiyordu; kullanıcı 15 soruyu boşuna yanıtlamış oluyordu.
+  const signals = profileSignals(scenarios[1].payload);
+  const asked = new Map(signals.answers.map((entry) => [entry.question, entry.answer]));
+  assert.equal(asked.get("Sakatlık veya ağrı bölgesi"), "Diz");
+  assert.equal(asked.get("Ana hedef"), "Kilo vermek");
+  assert.ok(!signals.answers.some((entry) => entry.answer === ""), "boş cevap isteme girmemeli");
+});
+
+test("yeni sorular plan sinyallerine yansır", () => {
+  const signals = profileSignals({ history: history({
+    goal: "Güçlenmek", level: "İleri seviye", availableDays: "3–4 gün", sessionMinutes: "45 dakika",
+    barrier: "Zaman bulamadım", motivation: "Çocuğumla koşabilmek istiyorum",
+    location: "Evde", equipment: "Dambıl · Yoga matı", recentFrequency: "0 gün",
+  }) });
+  assert.equal(signals.pastBarrier, "Zaman bulamadım");
+  assert.equal(signals.motivation, "Çocuğumla koşabilmek istiyorum");
+  assert.equal(signals.trainingPlace, "Evde");
+  assert.equal(signals.equipmentAccess, "Dambıl · Yoga matı");
+});
+
+test("uzun aradan sonra dönen kullanıcıya ileri seviye yükü verilmez", () => {
+  // "İleri seviye" beyanı eski formu anlatır; son 3 ayda 0 gün antrenman
+  // yapmış birine ilk haftadan ileri yoğunluk vermek sakatlık riskidir.
+  const detrained = profileSignals({ history: history({
+    goal: "Güçlenmek", level: "İleri seviye", experience: "Uzun süredir düzenli",
+    availableDays: "3–4 gün", sessionMinutes: "45 dakika", recentFrequency: "0 gün",
+  }) });
+  assert.equal(detrained.detrained, true);
+  assert.equal(detrained.intensity, "Düşük-orta");
+  assert.equal(detrained.setRange, "2–3", "ara vermiş kullanıcıya başlangıç set aralığı verilmeli");
+
+  const active = profileSignals({ history: history({
+    goal: "Güçlenmek", level: "İleri seviye", experience: "Uzun süredir düzenli",
+    availableDays: "3–4 gün", sessionMinutes: "45 dakika", recentFrequency: "5+ gün",
+  }) });
+  assert.equal(active.detrained, false);
+  assert.equal(active.setRange, "3–4");
+});
+
+test("masa başı çalışan kullanıcı düşük yoğunlukla başlar", () => {
+  // Eski testte bu seçenek "Düşük" idi; yeni metin eşleşmeyince sinyal sessizce
+  // kaybolmuştu. Taşınmış eski kayıtlar da hâlâ "Düşük" taşıyabilir.
+  const base = { goal: "Kas geliştirmek", level: "Orta seviye", experience: "Düzenli", availableDays: "3–4 gün", sessionMinutes: "45 dakika", recentFrequency: "3–4 gün" };
+  assert.equal(profileSignals({ history: history({ ...base, dailyMovement: "Masa başı" }) }).intensity, "Düşük-orta");
+  assert.equal(profileSignals({ history: history({ ...base, dailyMovement: "Düşük" }) }).intensity, "Düşük-orta");
+  assert.equal(profileSignals({ history: history({ ...base, dailyMovement: "Fiziksel iş" }) }).intensity, "Orta");
+});
+
 test("serbest metindeki gün sayısını antrenman süresi sanmaz", () => {
   assert.equal(extractSessionMinutes("Haftada 3 gün, 40 dakika ayırabilirim"), 40);
   assert.equal(extractSessionMinutes("Hafta sonu 1 saat"), 60);

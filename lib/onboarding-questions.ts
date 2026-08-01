@@ -77,6 +77,39 @@ export function normalizeHistory(saved: unknown): string[] {
   return [...answers, ...emptyHistory()].slice(0, QUESTION_COUNT);
 }
 
+/**
+ * Yapay zekâya gönderilen soru etiketleri.
+ *
+ * Sözlükteki soru metinleri kullanıcının diline göre değişir; plan istemi ise
+ * her kullanıcı için aynı olmalı. Ayrıca çıplak bir cevap dizisi gönderildiğinde
+ * model "Diz" cevabının hangi soruya ait olduğunu bilemiyordu — her cevap
+ * sorusuyla birlikte gider.
+ */
+export const QUESTION_LABELS: Record<keyof typeof QUESTION, string> = {
+  goal: "Ana hedef",
+  motivation: "Hedefin kişisel nedeni",
+  barrier: "Geçmişte onu durduran engel",
+  experience: "Geçmişte düzenli spor yaptı mı",
+  level: "Kendini gördüğü seviye",
+  recentFrequency: "Son 3 ayda haftalık antrenman günü",
+  availableDays: "Haftada ayırabileceği gün",
+  sessionMinutes: "Bir seansa ayırabileceği süre",
+  trainingStyles: "İlgi duyduğu antrenman türleri",
+  location: "Antrenman yapacağı yer",
+  equipment: "Erişebildiği ekipman",
+  injuries: "Sakatlık veya ağrı bölgesi",
+  dailyMovement: "Gün içi hareket düzeyi",
+  sleep: "Uyku ve toparlanma düzeni",
+  freeNote: "Serbest not",
+};
+
+/** Cevapları soru etiketleriyle eşleştirir; boş cevaplar listeye girmez. */
+export function labelledAnswers(history: string[]): { question: string; answer: string }[] {
+  return Object.entries(QUESTION)
+    .map(([name, index]) => ({ question: QUESTION_LABELS[name as keyof typeof QUESTION], answer: (history[index] || "").trim() }))
+    .filter((entry) => entry.answer !== "");
+}
+
 /** Testin tamamlanmış sayılması için gereken asgari cevaplar. */
 export const REQUIRED_QUESTIONS: number[] = [QUESTION.goal, QUESTION.level, QUESTION.availableDays, QUESTION.sessionMinutes];
 

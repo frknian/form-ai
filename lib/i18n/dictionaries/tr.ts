@@ -1188,7 +1188,7 @@ export const tr = {
     profileTitle: "Profil ölçüleri taranıyor",
     profileBody: "Yaş, boy, kilo, ortam ve ekipman değerlendiriliyor",
     historyTitle: "Spor geçmişi çözümleniyor",
-    historyBody: "10 test cevabı, hedef ve ağrı bölgeleri birlikte okunuyor",
+    historyBody: "15 test cevabı, hedef ve ağrı bölgeleri birlikte okunuyor",
     planningTitle: "Program kişiselleştiriliyor",
     planningBody: "Hareket, set, tekrar ve dinlenme seçiliyor",
     completeTitle: "AI verileri taradı",

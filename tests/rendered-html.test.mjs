@@ -200,7 +200,10 @@ test("keeps the AI plan and movement library wired into the product", async () =
   assert.match(route, /generateAiObject/);
   assert.match(route, /KULLANICI VERİLERİ/);
   assert.match(route, /HAM KULLANICI VERİLERİ/);
-  assert.match(route, /10 TEST CEVABININ ANALİZİ/);
+  // Cevaplar soru etiketleriyle birlikte gider; çıplak dizi hangi cevabın
+  // hangi soruya ait olduğunu modele bırakıyordu.
+  assert.match(route, /PROFİL TESTİ \(\$\{QUESTION_COUNT\} soru\)/);
+  assert.match(route, /JSON\.stringify\(signals\.answers\)/);
   assert.match(route, /weeklySchedule/);
   assert.match(route, /progression/);
   assert.match(route, /profileFingerprint/);

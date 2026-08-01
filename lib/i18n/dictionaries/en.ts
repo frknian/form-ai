@@ -1190,7 +1190,7 @@ export const en: typeof tr = {
     profileTitle: "Scanning profile measurements",
     profileBody: "Evaluating age, height, weight, environment, and equipment",
     historyTitle: "Analyzing training history",
-    historyBody: "Reading 10 test answers, your goal, and pain areas together",
+    historyBody: "Reading 15 test answers, your goal, and pain areas together",
     planningTitle: "Personalizing your program",
     planningBody: "Selecting exercises, sets, reps, and rest",
     completeTitle: "AI finished scanning your data",
