@@ -98,6 +98,71 @@ export function useStoredGoalPlan(): unknown | null {
   }
 }
 
+// Özel programlar ve program ilerleme günlüğü. İkisi de küçük JSON'lar;
+// ayrı tablo açmak yerine tercih katmanında tutulur ve PreferenceSync ile
+// cihazlar arasında eşitlenir.
+function jsonPreference(key: string) {
+  const read = () => {
+    try {
+      return typeof localStorage !== "undefined" ? localStorage.getItem(key) : null;
+    } catch {
+      return null;
+    }
+  };
+  const write = (value: unknown | null) => {
+    try {
+      if (value === null) localStorage.removeItem(key);
+      else localStorage.setItem(key, JSON.stringify(value));
+    } catch {
+      // yerel depolama kapalıysa değişiklik yalnız bu oturumda geçerli olur
+    }
+    listeners.forEach((listener) => listener());
+    notifyPreferenceChange();
+  };
+  return { read, write };
+}
+
+const customProgramsStore = jsonPreference("hedefit:custom-programs");
+const programLogStore = jsonPreference("hedefit:program-log");
+
+export function setStoredCustomPrograms(programs: unknown) {
+  customProgramsStore.write(programs);
+}
+
+export function useStoredCustomPrograms(): unknown {
+  const raw = useSyncExternalStore(subscribe, customProgramsStore.read, () => null);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+/** Program günlüğü sınırsız büyümesin: en yeni 200 kayıt tutulur. */
+export function appendProgramLog(entry: { programKey: string; completedAt: string }) {
+  let current: unknown[] = [];
+  try {
+    const raw = programLogStore.read();
+    const parsed = raw ? JSON.parse(raw) : [];
+    if (Array.isArray(parsed)) current = parsed;
+  } catch {
+    current = [];
+  }
+  programLogStore.write([...current, entry].slice(-200));
+}
+
+export function useStoredProgramLog(): { programKey: string; completedAt: string }[] {
+  const raw = useSyncExternalStore(subscribe, programLogStore.read, () => null);
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter((item) => item && typeof item.programKey === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
 export function useTargetWeightKg(): number | null {
   const raw = useSyncExternalStore(subscribe, readTargetWeightRaw, () => null);
   if (raw === null) return null;

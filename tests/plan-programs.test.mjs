@@ -75,29 +75,6 @@ test("kişisel plan hazır program hareketlerini son sıraya iter", () => {
   assert.match(appSource, /READY_PROGRAM_NAMES\.has\(item\.name\) \? 3 : 2/);
 });
 
-test("antrenman ekranı hazır programları en üstte, hareket listesi olarak gösterir", () => {
-  // Eski tab tabanlı widget "Kullan" deyip kişisel planı değiştiriyordu;
-  // yeni ekran 3 kart + bölgesel tarama ile "hareket listesi"ne geçiş yapar.
-  assert.doesNotMatch(appSource, /function ReadyPrograms\(/, "eski widget kaldırılmalı");
-  assert.doesNotMatch(appSource, /function applyReadyProgram\(/, "eski 'Kullan' akışı kaldırılmalı");
-  assert.match(appSource, /activeView === "workout" \? <>\s*<div className="ready-programs" id="ready-programs">/, "hazır programlar workout sekmesinin en üstünde olmalı");
-  assert.match(appSource, /setBrowseProgram\(\{ title: t\.workoutBrowse\.aiCardTitle, profile: autoEquipmentProfile \}\)/);
-  assert.match(appSource, /setBrowseProgram\(\{ title: t\.readyPrograms\.gymTitle, profile: "gym" \}\)/);
-  assert.match(appSource, /setBrowseProgram\(\{ title: t\.readyPrograms\.equipmentFreeTitle, profile: "equipmentFree" \}\)/);
-});
-
-test("bölgesel çalış kataloğun gerçek bölgelerini kullanır ve ekipman filtresi uygular", () => {
-  assert.match(appSource, /const BODY_REGIONS = \["Göğüs", "Sırt", "Bacak", "Kalça", "Omuz", "Kol", "Core"\] as const;/);
-  assert.match(appSource, /matchesProfile\(item, browseProgram\.profile\)/, "bölgesel liste de ekipmana göre filtrelenmeli");
-});
-
-test("hareket detayından çıkmak seçilen programın listesine döner, başa değil", () => {
-  // setBrowseDetail(null) yalnız modali kapatmalı; browseProgram'a dokunmamalı,
-  // aksi halde kullanıcı program seçim ekranına geri fırlatılırdı.
-  assert.doesNotMatch(appSource, /onClick=\{\(\) => setBrowseDetail\(null\)\}[^}]*setBrowseProgram\(null\)/);
-  assert.match(appSource, /onClick=\{\(\) => setBrowseDetail\(null\)\}/);
-});
-
 test("plan hareket sayısı süreye ve haftalık sıklığa göre değişir", () => {
   // İndeksler artık lib/onboarding-questions.ts'te adlandırılır; sihirli sayı
   // kullanmak soru sırası değişince sessizce yanlış alanı okutuyordu.
@@ -168,27 +145,6 @@ test("kalori halkasındaki metin diskin ortasında toplanır", async () => {
   assert.doesNotMatch(css, /\.calorie-progress > div \{[^}]*background:#22221f/);
 });
 
-test("hazır programlar tek başlık altında toplanır, AI programı full body'dir", async () => {
-  // "İstersen hemen başla" + "Full body · seviye" + "AI Programı" üç ayrı
-  // program varmış izlenimi veriyordu; hepsi aynı listeyi anlatıyor.
-  assert.doesNotMatch(appSource, /t\.readyPrograms\.title/, "kaldırılan başlık hâlâ kullanılıyor");
-  assert.doesNotMatch(appSource, /t\.dashboard\.fullBody/, "antrenman listesinde full body başlığı kalmış");
-  assert.match(appSource, /t\.dashboard\.myWorkout\(planLevel\)/);
-
-  const tr = await readFile(new URL("../lib/i18n/dictionaries/tr.ts", import.meta.url), "utf8");
-  // Full body bilgisi artık AI kartının açıklamasında duruyor.
-  assert.match(tr, /aiCardDetail: \(equipment: string\) => `Full body/);
-});
-
-test("bölgesel çalışta yer ayrıca seçilir ve hareketleri belirler", () => {
-  // Profilde "Evde" yazan biri bugün salona gitmiş olabilir; seçim yalnız
-  // bu taramayı etkiler, profili değiştirmez.
-  assert.match(appSource, /const \[regionPlace, setRegionPlace\] = useState<"home" \| "gym">\("home"\)/);
-  assert.match(appSource, /regionPlace === "gym" \? "gym" : detectUserEquipmentProfile\(false, equipmentText\)/);
-  assert.match(appSource, /setBrowseProgram\(\{ title: regionLabel\(t, area\), profile: regionProfile, area \}\)/);
-  assert.doesNotMatch(appSource, /profile: autoEquipmentProfile, area/, "bölge taraması hâlâ profildeki yeri kullanıyor");
-});
-
 test("beslenme ekranında öğün ekleme hedef panelinin önünde gelir", async () => {
   const tracker = await readFile(new URL("../components/CalorieTracker.tsx", import.meta.url), "utf8");
   const entryPanel = tracker.indexOf('className="food-entry-panel"');
@@ -215,7 +171,7 @@ test("profil testinde panele ait ağır hesaplar çalışmaz", () => {
   // her tuş vuruşu 170 hareketlik katalogda ekipman eşleşmesi (regex), plan
   // üretimi ve JSON.stringify tetikliyordu. Hepsi onDashboard ile kapatıldı.
   assert.match(appSource, /const onDashboard = step === STEP\.dashboard;/);
-  for (const memo of ["localPlan", "workouts", "planExerciseOptions"]) {
+  for (const memo of ["localPlan", "workouts"]) {
     const block = appSource.match(new RegExp(`const ${memo} = useMemo\\(([^]*?)\\n  \\);`))?.[1] ?? "";
     assert.ok(block.length > 0, `${memo} memo'su bulunamadı`);
     // Kapı iki biçimde yazılabiliyor: tek satırda "onDashboard ? …" ya da
@@ -255,4 +211,53 @@ test("soru sayacı sorunun üstünde ve şıklar eşit boyutta", async () => {
   const grid = css.match(/\.answer-grid \{ display:grid; grid-template-columns:repeat\(auto-fit,minmax\(150px,1fr\)\); ([^}]*)\}/)?.[1] ?? "";
   assert.ok(grid.length > 0, "şıklar eşit sütunlu grid'e alınmamış");
   assert.match(css, /\.answer-grid \.answer \{[^}]*min-height:56px/, "şıkların yüksekliği eşitlenmemiş");
+});
+
+test("antrenman sekmesi tek bir program sistemi gösterir", () => {
+  // Eskiden üstte "hazır programlar", altta ayrı bir "günün antrenmanı"
+  // listesi vardı; ikisi farklı hareketler gösterip aynı şeyi anlatıyordu.
+  assert.match(appSource, /activeView === "workout" \? <>\s*\{\/\*[^]*?<TrainingPrograms/, "antrenman sekmesi program sistemine bağlanmamış");
+  assert.doesNotMatch(appSource, /workout-plan-list/, "günün antrenmanı bloğu kalmış");
+  assert.doesNotMatch(appSource, /t\.dashboard\.myWorkout/, "günün antrenmanı başlığı kalmış");
+  assert.doesNotMatch(appSource, /<PlanEditor/, "plan düzenleyici yerini program kurucuya bıraktı");
+  // Eski tarama sisteminden hiçbir kalıntı kalmamalı.
+  for (const dead of ["browseProgram", "browseDetail", "regionPickerOpen", "startBrowseSession"]) {
+    assert.ok(!appSource.includes(dead), `ölü tarama kodu kalmış: ${dead}`);
+  }
+});
+
+test("program sistemi dört tür sunar ve salon/ev ayrımı yapar", async () => {
+  const source = await readFile(new URL("../components/TrainingPrograms.tsx", import.meta.url), "utf8");
+  // Akıllı program AI'dan gelir; testi tamamlamadan açılamaz.
+  assert.match(source, /disabled=\{!smartWorkouts\.length\}/, "akıllı program test tamamlanmadan açılabiliyor");
+  assert.match(source, /kind: "fullBody", place/);
+  assert.match(source, /kind: "split", place, area/);
+  // Salon/ev seçimi ekipman profiline çevrilmeli, yoksa evde salon aleti çıkar.
+  assert.match(source, /placeToProfile\(selection\.place, equipmentText\)/);
+  assert.match(source, /const BODY_REGIONS = \["Göğüs", "Sırt", "Bacak", "Kalça", "Omuz", "Kol", "Core"\] as const;/);
+});
+
+test("özel programlar üç slotla sınırlı ve kütüphaneden kurulur", async () => {
+  const source = await readFile(new URL("../components/TrainingPrograms.tsx", import.meta.url), "utf8");
+  assert.match(source, /Array\.from\(\{ length: CUSTOM_PROGRAM_SLOTS \}/);
+  assert.match(source, /function CustomProgramBuilder/);
+  // Kurucu gerçek katalogdan seçtirmeli, sabit bir listeden değil.
+  assert.match(source, /exerciseLibrary\s*\n?\s*\.filter\(\(item\) => \(!area \|\| item\.area === area\)/);
+});
+
+test("tamamlanan seans çalıştırılan programın sayacına yazılır", () => {
+  assert.match(appSource, /appendProgramLog\(\{ programKey: activeProgramKey, completedAt: record\.completedAt \}\)/);
+  assert.match(appSource, /setActiveProgramKey\(key\)/);
+});
+
+test("seans bitince süre, yakım ve çalışılan bölgeler gösterilir", () => {
+  assert.match(appSource, /className="session-summary"/);
+  assert.match(appSource, /formatSessionLength\(pendingSession\.durationSeconds, locale\)/);
+  assert.match(appSource, /sessionAreas\.length > 0 &&/);
+  // Atlanan hareketler çalışılmış sayılmamalı.
+  assert.match(appSource, /playerQueue\.filter\(\(_, index\) => !skippedExercises\.includes\(index\)\)/);
+});
+
+test("marka logosu ana ekrana döner", () => {
+  assert.match(appSource, /<button type="button" className="brand"[^>]*onClick=\{\(\) => \{ setActiveView\("plan"\)/);
 });

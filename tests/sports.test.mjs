@@ -56,7 +56,9 @@ test("aktivite günlükleri geçmişe ve seri özetine güvenli biçimde bağlan
 
 test("hareket kılavuzu alan ile tutarlıdır ve Türkçe küçültmeden etkilenmez", async () => {
   const src = await readFile(new URL("../components/FitAiApp.tsx", import.meta.url), "utf8");
-  const body = src.slice(src.indexOf("function getMotionPattern"), src.indexOf("function getMotionGuide"));
+  // Bitiş sınırı "export" olsun olmasın çalışmalı; aksi halde getMotionGuide
+  // dışa açıldığında dilime sarkan "export" eval'i SyntaxError'a düşürüyordu.
+  const body = src.slice(src.indexOf("function getMotionPattern"), src.search(/\n(?:export )?function getMotionGuide/));
   const pat = eval(`(${body.replace('function getMotionPattern(exercise: { name: string; english: string }): MotionPattern {', "function(exercise){").trimEnd()})`);
 
   // Türkçe küçültme büyük "I"yı noktasız "ı"ya çevirir; kalıp eşleştirmesi

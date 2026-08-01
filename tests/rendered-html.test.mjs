@@ -141,17 +141,21 @@ test("keeps email verification and Google authentication wired into profile crea
 });
 
 test("keeps the AI plan and movement library wired into the product", async () => {
-  const [page, route, weeklyRoute, layout, supabaseSchema] = await Promise.all([
+  const [page, route, weeklyRoute, layout, supabaseSchema, programs] = await Promise.all([
     readFile(new URL("../components/FitAiApp.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/api/generate-plan/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/api/weekly-review/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
     readFile(new URL("../db/supabase-schema.sql", import.meta.url), "utf8"),
+    readFile(new URL("../components/TrainingPrograms.tsx", import.meta.url), "utf8"),
   ]);
 
-  assert.match(page, /t\.readyPrograms\.eyebrow/);
+  // readyPrograms sözlüğü yerini programs'a bıraktı; program ekranı artık
+  // ayrı bir bileşende (components/TrainingPrograms.tsx).
+  assert.match(page, /<TrainingPrograms/);
   assert.match(page, /t\.aiScan\.completeTitle/);
-  assert.match(page, /t\.dashboard\.howTo/);
+  // Hareket anlatımı program listesine taşındı (günün antrenmanı kaldırıldı).
+  assert.match(programs, /t\.dashboard\.howTo/);
   assert.match(page, /Yerde Dambıl Göğüs Presi/);
   assert.ok((page.match(/^  \["/gm) ?? []).length >= 100, "exercise library should contain 100+ additional movements");
   // Çoklu seçim artık yalnız sakatlık sorusunda değil, seçenekli tüm sorularda.
@@ -179,7 +183,9 @@ test("keeps the AI plan and movement library wired into the product", async () =
   assert.match(page, /t\.workoutPlayer\.finishAndSave/);
   assert.match(page, /workout_sessions/);
   assert.match(page, /WorkoutSetLogger/);
-  assert.match(page, /PlanEditor/);
+  // Plan düzenleyici yerini program kurucuya bıraktı: kullanıcı artık
+  // hareket kütüphanesinden kendi programını kuruyor (3 slot).
+  assert.match(page, /TrainingPrograms/);
   assert.match(page, /workout_plans/);
   assert.match(page, /workout_exercise_logs/);
   assert.match(page, /workout_set_logs/);
@@ -243,7 +249,8 @@ test("keeps the AI plan and movement library wired into the product", async () =
   assert.match(page, /ActivityStreak/);
   assert.match(page, /ActivityLogger/);
   assert.match(page, /activeView === "profile"/);
-  assert.match(page, /autoplay=\{false\}/);
+  // Liste animasyonları oynamaz (pil/kaydırma); liste artık program ekranında.
+  assert.match(programs, /autoplay=\{false\}/);
   assert.match(supabaseSchema, /Users can read own nutrition goals/i);
   assert.match(supabaseSchema, /Users can update own nutrition goals/i);
   assert.match(supabaseSchema, /Users can read own weekly AI reviews/i);
