@@ -61,9 +61,11 @@ test("odak halkası ve azaltılmış hareket desteklenir", () => {
   // Klavye kullanıcısı için görünür odak; hareket duyarlılığı olan kullanıcı
   // için animasyonsuz sürüm.
   assert.match(css, /:focus-visible[^{]*\{[^}]*outline:2px solid var\(--focus-ring\)/);
-  const reduced = css.slice(css.lastIndexOf("@media (prefers-reduced-motion: reduce)"));
-  assert.match(reduced, /\.option-card/);
-  assert.match(reduced, /transform:none/);
+  // Dosyada birden çok reduced-motion bloğu var (soru ilerlemesi, bekleme
+  // ekranı, tasarım katmanı); ilgilendiğimiz, kartların hareketini kapatan.
+  const reducedBlocks = [...css.matchAll(/@media \(prefers-reduced-motion: reduce\) \{([^]*?)\n\}/g)].map((match) => match[1]);
+  assert.ok(reducedBlocks.some((block) => block.includes(".option-card") && block.includes("transform:none")), "kart animasyonları kapatılmıyor");
+  assert.ok(reducedBlocks.some((block) => block.includes(".sport-loader-arc")), "bekleme ekranı animasyonu kapatılmıyor");
 });
 
 test("onboarding telefonda tek sütuna iner ve eylem çubuğu sabitlenir", () => {
@@ -77,4 +79,29 @@ test("onboarding telefonda tek sütuna iner ve eylem çubuğu sabitlenir", () =>
 
   const tiny = css.slice(css.lastIndexOf("@media (max-width:420px)"));
   assert.match(tiny, /\.option-cards-3 \{ grid-template-columns:1fr; \}/, "375px'te üç sütun kart okunmuyordu");
+});
+
+test("koyu temada koyu zeminli düğmeler açık yazı alır", async () => {
+  // "Detayları görüntüle" koyu temada okunmuyordu: zemin #303a23 (koyu),
+  // yazı ise açık-lime grubundan #34410e (koyu) geliyordu.
+  const darkText = css.match(/\.dark \.streak-card[^{]*\{([^}]*)\}/)?.[0] ?? "";
+  for (const selector of [".detail-add", ".exercise-detail-button", ".load-exercises"]) {
+    assert.ok(!darkText.includes(selector), `${selector} koyu yazı grubunda kalmış`);
+  }
+  const darkSurface = css.match(/\.dark \.detail-add,\.dark \.exercise-detail-button,\.dark \.load-exercises \{([^}]*)\}/)?.[1] ?? "";
+  assert.match(darkSurface, /background:#303a23/);
+  assert.match(darkSurface, /color:#dcefa4/, "koyu zeminli düğme kendi açık yazı rengini almalı");
+});
+
+test("bekleme ekranı sportif ve erişilebilir", async () => {
+  const loader = await readFile(new URL("../components/SportyLoader.tsx", import.meta.url), "utf8");
+  assert.match(loader, /role="status"/);
+  assert.match(loader, /aria-live="polite"/);
+  assert.match(loader, /sport-loader-bars/);
+  // Eski jenerik "↗" kutusu iki ekranda da kalmamalı.
+  for (const file of ["../components/AuthScreen.tsx", "../components/FitAiApp.tsx"]) {
+    const source = await readFile(new URL(file, import.meta.url), "utf8");
+    assert.match(source, /<SportyLoader /, `${file}: sportif bekleme ekranı bağlanmamış`);
+    assert.doesNotMatch(source, /auth-loading-mark/, `${file}: eski bekleme kutusu duruyor`);
+  }
 });

@@ -69,7 +69,11 @@ test("server-renders the secure Hedefit account entry", async () => {
 
   const html = await response.text();
   assert.match(html, /<title>Hedefit — Hedefin için fit plan\.<\/title>/i);
-  assert.match(html, /Güvenli hesabın hazırlanıyor/i);
+  // Açılışta sportif bekleme ekranı sunucudan gelir; jenerik "yükleniyor"
+  // kutusu yerine tur halkası + tempo çubukları.
+  assert.match(html, /Isınma turu/i);
+  assert.match(html, /class="sport-loader"/);
+  assert.match(html, /role="status"/);
   assert.doesNotMatch(html, /class="topbar"/);
   assert.doesNotMatch(html, />Antrenmanım</);
   assert.doesNotMatch(html, /Your site is taking shape|Building your site|codex-preview/i);

@@ -22,10 +22,10 @@ export const tr = {
     profile: "Profilim",
   },
   auth: {
-    loadingTitle: "Güvenli hesabın hazırlanıyor",
-    loadingBody: "Oturum bilgilerin kontrol ediliyor…",
-    profileLoadingTitle: "Profilin hazırlanıyor",
-    profileLoadingBody: "Hesap durumun ve kişisel verilerin kontrol ediliyor…",
+    loadingTitle: "Isınma turu",
+    loadingBody: "Güvenli oturumun hazırlanıyor…",
+    profileLoadingTitle: "Antrenmana hazırlanıyoruz",
+    profileLoadingBody: "Profilin, planın ve ilerlemen yükleniyor…",
     eyebrow: "KİŞİSEL ANTRENMAN · GÜVENLİ HESAP",
     heroTitleLine1: "Programın seninle",
     heroTitleEm: "birlikte gelişsin.",
@@ -700,7 +700,9 @@ export const tr = {
   measurements: {
     eyebrow: "VÜCUT ÖLÇÜMLERİ",
     title: "Değişimini ölçerek takip et",
-    body: "Aynı koşullarda düzenli ölçüm, günlük dalgalanmalardan daha anlamlı bir eğilim gösterir.",
+    // Bölüm hangi ölçüleri aldığını söylemiyordu; kullanıcı bel/göğüs/bacak
+    // takibinin burada olduğunu göremiyordu.
+    body: "Kilo, bel, göğüs, kalça, kol ve bacak çevreni kaydet. Aynı koşullarda düzenli ölçüm, günlük dalgalanmalardan daha anlamlı bir eğilim gösterir.",
     addMeasurement: "+ Ölçüm ekle",
     rangeLabel: "Grafik zaman aralığı",
     range7d: "7 gün",
@@ -709,7 +711,7 @@ export const tr = {
     rangeAll: "Tüm zamanlar",
     loading: "Ölçümlerin yükleniyor…",
     emptyTitle: "İlk ölçümünü kaydet",
-    emptyBody: "Kilo veya çevre ölçülerinden en az birini ekle. İkinci kaydınla birlikte ilerleme grafiğin oluşacak.",
+    emptyBody: "Kilonu ya da bel, göğüs, kalça, kol, bacak çevrenden en az birini ekle. İkinci kaydınla birlikte ilerleme grafiğin oluşacak.",
     addFirst: "İlk ölçümü ekle",
     noMeasurementYet: "Henüz ölçüm yok",
     sinceFirst: "İlk kayda göre",
@@ -1037,7 +1039,9 @@ export const tr = {
     stageHint: (remaining: number) => `${remaining} antrenman sonra bir sonraki aşama açılır.`,
     stageMaxHint: "Son aşamadasın; artık yükü set kaydından takip et.",
     todayEyebrow: "BUGÜN",
-    fullBody: (level: string) => `Full body · ${level}`,
+    // "Full body" başlığı AI Programı kartıyla aynı şeyi anlatıyordu; iki
+    // ayrı program varmış izlenimi veriyordu. Liste artık seviyeyle anılır.
+    myWorkout: (level: string) => `Antrenmanım · ${level}`,
     howTo: "3 adımda nasıl yapılır?",
     openWorkoutLabel: (name: string) => `${name} hareket akışını ve sayacını aç`,
     openShort: "Aç",
@@ -1207,10 +1211,12 @@ export const tr = {
   },
   workoutBrowse: {
     aiCardTitle: "AI Programı",
-    aiCardDetail: (equipment: string) => `${equipment} için otomatik oluşturuldu`,
+    aiCardDetail: (equipment: string) => `Full body · ${equipment} için otomatik oluşturuldu`,
     start: "Başla",
     regionButton: "Bölgesel Çalış",
     regionPickerTitle: "Hangi bölgeye çalışmak istiyorsun?",
+    placeLabel: "NEREDE ÇALIŞACAKSIN?",
+    regionAreasLabel: "BÖLGE",
     regionPickerBack: "← Geri",
     regionChest: "Göğüs",
     regionBack: "Sırt",

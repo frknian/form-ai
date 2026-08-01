@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { authCallbackUrl, isNativeApp, openNativeBrowser } from "@/lib/mobile";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LanguageToggle } from "@/components/LanguageToggle";
+import { SportyLoader } from "@/components/SportyLoader";
 import { useTranslations, type Dictionary } from "@/lib/i18n/translate";
 import { isValidBirthDate } from "@/lib/profile";
 
@@ -383,7 +384,7 @@ export function AuthScreen({ status, onSignedIn }: { status: "loading" | "anonym
   }
 
   if (status === "loading") {
-    return <main className="auth-shell auth-loading"><section className="auth-status-card"><div className="auth-loading-mark">↗</div><h1>{t.auth.loadingTitle}</h1><p>{t.auth.loadingBody}</p></section></main>;
+    return <SportyLoader title={t.auth.loadingTitle} body={t.auth.loadingBody} />;
   }
 
   return (

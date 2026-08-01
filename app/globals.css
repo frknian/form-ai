@@ -785,7 +785,11 @@ button,input { font:inherit; } button { cursor:pointer; }
 .dark .primary-btn,.dark .start-btn { background:var(--lime); color:#1d1d1b; }
 .dark .primary-btn span,.dark .start-btn span { color:#43520f; }
 .dark .equipment.selected,.dark .answer.selected,.dark .progress-status,.dark .player-meta span,.dark .feedback-options button.selected,.dark .fatigue-scale button.selected { color:#33400e; }
-.dark .streak-card,.dark .calorie-card,.dark .finish-btn,.dark .ready-card button,.dark .detail-add,.dark .exercise-detail-button,.dark .load-exercises { color:#34410e; }
+/* Bu grup AÇIK lime zemin üzerine koyu yazı içindir. .detail-add,
+   .exercise-detail-button ve .load-exercises aşağıda KOYU zemin (#303a23)
+   alıyor; koyu yazıyla birleşince "Detayları görüntüle" koyu temada
+   okunmuyordu. O üçü bu gruptan çıkarıldı, kendi açık yazı rengini alıyor. */
+.dark .streak-card,.dark .calorie-card,.dark .finish-btn,.dark .ready-card button { color:#34410e; }
 .dark .exercise-metadata strong,.dark .library-empty strong { color:var(--ink); }
 .dark .exercise-facts span,.dark .detail-tags span { background:#303329; color:#bcc3aa; }
 .dark .db-exercise-animation,.dark .exercise-media { border-color:#34362f; }.dark .db-exercise-animation { background:linear-gradient(145deg,#292b26,#1b1c19); }.dark .db-exercise-animation img { mix-blend-mode:normal; }
@@ -1009,7 +1013,7 @@ input,select,textarea { color-scheme:inherit; }
 .dark .profile-account button { color:#f0ab8e; }
 .dark .postpone-dialog > div:last-child button:last-child { background:var(--lime); color:#1d1d1b; border-color:var(--lime); }
 .dark .detail-close,.dark .detail-open,.dark .library-empty button { background:#30312c; color:#f2f2ec; }
-.dark .detail-add,.dark .exercise-detail-button,.dark .load-exercises { background:#303a23; border-color:#62783a; }
+.dark .detail-add,.dark .exercise-detail-button,.dark .load-exercises { background:#303a23; border-color:#62783a; color:#dcefa4; }
 .dark .exercise-added { background:#30312c; color:var(--lime); }
 
 @media (hover:hover) {
@@ -1528,3 +1532,41 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .primary-btn:hover:not(:disabled), .start-btn:hover:not(:disabled),
   .option-card:hover, .ready-card:hover, .database-exercise-card:hover { transform:none; }
 }
+
+/* --- Sportif bekleme ekranı ---------------------------------------------
+   Sabit bir daireydi; fitness uygulamasından çok jenerik bir yükleniyor
+   kutusu gibi duruyordu. Tur halkası + nabız + tempo çubukları. Renk yine
+   paletten: yalnız --lime ve --ink. */
+.sport-loader-card { gap:14px; }
+.sport-loader { position:relative; display:grid; place-items:center; width:104px; height:104px; margin-bottom:2px; }
+.sport-loader svg { width:100%; height:100%; transform:rotate(-90deg); }
+.sport-loader circle { fill:none; stroke-width:7; stroke-linecap:round; }
+.sport-loader-track { stroke:var(--line); }
+/* 264 ≈ 2πr (r=42). Yayın uzunluğu ve konumu birlikte döner: tek bir
+   dönüşten ibaret olmayan, hızlanıp yavaşlayan bir tur hissi verir. */
+.sport-loader-arc { stroke:var(--lime); stroke-dasharray:70 194; transform-origin:50% 50%; animation:sport-lap 1.5s var(--ease) infinite; }
+.sport-loader-core { position:absolute; display:grid; place-items:center; width:52px; height:52px; border-radius:50%; background:color-mix(in srgb, var(--lime) 22%, var(--surface-elevated)); color:var(--ink); animation:sport-pulse 1.5s var(--ease) infinite; }
+.sport-loader-core .onboarding-icon { width:26px; height:26px; }
+.sport-loader-bars { display:flex; align-items:flex-end; justify-content:center; gap:5px; height:22px; margin-top:2px; }
+.sport-loader-bars i { width:5px; height:100%; border-radius:var(--r-pill); background:var(--lime); opacity:.55; transform-origin:bottom; animation:sport-tempo 1.05s var(--ease) infinite; }
+.sport-loader-bars i:nth-child(2) { animation-delay:.12s; }
+.sport-loader-bars i:nth-child(3) { animation-delay:.24s; }
+.sport-loader-bars i:nth-child(4) { animation-delay:.36s; }
+.sport-loader-bars i:nth-child(5) { animation-delay:.48s; }
+
+@keyframes sport-lap { 0% { transform:rotate(0deg); } 100% { transform:rotate(360deg); } }
+@keyframes sport-pulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.09); } }
+@keyframes sport-tempo { 0%,100% { transform:scaleY(.35); } 50% { transform:scaleY(1); } }
+
+@media (prefers-reduced-motion: reduce) {
+  /* Animasyonu tamamen kapatmak "donmuş" bir ekran bırakırdı; halka duruyor
+     ama yay yine de tamamlanmamış görünüyor, yani hâlâ bir bekleme işareti. */
+  .sport-loader-arc, .sport-loader-core, .sport-loader-bars i { animation:none; }
+  .sport-loader-bars i { transform:scaleY(.7); }
+}
+
+/* Bölgesel çalış: yer seçimi (Ev / Salon) ve bölge listesi */
+.region-place { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
+.region-place button { width:100%; }
+.region-areas-legend { margin-top:20px; }
+.ready-programs .equipment-list { margin-top:10px; }

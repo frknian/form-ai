@@ -167,3 +167,44 @@ test("kalori halkasındaki metin diskin ortasında toplanır", async () => {
   // İç disk kart arka planıyla (#22221f) aynı renkte olmamalı, yoksa görünmez.
   assert.doesNotMatch(css, /\.calorie-progress > div \{[^}]*background:#22221f/);
 });
+
+test("hazır programlar tek başlık altında toplanır, AI programı full body'dir", async () => {
+  // "İstersen hemen başla" + "Full body · seviye" + "AI Programı" üç ayrı
+  // program varmış izlenimi veriyordu; hepsi aynı listeyi anlatıyor.
+  assert.doesNotMatch(appSource, /t\.readyPrograms\.title/, "kaldırılan başlık hâlâ kullanılıyor");
+  assert.doesNotMatch(appSource, /t\.dashboard\.fullBody/, "antrenman listesinde full body başlığı kalmış");
+  assert.match(appSource, /t\.dashboard\.myWorkout\(planLevel\)/);
+
+  const tr = await readFile(new URL("../lib/i18n/dictionaries/tr.ts", import.meta.url), "utf8");
+  // Full body bilgisi artık AI kartının açıklamasında duruyor.
+  assert.match(tr, /aiCardDetail: \(equipment: string\) => `Full body/);
+});
+
+test("bölgesel çalışta yer ayrıca seçilir ve hareketleri belirler", () => {
+  // Profilde "Evde" yazan biri bugün salona gitmiş olabilir; seçim yalnız
+  // bu taramayı etkiler, profili değiştirmez.
+  assert.match(appSource, /const \[regionPlace, setRegionPlace\] = useState<"home" \| "gym">\("home"\)/);
+  assert.match(appSource, /regionPlace === "gym" \? "gym" : detectUserEquipmentProfile\(false, equipmentText\)/);
+  assert.match(appSource, /setBrowseProgram\(\{ title: regionLabel\(t, area\), profile: regionProfile, area \}\)/);
+  assert.doesNotMatch(appSource, /profile: autoEquipmentProfile, area/, "bölge taraması hâlâ profildeki yeri kullanıyor");
+});
+
+test("beslenme ekranında öğün ekleme hedef panelinin önünde gelir", async () => {
+  const tracker = await readFile(new URL("../components/CalorieTracker.tsx", import.meta.url), "utf8");
+  const entryPanel = tracker.indexOf('className="food-entry-panel"');
+  const goalsPanel = tracker.indexOf("<NutritionGoalsPanel");
+  assert.ok(entryPanel > 0 && goalsPanel > 0, "iki bölüm de bulunmalı");
+  assert.ok(entryPanel < goalsPanel, "günlük iş olan öğün ekleme, ayar niteliğindeki hedef panelinin üstünde olmalı");
+});
+
+test("ilerleme ekranı bel/göğüs/bacak ölçülerini adıyla duyurur", async () => {
+  // Bölüm zaten bu alanları kaydediyordu ama başlığı hangi ölçüler olduğunu
+  // söylemediği için bulunamıyordu.
+  const app = await readFile(new URL("../components/FitAiApp.tsx", import.meta.url), "utf8");
+  assert.match(app, /<BodyMeasurements userId=\{userId\}/, "ölçümler ilerleme ekranında olmalı");
+  const tr = await readFile(new URL("../lib/i18n/dictionaries/tr.ts", import.meta.url), "utf8");
+  const block = tr.slice(tr.indexOf('eyebrow: "VÜCUT ÖLÇÜMLERİ"'), tr.indexOf('addFirst:'));
+  for (const area of ["bel", "göğüs", "bacak"]) {
+    assert.ok(block.toLocaleLowerCase("tr-TR").includes(area), `ölçüm metni "${area}" bölgesinden söz etmiyor`);
+  }
+});

@@ -447,8 +447,9 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
       <div className="date-switcher"><button type="button" aria-label={t.calorieTracker.previousDay} onClick={() => setDateOffset((day) => day - 1)}><ChevronLeft size={17} /></button><div><span>{dateOffset === 0 ? t.calorieTracker.today : t.calorieTracker.dailyLabel}</span><strong>{todayLabel(dateOffset, dateLocale)}</strong></div><button type="button" aria-label={t.calorieTracker.nextDay} disabled={dateOffset >= 0} onClick={() => setDateOffset((day) => Math.min(0, day + 1))}><ChevronRight size={17} /></button></div>
     </div>
 
-    <NutritionGoalsPanel key={`${nutritionGoal.goalType}-${nutritionGoal.calorieTarget}-${nutritionGoal.proteinGrams}-${nutritionGoal.carbsGrams}-${nutritionGoal.fatGrams}`} goal={nutritionGoal} recommendedGoals={recommendedGoals} totals={totals} trend={weightTrend} trendProgress={trendProgress} saving={goalSaving} saveMessage={goalMessage} onSave={saveNutritionGoal} />
-
+    {/* Öğün eklemek bu ekranın günlük işi; hedef paneli ise ayda bir
+        dokunulan bir ayar. Hedefler üstteyken kullanıcı her gün onu geçip
+        aşağı kaydırmak zorunda kalıyordu, bu yüzden sıra ters çevrildi. */}
     {regulars.length > 0 && <section className="frequent-meals">
       <div className="frequent-meals-head"><div className="eyebrow">{t.frequentMeals.eyebrow}</div><span>{t.frequentMeals.hint}</span></div>
       <div className="frequent-meals-list">{regulars.map((item) => <button type="button" key={item.key} onClick={() => void addFrequentMeal(item.key)}>
@@ -497,6 +498,8 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
       <div className="calorie-hero-copy"><span>{t.calorieTracker.dailyGoal}</span><strong>{nutritionGoal.calorieTarget} kcal</strong><p>{overBy ? t.calorieTracker.overMessage(overBy) : remaining ? t.calorieTracker.remainingMessage(remaining) : t.calorieTracker.goalReached}</p><div className="macro-row"><span><i className="protein" />{t.calorieTracker.macroProtein} <b>{totals.protein}/{nutritionGoal.proteinGrams}g</b></span><span><i className="carbs" />{t.calorieTracker.macroCarbs} <b>{totals.carbs}/{nutritionGoal.carbsGrams}g</b></span><span><i className="fat" />{t.calorieTracker.macroFat} <b>{totals.fat}/{nutritionGoal.fatGrams}g</b></span></div></div>
       <div className={overBy ? "calorie-remaining over" : "calorie-remaining"}><span>{overBy ? t.calorieTracker.overLabel : t.calorieTracker.remainingLabel}</span><strong>{overBy ? `+${overBy}` : remaining}</strong><small>kcal</small></div>
     </section>
+
+    <NutritionGoalsPanel key={`${nutritionGoal.goalType}-${nutritionGoal.calorieTarget}-${nutritionGoal.proteinGrams}-${nutritionGoal.carbsGrams}-${nutritionGoal.fatGrams}`} goal={nutritionGoal} recommendedGoals={recommendedGoals} totals={totals} trend={weightTrend} trendProgress={trendProgress} saving={goalSaving} saveMessage={goalMessage} onSave={saveNutritionGoal} />
 
     <HydrationFasting userId={userId} weightKg={weightKg} />
 

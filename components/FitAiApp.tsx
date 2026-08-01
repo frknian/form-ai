@@ -22,6 +22,7 @@ import { ActivityLogger } from "@/components/ActivityLogger";
 import { WeeklyAiReview } from "@/components/WeeklyAiReview";
 import { WorkoutSetLogger } from "@/components/WorkoutSetLogger";
 import { MobileRuntime } from "@/components/MobileRuntime";
+import { SportyLoader } from "@/components/SportyLoader";
 import { PreferenceSync } from "@/components/PreferenceSync";
 import { PlanEditor } from "@/components/PlanEditor";
 import { GoalForecast } from "@/components/GoalForecast";
@@ -793,6 +794,7 @@ export default function Home() {
   const [accountStatus, setAccountStatus] = useState<AccountStatus | "loading">("loading");
   const [browseProgram, setBrowseProgram] = useState<{ title: string; profile: EquipmentProfile; area?: string } | null>(null);
   const [regionPickerOpen, setRegionPickerOpen] = useState(false);
+  const [regionPlace, setRegionPlace] = useState<"home" | "gym">("home");
   const [browseDetail, setBrowseDetail] = useState<typeof exerciseLibrary[number] | null>(null);
 
 
@@ -812,6 +814,12 @@ export default function Home() {
   const shownHeight = height || String(DEFAULT_HEIGHT_CM);
   const shownWeight = weight || String(DEFAULT_WEIGHT_KG);
   const autoEquipmentProfile = useMemo(() => detectUserEquipmentProfile(gym === "Salon", equipmentText), [gym, equipmentText]);
+  // Salon seçilirse salon kataloğu; ev seçilirse kullanıcının EVDEKİ ekipmanı
+  // (profilinde "Salon" yazsa bile), yoksa ekipmansız.
+  const regionProfile = useMemo(
+    () => regionPlace === "gym" ? "gym" : detectUserEquipmentProfile(false, equipmentText),
+    [regionPlace, equipmentText],
+  );
   const browseExercises = useMemo(() => {
     if (!browseProgram) return [];
     if (!browseProgram.area) return buildReadyProgram(exerciseLibrary, browseProgram.profile);
@@ -1541,7 +1549,7 @@ export default function Home() {
   }
 
   if (accountStatus === "loading") {
-    return <main className="auth-shell auth-loading"><section className="auth-status-card"><div className="auth-loading-mark">↗</div><h1>{t.auth.profileLoadingTitle}</h1><p>{t.auth.profileLoadingBody}</p></section></main>;
+    return <SportyLoader title={t.auth.profileLoadingTitle} body={t.auth.profileLoadingBody} />;
   }
 
   if (accountStatus === "frozen") {
@@ -1629,9 +1637,18 @@ export default function Home() {
               </> : <div className="library-empty"><strong>{t.workoutBrowse.emptyTitle}</strong><p>{t.workoutBrowse.emptyBody}</p></div>}
             </> : regionPickerOpen ? <>
               <div className="section-title"><div><div className="eyebrow">{t.readyPrograms.eyebrow}</div><h2>{t.workoutBrowse.regionPickerTitle}</h2></div><button type="button" className="back-btn" onClick={() => setRegionPickerOpen(false)}>{t.workoutBrowse.regionPickerBack}</button></div>
-              <div className="equipment-list">{BODY_REGIONS.map((area) => <button type="button" key={area} className="equipment" onClick={() => { setRegionPickerOpen(false); setBrowseProgram({ title: regionLabel(t, area), profile: autoEquipmentProfile, area }); }}>{regionLabel(t, area)}</button>)}</div>
+              {/* Ev/Salon burada ayrıca sorulur: kullanıcı profilinde "Evde"
+                  yazsa bile bugün salona gitmiş olabilir. Seçim yalnız bu
+                  taramayı etkiler, profili değiştirmez. */}
+              <div className="metric-legend">{t.workoutBrowse.placeLabel}</div>
+              <div className="region-place" role="group" aria-label={t.workoutBrowse.placeLabel}>
+                <button type="button" aria-pressed={regionPlace === "home"} className={regionPlace === "home" ? "equipment selected" : "equipment"} onClick={() => setRegionPlace("home")}>{t.onboarding.homeLabel}</button>
+                <button type="button" aria-pressed={regionPlace === "gym"} className={regionPlace === "gym" ? "equipment selected" : "equipment"} onClick={() => setRegionPlace("gym")}>{t.onboarding.gymLabel}</button>
+              </div>
+              <div className="metric-legend region-areas-legend">{t.workoutBrowse.regionAreasLabel}</div>
+              <div className="equipment-list">{BODY_REGIONS.map((area) => <button type="button" key={area} className="equipment" onClick={() => { setRegionPickerOpen(false); setBrowseProgram({ title: regionLabel(t, area), profile: regionProfile, area }); }}>{regionLabel(t, area)}</button>)}</div>
             </> : <>
-              <div className="section-title"><div><div className="eyebrow">{t.readyPrograms.eyebrow}</div><h2>{t.readyPrograms.title}</h2></div><span className="ready-note">{t.readyPrograms.note}</span></div>
+              <div className="section-title"><div className="eyebrow">{t.readyPrograms.eyebrow}</div><span className="ready-note">{t.readyPrograms.note}</span></div>
               <div className="ready-grid">
                 <article className="ready-card"><div><h3>{t.workoutBrowse.aiCardTitle}</h3><p>{t.workoutBrowse.aiCardDetail(equipmentProfileLabel(t, autoEquipmentProfile))}</p></div><button type="button" onClick={() => setBrowseProgram({ title: t.workoutBrowse.aiCardTitle, profile: autoEquipmentProfile })}>{t.workoutBrowse.start} →</button></article>
                 <article className="ready-card"><div><h3>{t.readyPrograms.gymTitle}</h3><p>{t.readyPrograms.gymDetail}</p></div><button type="button" onClick={() => setBrowseProgram({ title: t.readyPrograms.gymTitle, profile: "gym" })}>{t.workoutBrowse.start} →</button></article>
@@ -1645,7 +1662,7 @@ export default function Home() {
           <div className="plan-explanation"><div><div className="eyebrow">{t.dashboard.planWhyEyebrow}</div><h2>{planLevel} · {planGoal}</h2><p>{aiRationale || t.dashboard.planWhyDefault}</p>{aiSafetyNote && <div className="ai-safety"><strong>{t.dashboard.safetyNoteLabel}</strong><span>{aiSafetyNote}</span></div>}{aiError && <div className="ai-error">{aiError}</div>}</div></div>
           <AdaptivePlanCard adaptation={adaptation} sessionCount={sessionHistory.length} />
           {aiAnalysis && <AiPlanInsights analysis={aiAnalysis} schedule={aiSchedule} progression={aiProgression} fingerprint={aiFingerprint} />}
-          <div className="workout-layout" id="workout-plan-list"><div className="workout-main"><div className="section-title"><div><div className="eyebrow">{t.dashboard.todayEyebrow}</div><h2>{t.dashboard.fullBody(planLevel)}</h2></div><div className="plan-stage"><span>{t.dashboard.stageLabel(progressionBlock + 1)}</span><strong>{[t.dashboard.stageIntro, t.dashboard.stageVolume, t.dashboard.stageStrength, t.dashboard.stageIntensity][progressionBlock]}</strong><small>{progressionBlock >= 3 ? t.dashboard.stageMaxHint : t.dashboard.stageHint([3, 7, 12][progressionBlock] - sessionHistory.length)}</small></div></div><PlanEditor workouts={aiWorkouts.length ? aiWorkouts : localPlan} exerciseOptions={planExerciseOptions} onSave={saveCustomPlan} onReset={resetCustomPlan} /><div className="workout-list">{workouts.map((workout, index) => { const guide = getMotionGuide(workout); return <article className="workout-card" key={workout.name}><ExerciseAnimation exercise={workout} compact autoplay={false} /><div className="exercise-info"><div className="exercise-labels"><div className="pill">{workout.level}</div><span>{guide.action}</span></div><h3>{workout.name} <small>{workout.english}</small></h3><p>{workout.sets} · {workout.rest}</p><details className="how-to"><summary>{t.dashboard.howTo}</summary><ol className="mini-steps"><li>{guide.start}</li><li>{workout.instructions}</li><li>{guide.finish}</li></ol></details></div><button className="play-btn" type="button" aria-label={t.dashboard.openWorkoutLabel(workout.name)} onClick={() => openWorkout(index)}><span>▶</span><small>{t.dashboard.openShort}</small></button></article>; })}</div><button className="start-btn" type="button" onClick={() => openWorkout(0)}>{t.dashboard.startWorkout} <span>→</span></button></div><aside className="coach-card"><div className="coach-top"><span className="spark">✦</span><span>{t.dashboard.coachBrand}</span></div><h2>{t.dashboard.coachTitleLine1}<br /><em>{t.dashboard.coachTitleEm}</em> {t.dashboard.coachTitleRest}</h2><p>{t.dashboard.coachBody}</p><div className="coach-line" /><small>{t.dashboard.coachSignoff(name || t.dashboard.defaultName)}</small></aside></div></>}</>
+          <div className="workout-layout" id="workout-plan-list"><div className="workout-main"><div className="section-title"><div><div className="eyebrow">{t.dashboard.todayEyebrow}</div><h2>{t.dashboard.myWorkout(planLevel)}</h2></div><div className="plan-stage"><span>{t.dashboard.stageLabel(progressionBlock + 1)}</span><strong>{[t.dashboard.stageIntro, t.dashboard.stageVolume, t.dashboard.stageStrength, t.dashboard.stageIntensity][progressionBlock]}</strong><small>{progressionBlock >= 3 ? t.dashboard.stageMaxHint : t.dashboard.stageHint([3, 7, 12][progressionBlock] - sessionHistory.length)}</small></div></div><PlanEditor workouts={aiWorkouts.length ? aiWorkouts : localPlan} exerciseOptions={planExerciseOptions} onSave={saveCustomPlan} onReset={resetCustomPlan} /><div className="workout-list">{workouts.map((workout, index) => { const guide = getMotionGuide(workout); return <article className="workout-card" key={workout.name}><ExerciseAnimation exercise={workout} compact autoplay={false} /><div className="exercise-info"><div className="exercise-labels"><div className="pill">{workout.level}</div><span>{guide.action}</span></div><h3>{workout.name} <small>{workout.english}</small></h3><p>{workout.sets} · {workout.rest}</p><details className="how-to"><summary>{t.dashboard.howTo}</summary><ol className="mini-steps"><li>{guide.start}</li><li>{workout.instructions}</li><li>{guide.finish}</li></ol></details></div><button className="play-btn" type="button" aria-label={t.dashboard.openWorkoutLabel(workout.name)} onClick={() => openWorkout(index)}><span>▶</span><small>{t.dashboard.openShort}</small></button></article>; })}</div><button className="start-btn" type="button" onClick={() => openWorkout(0)}>{t.dashboard.startWorkout} <span>→</span></button></div><aside className="coach-card"><div className="coach-top"><span className="spark">✦</span><span>{t.dashboard.coachBrand}</span></div><h2>{t.dashboard.coachTitleLine1}<br /><em>{t.dashboard.coachTitleEm}</em> {t.dashboard.coachTitleRest}</h2><p>{t.dashboard.coachBody}</p><div className="coach-line" /><small>{t.dashboard.coachSignoff(name || t.dashboard.defaultName)}</small></aside></div></>}</>
           : <>
           <div className="dashboard-head"><div><div className="eyebrow">{t.dashboard.todaysPlan}</div><h1>{t.dashboard.greeting(name || t.dashboard.defaultName)}<em>{t.dashboard.greetingEm}</em></h1></div><ActivityStreak userId={authUser.id} /></div>
           <div className="stats-row"><div><span>{t.dashboard.bmiLabel}</span><strong>{bmi}</strong><small>{t.dashboard.bmiHint}</small></div><div><span>{t.dashboard.goalLabel}</span><strong>{goalText ? t.dashboard.goalPersonal : t.dashboard.goalDefault}</strong><small>{t.dashboard.goalHint}</small></div><div><span>{t.dashboard.environmentLabel}</span><strong>{gym === "Salon" ? t.onboarding.gymLabel : t.onboarding.homeLabel}</strong><small>{equipmentText || t.dashboard.noEquipment}</small></div></div>
