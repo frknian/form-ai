@@ -59,18 +59,21 @@ Yayın ortamında Supabase panelinde:
 
 ## Dağıtım
 
-Veri katmanı Supabase'dir. Uygulama Nitro tabanlı hatla yayınlanır:
+Veri katmanı Supabase'dir. Tek dağıtım hedefi **Cloudflare Workers**:
 
 ```bash
-npm run build:vercel   # NITRO_PRESET=vercel · çıktı: .vercel/output
+npm run build    # vinext build · çıktı: dist/
+npm run deploy   # build + wrangler deploy -c dist/server/wrangler.json
 ```
 
-- **Vercel**: `vercel.json` bu komutu ve `.vercel/output` dizinini kullanır.
-- **Dokploy (veya başka bir Node barındırma)**: aynı Nitro yapılandırmasıyla farklı bir preset seçilebilir, ör. `NITRO_PRESET=node-server vite build`.
+Cloudflare panelindeki otomatik dağıtım da `npm run build` çalıştırır. İstemciye
+gömülen `NEXT_PUBLIC_*` değerleri derleme anında okunur; bu yüzden `.env.production`
+repoya bilerek dahil edilmiştir (bkz. `.gitignore` içindeki açıklama). Worker
+gizli anahtarları (`AI_API_KEY`, `SUPABASE_SECRET_KEY`) ise Cloudflare panelinden
+**Secret** olarak tanımlanır — derlemeye girmezler.
 
-Güvenlik başlıkları `nitro.config.ts` içindeki route kurallarıyla eklenir; bu nedenle her iki Nitro presetinde de geçerlidir. Derleme sonrası `.vercel/output/config.json` içinde başlıkların bulunduğu doğrulanabilir.
-
-`npm run build` / `npm start` komutları workerd tabanlı yerel çalıştırma hattını kullanır; o hatta başlıklar `worker/index.ts` üzerinden eklenir.
+Güvenlik başlıkları tek kaynaktan (`lib/security-headers.ts`) gelir ve
+`worker/index.ts` içinde tüm yanıtlara eklenir.
 
 ## Android yayını (Google Play)
 
@@ -130,7 +133,7 @@ Gizlilik politikası taslağı ve veri güvenliği formu cevapları için
 - **A02 – Kriptografik hatalar**: Gizli anahtarlar (`SUPABASE_SECRET_KEY`, `AI_API_KEY`) yalnızca sunucuda kullanılır; istemci paketine hiçbir gizli değer girmez. HSTS zorunludur.
 - **A03 – Enjeksiyon**: Veritabanı erişimi parametreli Supabase istemcisi üzerindendir. Kullanıcı girdisi uzunluk ve tip olarak sınırlandırılır. Uygulamada `innerHTML` ile kullanıcı içeriği basılmaz.
 - **A04 – Güvensiz tasarım**: Tüm uç noktalarda hız sınırı vardır (`lib/rate-limit.ts`) — plan üretimi 5/5dk, sohbet 20/dk, beslenme 15–40/dk. Sayaç örnek belleğinde tutulur; çok örnekli dağıtımda üst sınır örnek başınadır.
-- **A05 – Hatalı yapılandırma**: CSP, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, HSTS ve COOP tüm yanıtlara eklenir. Başlık tanımı tek kaynaktadır (`lib/security-headers.ts`) ve her dağıtım hattında uygulanır: Nitro (Vercel/Dokploy) için `nitro.config.ts` route kuralları, workerd hattı için `worker/index.ts`. API yanıtları `no-store`; `X-Powered-By` kapalıdır.
+- **A05 – Hatalı yapılandırma**: CSP, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, HSTS ve COOP tüm yanıtlara eklenir. Başlık tanımı tek kaynaktadır (`lib/security-headers.ts`) ve `worker/index.ts` içinde tüm yanıtlara uygulanır. API yanıtları `no-store`; `X-Powered-By` kapalıdır.
 - **A06 – Güncel olmayan bileşenler**: `npm audit` ile izlenir; `undici`, `postcss` ve `sharp` için yamalı sürümler `package.json > overrides` ile zorlanır.
 - **A07 – Kimlik doğrulama hataları**: Doğrulama ve şifre sıfırlama tek kullanımlık OTP koduyla; şifre en az 8 karakter; doğrulanmamış hesap uygulamaya alınmaz.
 - **A08 – Veri bütünlüğü**: AI yanıtları şema ile doğrulanır ve her egzersiz kimliği yerel katalogda kontrol edilir; doğrulanamayan içerik kullanıcıya gösterilmez.
