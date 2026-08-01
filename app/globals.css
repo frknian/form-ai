@@ -1736,3 +1736,32 @@ button.brand:hover .brand-mark { transform:scale(1.06); }
 .program-exercise-list > article > .db-exercise-animation.compact { flex:0 0 92px; width:92px; height:78px; border-radius:8px; }
 .program-exercise-list > article > div { flex:1; min-width:0; }
 @media (max-width:700px) { .program-exercise-list > article > .db-exercise-animation.compact { flex-basis:76px; width:76px; height:66px; } }
+
+/* --- Profil sayfası: gruplanmış kutular ve şıklı sorular ---------------- */
+.profile-box { grid-column:1/-1; display:grid; gap:18px; margin-top:6px; padding:22px; border:1px solid var(--line); border-radius:var(--r-lg); background:var(--surface-soft); }
+.profile-box-head span { display:block; color:var(--muted-text); font-size:10px; font-weight:800; letter-spacing:1px; }
+.profile-box-head strong { display:block; margin:7px 0 5px; font-size:19px; letter-spacing:-.6px; }
+.profile-box-head p { margin:0; color:var(--muted-text); font-size:11.5px; line-height:1.55; }
+.profile-question { min-width:0; margin:0; padding:0; border:0; }
+.profile-question legend { padding:0 0 4px; color:var(--muted-text); font-size:11px; font-weight:800; letter-spacing:.9px; text-transform:uppercase; }
+.profile-question .option-cards { margin-top:10px; }
+.profile-question .answer-grid { margin-top:10px; }
+.profile-body-link { padding:14px 16px; border:1px dashed var(--line); border-radius:var(--r-md); }
+.profile-body-link span { display:block; margin-bottom:6px; color:var(--muted-text); font-size:9.5px; font-weight:800; letter-spacing:.9px; }
+.profile-body-link p { margin:0; color:var(--ink); font-size:12px; line-height:1.6; }
+
+/* Ayarlar kutusu: içindeki eski satırların kendi çerçevesi kalkar. */
+.profile-settings > .profile-preferences,
+.profile-settings > .profile-export,
+.profile-settings > .account-danger-zone { margin:0; border-width:0 0 1px; border-radius:0; padding:16px 0; background:transparent; }
+.profile-settings > .account-danger-zone:last-of-type { border-bottom:0; }
+.profile-signout { display:flex; justify-content:flex-end; padding-top:4px; border-top:1px solid var(--line); }
+.profile-signout button { min-height:46px; padding:0 20px; border:1px solid var(--line); border-radius:var(--r-md); background:var(--surface); color:var(--muted-text); font-size:12.5px; font-weight:750; cursor:pointer; }
+.profile-signout button:hover { border-color:#a9622f; color:#a9622f; }
+.dark .profile-signout button:hover { border-color:#e0a877; color:#e0a877; }
+
+@media (max-width:700px) {
+  .profile-box { padding:16px; gap:16px; }
+  .profile-signout { justify-content:stretch; }
+  .profile-signout button { width:100%; }
+}

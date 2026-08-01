@@ -7,6 +7,9 @@ import { createClient } from "@/lib/supabase/client";
 import { calculateAge, isValidBirthDate, type EditableProfile } from "@/lib/profile";
 import { saveProfileWithHistory, signedAvatarUrl } from "@/lib/profile-service";
 import { TrainingPlaceSwitch } from "@/components/TrainingPlaceSwitch";
+import { OnboardingIcon } from "@/components/onboarding/OnboardingIcon";
+import { GOAL_PRESETS } from "@/lib/goal-presets";
+import { EQUIPMENT_CHOICES, INJURY_CHOICES, formatChoices, parseChoices, toggleChoice } from "@/lib/profile-choices";
 import { useWeightUnit, setStoredWeightUnit } from "@/lib/preferences";
 import { kgToInputValue, parseWeightInputToKg, type WeightUnit } from "@/lib/units";
 import { translateGender, useTranslations } from "@/lib/i18n/translate";
@@ -27,6 +30,9 @@ type ProfileManagerProps = {
   onDeleted: () => void;
   onProgressReset: () => void;
   onRetakeTest: () => void;
+  /** Profil testindeki sakatlık cevabı; burada da düzenlenebilir. */
+  injuryAnswer: string;
+  onInjuryChange: (next: string) => void;
   onSignOut: () => Promise<void>;
 };
 
@@ -36,7 +42,7 @@ function numberOrNull(value: string) {
   return Number.isFinite(number) && number > 0 ? number : null;
 }
 
-export function ProfileManager({ user, profile, avatarUrl, onSaved, onFrozen, onDeleted, onProgressReset, onRetakeTest, onSignOut }: ProfileManagerProps) {
+export function ProfileManager({ user, profile, avatarUrl, onSaved, onFrozen, onDeleted, onProgressReset, onRetakeTest, onSignOut, injuryAnswer, onInjuryChange }: ProfileManagerProps) {
   const t = useTranslations();
   const locale = useLocale();
   const dateLocale = locale === "en" ? "en-US" : "tr-TR";
@@ -236,15 +242,65 @@ export function ProfileManager({ user, profile, avatarUrl, onSaved, onFrozen, on
     <div className="profile-manager-intro">
       <div className="eyebrow">{t.profileManager.eyebrow}</div><h2 id="profile-manager-title">{t.profileManager.title}</h2><p>{t.profileManager.body}</p>
       <div className="profile-avatar-card"><div className="profile-avatar-preview">{shownAvatar ? <Image className="profile-avatar-image" src={shownAvatar} alt={t.profileManager.avatarAlt} width={76} height={76} unoptimized /> : <span>{draft.displayName.charAt(0).toLocaleUpperCase(dateLocale) || "S"}</span>}</div><div><strong>{t.profileManager.profilePhoto}</strong><small>{t.profileManager.photoSizeHint}</small><label className="profile-avatar-button">{t.profileManager.changePhotoPrefix} {shownAvatar ? t.profileManager.changePhoto : t.profileManager.uploadPhoto}<input type="file" accept="image/jpeg,image/png,image/webp" onChange={chooseAvatar} /></label></div></div>
-      <div className="profile-account"><span>{t.profileManager.verifiedAccount}</span><strong>{user.email}</strong><small>{t.profileManager.emailVerified}</small><button type="button" onClick={() => void onSignOut()}>{t.profileManager.signOut}</button></div>
+      <div className="profile-account"><span>{t.profileManager.verifiedAccount}</span><strong>{user.email}</strong><small>{t.profileManager.emailVerified}</small></div>
     </div>
 
     <form className="profile-editor-fields" onSubmit={save}>
       <div className="profile-personal-grid"><label>{t.profileManager.nameLabel}<input required value={draft.displayName} onChange={(event) => update("displayName", event.target.value)} /></label><label>{t.profileManager.birthDateLabel}<input required type="date" min="1905-01-01" max={new Date().toISOString().slice(0, 10)} value={draft.birthDate} onChange={(event) => update("birthDate", event.target.value)} /><small>{age === null ? t.profileManager.ageAutoCalculated : t.profileManager.ageSuffix(age)}</small></label><label>{t.profileManager.genderLabel}<select value={draft.gender} onChange={(event) => update("gender", event.target.value)}><option value="Kadın">{translateGender(t, "Kadın")}</option><option value="Erkek">{translateGender(t, "Erkek")}</option><option value="Belirtmek istemiyorum">{translateGender(t, "Belirtmek istemiyorum")}</option></select></label><label>{t.profileManager.heightLabel}<input required type="number" min="80" max="250" step="0.1" value={draft.heightCm ?? ""} onChange={(event) => update("heightCm", numberOrNull(event.target.value))} /></label><label>{t.profileManager.weightLabel(unit.toLocaleUpperCase(dateLocale))}<input required type="number" min={unit === "lb" ? 44 : 20} max={unit === "lb" ? 1100 : 500} step="0.1" value={kgToInputValue(draft.weightKg, unit)} onChange={(event) => update("weightKg", parseWeightInputToKg(event.target.value, unit))} /></label></div>
-      <TrainingPlaceSwitch value={draft.environment} onChange={(environment) => update("environment", environment)} />
-      <label className="textarea-label">{t.profileManager.goalLabel}<textarea maxLength={1000} value={draft.goalText} onChange={(event) => update("goalText", event.target.value)} /></label><label className="textarea-label">{t.profileManager.equipmentLabel}<textarea maxLength={1000} value={draft.equipmentText} onChange={(event) => update("equipmentText", event.target.value)} /></label><label className="textarea-label">{t.profileManager.requestedExercisesLabel}<textarea maxLength={1000} value={draft.requestedExercises} onChange={(event) => update("requestedExercises", event.target.value)} /></label>
       <button className="primary-btn" disabled={saving} type="submit">{saving ? t.profileManager.saving : t.profileManager.saveChanges}</button>{message && <p className="profile-save-message" role="status">{message}</p>}
     </form>
+
+    {/* KUTU 2 — Antrenman ayarları. Hepsi serbest metindi; çoğu kullanıcı boş
+        bırakıyor, dolduranın cümlesini de plan üretimi güvenilir okuyamıyordu.
+        Şıklı sorular kanonik değer üretir ve doğrudan akıllı analize gider. */}
+    <div className="profile-box profile-training">
+      <div className="profile-box-head"><span>{t.profileChoices.trainingEyebrow}</span><strong>{t.profileChoices.trainingTitle}</strong><p>{t.profileChoices.trainingBody}</p></div>
+
+      {/* TrainingPlaceSwitch kendi legend'ini basıyor; üstüne bir başlık daha
+          koymak aynı soruyu iki kez soruyordu. Metni ona veriyoruz. */}
+      <TrainingPlaceSwitch value={draft.environment} onChange={(environment) => update("environment", environment)} label={t.profileManager.environmentQuestion} />
+
+      <fieldset className="profile-question">
+        <legend>{t.profileChoices.goalQuestion}</legend>
+        <div className="option-cards option-cards-3">{GOAL_PRESETS.map((preset) => (
+          <button type="button" key={preset.id} aria-pressed={draft.goalText.trim() === preset.text}
+            className={draft.goalText.trim() === preset.text ? "option-card selected" : "option-card"}
+            onClick={() => update("goalText", draft.goalText.trim() === preset.text ? "" : preset.text)}>
+            <OnboardingIcon name={preset.icon} /><span>{t.onboarding.goalPresets[preset.id]}</span>
+          </button>
+        ))}</div>
+      </fieldset>
+
+      <fieldset className="profile-question">
+        <legend>{t.profileChoices.equipmentQuestion}</legend>
+        <div className="answer-grid">{EQUIPMENT_CHOICES.map((choice) => {
+          const chosen = parseChoices(draft.equipmentText).includes(choice);
+          return <button type="button" key={choice} aria-pressed={chosen} className={chosen ? "answer selected" : "answer"}
+            onClick={() => update("equipmentText", formatChoices(toggleChoice(parseChoices(draft.equipmentText), choice)))}>{choice}</button>;
+        })}</div>
+      </fieldset>
+
+      <fieldset className="profile-question">
+        <legend>{t.profileChoices.injuryQuestion}</legend>
+        <div className="answer-grid">{INJURY_CHOICES.map((choice) => {
+          const chosen = parseChoices(injuryAnswer).includes(choice);
+          return <button type="button" key={choice} aria-pressed={chosen} className={chosen ? "answer selected" : "answer"}
+            onClick={() => onInjuryChange(formatChoices(toggleChoice(parseChoices(injuryAnswer), choice)))}>{choice}</button>;
+        })}</div>
+      </fieldset>
+
+      <label className="textarea-label">{t.profileChoices.requestedQuestion} <small>{t.profileChoices.requestedHint}</small>
+        <textarea maxLength={1000} value={draft.requestedExercises} onChange={(event) => update("requestedExercises", event.target.value)} />
+      </label>
+
+      {/* Yaş/boy/kilo hedefle birlikte okunur: kalori hedefi ve haftalık tempo
+          bu dörtlüden çıkar, ayrı ayrı anlam taşımazlar. */}
+      <div className="profile-body-link"><span>{t.profileChoices.bodyEyebrow}</span><p>{t.profileChoices.bodyBody(age === null ? "—" : String(age), draft.heightCm === null ? "—" : String(draft.heightCm), draft.weightKg === null ? "—" : String(Math.round(draft.weightKg)))}</p></div>
+    </div>
+
+    {/* KUTU 3 — Ayarlar ve hesap. Beş ayrı kutu hâlinde dağınıktı. */}
+    <div className="profile-box profile-settings">
+      <div className="profile-box-head"><span>{t.profileChoices.settingsEyebrow}</span><strong>{t.profileChoices.settingsTitle}</strong></div>
 
     <div className="profile-preferences"><div><span>{t.profileManager.preferencesEyebrow}</span><strong>{t.profileManager.weightUnitTitle}</strong><small>{t.profileManager.weightUnitHint}</small></div><div className="segmented unit-segmented">{(["kg", "lb"] as WeightUnit[]).map((option) => <button type="button" key={option} aria-pressed={unit === option} className={unit === option ? "selected" : ""} onClick={() => setStoredWeightUnit(option)}>{option === "kg" ? t.profileManager.unitKg : t.profileManager.unitLb}</button>)}</div></div>
 
@@ -255,6 +311,9 @@ export function ProfileManager({ user, profile, avatarUrl, onSaved, onFrozen, on
     <div className="account-danger-zone progress-reset-zone"><div><span>{t.profileManager.progressResetEyebrow}</span><strong>{t.profileManager.progressResetTitle}</strong><p>{t.profileManager.progressResetBody}</p></div><div><button className="danger" type="button" disabled={saving || resettingProgress} onClick={() => setProgressResetOpen(true)}>{t.profileManager.progressResetButton}</button></div></div>
 
     <div className="account-danger-zone"><div><span>{t.profileManager.accountManagementEyebrow}</span><strong>{t.profileManager.accountManagementTitle}</strong><p>{t.profileManager.accountManagementBody}</p></div><div><button type="button" disabled={saving} onClick={() => void freezeAccount()}>{t.profileManager.freezeAccount}</button><button className="danger" type="button" disabled={saving} onClick={() => setDeleteOpen(true)}>{t.profileManager.deleteAccount}</button></div></div>
+
+      <div className="profile-signout"><button type="button" onClick={() => void onSignOut()}>{t.profileManager.signOut}</button></div>
+    </div>
 
     {progressResetOpen && <div className="account-delete-overlay" role="dialog" aria-modal="true" aria-labelledby="reset-progress-title" aria-describedby="reset-progress-description"><div className="account-delete-dialog"><span className="danger-label">{t.profileManager.irreversibleLabel}</span><h2 id="reset-progress-title">{t.profileManager.progressResetDialogTitle}</h2><p id="reset-progress-description">{t.profileManager.progressResetDialogBody}</p><label>{t.profileManager.confirmPhraseLabel}<strong>{t.profileManager.progressResetConfirmPhrase}</strong>{t.profileManager.confirmPhraseSuffix}<input autoFocus value={progressResetPhrase} onChange={(event) => setProgressResetPhrase(event.target.value)} /></label><label className="delete-checkbox"><input type="checkbox" checked={progressResetAccepted} onChange={(event) => setProgressResetAccepted(event.target.checked)} /><span>{t.profileManager.progressResetCheckboxLabel}</span></label><div><button type="button" disabled={resettingProgress} onClick={() => setProgressResetOpen(false)}>{t.profileManager.cancel}</button><button className="danger" type="button" disabled={resettingProgress || progressResetPhrase !== t.profileManager.progressResetConfirmPhrase || !progressResetAccepted} onClick={() => void resetProgress()}>{resettingProgress ? t.profileManager.progressResetting : t.profileManager.progressResetButton}</button></div></div></div>}
 
