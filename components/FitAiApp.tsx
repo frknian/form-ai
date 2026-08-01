@@ -22,6 +22,7 @@ import { ActivityLogger } from "@/components/ActivityLogger";
 import { WeeklyAiReview } from "@/components/WeeklyAiReview";
 import { WorkoutSetLogger } from "@/components/WorkoutSetLogger";
 import { MobileRuntime } from "@/components/MobileRuntime";
+import { PreferenceSync } from "@/components/PreferenceSync";
 import { PlanEditor } from "@/components/PlanEditor";
 import { GoalForecast } from "@/components/GoalForecast";
 import { QuickActions } from "@/components/QuickActions";
@@ -1528,6 +1529,7 @@ export default function Home() {
   return (
     <main className="app-shell">
       <MobileRuntime />
+      <PreferenceSync userId={authUser?.id} />
       {step === 5 && <nav className="topbar">
         <div className="brand"><span className="brand-mark">↗</span><span>Hede<span className="brand-letter-gradient">f</span><span className="brand-dot">it</span></span></div>
         <div className="top-links" ref={topLinksRef}><button type="button" aria-pressed={activeView === "plan"} className={activeView === "plan" ? "active" : ""} onClick={() => setActiveView("plan")}>{t.nav.home}</button><button type="button" aria-pressed={activeView === "workout"} className={activeView === "workout" ? "active" : ""} onClick={() => setActiveView("workout")}>{t.nav.workout}</button><button type="button" aria-pressed={activeView === "nutrition"} className={activeView === "nutrition" ? "active" : ""} onClick={() => setActiveView("nutrition")}>{t.nav.nutrition}</button><button type="button" aria-pressed={activeView === "progress"} className={activeView === "progress" ? "active" : ""} onClick={() => setActiveView("progress")}>{t.nav.progress}</button><button type="button" aria-pressed={activeView === "calendar"} className={activeView === "calendar" ? "active" : ""} onClick={() => setActiveView("calendar")}>{t.nav.calendar}</button><button type="button" aria-pressed={activeView === "library"} className={activeView === "library" ? "active" : ""} onClick={() => setActiveView("library")}>{t.nav.library}</button></div>

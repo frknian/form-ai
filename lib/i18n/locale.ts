@@ -1,6 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { notifyPreferenceChange } from "../preference-sync.ts";
 
 export type Locale = "tr" | "en";
 
@@ -35,6 +36,7 @@ export function setStoredLocale(locale: Locale) {
   // büyük harf kurallarını uygulamaya devam eder (ör. İngilizce "i" → "İ").
   if (typeof document !== "undefined") document.documentElement.lang = locale;
   listeners.forEach((listener) => listener());
+  notifyPreferenceChange();
 }
 
 function subscribe(callback: () => void) {

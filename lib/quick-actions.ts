@@ -1,13 +1,14 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { notifyPreferenceChange } from "./preference-sync.ts";
 
 // Ana ekrandaki kısayollar. Her biri bir görünüme gider ve gerekiyorsa o
 // görünümdeki belirli bir bölüme kaydırır — kullanıcı "hazır programlar"a
 // bastığında sayfanın altındaki bölümü kendisi aramasın.
 //
-// Seçim yerel tercihte tutulur: kullanıcıya özel bir görünüm ayarı için
-// veritabanı şeması ve migration gerektirmez.
+// Seçim localStorage'da tutulur ve oturum açıkken hesaba eşitlenir
+// (components/PreferenceSync.tsx), böylece her cihazda aynı kısayollar çıkar.
 
 export type AppView = "plan" | "workout" | "progress" | "library" | "nutrition" | "calendar" | "profile";
 
@@ -64,6 +65,7 @@ export function setStoredQuickActionIds(ids: string[]) {
     // yerel depolama kapalıysa seçim yalnızca bu oturumda geçerli olur
   }
   listeners.forEach((listener) => listener());
+  notifyPreferenceChange();
 }
 
 /** Kısayolu açıp kapatır; en az bir tanesi açık kalır. */

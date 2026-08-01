@@ -1,6 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { notifyPreferenceChange } from "./preference-sync.ts";
 import type { WeightUnit } from "./units";
 
 const WEIGHT_UNIT_KEY = "fitai:weight-unit";
@@ -22,6 +23,7 @@ export function setStoredWeightUnit(unit: WeightUnit) {
     // yerel depolama kapalıysa sessizce geç
   }
   listeners.forEach((listener) => listener());
+  notifyPreferenceChange();
 }
 
 function subscribe(callback: () => void) {
@@ -38,8 +40,8 @@ export function useWeightUnit(): WeightUnit {
   return useSyncExternalStore(subscribe, readWeightUnit, () => "kg");
 }
 
-// Hedef kilo. Veritabanında böyle bir alan yok; kurulum adımı gerektirmemesi için
-// ağırlık birimiyle aynı yerel depoda tutulur (bu yüzden cihaza özeldir).
+// Hedef kilo. Profil tablosunda böyle bir alan yok; ağırlık birimiyle aynı
+// yerel depoda tutulur ve oradan hesaba eşitlenir (components/PreferenceSync).
 const TARGET_WEIGHT_KEY = "fitai:target-weight-kg";
 
 function readTargetWeightRaw(): string | null {
@@ -58,6 +60,7 @@ export function setStoredTargetWeightKg(weightKg: number | null) {
     // yerel depolama kapalıysa sessizce geç
   }
   listeners.forEach((listener) => listener());
+  notifyPreferenceChange();
 }
 
 export function useTargetWeightKg(): number | null {

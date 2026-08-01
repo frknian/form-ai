@@ -2,6 +2,7 @@
 
 import { useEffect, useSyncExternalStore } from "react";
 import { useTranslations } from "@/lib/i18n/translate";
+import { notifyPreferenceChange } from "@/lib/preference-sync";
 
 type Theme = "light" | "dark";
 
@@ -37,6 +38,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
     const next = theme === "dark" ? "light" : "dark";
     window.localStorage.setItem("hedefit-theme", next);
     window.dispatchEvent(new Event("hedefit-theme-change"));
+    notifyPreferenceChange();
   }
 
   const dark = theme === "dark";
