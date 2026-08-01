@@ -82,3 +82,59 @@ test("öğün alanları mobilde ızgarayı taşırmaz", async () => {
   }
   assert.match(css, /\.ai-estimate-card strong[^{]*\{[^}]*overflow-wrap:anywhere/);
 });
+
+test("ev ölçüleri AI tahmini olmadan da gram üretir", async () => {
+  const { referenceGrams, needsAnalysis, toGrams } = await import("../lib/portion-unit.ts");
+  // Bir su bardağının hacmi yemekten yemeğe değişmez; porsiyon/adetten farklı
+  // olarak bunlar bir tahmine bağlı değildir.
+  assert.equal(referenceGrams("waterGlass", null), 200);
+  assert.equal(referenceGrams("teaGlass", null), 110);
+  assert.equal(referenceGrams("mug", null), 250);
+  assert.equal(referenceGrams("plate", null), 350);
+  assert.equal(referenceGrams("bowl", null), 250);
+  assert.equal(referenceGrams("ml", null), 1);
+  assert.equal(toGrams("2", "waterGlass", referenceGrams("waterGlass", null)), 400);
+
+  for (const unit of ["ml", "teaGlass", "waterGlass", "mug", "plate", "bowl"]) {
+    assert.equal(needsAnalysis(unit), false, `${unit} tahmine bağlı olmamalı`);
+  }
+});
+
+test("porsiyon ve adet hâlâ tahmin ister", async () => {
+  const { referenceGrams, needsAnalysis, toGrams } = await import("../lib/portion-unit.ts");
+  // Tahmin yokken uydurma bir ağırlıkla devam etmek sessizce yanlış kalori
+  // kaydederdi; bu yüzden null döner ve arayüz birimi kilitler.
+  assert.equal(referenceGrams("portion", null), null);
+  assert.equal(referenceGrams("piece", null), null);
+  assert.equal(toGrams("2", "portion", null), null);
+  assert.equal(needsAnalysis("portion"), true);
+  assert.equal(needsAnalysis("piece"), true);
+  // Tahmin varsa çalışırlar.
+  assert.equal(referenceGrams("portion", 320), 320);
+  assert.equal(referenceGrams("piece", 300, "3 yumurta"), 100);
+});
+
+test("birim seçici mobilde kırpılmaz", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  // Tek satırlık pill + overflow:hidden, 9 birimden yalnız 2'sini gösteriyordu
+  // (ölçüldü: kap 131px, içerik 491px).
+  const rule = css.match(/\.portion-unit-switch \{([^}]*)\}/)?.[1] ?? "";
+  assert.match(rule, /flex-wrap:wrap/, "çipler sarmalanmalı");
+  assert.doesNotMatch(rule, /overflow:hidden/, "kırpma geri gelmiş");
+  assert.match(css, /\.manual-fields > label:has\(\.portion-unit-switch\) \{ grid-column:1\/-1; \}/, "porsiyon alanı mobilde tam satır olmalı");
+});
+
+test("profilden planı yenilemek panelde kalır", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const [app, manager] = await Promise.all([
+    readFile(new URL("../components/FitAiApp.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../components/ProfileManager.tsx", import.meta.url), "utf8"),
+  ]);
+  assert.match(app, /await createPlan\(\{ keepOnDashboard: true \}\)/);
+  // Yenilemede onboarding ekranlarına geçilmemeli.
+  assert.match(app, /if \(!keepOnDashboard\) setStep\(STEP\.building\)/);
+  assert.match(app, /if \(keepOnDashboard\) return;\s*\n\s*setPlanReport\(/);
+  assert.match(manager, /onRefreshPlan\(\)\.finally/);
+  assert.match(app, /onRefreshPlan=\{refreshPlanFromProfile\}/);
+});

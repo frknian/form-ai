@@ -1389,11 +1389,21 @@ export default function Home() {
     }
   }
 
-  async function createPlan() {
+  /**
+   * Profildeki cevaplarla AI programını yeniden kurar.
+   *
+   * createPlan onboarding akışını da sürüyor (kişiselleştirme ekranı → rapor);
+   * yenilemede kullanıcı panelde kalmalı, o yüzden ekran geçişleri atlanır.
+   */
+  async function refreshPlanFromProfile() {
+    await createPlan({ keepOnDashboard: true });
+  }
+
+  async function createPlan({ keepOnDashboard = false }: { keepOnDashboard?: boolean } = {}) {
     setSaving(true);
     // Kişiselleştirme artık soru ekranının altında değil, kendi tam ekranında
     // gösterilir: son soruda kalıp bekletmek "takıldı mı?" hissi veriyordu.
-    setStep(STEP.building);
+    if (!keepOnDashboard) setStep(STEP.building);
     // Hedef planı, test cevaplarıyla birlikte burada kurulur. Haftalık gün ve
     // seans süresi zaten teste soruldu; ikinci kez sormak yerine oradan alınır.
     const targetKg = readMeasure(shownTargetWeight, WEIGHT_RANGE, 0);
@@ -1478,6 +1488,7 @@ export default function Home() {
     // Panele doğrudan atlamak yerine önce özet: kaç gün, kaç dakika, kaç
     // hareket ve kalori açığı/fazlası. Kullanıcı ne aldığını görmeden
     // uygulamanın içine düşüyordu.
+    if (keepOnDashboard) return;
     setPlanReport({
       weeklyDays: extractWeeklyDays(history[QUESTION.availableDays] || history[QUESTION.recentFrequency]),
       sessionMinutes: extractSessionMinutes(history[QUESTION.sessionMinutes]),
@@ -1651,7 +1662,7 @@ export default function Home() {
                 arada kalınca kullanıcı kaçıncı soruda olduğunu göremiyordu. */}
             <div className="question-progress"><div className="question-counter"><b>{questionIndex + 1}</b><span>/{QUESTION_COUNT}</span></div><div className="question-progress-bar" role="progressbar" aria-valuenow={questionIndex + 1} aria-valuemin={1} aria-valuemax={QUESTION_COUNT}><i style={{ width: `${((questionIndex + 1) / QUESTION_COUNT) * 100}%` }} /></div></div>
             <div className="question-card"><h2>{t.onboarding.historyQuestions[questionIndex]}</h2>{(answerOptions[questionIndex] ?? []).length > 0 && <p className="multi-select-note">{t.onboarding.multiSelectNote}</p>}<div className="answer-grid">{(answerOptions[questionIndex] ?? []).map((answer, answerIndex) => { const label = (t.onboarding.answerOptions[questionIndex] ?? [])[answerIndex] ?? answer; const selected = (history[questionIndex] || "").split(" · ").includes(answer); return <button type="button" key={answer} aria-pressed={selected} className={selected ? "answer selected" : "answer"} onClick={() => toggleAnswer(answer)}>{label}</button>; })}</div>{FREE_TEXT_QUESTIONS.includes(questionIndex) && <textarea className="question-note" aria-label={t.onboarding.historyQuestions[questionIndex]} value={history[questionIndex]} onChange={(e) => setFreeAnswer(e.target.value)} rows={4} />}</div>
-            <div className="action-row"><button className="back-btn" type="button" onClick={() => questionIndex ? setQuestionIndex(questionIndex - 1) : setStep(STEP.photo)}>{t.common.back}</button>{questionIndex < QUESTION_COUNT - 1 ? <button className="primary-btn" type="button" onClick={() => setQuestionIndex(questionIndex + 1)}>{t.onboarding.next} <span>→</span></button> : <button className="primary-btn" type="button" onClick={createPlan} disabled={saving}>{t.onboarding.buildPlan} <span>→</span></button>}</div>
+            <div className="action-row"><button className="back-btn" type="button" onClick={() => questionIndex ? setQuestionIndex(questionIndex - 1) : setStep(STEP.photo)}>{t.common.back}</button>{questionIndex < QUESTION_COUNT - 1 ? <button className="primary-btn" type="button" onClick={() => setQuestionIndex(questionIndex + 1)}>{t.onboarding.next} <span>→</span></button> : <button className="primary-btn" type="button" onClick={() => void createPlan()} disabled={saving}>{t.onboarding.buildPlan} <span>→</span></button>}</div>
           </div>}
 
           {step === STEP.building && <div className="step-content building-step">
@@ -1678,7 +1689,7 @@ export default function Home() {
         </section>
       ) : (
         <section className="dashboard">
-<WorkoutCalendar active={activeView === "calendar"} userId={authUser?.id} onStartWorkout={() => setActiveView("workout")} />{activeView === "calendar" ? null : activeView === "profile" ? <ProfileManager user={authUser} profile={{ displayName: name, birthDate, gender, heightCm: Number(height) || null, weightKg: Number(weight) || null, goalText, environment: gym === "Salon" ? "Salon" : "Evde", equipmentText, requestedExercises, avatarPath }} avatarUrl={avatarUrl} onSaved={applySavedProfile} onFrozen={() => setAccountStatus("frozen")} onDeleted={clearDeletedAccount} onProgressReset={resetSavedProgress} onRetakeTest={retakeProfileTest} onSignOut={handleSignOut} injuryAnswer={history[QUESTION.injuries] || ""} onInjuryChange={(next) => setHistory((current) => { const copy = current.slice(); copy[QUESTION.injuries] = next; return copy; })} /> : activeView === "progress" ? <><PersonalRecordCelebration records={newRecords} unit={weightUnit} onDismiss={() => setNewRecords([])} /><ProgressView name={name} sessions={sessionHistory} referenceTime={progressReferenceTime} energyMetrics={energyMetrics} userId={authUser?.id} goalText={goalText || planGoal} /></> : activeView === "nutrition" ? <CalorieTracker userId={authUser?.id} bmr={energyMetrics?.bmr} tdee={energyMetrics?.tdee} weightKg={Number(weight) || undefined} activityFactor={energyMetrics?.activityFactor} workoutDays={inferWorkoutDays(history[QUESTION.availableDays] || history[QUESTION.recentFrequency])} profileGoal={goalText || planGoal} /> : activeView === "library" ? <LibraryView onOpenWorkout={(exercise) => openWorkout(0, [exercise])} onAddWorkout={(exercise) => setAiWorkouts((current) => current.some((item) => item.id === exercise.id) ? current : [...current, exercise])} /> : <>
+<WorkoutCalendar active={activeView === "calendar"} userId={authUser?.id} onStartWorkout={() => setActiveView("workout")} />{activeView === "calendar" ? null : activeView === "profile" ? <ProfileManager user={authUser} profile={{ displayName: name, birthDate, gender, heightCm: Number(height) || null, weightKg: Number(weight) || null, goalText, environment: gym === "Salon" ? "Salon" : "Evde", equipmentText, requestedExercises, avatarPath }} avatarUrl={avatarUrl} onSaved={applySavedProfile} onFrozen={() => setAccountStatus("frozen")} onDeleted={clearDeletedAccount} onProgressReset={resetSavedProgress} onRetakeTest={retakeProfileTest} onRefreshPlan={refreshPlanFromProfile} onSignOut={handleSignOut} injuryAnswer={history[QUESTION.injuries] || ""} onInjuryChange={(next) => setHistory((current) => { const copy = current.slice(); copy[QUESTION.injuries] = next; return copy; })} /> : activeView === "progress" ? <><PersonalRecordCelebration records={newRecords} unit={weightUnit} onDismiss={() => setNewRecords([])} /><ProgressView name={name} sessions={sessionHistory} referenceTime={progressReferenceTime} energyMetrics={energyMetrics} userId={authUser?.id} goalText={goalText || planGoal} /></> : activeView === "nutrition" ? <CalorieTracker userId={authUser?.id} bmr={energyMetrics?.bmr} tdee={energyMetrics?.tdee} weightKg={Number(weight) || undefined} activityFactor={energyMetrics?.activityFactor} workoutDays={inferWorkoutDays(history[QUESTION.availableDays] || history[QUESTION.recentFrequency])} profileGoal={goalText || planGoal} /> : activeView === "library" ? <LibraryView onOpenWorkout={(exercise) => openWorkout(0, [exercise])} onAddWorkout={(exercise) => setAiWorkouts((current) => current.some((item) => item.id === exercise.id) ? current : [...current, exercise])} /> : <>
           {activeView === "workout" && activeWorkout !== null && currentWorkout && currentGuide && currentPrescription ? <div className="workout-player">
             <button className="back-btn" type="button" onClick={() => { setIsRunning(false); setActiveWorkout(null); }}>{t.workoutPlayer.backToPlan}</button>
             <div className="workout-session-progress" aria-label={t.workoutPlayer.progressLabel}>{playerQueue.map((exercise, index) => <span key={`${exercise.name}-${index}`} className={completedExercises.includes(index) ? "complete" : skippedExercises.includes(index) ? "skipped" : index === activeWorkout ? "active" : ""} />)}</div>

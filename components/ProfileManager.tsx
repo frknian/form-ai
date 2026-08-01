@@ -30,6 +30,8 @@ type ProfileManagerProps = {
   onDeleted: () => void;
   onProgressReset: () => void;
   onRetakeTest: () => void;
+  /** Profildeki cevaplarla AI programını yeniden kurar. */
+  onRefreshPlan: () => Promise<void>;
   /** Profil testindeki sakatlık cevabı; burada da düzenlenebilir. */
   injuryAnswer: string;
   onInjuryChange: (next: string) => void;
@@ -42,7 +44,8 @@ function numberOrNull(value: string) {
   return Number.isFinite(number) && number > 0 ? number : null;
 }
 
-export function ProfileManager({ user, profile, avatarUrl, onSaved, onFrozen, onDeleted, onProgressReset, onRetakeTest, onSignOut, injuryAnswer, onInjuryChange }: ProfileManagerProps) {
+export function ProfileManager({ user, profile, avatarUrl, onSaved, onFrozen, onDeleted, onProgressReset, onRetakeTest, onSignOut, injuryAnswer, onInjuryChange, onRefreshPlan }: ProfileManagerProps) {
+  const [refreshing, setRefreshing] = useState(false);
   const t = useTranslations();
   const locale = useLocale();
   const dateLocale = locale === "en" ? "en-US" : "tr-TR";
@@ -305,6 +308,11 @@ export function ProfileManager({ user, profile, avatarUrl, onSaved, onFrozen, on
     <div className="profile-preferences"><div><span>{t.profileManager.preferencesEyebrow}</span><strong>{t.profileManager.weightUnitTitle}</strong><small>{t.profileManager.weightUnitHint}</small></div><div className="segmented unit-segmented">{(["kg", "lb"] as WeightUnit[]).map((option) => <button type="button" key={option} aria-pressed={unit === option} className={unit === option ? "selected" : ""} onClick={() => setStoredWeightUnit(option)}>{option === "kg" ? t.profileManager.unitKg : t.profileManager.unitLb}</button>)}</div></div>
 
     <div className="profile-export"><div><span>{t.profileManager.dataEyebrow}</span><strong>{t.profileManager.exportTitle}</strong><p>{t.profileManager.exportBody}</p></div><button type="button" disabled={exporting} onClick={() => void exportData()}>{exporting ? t.profileManager.exportPreparing : t.profileManager.exportButton}</button></div>
+
+    {/* Profil cevapları değişince Full Body/Bölgesel programlar kendiliğinden
+        güncellenir (ekipmandan türetilirler), ama Akıllı Program AI'dan gelir
+        ve yeniden üretilmesi gerekir. */}
+    <div className="profile-export refresh-plan-zone"><div><span>{t.profileManager.refreshEyebrow}</span><strong>{t.profileManager.refreshTitle}</strong><p>{t.profileManager.refreshBody}</p></div><button type="button" disabled={refreshing} onClick={() => { setRefreshing(true); void onRefreshPlan().finally(() => setRefreshing(false)); }}>{refreshing ? t.profileManager.refreshing : t.profileManager.refreshAction}</button></div>
 
     <div className="profile-export retake-test-zone"><div><span>{t.profileManager.retakeTestEyebrow}</span><strong>{t.profileManager.retakeTestTitle}</strong><p>{t.profileManager.retakeTestBody}</p></div><button type="button" onClick={onRetakeTest}>{t.profileManager.retakeTestAction}</button></div>
 

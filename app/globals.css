@@ -1277,11 +1277,16 @@ input,select,textarea { color-scheme:inherit; }
 .manual-fields input,.manual-fields select { max-width:100%; box-sizing:border-box; }
 
 /* Porsiyon birimi anahtarı (gram / adet) */
-.portion-unit-switch { display:inline-flex; gap:0; margin-top:6px; border:1px solid var(--line); border-radius:999px; overflow:hidden; }
-.portion-unit-switch button { min-height:28px; padding:0 11px; border:0; background:transparent; color:var(--muted-text); font-size:10px; font-weight:700; cursor:pointer; }
-.portion-unit-switch button.active { background:#e8f7b5; color:#3f4a1d; }
+/* Birim seçici ÇİP ızgarasıdır, tek satırlık pill değil. Pill hâlindeyken
+   `overflow:hidden` ile 9 birimden yalnız 2'si görünüyordu (ölçüldü: kap
+   131px, içerik 491px) — kalanlar sessizce kırpılıyordu. */
+.portion-unit-switch { display:flex; flex-wrap:wrap; gap:6px; margin-top:7px; }
+.portion-unit-switch button { min-height:36px; padding:0 12px; border:1px solid var(--line); border-radius:var(--r-pill); background:var(--surface); color:var(--muted-text); font-size:11px; font-weight:700; white-space:nowrap; cursor:pointer; }
+.portion-unit-switch button:hover:not(:disabled):not(.active) { border-color:#a9bf57; color:var(--ink); }
+.portion-unit-switch button:disabled { opacity:.45; cursor:not-allowed; }
+.portion-unit-switch button.active { border-color:#c6e55f; background:#e8f7b5; color:#3f4a1d; }
 .portion-unit-hint { display:block; margin-top:5px; color:var(--muted-text); font-size:9px; line-height:1.4; }
-.dark .portion-unit-switch { border-color:#46502c; }
+.dark .portion-unit-switch button { border-color:#46502c; }
 .dark .portion-unit-switch button.active { background:#33411f; color:#d9ed9e; }
 
 /* Ana ekran kısayolları */
@@ -1765,3 +1770,12 @@ button.brand:hover .brand-mark { transform:scale(1.06); }
   .profile-signout { justify-content:stretch; }
   .profile-signout button { width:100%; }
 }
+
+/* Porsiyon alanı mobilde tam satır: çipler yarım sütuna sığmıyor. */
+@media (max-width:700px) {
+  .manual-fields > label:has(.portion-unit-switch) { grid-column:1/-1; }
+  .portion-unit-switch button { min-height:40px; font-size:12px; }
+}
+.refresh-plan-zone button { min-height:40px; padding:0 16px; border:1px solid #cbdc92; border-radius:9px; background:#f0f8d0; color:#52641a; font-size:12px; font-weight:700; cursor:pointer; }
+.refresh-plan-zone button:disabled { opacity:.6; cursor:wait; }
+.dark .refresh-plan-zone button { background:#33411f; border-color:#5d7030; color:#d9ed9e; }

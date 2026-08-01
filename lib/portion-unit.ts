@@ -1,4 +1,5 @@
-// Porsiyon birimi: gram, porsiyon ya da adet.
+// Porsiyon birimi: gram, mililitre, ev ölçüleri (bardak/kupa/tabak/kase),
+// porsiyon ya da adet.
 //
 // Tüm besin matematiği GRAM üzerinden çalışır (scaleFoodNutrition 100 g bazlı),
 // bu yüzden porsiyon ve adet yalnızca giriş kolaylığıdır: kaç tane yediğini
@@ -13,9 +14,32 @@
 // onları ancak tahmin varken sunar — uydurma bir ağırlıkla devam etmek sessizce
 // yanlış kalori kaydeder.
 
-export type PortionUnit = "g" | "portion" | "piece";
+export type PortionUnit = "g" | "ml" | "teaGlass" | "waterGlass" | "mug" | "plate" | "bowl" | "portion" | "piece";
 
-export const PORTION_UNITS: PortionUnit[] = ["g", "portion", "piece"];
+export const PORTION_UNITS: PortionUnit[] = ["g", "ml", "teaGlass", "waterGlass", "mug", "plate", "bowl", "portion", "piece"];
+
+// Ev ölçülerinin yaklaşık gram karşılığı. Bunlar SABİTTİR: porsiyon ve adetten
+// farklı olarak bir AI tahminine ihtiyaç duymazlar, çünkü bir su bardağının
+// hacmi yemekten yemeğe değişmez.
+//
+// ml → g dönüşümü suyun yoğunluğunu (1 g/ml) varsayar. Yağ (~0,92) ve bal
+// (~1,4) gibi sıvılarda sapar; bu yüzden arayüzde "yaklaşık" denir. Tabak ve
+// kase ise hacim değil, tipik bir porsiyon ağırlığıdır.
+const HOUSEHOLD_GRAMS: Partial<Record<PortionUnit, number>> = {
+  ml: 1,
+  teaGlass: 110,
+  waterGlass: 200,
+  mug: 250,
+  plate: 350,
+  bowl: 250,
+};
+
+/** Bu birimler AI tahmini olmadan hesaplanamaz (referansları yemeğe özgüdür). */
+export const UNITS_NEEDING_ANALYSIS: PortionUnit[] = ["portion", "piece"];
+
+export function needsAnalysis(unit: PortionUnit): boolean {
+  return UNITS_NEEDING_ANALYSIS.includes(unit);
+}
 
 export function parseAmount(value: string): number | null {
   const parsed = Number(value.replace(",", "."));
@@ -43,6 +67,8 @@ export function detectPieceCount(description: string): number | null {
 /** Bir birimin (porsiyon ya da adet) kaç gram olduğu. */
 export function referenceGrams(unit: PortionUnit, analysedGrams: number | null, description = ""): number | null {
   if (unit === "g") return 1;
+  const household = HOUSEHOLD_GRAMS[unit];
+  if (household !== undefined) return household;
   if (!analysedGrams || analysedGrams <= 0) return null;
   if (unit === "portion") return analysedGrams;
   const count = detectPieceCount(description);

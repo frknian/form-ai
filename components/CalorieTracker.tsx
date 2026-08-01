@@ -6,7 +6,7 @@ import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { NutritionGoalsPanel } from "@/components/NutritionGoalsPanel";
 import { HydrationFasting } from "@/components/HydrationFasting";
 import { frequentMeals } from "@/lib/frequent-meals";
-import { PORTION_UNITS, fromGrams, referenceGrams, toGrams, type PortionUnit } from "@/lib/portion-unit";
+import { PORTION_UNITS, fromGrams, needsAnalysis, referenceGrams, toGrams, type PortionUnit } from "@/lib/portion-unit";
 import { emptyFoodNutrition, scaleFoodNutrition, type FoodMicronutrients, type FoodNutrition } from "@/lib/food-search";
 import { calculateNutritionGoal, calculateWeeklyWeightTrend, inferNutritionGoal, sanitizeNutritionGoal, type NutritionGoal, type NutritionGoalType, type WeightTrend } from "@/lib/nutrition-goals";
 import { isNativeApp, mobileImpact, takeFoodPhoto } from "@/lib/mobile";
@@ -31,9 +31,18 @@ interface CalorieTrackerProps {
 const meals: Meal[] = ["Kahvaltı", "Öğle yemeği", "Akşam yemeği", "Atıştırmalık"];
 
 function portionUnitLabel(t: ReturnType<typeof useTranslations>, unit: PortionUnit) {
-  if (unit === "g") return t.calorieTracker.portionUnitGram;
-  if (unit === "portion") return t.calorieTracker.portionUnitPortion;
-  return t.calorieTracker.portionUnitPiece;
+  const labels: Record<PortionUnit, string> = {
+    g: t.calorieTracker.portionUnitGram,
+    ml: t.calorieTracker.portionUnitMl,
+    teaGlass: t.calorieTracker.portionUnitTeaGlass,
+    waterGlass: t.calorieTracker.portionUnitWaterGlass,
+    mug: t.calorieTracker.portionUnitMug,
+    plate: t.calorieTracker.portionUnitPlate,
+    bowl: t.calorieTracker.portionUnitBowl,
+    portion: t.calorieTracker.portionUnitPortion,
+    piece: t.calorieTracker.portionUnitPiece,
+  };
+  return labels[unit];
 }
 
 function normalizeFoodSource(value: unknown): FoodEntry["source"] {
@@ -473,15 +482,24 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
             <label className="food-name">{t.calorieTracker.foodNameLabel}<input value={foodName} onChange={(event) => { setFoodName(event.target.value); setAiEstimate(null); setNutrition(emptyFoodNutrition()); }} placeholder={t.calorieTracker.foodNamePlaceholder} autoComplete="off" /></label>
             <label>{portionUnit === "g" ? t.calorieTracker.portionLabel : portionUnitLabel(t, portionUnit).toLocaleUpperCase("tr-TR")}
               <input inputMode="decimal" value={portionUnit === "g" ? grams : unitAmount} onChange={(event) => updatePortion(event.target.value)} placeholder={portionUnit === "g" ? "100" : "1"} />
-              {analysedGrams !== null && <span className="portion-unit-switch" role="group" aria-label={t.calorieTracker.portionUnitLabel}>
-                {PORTION_UNITS.map((unit) => <button
-                  key={unit}
-                  type="button"
-                  aria-pressed={portionUnit === unit}
-                  className={portionUnit === unit ? "active" : ""}
-                  onClick={() => switchPortionUnit(unit)}
-                >{portionUnitLabel(t, unit)}</button>)}
-              </span>}
+              {/* Ev ölçüleri sabit gram karşılığı taşır, bu yüzden AI tahmini
+                  olmadan da seçilebilir. Porsiyon ve adet ise yemeğe özgüdür;
+                  tahmin yokken kilitli kalırlar, yoksa uydurma bir ağırlıkla
+                  sessizce yanlış kalori kaydedilirdi. */}
+              <span className="portion-unit-switch" role="group" aria-label={t.calorieTracker.portionUnitLabel}>
+                {PORTION_UNITS.map((unit) => {
+                  const locked = needsAnalysis(unit) && analysedGrams === null;
+                  return <button
+                    key={unit}
+                    type="button"
+                    disabled={locked}
+                    title={locked ? t.calorieTracker.portionUnitNeedsAnalysis : undefined}
+                    aria-pressed={portionUnit === unit}
+                    className={portionUnit === unit ? "active" : ""}
+                    onClick={() => switchPortionUnit(unit)}
+                  >{portionUnitLabel(t, unit)}</button>;
+                })}
+              </span>
               {portionUnit !== "g" && unitGrams !== null && <small className="portion-unit-hint">{t.calorieTracker.portionUnitHint(portionUnitLabel(t, portionUnit), Math.round(unitGrams))}</small>}
             </label>
             {aiEstimate && <div className={`ai-estimate-card ${aiEstimate.confidence}`}><span>{t.calorieTracker.aiEstimateLabel}</span><strong>{foodName}</strong><small>{t.calorieTracker.aiEstimateGrams(aiEstimate.grams)}</small><div className="ai-nutrition-values"><b>{nutrition.calories}<small>kcal</small></b><b>{nutrition.protein}<small>{t.calorieTracker.macroProtein} (g)</small></b><b>{nutrition.carbs}<small>{t.calorieTracker.macroCarbs} (g)</small></b><b>{nutrition.fat}<small>{t.calorieTracker.macroFat} (g)</small></b><b>{nutrition.fiber}<small>{t.calorieTracker.fieldFiber} (g)</small></b></div>{aiEstimate.items.length > 1 && <small>{aiEstimate.items.join(" · ")}</small>}<p>{aiEstimate.confidence === "low" ? t.calorieTracker.aiConfidenceLow : aiEstimate.confidence === "high" ? t.calorieTracker.aiConfidenceHigh : t.calorieTracker.aiConfidenceMedium}</p></div>}
