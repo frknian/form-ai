@@ -208,3 +208,51 @@ test("ilerleme ekranı bel/göğüs/bacak ölçülerini adıyla duyurur", async 
     assert.ok(block.toLocaleLowerCase("tr-TR").includes(area), `ölçüm metni "${area}" bölgesinden söz etmiyor`);
   }
 });
+
+test("profil testinde panele ait ağır hesaplar çalışmaz", () => {
+  // Bildirilen hata: sorularda yazarken ve şık seçerken uygulama kasıyordu.
+  // Sebep, panele ait dört useMemo'nun bağımlılığında `history` olmasıydı:
+  // her tuş vuruşu 170 hareketlik katalogda ekipman eşleşmesi (regex), plan
+  // üretimi ve JSON.stringify tetikliyordu. Hepsi onDashboard ile kapatıldı.
+  assert.match(appSource, /const onDashboard = step === STEP\.dashboard;/);
+  for (const memo of ["localPlan", "workouts", "planExerciseOptions"]) {
+    const block = appSource.match(new RegExp(`const ${memo} = useMemo\\(([^]*?)\\n  \\);`))?.[1] ?? "";
+    assert.ok(block.length > 0, `${memo} memo'su bulunamadı`);
+    // Kapı iki biçimde yazılabiliyor: tek satırda "onDashboard ? …" ya da
+    // koşulun satır sonunda kaldığı çok satırlı ternary.
+    assert.match(block, /onDashboard\s*(\?|\n\s*\?)/, `${memo} panel dışında da hesaplanıyor`);
+    assert.match(block, /\[onDashboard,/, `${memo} bağımlılık listesinde onDashboard yok`);
+  }
+  assert.match(appSource, /const coachContext = useMemo\(\(\) => !onDashboard \? "" :/);
+});
+
+test("onboarding adımları adlandırılmıştır ve panel sonuncudur", () => {
+  // Araya "kişiselleştiriliyor" ve "rapor" ekranları girdi; çıplak sayı
+  // karşılaştırmaları (step === 5) sessizce yanlış ekranı gösterirdi.
+  assert.match(appSource, /const STEP = \{ profile: 1, place: 2, photo: 3, test: 4, building: 5, report: 6, dashboard: 7 \} as const;/);
+  assert.doesNotMatch(appSource, /step === 5|step < 5|setStep\(5\)/, "çıplak adım numarası kalmış");
+});
+
+test("son sorudan sonra kişiselleştirme ve rapor ekranı gelir", () => {
+  // Eskiden son soruda beklenip doğrudan panele atlanıyordu.
+  assert.match(appSource, /setStep\(STEP\.building\)/, "kişiselleştirme ekranına geçilmiyor");
+  assert.match(appSource, /setStep\(STEP\.report\)/, "rapor ekranına geçilmiyor");
+  assert.match(appSource, /step === STEP\.building &&/);
+  assert.match(appSource, /step === STEP\.report && planReport &&/);
+  // Rapor panele ancak kullanıcı düğmeye basınca geçmeli.
+  assert.match(appSource, /onClick=\{\(\) => setStep\(STEP\.dashboard\)\}/);
+});
+
+test("hedef kilo profil testinden önce sorulur ve plana yazılır", () => {
+  assert.match(appSource, /targetWeight=\{shownTargetWeight\} onTargetWeightChange=\{setTargetWeightDraft\}/);
+  // Haftalık gün ve süre teste zaten soruldu; ikinci kez sorulmaz.
+  assert.match(appSource, /setStoredGoalPlan\(\{[^]*?weeklyDays: extractWeeklyDays\(history\[QUESTION\.availableDays\]/);
+});
+
+test("soru sayacı sorunun üstünde ve şıklar eşit boyutta", async () => {
+  assert.match(appSource, /<div className="question-counter"><b>\{questionIndex \+ 1\}<\/b><span>\/\{QUESTION_COUNT\}<\/span><\/div>/);
+  const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  const grid = css.match(/\.answer-grid \{ display:grid; grid-template-columns:repeat\(auto-fit,minmax\(150px,1fr\)\); ([^}]*)\}/)?.[1] ?? "";
+  assert.ok(grid.length > 0, "şıklar eşit sütunlu grid'e alınmamış");
+  assert.match(css, /\.answer-grid \.answer \{[^}]*min-height:56px/, "şıkların yüksekliği eşitlenmemiş");
+});

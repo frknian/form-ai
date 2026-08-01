@@ -32,7 +32,8 @@ import { FrozenAccountScreen, ProfileManager } from "@/components/ProfileManager
 import { TrainingPlaceSwitch } from "@/components/TrainingPlaceSwitch";
 import { BodyMetrics } from "@/components/onboarding/BodyMetrics";
 import { GoalPicker } from "@/components/onboarding/GoalPicker";
-import { DEFAULT_HEIGHT_CM, DEFAULT_WEIGHT_KG } from "@/lib/body-metrics";
+import { DEFAULT_HEIGHT_CM, DEFAULT_WEIGHT_KG, WEIGHT_RANGE, readMeasure } from "@/lib/body-metrics";
+import { planGoal as buildGoalProjection } from "@/lib/goal-plan";
 import { getExerciseById, getExercisesForAI } from "@/lib/exercise-service";
 import { trustedExerciseMedia } from "@/lib/trusted-exercise-media";
 import { translateExerciseLabel, turkishExerciseInstructions } from "@/lib/exercise-translations";
@@ -52,7 +53,7 @@ import { isVerifiedAuthUser } from "@/lib/auth";
 import { saveProfileWithHistory, signedAvatarUrl } from "@/lib/profile-service";
 import { detectNewPersonalRecords, summarizePersonalRecords, type NewPersonalRecord, type PersonalRecord, type SetLogInput } from "@/lib/personal-records";
 import { formatWeight, unitToKg, type WeightUnit } from "@/lib/units";
-import { useStoredGoalPlan, useWeightUnit } from "@/lib/preferences";
+import { setStoredGoalPlan, useStoredGoalPlan, useWeightUnit } from "@/lib/preferences";
 import { authorizedFetch } from "@/lib/api-client";
 
 // Kullanıcı hangi arayüz dilini seçerse seçsin, seçilen cevaplar bu Türkçe
@@ -60,6 +61,12 @@ import { authorizedFetch } from "@/lib/api-client";
 // (ör. pain.includes("diz")) bu sabit değerlere dayanır. Yalnızca EKRANDA
 // GÖSTERİLEN metin `t.onboarding.historyQuestions/answerOptions` ile çevrilir.
 const answerOptions = tr.onboarding.answerOptions;
+
+// Onboarding adımları. Daha önce çıplak sayılardı (5 = gösterge paneli);
+// araya ekran eklemek her karşılaştırmayı tek tek gözden geçirmeyi
+// gerektiriyordu. Panel her zaman SON adımdır.
+const STEP = { profile: 1, place: 2, photo: 3, test: 4, building: 5, report: 6, dashboard: 7 } as const;
+const FORM_STEP_COUNT = 4;
 
 // Diğer seçeneklerle birlikte işaretlenmesi anlamsız olan cevaplar. Bunlardan
 // biri seçilince diğerleri temizlenir (ör. "Yok" ile birlikte "Diz" olamaz).
@@ -737,7 +744,9 @@ export default function Home() {
   const locale = useLocale();
   const [authStatus, setAuthStatus] = useState<"loading" | "anonymous" | "authenticated" | "unavailable">("loading");
   const [authUser, setAuthUser] = useState<User | null>(null);
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState<number>(STEP.profile);
+  const [targetWeightDraft, setTargetWeightDraft] = useState("");
+  const [planReport, setPlanReport] = useState<{ weeklyDays: number; sessionMinutes: number; exerciseCount: number } | null>(null);
   const [name, setName] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [height, setHeight] = useState("");
@@ -802,10 +811,28 @@ export default function Home() {
   const [browseDetail, setBrowseDetail] = useState<typeof exerciseLibrary[number] | null>(null);
 
 
-  const localPlan = useMemo(() => createPersonalPlan(gym, equipmentText, history, goalText, requestedExercises, sessionHistory.length), [gym, equipmentText, history, goalText, requestedExercises, sessionHistory.length]);
+  // PERFORMANS: aşağıdaki dört hesap YALNIZ gösterge panelinde kullanılır ama
+  // bağımlılıkları arasında `history` var. Gate olmadan, profil testinde her
+  // tuş vuruşu ve her şık dokunuşu 170 hareketlik katalogda ekipman eşleşmesi
+  // (regex + normalize), plan üretimi, sıralama ve JSON.stringify tetikliyordu
+  // — tek başına ekipman filtresi ~7 ms, toplamı telefonda yazmayı kasıyordu.
+  // Panel dışındayken boş dönüyoruz; panele geçince zaten yeniden hesaplanır.
+  const onDashboard = step === STEP.dashboard;
+  const localPlan = useMemo(
+    () => onDashboard ? createPersonalPlan(gym, equipmentText, history, goalText, requestedExercises, sessionHistory.length) : [],
+    [onDashboard, gym, equipmentText, history, goalText, requestedExercises, sessionHistory.length],
+  );
   const adaptation = useMemo(() => summarizeTrainingAdaptation(sessionHistory), [sessionHistory]);
-  const workouts = useMemo(() => adaptWorkoutsToHistory(aiWorkouts.length ? aiWorkouts : localPlan, adaptation, localPlan), [adaptation, aiWorkouts, localPlan]);
-  const planExerciseOptions = useMemo(() => exerciseLibrary.filter((exercise) => isExerciseSafeForProfile(exercise, gym, equipmentText, history)).map((exercise) => ({ ...exercise, level: exercise.area, sets: `3 set · ${exercise.name === "Plank" || exercise.name === "Dead Bug" ? "30 sn" : "10 tekrar"}`, rest: "60 sn dinlenme", seconds: exercise.name === "Plank" || exercise.name === "Dead Bug" ? 30 : 45 })), [equipmentText, gym, history]);
+  const workouts = useMemo(
+    () => onDashboard ? adaptWorkoutsToHistory(aiWorkouts.length ? aiWorkouts : localPlan, adaptation, localPlan) : [],
+    [onDashboard, adaptation, aiWorkouts, localPlan],
+  );
+  const planExerciseOptions = useMemo(
+    () => onDashboard
+      ? exerciseLibrary.filter((exercise) => isExerciseSafeForProfile(exercise, gym, equipmentText, history)).map((exercise) => ({ ...exercise, level: exercise.area, sets: `3 set · ${exercise.name === "Plank" || exercise.name === "Dead Bug" ? "30 sn" : "10 tekrar"}`, rest: "60 sn dinlenme", seconds: exercise.name === "Plank" || exercise.name === "Dead Bug" ? 30 : 45 }))
+      : [],
+    [onDashboard, equipmentText, gym, history],
+  );
   const currentWorkout = activeWorkout === null ? null : playerQueue[activeWorkout] || null;
   const currentGuide = currentWorkout ? getMotionGuide(currentWorkout) : null;
   const currentPrescription = currentWorkout ? workoutPrescription(currentWorkout) : null;
@@ -817,6 +844,9 @@ export default function Home() {
   // ekranda ise her zaman geçerli bir başlangıç değeri gösterilir.
   const shownHeight = height || String(DEFAULT_HEIGHT_CM);
   const shownWeight = weight || String(DEFAULT_WEIGHT_KG);
+  // Hedef kilo profil testinden ÖNCE sorulur; varsayılan olarak mevcut kilo
+  // gösterilir ("kilonu koru"), kullanıcı kaydırınca hedef oluşur.
+  const shownTargetWeight = targetWeightDraft || shownWeight;
   const autoEquipmentProfile = useMemo(() => detectUserEquipmentProfile(gym === "Salon", equipmentText), [gym, equipmentText]);
   // Salon seçilirse salon kataloğu; ev seçilirse kullanıcının EVDEKİ ekipmanı
   // (profilinde "Salon" yazsa bile), yoksa ekipmansız.
@@ -837,6 +867,17 @@ export default function Home() {
     return calculated === null ? "" : String(calculated);
   }, [birthDate]);
   const energyMetrics = useMemo(() => calculateEnergyMetrics(gender, age, height, weight, history[QUESTION.dailyMovement]), [age, gender, height, history, weight]);
+  // Rapordaki kalori açığı/fazlası. Hedef kilo verilmediyse (koru) gösterilmez.
+  const reportEnergy = useMemo(() => {
+    const target = readMeasure(shownTargetWeight, WEIGHT_RANGE, 0);
+    const current = readMeasure(shownWeight, WEIGHT_RANGE, 0);
+    if (!planReport || target <= 0 || Math.abs(target - current) < 0.5) return null;
+    const result = buildGoalProjection(
+      { targetWeightKg: target, weeklyDays: planReport.weeklyDays, sessionMinutes: planReport.sessionMinutes, intensity: "steady" },
+      { currentWeightKg: current, bmr: energyMetrics?.bmr ?? null },
+    );
+    return result.status === "ready" ? result : null;
+  }, [planReport, shownTargetWeight, shownWeight, energyMetrics]);
   const displayedSessionCalories = Math.round(sessionCalories);
   const progressionBlock = planProgressionBlock(sessionHistory.length);
   const planLevel = history[QUESTION.level] || "Yeni başlıyorum";
@@ -846,12 +887,14 @@ export default function Home() {
     const w = Number(weight);
     return h && w ? (w / (h * h)).toFixed(1) : "22.4";
   }, [height, weight]);
-  const coachContext = useMemo(() => JSON.stringify({
+  // Sohbet bağlamı da yalnız panelde (AiCoachChat) kullanılır; gate olmadan
+  // her tuş vuruşunda tüm planı JSON'a çeviriyordu.
+  const coachContext = useMemo(() => !onDashboard ? "" : JSON.stringify({
     profile: { name, age, gender, height, weight, bmi, environment: gym, equipment: equipmentText || "Ekipmansız", goal: goalText || planGoal, requestedExercises },
     historyAnswers: history,
     currentPlan: workouts.map(({ name: exerciseName, area, sets, rest, instructions }) => ({ name: exerciseName, area, sets, rest, instructions })),
     recentWorkouts: sessionHistory.slice(0, 5).map(({ completedAt, durationSeconds, calories, completedExercises, totalExercises, difficulty, fatigue, painAreas }) => ({ completedAt, durationSeconds, calories, completedExercises, totalExercises, difficulty, fatigue, painAreas })),
-  }), [age, bmi, equipmentText, gender, goalText, gym, height, history, name, planGoal, requestedExercises, sessionHistory, weight, workouts]);
+  }), [onDashboard, age, bmi, equipmentText, gender, goalText, gym, height, history, name, planGoal, requestedExercises, sessionHistory, weight, workouts]);
 
   function handlePhoto(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -956,7 +999,7 @@ export default function Home() {
       // kullanıcının hedefini "deneyim" sanmak gibi sessiz hatalar üretirdi.
       const savedHistory = normalizeHistory(profile.history_answers);
       if (Array.isArray(profile.history_answers) && profile.history_answers.length) setHistory(savedHistory);
-      if (isHistoryComplete(savedHistory)) setStep(5);
+      if (isHistoryComplete(savedHistory)) setStep(STEP.dashboard);
     }
     void loadProfile();
     return () => { cancelled = true; };
@@ -1365,6 +1408,21 @@ export default function Home() {
 
   async function createPlan() {
     setSaving(true);
+    // Kişiselleştirme artık soru ekranının altında değil, kendi tam ekranında
+    // gösterilir: son soruda kalıp bekletmek "takıldı mı?" hissi veriyordu.
+    setStep(STEP.building);
+    // Hedef planı, test cevaplarıyla birlikte burada kurulur. Haftalık gün ve
+    // seans süresi zaten teste soruldu; ikinci kez sormak yerine oradan alınır.
+    const targetKg = readMeasure(shownTargetWeight, WEIGHT_RANGE, 0);
+    const currentKg = readMeasure(shownWeight, WEIGHT_RANGE, 0);
+    if (targetKg > 0 && Math.abs(targetKg - currentKg) >= 0.5) {
+      setStoredGoalPlan({
+        targetWeightKg: targetKg,
+        weeklyDays: extractWeeklyDays(history[QUESTION.availableDays] || history[QUESTION.recentFrequency]),
+        sessionMinutes: extractSessionMinutes(history[QUESTION.sessionMinutes]),
+        intensity: "steady",
+      });
+    }
     setAiStatus("scanning");
     setAiStage("profile");
     setAiError("");
@@ -1434,7 +1492,15 @@ export default function Home() {
     }
     setAiStage("complete");
     setSaving(false);
-    setStep(5);
+    // Panele doğrudan atlamak yerine önce özet: kaç gün, kaç dakika, kaç
+    // hareket ve kalori açığı/fazlası. Kullanıcı ne aldığını görmeden
+    // uygulamanın içine düşüyordu.
+    setPlanReport({
+      weeklyDays: extractWeeklyDays(history[QUESTION.availableDays] || history[QUESTION.recentFrequency]),
+      sessionMinutes: extractSessionMinutes(history[QUESTION.sessionMinutes]),
+      exerciseCount: createPersonalPlan(gym, equipmentText, history, goalText, requestedExercises, sessionHistory.length).length,
+    });
+    setStep(STEP.report);
   }
 
   // Hazır program/bölgesel liste ekipman filtresine göre üretilir (bkz.
@@ -1468,7 +1534,7 @@ export default function Home() {
   // yeniden açılır; antrenman ve beslenme kayıtlarına dokunulmaz.
   function retakeProfileTest() {
     setQuestionIndex(0);
-    setStep(4);
+    setStep(STEP.test);
     setActiveView("plan");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -1504,7 +1570,7 @@ export default function Home() {
     if (supabase) await supabase.auth.signOut();
     setAuthUser(null);
     setAuthStatus("anonymous");
-    setStep(1);
+    setStep(STEP.profile);
     setName("");
     setBirthDate("");
     setHeight("");
@@ -1545,7 +1611,7 @@ export default function Home() {
     setAuthUser(null);
     setAuthStatus("anonymous");
     setAccountStatus("active");
-    setStep(1);
+    setStep(STEP.profile);
   }
 
   if (authStatus !== "authenticated" || !authUser) {
@@ -1564,52 +1630,75 @@ export default function Home() {
     <main className="app-shell">
       <MobileRuntime />
       <PreferenceSync userId={authUser?.id} />
-      {step === 5 && <nav className="topbar">
+      {step === STEP.dashboard && <nav className="topbar">
         <div className="brand"><span className="brand-mark">↗</span><span>Hede<span className="brand-letter-gradient">f</span><span className="brand-dot">it</span></span></div>
         <div className="top-links" ref={topLinksRef}><button type="button" aria-pressed={activeView === "plan"} className={activeView === "plan" ? "active" : ""} onClick={() => setActiveView("plan")}>{t.nav.home}</button><button type="button" aria-pressed={activeView === "workout"} className={activeView === "workout" ? "active" : ""} onClick={() => setActiveView("workout")}>{t.nav.workout}</button><button type="button" aria-pressed={activeView === "nutrition"} className={activeView === "nutrition" ? "active" : ""} onClick={() => setActiveView("nutrition")}>{t.nav.nutrition}</button><button type="button" aria-pressed={activeView === "progress"} className={activeView === "progress" ? "active" : ""} onClick={() => setActiveView("progress")}>{t.nav.progress}</button><button type="button" aria-pressed={activeView === "calendar"} className={activeView === "calendar" ? "active" : ""} onClick={() => setActiveView("calendar")}>{t.nav.calendar}</button><button type="button" aria-pressed={activeView === "library"} className={activeView === "library" ? "active" : ""} onClick={() => setActiveView("library")}>{t.nav.library}</button></div>
-        <div className="top-actions"><LanguageToggle /><ThemeToggle /><button type="button" className={activeView === "profile" ? "profile-mini active" : "profile-mini"} aria-pressed={activeView === "profile"} onClick={() => step === 5 && setActiveView("profile")}><span className="mini-avatar">{avatarUrl ? <Image src={avatarUrl} alt="" width={30} height={30} unoptimized /> : name ? name.charAt(0).toUpperCase() : "E"}</span><span>{t.nav.profile}</span></button></div>
+        <div className="top-actions"><LanguageToggle /><ThemeToggle /><button type="button" className={activeView === "profile" ? "profile-mini active" : "profile-mini"} aria-pressed={activeView === "profile"} onClick={() => step === STEP.dashboard && setActiveView("profile")}><span className="mini-avatar">{avatarUrl ? <Image src={avatarUrl} alt="" width={30} height={30} unoptimized /> : name ? name.charAt(0).toUpperCase() : "E"}</span><span>{t.nav.profile}</span></button></div>
       </nav>}
-      {step < 5 && <div className="toggle-row onboarding-toggle-row"><LanguageToggle /><ThemeToggle /></div>}
+      {step < STEP.dashboard && <div className="toggle-row onboarding-toggle-row"><LanguageToggle /><ThemeToggle /></div>}
 
-      {step < 5 ? (
+      {step < STEP.dashboard ? (
         <section className="onboarding-wrap">
-          <div className="progress-row"><span className="progress-label">{step === 4 ? t.onboarding.stepLabelHistory : t.onboarding.stepLabelProfile}</span><span>{t.onboarding.stepCounter(step)}</span></div>
-          <div className="progress-track"><span style={{ width: `${(step / 4) * 100}%` }} /></div>
+          <div className="progress-row"><span className="progress-label">{step === STEP.test ? t.onboarding.stepLabelHistory : t.onboarding.stepLabelProfile}</span><span>{t.onboarding.stepCounter(Math.min(step, FORM_STEP_COUNT))}</span></div>
+          <div className="progress-track"><span style={{ width: `${(Math.min(step, FORM_STEP_COUNT) / FORM_STEP_COUNT) * 100}%` }} /></div>
 
-          {step === 1 && <div className="step-content">
+          {step === STEP.profile && <div className="step-content">
             <div className="eyebrow">{t.onboarding.step1Eyebrow}</div><h1>{t.onboarding.step1TitleLine1}<br /><em>{t.onboarding.step1TitleEm}</em></h1><p className="lead">{t.onboarding.step1Lead}</p>
             <div className="form-grid">
               <label className="wide">{t.onboarding.nameLabel}<input value={name} onChange={(e) => setName(e.target.value)} placeholder={t.onboarding.namePlaceholder} /></label>
               <label className="wide">{t.onboarding.birthDateLabel}<input type="date" min="1905-01-01" max={new Date().toISOString().slice(0, 10)} value={birthDate} onChange={(e) => setBirthDate(e.target.value)} /><small>{age ? t.onboarding.birthDateHintKnown(age) : t.onboarding.birthDateHintUnknown}</small></label>
             </div>
-            <BodyMetrics gender={gender} onGenderChange={setGender} height={shownHeight} onHeightChange={setHeight} weight={shownWeight} onWeightChange={setWeight} />
+            <BodyMetrics gender={gender} onGenderChange={setGender} height={shownHeight} onHeightChange={setHeight} weight={shownWeight} onWeightChange={setWeight} targetWeight={shownTargetWeight} onTargetWeightChange={setTargetWeightDraft} />
             {/* Kaydırıcı hiç dokunulmasa bile bir değer GÖSTERİR; ekranda 170 cm
                 yazarken devam düğmesinin kapalı kalması kullanıcıyı kilitliyordu.
                 Gösterilen değeri devam ederken yazıyoruz, böylece ekranda görünen
                 ile kaydedilen her zaman aynı olur. */}
-            <div className="action-row"><button className="primary-btn" type="button" disabled={!name.trim() || !isValidBirthDate(birthDate)} onClick={() => { setHeight(shownHeight); setWeight(shownWeight); setStep(2); }}>{t.common.continueLabel} <span>→</span></button></div>
+            <div className="action-row"><button className="primary-btn" type="button" disabled={!name.trim() || !isValidBirthDate(birthDate)} onClick={() => { setHeight(shownHeight); setWeight(shownWeight); setStep(STEP.place); }}>{t.common.continueLabel} <span>→</span></button></div>
           </div>}
 
-          {step === 2 && <div className="step-content equipment-step">
+          {step === STEP.place && <div className="step-content equipment-step">
             <div className="eyebrow">{t.onboarding.step2Eyebrow}</div><h1>{t.onboarding.step2TitleLine1}<br /><em>{t.onboarding.step2TitleEm}</em></h1><p className="lead">{t.onboarding.step2Lead}</p>
             <TrainingPlaceSwitch value={gym === "Salon" ? "Salon" : "Evde"} onChange={setGym} label={t.onboarding.trainingPlaceLabel} homeLabel={t.onboarding.homeLabel} homeHint={t.onboarding.homeHint} gymLabel={t.onboarding.gymLabel} gymHint={t.onboarding.gymHint} />
             <label className="textarea-label">{t.onboarding.equipmentLabel} <small>{t.onboarding.optionalHint}</small><textarea value={equipmentText} onChange={(e) => setEquipmentText(e.target.value)} placeholder={t.onboarding.equipmentPlaceholder(gender)} /></label>
             <GoalPicker value={goalText} onChange={setGoalText} />
             <label className="textarea-label">{t.onboarding.goalLabel} <small>{t.onboarding.goalHint}</small><textarea value={goalText} onChange={(e) => setGoalText(e.target.value)} placeholder={t.onboarding.goalPlaceholder(gender)} /></label>
             <label className="textarea-label">{t.onboarding.requestedExercisesLabel} <small>{t.onboarding.optionalHint}</small><textarea value={requestedExercises} onChange={(e) => setRequestedExercises(e.target.value)} placeholder={t.onboarding.requestedExercisesPlaceholder(gender)} /></label>
-            <div className="action-row"><button className="back-btn" type="button" onClick={() => setStep(1)}>{t.common.back}</button><button className="primary-btn" type="button" onClick={() => setStep(3)}>{t.common.continueLabel} <span>→</span></button></div>
+            <div className="action-row"><button className="back-btn" type="button" onClick={() => setStep(STEP.profile)}>{t.common.back}</button><button className="primary-btn" type="button" onClick={() => setStep(STEP.photo)}>{t.common.continueLabel} <span>→</span></button></div>
           </div>}
 
-          {step === 3 && <div className="step-content photo-step">
+          {step === STEP.photo && <div className="step-content photo-step">
             <div className="eyebrow">{t.onboarding.step3Eyebrow}</div><h1>{t.onboarding.step3TitleLine1}<br /><em>{t.onboarding.step3TitleEm}</em></h1><p className="lead">{t.onboarding.step3Lead}</p>
             <label className="upload-box">{photo ? <Image src={photo} alt={t.onboarding.uploadAlt} width={300} height={160} unoptimized /> : <><span className="upload-icon">＋</span><strong>{t.onboarding.uploadTitle}</strong><small>{t.onboarding.uploadHint}</small></>}<input type="file" accept="image/*" onChange={handlePhoto} /></label>
-            <div className="privacy-note"><span>⌁</span> {t.onboarding.privacyNoteAnalysis}</div><div className="action-row"><button className="back-btn" type="button" onClick={() => setStep(2)}>{t.common.back}</button><button className="primary-btn" type="button" onClick={() => setStep(4)}>{t.onboarding.startTest} <span>→</span></button></div>
+            <div className="privacy-note"><span>⌁</span> {t.onboarding.privacyNoteAnalysis}</div><div className="action-row"><button className="back-btn" type="button" onClick={() => setStep(STEP.place)}>{t.common.back}</button><button className="primary-btn" type="button" onClick={() => setStep(STEP.test)}>{t.onboarding.startTest} <span>→</span></button></div>
           </div>}
 
-          {step === 4 && <div className="step-content history-step">
-            <div className="question-progress"><div className="eyebrow">{t.onboarding.step4Eyebrow(questionIndex + 1, QUESTION_COUNT)}</div><div className="question-progress-bar" role="progressbar" aria-valuenow={questionIndex + 1} aria-valuemin={1} aria-valuemax={QUESTION_COUNT}><i style={{ width: `${((questionIndex + 1) / QUESTION_COUNT) * 100}%` }} /></div></div><h1>{t.onboarding.step4TitleLine1}<br /><em>{t.onboarding.step4TitleEm}</em></h1><p className="lead">{t.onboarding.step4Lead}</p>
-            <div className="question-card"><span className="question-number">{String(questionIndex + 1).padStart(2, "0")}</span><h2>{t.onboarding.historyQuestions[questionIndex]}</h2>{(answerOptions[questionIndex] ?? []).length > 0 && <p className="multi-select-note">{t.onboarding.multiSelectNote}</p>}<div className="answer-grid">{(answerOptions[questionIndex] ?? []).map((answer, answerIndex) => { const label = (t.onboarding.answerOptions[questionIndex] ?? [])[answerIndex] ?? answer; const selected = (history[questionIndex] || "").split(" · ").includes(answer); return <button type="button" key={answer} aria-pressed={selected} className={selected ? "answer selected" : "answer"} onClick={() => toggleAnswer(answer)}>{label}</button>; })}</div>{FREE_TEXT_QUESTIONS.includes(questionIndex) && <textarea className="question-note" aria-label={t.onboarding.historyQuestions[questionIndex]} value={history[questionIndex]} onChange={(e) => setFreeAnswer(e.target.value)} rows={4} />}</div>
-            {saving && <AiScanFigure status="scanning" stage={aiStage} />}<div className="action-row"><button className="back-btn" type="button" onClick={() => questionIndex ? setQuestionIndex(questionIndex - 1) : setStep(3)}>{t.common.back}</button>{questionIndex < QUESTION_COUNT - 1 ? <button className="primary-btn" type="button" onClick={() => setQuestionIndex(questionIndex + 1)}>{t.onboarding.next} <span>→</span></button> : <button className="primary-btn" type="button" onClick={createPlan} disabled={saving}>{saving ? t.onboarding.buildingPlan : t.onboarding.buildPlan}</button>}</div>
+          {step === STEP.test && <div className="step-content history-step">
+            {/* Sayaç ve çubuk doğrudan sorunun üstünde: uzun başlık ve lead
+                arada kalınca kullanıcı kaçıncı soruda olduğunu göremiyordu. */}
+            <div className="question-progress"><div className="question-counter"><b>{questionIndex + 1}</b><span>/{QUESTION_COUNT}</span></div><div className="question-progress-bar" role="progressbar" aria-valuenow={questionIndex + 1} aria-valuemin={1} aria-valuemax={QUESTION_COUNT}><i style={{ width: `${((questionIndex + 1) / QUESTION_COUNT) * 100}%` }} /></div></div>
+            <div className="question-card"><h2>{t.onboarding.historyQuestions[questionIndex]}</h2>{(answerOptions[questionIndex] ?? []).length > 0 && <p className="multi-select-note">{t.onboarding.multiSelectNote}</p>}<div className="answer-grid">{(answerOptions[questionIndex] ?? []).map((answer, answerIndex) => { const label = (t.onboarding.answerOptions[questionIndex] ?? [])[answerIndex] ?? answer; const selected = (history[questionIndex] || "").split(" · ").includes(answer); return <button type="button" key={answer} aria-pressed={selected} className={selected ? "answer selected" : "answer"} onClick={() => toggleAnswer(answer)}>{label}</button>; })}</div>{FREE_TEXT_QUESTIONS.includes(questionIndex) && <textarea className="question-note" aria-label={t.onboarding.historyQuestions[questionIndex]} value={history[questionIndex]} onChange={(e) => setFreeAnswer(e.target.value)} rows={4} />}</div>
+            <div className="action-row"><button className="back-btn" type="button" onClick={() => questionIndex ? setQuestionIndex(questionIndex - 1) : setStep(STEP.photo)}>{t.common.back}</button>{questionIndex < QUESTION_COUNT - 1 ? <button className="primary-btn" type="button" onClick={() => setQuestionIndex(questionIndex + 1)}>{t.onboarding.next} <span>→</span></button> : <button className="primary-btn" type="button" onClick={createPlan} disabled={saving}>{t.onboarding.buildPlan} <span>→</span></button>}</div>
+          </div>}
+
+          {step === STEP.building && <div className="step-content building-step">
+            <AiScanFigure status="scanning" stage={aiStage} />
+            <h1>{t.onboarding.buildingTitle}<br /><em>{t.onboarding.buildingTitleEm}</em></h1>
+            <p className="lead">{t.onboarding.buildingLead}</p>
+          </div>}
+
+          {step === STEP.report && planReport && <div className="step-content report-step">
+            <div className="eyebrow">{t.onboarding.reportEyebrow}</div>
+            <h1>{t.onboarding.reportTitle}<br /><em>{t.onboarding.reportTitleEm}</em></h1>
+            <p className="lead">{aiRationale || t.onboarding.reportLead}</p>
+            <div className="report-grid">
+              <div><span>{t.onboarding.reportWeeklyDays}</span><strong>{planReport.weeklyDays}</strong><small>{t.onboarding.reportWeeklyDaysHint(planReport.sessionMinutes)}</small></div>
+              <div><span>{t.onboarding.reportExercises}</span><strong>{planReport.exerciseCount}</strong><small>{t.onboarding.reportExercisesHint}</small></div>
+              {reportEnergy && <div><span>{reportEnergy.losing ? t.onboarding.reportDeficit : t.onboarding.reportSurplus}</span><strong>{reportEnergy.dailyDeltaKcal} <small>kcal</small></strong><small>{t.onboarding.reportEnergyHint(reportEnergy.weeks)}</small></div>}
+            </div>
+            {aiSafetyNote && <div className="ai-safety"><strong>{t.dashboard.safetyNoteLabel}</strong><span>{aiSafetyNote}</span></div>}
+            {aiError && <div className="ai-error">{aiError}</div>}
+            <p className="report-disclaimer">{t.goalPlan.disclaimer}</p>
+            <div className="action-row"><button className="primary-btn" type="button" onClick={() => setStep(STEP.dashboard)}>{t.onboarding.reportContinue} <span>→</span></button></div>
           </div>}
           <aside className="side-note"><div className="orb"><span>✦</span></div><p><strong>{t.onboarding.sideNoteTitle}</strong><br />{t.onboarding.sideNoteBody}</p></aside>
         </section>
@@ -1680,7 +1769,7 @@ export default function Home() {
         </section>
       )}
       {pendingSession && <div className="feedback-overlay" role="dialog" aria-modal="true" aria-labelledby="feedback-title"><div className="feedback-dialog"><div className="feedback-check">✓</div><div className="eyebrow">{t.feedback.completedEyebrow}</div><h2 id="feedback-title">{t.feedback.titleLine1}<br /><em>{t.feedback.titleEm}</em></h2><p>{t.feedback.body}</p><fieldset><legend>{t.feedback.difficultyLegend}</legend><div className="feedback-options">{(["Kolay", "Uygun", "Zor"] as WorkoutDifficulty[]).map((option) => <button type="button" aria-pressed={feedbackDifficulty === option} className={feedbackDifficulty === option ? "selected" : ""} onClick={() => setFeedbackDifficulty(option)} key={option}>{option === "Kolay" ? t.feedback.difficultyEasy : option === "Uygun" ? t.feedback.difficultySuitable : t.feedback.difficultyHard}</button>)}</div></fieldset><fieldset><legend>{t.feedback.fatigueLegend}</legend><div className="fatigue-scale">{[1, 2, 3, 4, 5].map((value) => <button type="button" aria-pressed={feedbackFatigue === value} className={feedbackFatigue === value ? "selected" : ""} onClick={() => setFeedbackFatigue(value)} key={value}><strong>{value}</strong><small>{value === 1 ? t.feedback.fatigueVeryLow : value === 3 ? t.feedback.fatigueMedium : value === 5 ? t.feedback.fatigueVeryHigh : ""}</small></button>)}</div></fieldset><fieldset><legend>{t.feedback.painLegend}</legend><div className="feedback-options pain-options">{["Yok", "Bel", "Diz", "Omuz", "Diğer"].map((area) => <button type="button" aria-pressed={feedbackPainAreas.includes(area)} className={feedbackPainAreas.includes(area) ? "selected" : ""} onClick={() => toggleFeedbackPain(area)} key={area}>{area === "Yok" ? t.feedback.painNone : area === "Bel" ? t.feedback.painLowerBack : area === "Diz" ? t.feedback.painKnee : area === "Omuz" ? t.feedback.painShoulder : t.feedback.painOther}</button>)}</div></fieldset><label className="feedback-note">{t.feedback.noteLabel} <small>{t.onboarding.optionalHint}</small><textarea value={feedbackNote} onChange={(event) => setFeedbackNote(event.target.value)} placeholder={t.feedback.notePlaceholder} /></label><div className="feedback-summary"><span>{t.feedback.nextStepLabel}</span><strong>{feedbackPainAreas.some((area) => area !== "Yok") || feedbackDifficulty === "Zor" || feedbackFatigue >= 4 ? t.feedback.nextStepRecovery : feedbackDifficulty === "Kolay" && feedbackFatigue <= 2 ? t.feedback.nextStepIncrease : t.feedback.nextStepBalanced}</strong></div><button className="primary-btn feedback-save" type="button" onClick={() => void saveWorkoutFeedback()}>{t.feedback.save} <span>→</span></button></div></div>}
-      {step === 5 && <AiCoachChat context={coachContext} />}
+      {step === STEP.dashboard && <AiCoachChat context={coachContext} />}
       <footer><span>{t.common.footerTagline}</span><span>© 2026</span></footer>
     </main>
   );

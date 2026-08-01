@@ -78,6 +78,7 @@ export function BodyMetrics({
   gender, onGenderChange,
   height, onHeightChange,
   weight, onWeightChange,
+  targetWeight, onTargetWeightChange,
 }: {
   gender: string;
   onGenderChange: (next: string) => void;
@@ -85,6 +86,9 @@ export function BodyMetrics({
   onHeightChange: Dispatch<SetStateAction<string>>;
   weight: string;
   onWeightChange: Dispatch<SetStateAction<string>>;
+  /** Hedef kilo. Verilmezse alan hiç gösterilmez (ör. profil düzenleme). */
+  targetWeight?: string;
+  onTargetWeightChange?: Dispatch<SetStateAction<string>>;
 }) {
   const t = useTranslations();
   const heightValue = readMeasure(height, HEIGHT_RANGE, DEFAULT_HEIGHT_CM);
@@ -160,6 +164,34 @@ export function BodyMetrics({
           </div>
         </MeasureField>
       </div>
+
+      {/* Hedef kilo burada sorulur: profil testinden ÖNCE, mevcut kilonun hemen
+          yanında. Kullanıcı "kaç kiloyum, kaça inmek istiyorum"u tek ekranda
+          görüp karşılaştırabilsin diye ayrı bir adıma taşınmadı. */}
+      {onTargetWeightChange && (
+        <MeasureField
+          value={readMeasure(targetWeight ?? "", WEIGHT_RANGE, weightValue)}
+          range={WEIGHT_RANGE}
+          onSet={(next) => onTargetWeightChange(String(next))}
+          onStep={stepBy(onTargetWeightChange, WEIGHT_RANGE, weightValue)}
+          label={t.onboarding.targetWeightShort}
+          unit="kg"
+          icon="weightLoss"
+          decreaseLabel={t.onboarding.decreaseLabel(t.onboarding.targetWeightShort)}
+          increaseLabel={t.onboarding.increaseLabel(t.onboarding.targetWeightShort)}
+        >
+          <div className="measure-visual measure-target" aria-hidden="true">
+            <span className="measure-target-delta">
+              {(() => {
+                const target = readMeasure(targetWeight ?? "", WEIGHT_RANGE, weightValue);
+                const delta = Math.round((target - weightValue) * 10) / 10;
+                if (Math.abs(delta) < 0.5) return t.onboarding.targetSame;
+                return `${delta < 0 ? "−" : "+"}${Math.abs(delta)} kg`;
+              })()}
+            </span>
+          </div>
+        </MeasureField>
+      )}
 
       {bmi !== null && (
         <div className="bmi-readout">
