@@ -1751,6 +1751,9 @@ export default function Home() {
             onSaveCustom={saveCustomProgram}
             onDeleteCustom={deleteCustomProgram}
           />
+          {/* Aktivite günlüğü ana ekrandan buraya alındı: yürüyüş ve koşu
+              kaydetmek de bir antrenman kaydı, ana ekranın işi değil. */}
+          <button type="button" className="activity-open" onClick={() => setActivityOpen(true)}><span className="activity-open-icon">🏃</span><span className="activity-open-text"><span className="eyebrow">{t.dashboard.activityEyebrow}</span><strong>{t.dashboard.activityTitle}</strong><small>{t.dashboard.activityBody}</small></span><span className="activity-open-cta">{t.dashboard.activityOpen} →</span></button>
           </>
           : <>
           {/* Ana ekran mobilde 7 blok boyunca aşağı iniyordu; sıfırdan gelen
@@ -1768,7 +1771,6 @@ export default function Home() {
                 <div className="stats-row"><div><span>{t.dashboard.bmiLabel}</span><strong>{bmi}</strong><small>{t.dashboard.bmiHint}</small></div><div><span>{t.dashboard.goalLabel}</span><strong>{goalText ? t.dashboard.goalPersonal : t.dashboard.goalDefault}</strong><small>{t.dashboard.goalHint}</small></div><div><span>{t.dashboard.environmentLabel}</span><strong>{gym === "Salon" ? t.onboarding.gymLabel : t.onboarding.homeLabel}</strong><small>{equipmentText || t.dashboard.noEquipment}</small></div></div>
               </> },
               { key: "actions", label: t.pager.homeActions, content: <>
-                <button type="button" className="activity-open" onClick={() => setActivityOpen(true)}><span className="activity-open-icon">🏃</span><span className="activity-open-text"><span className="eyebrow">{t.dashboard.activityEyebrow}</span><strong>{t.dashboard.activityTitle}</strong><small>{t.dashboard.activityBody}</small></span><span className="activity-open-cta">{t.dashboard.activityOpen} →</span></button>
                 <QuickActions onNavigate={navigateFromQuickAction} />
               </> },
               { key: "goal", label: t.pager.homeGoal, content: <GoalPlanCard userId={authUser?.id} currentWeightKg={Number(weight) || null} profileBmr={energyMetrics?.bmr ?? null} /> },
@@ -1778,12 +1780,14 @@ export default function Home() {
               </> },
             ]}
           />
-          {/* Kaplama sayfaların dışında durur: sabit konumlu bir diyalog,
-              yatay kaydırılan izin içinde beklenmedik biçimde kırpılabilir. */}
-          {activityOpen && <div className="activity-overlay" role="dialog" aria-modal="true" aria-label={t.dashboard.activityDialogLabel} onClick={(event) => { if (event.target === event.currentTarget) setActivityOpen(false); }}><div className="activity-modal"><button type="button" className="activity-modal-close" onClick={() => setActivityOpen(false)} aria-label={t.dashboard.activityCloseLabel}>×</button><ActivityLogger userId={authUser.id} weightKg={Number(weight) || 70} /></div></div>}</>}
+          </>}
           </>}
         </section>
       )}
+      {/* Kaplama görünüm dallarının DIŞINDA: aktivite günlüğü artık
+          antrenman sekmesinden açılıyor ve sabit konumlu bir diyalog,
+          yatay kaydırılan sayfalayıcı izinin içinde kırpılabilirdi. */}
+      {activityOpen && authUser && <div className="activity-overlay" role="dialog" aria-modal="true" aria-label={t.dashboard.activityDialogLabel} onClick={(event) => { if (event.target === event.currentTarget) setActivityOpen(false); }}><div className="activity-modal"><button type="button" className="activity-modal-close" onClick={() => setActivityOpen(false)} aria-label={t.dashboard.activityCloseLabel}>×</button><ActivityLogger userId={authUser.id} weightKg={Number(weight) || 70} /></div></div>}
       {pendingSession && <div className="feedback-overlay" role="dialog" aria-modal="true" aria-labelledby="feedback-title"><div className="feedback-dialog"><div className="feedback-check">✓</div><div className="eyebrow">{t.feedback.completedEyebrow}</div><h2 id="feedback-title">{t.feedback.titleLine1}<br /><em>{t.feedback.titleEm}</em></h2>
         {/* Seans özeti: kullanıcı ne yaptığını görmeden geri bildirim vermek
             zorunda kalıyordu. Süre, yakım, tamamlanan hareket ve çalışılan

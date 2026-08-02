@@ -1881,3 +1881,18 @@ button.brand:hover .brand-mark { transform:scale(1.06); }
 @media (prefers-reduced-motion: reduce) {
   .mobile-pager-dots button { transition:none; }
 }
+
+/* Öğün ekleme alanı dikey bir akış: önce porsiyon (gram/ml + ev ölçüleri),
+   sonra besin adı ile "AI ile analiz et" yan yana, en sonda ekle. Eski dört
+   sütunlu ızgara bu sırayı taşımıyordu ve porsiyon araya sıkışıyordu.
+   Bu blok dosyanın SONUNDA: .manual-fields'ın birden çok yerde tanımlı
+   sütunları aksi hâlde burayı ezerdi. */
+.manual-fields { grid-template-columns:minmax(0,1fr); align-items:stretch; }
+.manual-fields > * { grid-column:1/-1; }
+.food-name-row { display:flex; align-items:flex-end; gap:9px; }
+.food-name-row .food-name { flex:1 1 auto; min-width:0; }
+.food-name-row .ai-estimate-btn { flex:0 0 auto; min-height:42px; margin-top:0; }
+@media (max-width:520px) {
+  .food-name-row { flex-direction:column; align-items:stretch; }
+  .food-name-row .ai-estimate-btn { justify-content:center; }
+}

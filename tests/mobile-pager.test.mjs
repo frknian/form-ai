@@ -14,12 +14,13 @@ test("ana ekran mobilde dört sayfaya bölünür", () => {
   // Ana ekran alt alta 7 blok uzunluğundaydı; sıfırdan gelen kullanıcı ekranın
   // altında içerik kaldığını fark etmiyordu.
   assert.match(app, /<MobilePager/, "ana ekran sayfalayıcıya bağlanmalı");
-  const block = app.slice(app.indexOf("<MobilePager"), app.indexOf("activity-overlay"));
+  const pagerStart = app.indexOf("<MobilePager");
+  const block = app.slice(pagerStart, app.indexOf("</section>", pagerStart));
   const keys = [...block.matchAll(/\{ key: "([a-z]+)"/g)].map((match) => match[1]);
   assert.deepEqual(keys, ["today", "actions", "goal", "energy"]);
   // Her blok tam olarak bir sayfaya taşınmış olmalı, kopyalanmamalı.
   const markers = [
-    "className=\"dashboard-head\"", "className=\"stats-row\"", "className=\"activity-open\"",
+    "className=\"dashboard-head\"", "className=\"stats-row\"",
     "<QuickActions", "<GoalPlanCard", "className=\"wellness-row\"", "className=\"energy-dashboard\"",
   ];
   for (const marker of markers) {

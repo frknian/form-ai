@@ -489,14 +489,6 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
     {/* Öğün eklemek bu ekranın günlük işi; hedef paneli ise ayda bir
         dokunulan bir ayar. Hedefler üstteyken kullanıcı her gün onu geçip
         aşağı kaydırmak zorunda kalıyordu, bu yüzden sıra ters çevrildi. */}
-    {regulars.length > 0 && <section className="frequent-meals">
-      <div className="frequent-meals-head"><div className="eyebrow">{t.frequentMeals.eyebrow}</div><span>{t.frequentMeals.hint}</span></div>
-      <div className="frequent-meals-list">{regulars.map((item) => <button type="button" key={item.key} onClick={() => void addFrequentMeal(item.key)}>
-        <strong>{item.entry.name}</strong>
-        <span>{item.entry.calories} kcal · {item.entry.meal}</span>
-        <small>{t.frequentMeals.countLabel(item.count)}</small>
-      </button>)}</div>
-    </section>}
 
     <section className="food-entry-panel" id="food-entry-panel">
       <div className="section-title"><div><div className="eyebrow">{t.calorieTracker.addMealEyebrow}</div><h2>{t.calorieTracker.addMealTitle}</h2></div><span className="food-entry-note"><Sparkles size={14} /> {t.calorieTracker.quickAndPractical}</span></div>
@@ -508,9 +500,11 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
         <label>{t.calorieTracker.mealLabel}<select value={meal} onChange={(event) => setMeal(event.target.value as Meal)}>{meals.map((option) => <option key={option} value={option}>{option}</option>)}</select></label>
         {activeMethod === "photo" && <div className="method-content photo-food-content"><button type="button" className="food-photo-drop" onClick={() => void chooseFoodPhoto()}>{photoPreview ? <Image src={photoPreview} alt={t.calorieTracker.photoAlt} width={640} height={480} unoptimized /> : <><ImagePlus size={26} /><strong>{t.calorieTracker.photoDropPrompt1}</strong><span>{t.calorieTracker.photoDropPrompt2}</span></>}</button><input ref={cameraInput} className="sr-only" type="file" accept="image/*" capture="environment" onChange={handlePhoto} />{photoPreview && <button type="button" className="outline-btn" onClick={() => void chooseFoodPhoto()}>{t.calorieTracker.choosePhotoAgain}</button>}</div>}
         {(activeMethod === "text" || photoPreview) && <>
+          {/* Sıra bilerek böyle: önce ne kadar yediğin (porsiyon), sonra ne
+              yediğin ve analiz, en sonda ekle. Eskiden besin adı en üstteydi ve
+              porsiyon araya sıkışıyordu. */}
           <div className="manual-fields">
-            <label className="food-name">{t.calorieTracker.foodNameLabel}<input value={foodName} onChange={(event) => { setFoodName(event.target.value); setAiEstimate(null); setNutrition(emptyFoodNutrition()); }} placeholder={t.calorieTracker.foodNamePlaceholder} autoComplete="off" /></label>
-            <label>{portionUnit === "g" ? t.calorieTracker.portionLabel : portionUnitLabel(t, portionUnit).toLocaleUpperCase("tr-TR")}
+            <label className="portion-field">{portionUnit === "g" ? t.calorieTracker.portionLabel : portionUnitLabel(t, portionUnit).toLocaleUpperCase("tr-TR")}
               <input inputMode="decimal" value={portionUnit === "g" ? grams : unitAmount} onChange={(event) => updatePortion(event.target.value)} placeholder={portionUnit === "g" ? "100" : "1"} />
               {/* Ev ölçüleri sabit gram karşılığı taşır, bu yüzden AI tahmini
                   olmadan da seçilebilir. Porsiyon ve adet ise yemeğe özgüdür;
@@ -544,8 +538,13 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
               </span>
               {portionUnit !== "g" && unitGrams !== null && <small className="portion-unit-hint">{t.calorieTracker.portionUnitHint(portionUnitLabel(t, portionUnit), Math.round(unitGrams))}</small>}
             </label>
+            {/* Besin adı ve "AI ile analiz et" yan yana: analiz doğrudan bu
+                alandaki metne uygulanır, ikisini ayırmak bağı koparıyordu. */}
+            <div className="food-name-row">
+              <label className="food-name">{t.calorieTracker.foodNameLabel}<input value={foodName} onChange={(event) => { setFoodName(event.target.value); setAiEstimate(null); setNutrition(emptyFoodNutrition()); }} placeholder={t.calorieTracker.foodNamePlaceholder} autoComplete="off" /></label>
+              {activeMethod === "text" && <button type="button" className="ai-estimate-btn" disabled={estimating || foodName.trim().length < 2} onClick={() => void estimateFromText()}><Sparkles size={14} /> {estimating ? t.calorieTracker.estimating : t.calorieTracker.estimateWithAi}</button>}
+            </div>
             {aiEstimate && <div className={`ai-estimate-card ${aiEstimate.confidence}`}><span>{t.calorieTracker.aiEstimateLabel}</span><strong>{foodName}</strong><small>{t.calorieTracker.aiEstimateGrams(aiEstimate.grams)}</small><div className="ai-nutrition-values"><b>{nutrition.calories}<small>kcal</small></b><b>{nutrition.protein}<small>{t.calorieTracker.macroProtein} (g)</small></b><b>{nutrition.carbs}<small>{t.calorieTracker.macroCarbs} (g)</small></b><b>{nutrition.fat}<small>{t.calorieTracker.macroFat} (g)</small></b><b>{nutrition.fiber}<small>{t.calorieTracker.fieldFiber} (g)</small></b></div>{aiEstimate.items.length > 1 && <small>{aiEstimate.items.join(" · ")}</small>}<p>{aiEstimate.confidence === "low" ? t.calorieTracker.aiConfidenceLow : aiEstimate.confidence === "high" ? t.calorieTracker.aiConfidenceHigh : t.calorieTracker.aiConfidenceMedium}</p></div>}
-            {activeMethod === "text" && <button type="button" className="ai-estimate-btn" disabled={estimating || foodName.trim().length < 2} onClick={() => void estimateFromText()}><Sparkles size={14} /> {estimating ? t.calorieTracker.estimating : t.calorieTracker.estimateWithAi}</button>}
             <button type="button" className="primary-btn add-food" disabled={isSubmitting || estimating || (activeMethod === "photo" && !aiEstimate)} onClick={() => void submitManual()}><Plus size={16} /> {estimating ? t.calorieTracker.estimating : aiEstimate ? t.calorieTracker.addToLog : t.calorieTracker.analyzeAndAdd}</button>
           </div>
         </>}
@@ -554,6 +553,17 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
         {(message || pendingFoodPhoto) && <p className="food-message">{message || t.calorieTracker.restoringPhoto}</p>}
       </div>
     </section>
+
+    {/* Sık yenenler öğün eklemenin KISAYOLU; formun üstünde durunca asıl işi
+        aşağı itiyordu. Formun hemen altına alındı. */}
+    {regulars.length > 0 && <section className="frequent-meals">
+      <div className="frequent-meals-head"><div className="eyebrow">{t.frequentMeals.eyebrow}</div><span>{t.frequentMeals.hint}</span></div>
+      <div className="frequent-meals-list">{regulars.map((item) => <button type="button" key={item.key} onClick={() => void addFrequentMeal(item.key)}>
+        <strong>{item.entry.name}</strong>
+        <span>{item.entry.calories} kcal · {item.entry.meal}</span>
+        <small>{t.frequentMeals.countLabel(item.count)}</small>
+      </button>)}</div>
+    </section>}
 
     <section className="calorie-hero">
       <div className={overBy ? "calorie-progress over" : "calorie-progress"} style={{ "--progress": `${progress}%` } as React.CSSProperties}><div><small>{t.calorieTracker.todayIntake}</small><strong>{totals.calories}<em> kcal</em></strong><span>{t.calorieTracker.percentOfGoal(rawProgress)}</span></div></div>
