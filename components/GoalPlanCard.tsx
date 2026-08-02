@@ -46,7 +46,13 @@ function intensityCopy(t: ReturnType<typeof useTranslations>, intensity: GoalInt
  * açmamış kullanıcıda o satır olmadığı için profil eksiksizken bile
  * "günlük kalori hedefi için boy, kilo ve doğum tarihi gerekiyor" diyordu.
  */
-export function GoalPlanCard({ userId, currentWeightKg, profileBmr }: { userId?: string; currentWeightKg?: number | null; profileBmr?: number | null }) {
+/**
+ * `compact`: mobil ana ekranın tek sayfaya sığması için yalnız hafta/kalan/
+ * günlük kalori şeridini gösterir; grafik, AI analizi ve sihirbaz burada
+ * render edilmez. Dokunulunca `onOpen` çağrılır — ebeveyn aynı bileşeni
+ * `compact` olmadan bir kaplamada açar.
+ */
+export function GoalPlanCard({ userId, currentWeightKg, profileBmr, compact = false, onOpen }: { userId?: string; currentWeightKg?: number | null; profileBmr?: number | null; compact?: boolean; onOpen?: () => void }) {
   const t = useTranslations();
   const locale = useLocale();
   const unit = useWeightUnit();
@@ -95,7 +101,10 @@ export function GoalPlanCard({ userId, currentWeightKg, profileBmr }: { userId?:
 
   // Plan değiştiğinde analizi tazele.
   useEffect(() => {
-    if (!saved || !effectiveWeight || !plan || plan.status !== "ready") return;
+    // Kompakt şerit analiz metnini hiç göstermez; kaplama açıldığında zaten
+    // ayrı, tam bir örnek monte edilir. Burada istemek yinelenen bir çağrı
+    // olurdu.
+    if (compact || !saved || !effectiveWeight || !plan || plan.status !== "ready") return;
     const signature = JSON.stringify([saved, Math.round(effectiveWeight * 10), bmr]);
     if (requestedSignature.current === signature) return;
     requestedSignature.current = signature;
@@ -125,7 +134,7 @@ export function GoalPlanCard({ userId, currentWeightKg, profileBmr }: { userId?:
       }
     })();
     return () => { cancelled = true; };
-  }, [saved, effectiveWeight, bmr, locale, plan, t.goalPlan.error]);
+  }, [compact, saved, effectiveWeight, bmr, locale, plan, t.goalPlan.error]);
 
   function startWizard() {
     setDraft(saved ?? {
@@ -146,11 +155,40 @@ export function GoalPlanCard({ userId, currentWeightKg, profileBmr }: { userId?:
   }
 
   if (!effectiveWeight) {
+    if (compact) return <section className="goal-plan goal-plan-compact goal-plan-compact-disabled"><div className="eyebrow">{t.goalPlan.eyebrow}</div><p>{t.goalPlan.needsWeight}</p></section>;
     return <section className="goal-plan">
       <div className="section-title"><div className="eyebrow">{t.goalPlan.eyebrow}</div></div>
       <h2>{t.goalPlan.title}</h2>
       <p className="goal-plan-note">{t.goalPlan.needsWeight}</p>
     </section>;
+  }
+
+  // --- Kompakt şerit: sihirbaz ve tam kart burada render edilmez, her şey
+  // dokunmayla açılan kaplamaya devredilir. ---
+  if (compact) {
+    if (!saved || !plan) return <button type="button" className="goal-plan goal-plan-compact" onClick={onOpen}>
+      <div className="eyebrow">{t.goalPlan.eyebrow}</div>
+      <strong>{t.goalPlan.start}</strong>
+      <span className="goal-plan-compact-arrow">→</span>
+    </button>;
+
+    if (plan.status !== "ready") return <button type="button" className="goal-plan goal-plan-compact" onClick={onOpen}>
+      <div className="eyebrow">{t.goalPlan.eyebrow}</div>
+      <strong>{plan.status === "reached" ? t.goalPlan.reached : t.goalPlan.needsWeight}</strong>
+      <span className="goal-plan-compact-arrow">→</span>
+    </button>;
+
+    // Üç kısa değer yan yana: hafta, kalan kilo, günlük kalori hedefi. Tam
+    // karttaki uzun açıklamalar (haftalık tempo, antrenman yakımı) burada
+    // yok — dokununca kaplamada tam kart bunları zaten gösterir.
+    return <button type="button" className="goal-plan goal-plan-compact goal-plan-compact-ready" onClick={onOpen}>
+      <div className="eyebrow">{t.goalPlan.eyebrow}<span className="goal-plan-compact-arrow">{t.goalPlan.compactOpen} →</span></div>
+      <div className="goal-plan-compact-stats">
+        <div><strong>{plan.weeks}</strong><span>{t.goalPlan.compactDurationLabel}</span></div>
+        <div><strong>{formatWeight(plan.remainingKg, unit, { withUnit: true })}</strong><span>{t.goalPlan.compactRemainingLabel}</span></div>
+        {plan.dailyIntakeKcal !== null && <div><strong>{plan.dailyIntakeKcal} <small>kcal</small></strong><span>{t.goalPlan.compactIntakeLabel}</span></div>}
+      </div>
+    </button>;
   }
 
   // --- Soru sihirbazı ---

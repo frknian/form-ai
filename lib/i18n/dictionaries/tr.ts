@@ -21,17 +21,6 @@ export const tr = {
     library: "Hareket kütüphanesi",
     profile: "Profilim",
   },
-  pager: {
-    homeLabel: "Ana ekran sayfaları",
-    next: (pageName: string) => `İleri · ${pageName}`,
-    last: "Son sayfa",
-    goTo: (pageName: string) => `${pageName} sayfasına git`,
-    position: (current: number, total: number) => `${current} / ${total}`,
-    homeToday: "Bugün",
-    homeActions: "Hızlı işlemler",
-    homeGoal: "Hedefin",
-    homeEnergy: "Enerji",
-  },
   auth: {
     loadingTitle: "Isınma turu",
     loadingBody: "Güvenli oturumun hazırlanıyor…",
@@ -1003,6 +992,10 @@ export const tr = {
     analyze: "Planı analiz et",
     analyzing: "Planın analiz ediliyor…",
     edit: "Planı değiştir",
+    compactOpen: "Tüm planı gör",
+    compactDurationLabel: "Süre",
+    compactRemainingLabel: "Kalan",
+    compactIntakeLabel: "Hedef",
     // Sonuç
     weeksValue: (weeks: number) => `${weeks} hafta`,
     etaLabel: "Tahmini varış",

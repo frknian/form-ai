@@ -28,7 +28,6 @@ import { GoalPlanCard } from "@/components/GoalPlanCard";
 import { TrainingPrograms } from "@/components/TrainingPrograms";
 import { normalizeCustomPrograms, removeCustomProgram, summarizeProgramProgress, upsertCustomProgram, type CustomProgram } from "@/lib/training-programs";
 import { QuickActions } from "@/components/QuickActions";
-import { MobilePager } from "@/components/MobilePager";
 import type { AppView } from "@/lib/quick-actions";
 import { usePendingFoodPhoto } from "@/lib/mobile";
 import { FrozenAccountScreen, ProfileManager } from "@/components/ProfileManager";
@@ -804,6 +803,7 @@ export default function Home() {
   const topLinksRef = useRef<HTMLDivElement>(null);
   const [, setAiStatus] = useState<"idle" | "scanning" | "complete" | "fallback">("idle");
   const [activityOpen, setActivityOpen] = useState(false);
+  const [goalPlanOpen, setGoalPlanOpen] = useState(false);
   const weightUnit = useWeightUnit();
   // Hedef planı cevapları (hedef kilo, haftalık gün, seans süresi, tempo)
   // plan istemine de gider: kullanıcı "haftada 3 gün 45 dk ağır" dediyse
@@ -1756,34 +1756,30 @@ export default function Home() {
           <button type="button" className="activity-open" onClick={() => setActivityOpen(true)}><span className="activity-open-icon">🏃</span><span className="activity-open-text"><span className="eyebrow">{t.dashboard.activityEyebrow}</span><strong>{t.dashboard.activityTitle}</strong><small>{t.dashboard.activityBody}</small></span><span className="activity-open-cta">{t.dashboard.activityOpen} →</span></button>
           </>
           : <>
-          {/* Ana ekran mobilde 7 blok boyunca aşağı iniyordu; sıfırdan gelen
-              kullanıcı altta içerik kaldığını görmüyordu. Bloklar dört sayfaya
-              bölündü. Masaüstünde sayfalayıcı kutu üretmez, yerleşim aynıdır. */}
-          <MobilePager
-            label={t.pager.homeLabel}
-            nextLabel={t.pager.next}
-            lastLabel={t.pager.last}
-            goToLabel={t.pager.goTo}
-            positionLabel={t.pager.position}
-            pages={[
-              { key: "today", label: t.pager.homeToday, content: <>
-                <div className="dashboard-head"><div><div className="eyebrow">{t.dashboard.todaysPlan}</div><h1>{t.dashboard.greeting(name || t.dashboard.defaultName)}<em>{t.dashboard.greetingEm}</em></h1></div><ActivityStreak userId={authUser.id} /></div>
-                <div className="stats-row"><div><span>{t.dashboard.bmiLabel}</span><strong>{bmi}</strong><small>{t.dashboard.bmiHint}</small></div><div><span>{t.dashboard.goalLabel}</span><strong>{goalText ? t.dashboard.goalPersonal : t.dashboard.goalDefault}</strong><small>{t.dashboard.goalHint}</small></div><div><span>{t.dashboard.environmentLabel}</span><strong>{gym === "Salon" ? t.onboarding.gymLabel : t.onboarding.homeLabel}</strong><small>{equipmentText || t.dashboard.noEquipment}</small></div></div>
-              </> },
-              { key: "actions", label: t.pager.homeActions, content: <>
-                <QuickActions onNavigate={navigateFromQuickAction} />
-              </> },
-              { key: "goal", label: t.pager.homeGoal, content: <GoalPlanCard userId={authUser?.id} currentWeightKg={Number(weight) || null} profileBmr={energyMetrics?.bmr ?? null} /> },
-              { key: "energy", label: t.pager.homeEnergy, content: <>
-                <div className="wellness-row"><div className="wellness-card calorie-card"><div><span>{t.dashboard.todaysEnergy}</span><strong>{displayedSessionCalories} <small>kcal</small></strong><p>{t.dashboard.todaysEnergyBody}</p></div><div className="calorie-ring"><i>{displayedSessionCalories}</i></div><div className="calorie-note"><span>{t.dashboard.trackingLabel}</span><strong>{t.dashboard.trackingValue}</strong><small>{t.dashboard.trackingHint}</small></div></div></div>
-                {energyMetrics && <div className="energy-dashboard"><article><span>{t.dashboard.bmrLabel}</span><strong>{energyMetrics.bmr} <small>kcal/gün</small></strong><p>{t.dashboard.bmrBody}</p></article><article><span>{t.dashboard.tdeeLabel}</span><strong>{energyMetrics.tdee} <small>kcal/gün</small></strong><p>{t.dashboard.tdeeBody(energyMetrics.activityLabel)}</p></article><div><strong>{t.dashboard.approxTitle}</strong><p>{t.dashboard.approxBody}</p></div></div>}
-              </> },
-            ]}
-          />
+          {/* Ana ekran tek, sığan bir ekranda: mini seri selamlamanın yanında,
+              hedef planı yalnız hafta/kalan/günlük hedef şeridiyle özetlenir
+              (detay dokununca kaplamada açılır), enerji çemberi BMR ve TDEE
+              ile aynı satırda durur. Eskiden bunlar 4 ayrı kaydırmalı sayfaydı
+              ve hedef planı tek başına grafik+analizle koca bir sayfa
+              kaplıyordu; şimdi hepsi tek bakışta sığıyor. */}
+          <div className="dashboard-head"><div><div className="eyebrow">{t.dashboard.todaysPlan}</div><h1>{t.dashboard.greeting(name || t.dashboard.defaultName)}<em>{t.dashboard.greetingEm}</em> <ActivityStreak userId={authUser.id} compact /></h1></div></div>
+          <div className="stats-row"><div><span>{t.dashboard.bmiLabel}</span><strong>{bmi}</strong><small>{t.dashboard.bmiHint}</small></div><div><span>{t.dashboard.goalLabel}</span><strong>{goalText ? t.dashboard.goalPersonal : t.dashboard.goalDefault}</strong><small>{t.dashboard.goalHint}</small></div><div><span>{t.dashboard.environmentLabel}</span><strong>{gym === "Salon" ? t.onboarding.gymLabel : t.onboarding.homeLabel}</strong><small>{equipmentText || t.dashboard.noEquipment}</small></div></div>
+          <QuickActions onNavigate={navigateFromQuickAction} />
+          <GoalPlanCard compact onOpen={() => setGoalPlanOpen(true)} userId={authUser?.id} currentWeightKg={Number(weight) || null} profileBmr={energyMetrics?.bmr ?? null} />
+          <div className="home-energy-row">
+            <div className="calorie-ring"><i>{displayedSessionCalories}</i><small>kcal</small></div>
+            {energyMetrics && <>
+              <div className="home-energy-stat"><span>{t.dashboard.bmrLabel}</span><strong>{energyMetrics.bmr} <small>kcal</small></strong></div>
+              <div className="home-energy-stat"><span>{t.dashboard.tdeeLabel}</span><strong>{energyMetrics.tdee} <small>kcal</small></strong></div>
+            </>}
+          </div>
           </>}
           </>}
         </section>
       )}
+      {/* Hedef planının tam hâli (grafik, AI analizi, sihirbaz) yalnız burada,
+          kompakt şeride dokununca açılır — ana ekranda yer kaplamaz. */}
+      {goalPlanOpen && authUser && <div className="goal-plan-overlay" role="dialog" aria-modal="true" aria-label={t.goalPlan.eyebrow} onClick={(event) => { if (event.target === event.currentTarget) setGoalPlanOpen(false); }}><div className="goal-plan-overlay-inner"><button type="button" className="activity-modal-close" onClick={() => setGoalPlanOpen(false)} aria-label={t.dashboard.activityCloseLabel}>×</button><GoalPlanCard userId={authUser.id} currentWeightKg={Number(weight) || null} profileBmr={energyMetrics?.bmr ?? null} /></div></div>}
       {/* Kaplama görünüm dallarının DIŞINDA: aktivite günlüğü artık
           antrenman sekmesinden açılıyor ve sabit konumlu bir diyalog,
           yatay kaydırılan sayfalayıcı izinin içinde kırpılabilirdi. */}

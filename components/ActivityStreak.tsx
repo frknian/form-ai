@@ -7,7 +7,12 @@ import { useTranslations } from "@/lib/i18n/translate";
 
 type StreakRow = { current_streak?: number; last_activity_date?: string; timezone?: string };
 
-export function ActivityStreak({ userId }: { userId?: string }) {
+/**
+ * `compact`: mobil ana ekranın üst satırında selamlamanın yanına sığan mini
+ * rozet (🔥 sayı). Büyük kart mobilde tek başına bir blok kaplıyordu; kullanıcı
+ * seriyi görmek için ekranı ayrıca kaydırmak zorunda kalıyordu.
+ */
+export function ActivityStreak({ userId, compact = false }: { userId?: string; compact?: boolean }) {
   const t = useTranslations();
   const [streak, setStreak] = useState(1);
   const [lastActivity, setLastActivity] = useState<string | null>(null);
@@ -42,6 +47,8 @@ export function ActivityStreak({ userId }: { userId?: string }) {
       window.removeEventListener("fit-ai-progress-reset", reload);
     };
   }, [userId]);
+
+  if (compact) return <span className="activity-streak-mini" title={t.streak.days(streak)} aria-label={t.streak.days(streak)}><span aria-hidden="true">🔥</span>{streak}</span>;
 
   return <section className="activity-streak" aria-labelledby="activity-streak-title"><div><span>✦</span><div><small>{t.streak.label}</small><strong id="activity-streak-title">{t.streak.days(streak)}</strong><p>{lastActivity ? t.streak.sameDayNote : t.streak.freshNote}</p></div></div></section>;
 }

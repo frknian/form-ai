@@ -125,22 +125,24 @@ test("birim seçici mobilde kırpılmaz", async () => {
   assert.match(css, /\.manual-fields > label:has\(\.portion-unit-switch\) \{ grid-column:1\/-1; \}/, "porsiyon alanı mobilde tam satır olmalı");
 });
 
-test("gram/ml birinci, ev ölçüleri ikinci katmanda", () => {
-  // Kullanıcı geri bildirimi: 9 birim eşit ağırlıkta yan yana durunca gram/ml
-  // ile bardak/tabak gibi tahmini ölçüler ayrım gözetmeksizin sunuluyordu.
-  assert.deepEqual(PRIMARY_PORTION_UNITS, ["g", "ml"]);
-  assert.deepEqual(HOUSEHOLD_PORTION_UNITS, ["teaGlass", "waterGlass", "mug", "plate", "bowl", "portion", "piece"]);
+test("porsiyon ve adet gram/ml'nin yanında, ev ölçüleri ikinci katmanda", () => {
+  // Porsiyon ve adet ikinci gruptayken bardak/tabak arasında aranıyordu;
+  // artık gram/ml ile aynı grupta, AI tahmini gelene kadar kilitli kalırlar.
+  assert.deepEqual(PRIMARY_PORTION_UNITS, ["g", "ml", "portion", "piece"]);
+  assert.deepEqual(HOUSEHOLD_PORTION_UNITS, ["teaGlass", "waterGlass", "mug", "plate", "bowl"]);
   for (const unit of PRIMARY_PORTION_UNITS) assert.ok(!HOUSEHOLD_PORTION_UNITS.includes(unit), `${unit} iki grupta birden olmamalı`);
 });
 
 test("kalori takipçisinde iki ayrı birim grubu render edilir", async () => {
   const { readFile } = await import("node:fs/promises");
   const tsx = await readFile(new URL("../components/CalorieTracker.tsx", import.meta.url), "utf8");
-  assert.match(tsx, /PRIMARY_PORTION_UNITS\.map/, "birincil birimler (g, ml) ayrı render edilmeli");
+  assert.match(tsx, /PRIMARY_PORTION_UNITS\.map/, "birincil birimler (g, ml, porsiyon, adet) ayrı render edilmeli");
   assert.match(tsx, /HOUSEHOLD_PORTION_UNITS\.map/, "ev ölçüleri ayrı render edilmeli");
   assert.match(tsx, /portion-unit-household/, "ev ölçüleri grubu ikincil stille işaretlenmeli");
-  // Ev ölçüsü çipleri gram karşılığını da göstermeli (ör. "Tabak 350 g").
-  assert.match(tsx, /Math\.round\(grams\)\}\s*g/);
+  // Ev ölçüsü çiplerindeki "110 g" gibi gram karşılığı metni kaldırıldı;
+  // çipler artık sade, referenceGrams yalnız hesap için kullanılır.
+  const householdBlock = tsx.slice(tsx.indexOf("portion-unit-household"));
+  assert.doesNotMatch(householdBlock.slice(0, householdBlock.indexOf("</span>")), /Math\.round\(grams\)/, "gram metni ev ölçülerinde kalmamalı");
 });
 
 test("ev ölçüsü grubunun CSS'i tanımlı", async () => {

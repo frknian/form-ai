@@ -56,20 +56,41 @@ test("sık yediklerin öğün ekleme panelinin altında", () => {
 });
 
 test("aktivite günlüğü antrenman sekmesine taşındı", () => {
-  const workout = app.slice(app.indexOf("<TrainingPrograms"), app.indexOf('{ key: "today"'));
+  const homeStart = app.indexOf('className="dashboard-head"');
+  const workout = app.slice(app.indexOf("<TrainingPrograms"), homeStart);
   assert.match(workout, /className="activity-open"/, "buton antrenman sekmesinde olmalı");
-  // Ana ekran sayfalarında kalmamalı.
-  const pagerStart = app.indexOf("<MobilePager");
-  const pager = app.slice(pagerStart, app.indexOf("</section>", pagerStart));
-  assert.doesNotMatch(pager, /className="activity-open"/, "ana ekrandan kaldırılmalı");
+  // Ana ekranda (mini seri + hızlı işlemler + hedef + enerji şeridi) kalmamalı.
+  const home = app.slice(homeStart, app.indexOf("</section>", homeStart));
+  assert.doesNotMatch(home, /className="activity-open"/, "ana ekrandan kaldırılmalı");
   assert.equal(app.split('className="activity-open"').length - 1, 1, "tek kez render edilmeli");
 });
 
 test("aktivite kaplaması görünüm dallarının dışında kalır", () => {
-  // Antrenman sekmesinden açılıyor; sayfalayıcı izinin içinde kalsaydı
-  // yatay kaydırmada kırpılabilirdi.
+  // Antrenman sekmesinden açılıyor; ana ekran bölümünün içinde kalsaydı
+  // koşullu dallarda beklenmedik biçimde kırpılabilirdi.
   const overlay = app.indexOf('className="activity-overlay"');
-  const pagerEnd = app.indexOf("</section>", app.indexOf("<MobilePager"));
-  assert.ok(overlay > pagerEnd, "kaplama dashboard bölümünün dışında olmalı");
+  const homeEnd = app.indexOf("</section>", app.indexOf('className="dashboard-head"'));
+  assert.ok(overlay > homeEnd, "kaplama dashboard bölümünün dışında olmalı");
   assert.match(app, /\{activityOpen && authUser && <div className="activity-overlay"/, "kullanıcı yokken render edilmemeli");
+});
+
+test("ana ekran mini seri, kısayollar, hedef şeridi ve enerji satırını tek ekranda sıralar", () => {
+  // Sayfalama kaldırıldı: her şey artık tek, sığan bir ekranda dikey sırayla
+  // durur (mini seri selamlamanın yanında, hedef planı yalnız özet şeridiyle).
+  const homeStart = app.indexOf('className="dashboard-head"');
+  const home = app.slice(homeStart, app.indexOf("</section>", homeStart));
+  const at = (needle) => {
+    const index = home.indexOf(needle);
+    assert.ok(index > 0, `bulunamadı: ${needle}`);
+    return index;
+  };
+  const header = at("<ActivityStreak");
+  const actions = at("<QuickActions");
+  const goal = at("<GoalPlanCard compact");
+  const energy = at('className="home-energy-row"');
+  assert.match(home.slice(0, actions), /<ActivityStreak userId=\{authUser\.id\} compact \/>/, "seri mini ve selamlamanın yanında olmalı");
+  assert.ok(header < actions, "mini seri selamlamadan sonra, kısayollardan önce olmalı");
+  assert.ok(actions < goal, "hedef planı kısayolların altında olmalı");
+  assert.ok(goal < energy, "enerji satırı hedef planının altında olmalı");
+  assert.doesNotMatch(home, /<MobilePager/, "sayfalama kaldırılmalı");
 });

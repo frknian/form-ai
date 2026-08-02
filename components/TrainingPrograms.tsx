@@ -153,6 +153,30 @@ export function TrainingPrograms({
   return <section className="programs" id="ready-programs">
     <div className="section-title"><div className="eyebrow">{t.programs.eyebrow}</div><span className="programs-hint">{t.programs.hint}</span></div>
 
+    {/* Kendi programını kur en başta: kullanıcı burada kendi hareketlerini
+        seçtiği için hazır programlardan önce görmesi istendi. */}
+    <div className="program-cards program-custom-row">
+      {Array.from({ length: CUSTOM_PROGRAM_SLOTS }, (_, index) => {
+        const id = customSlotId(index);
+        const program = customPrograms.find((item) => item.id === id);
+        if (!program) {
+          return <article className="program-card program-card-empty" key={id}>
+            <OnboardingIcon name="health" />
+            <h3>{t.programs.createTitle}</h3>
+            <p>{t.programs.createBody}</p>
+            <button type="button" disabled={freeSlot !== id} onClick={() => setBuilderId(id)}>{t.programs.create} <span>+</span></button>
+          </article>;
+        }
+        return <article className="program-card" key={id}>
+          <OnboardingIcon name="health" />
+          <h3>{program.name}</h3>
+          <p>{t.programs.customCount(program.exerciseNames.length)}</p>
+          <small>{progressLabel(programKey("custom", undefined, id))}</small>
+          <button type="button" onClick={() => setSelection({ kind: "custom", id })}>{t.programs.open} <span>→</span></button>
+        </article>;
+      })}
+    </div>
+
     {/* Salon/ev, Full Body ve Bölgesel için ortak. Profil "Evde" dese bile
         kullanıcı bugün salona gitmiş olabilir; seçim profili değiştirmez. */}
     <div className="program-place" role="group" aria-label={t.programs.placeLabel}>
@@ -187,29 +211,6 @@ export function TrainingPrograms({
           <button type="button" key={area} className="equipment" onClick={() => setSelection({ kind: "split", place, area })}>{regionLabel(area)}</button>
         ))}</div>
       </article>
-    </div>
-
-    {/* Kullanıcının kendi programları. Slot doluysa kart, boşsa "oluştur". */}
-    <div className="program-cards program-custom-row">
-      {Array.from({ length: CUSTOM_PROGRAM_SLOTS }, (_, index) => {
-        const id = customSlotId(index);
-        const program = customPrograms.find((item) => item.id === id);
-        if (!program) {
-          return <article className="program-card program-card-empty" key={id}>
-            <OnboardingIcon name="health" />
-            <h3>{t.programs.createTitle}</h3>
-            <p>{t.programs.createBody}</p>
-            <button type="button" disabled={freeSlot !== id} onClick={() => setBuilderId(id)}>{t.programs.create} <span>+</span></button>
-          </article>;
-        }
-        return <article className="program-card" key={id}>
-          <OnboardingIcon name="health" />
-          <h3>{program.name}</h3>
-          <p>{t.programs.customCount(program.exerciseNames.length)}</p>
-          <small>{progressLabel(programKey("custom", undefined, id))}</small>
-          <button type="button" onClick={() => setSelection({ kind: "custom", id })}>{t.programs.open} <span>→</span></button>
-        </article>;
-      })}
     </div>
   </section>;
 }

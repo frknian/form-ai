@@ -1798,88 +1798,62 @@ button.brand:hover .brand-mark { transform:scale(1.06); }
 .refresh-plan-zone button:disabled { opacity:.6; cursor:wait; }
 .dark .refresh-plan-zone button { background:#33411f; border-color:#5d7030; color:#d9ed9e; }
 
-/* Ev ölçüsü çipleri ikinci grup: gram karşılığını da taşırlar. */
+/* Ev ölçüsü çipleri ikinci grup; gram karşılığı metni kaldırıldı (sade çip). */
 .portion-unit-household { margin-top:6px; }
-.portion-unit-household button { display:inline-flex; align-items:baseline; gap:5px; }
-.portion-unit-household button i { color:var(--muted-text); font-size:9.5px; font-style:normal; font-weight:600; }
-.portion-unit-household button.active i { color:#4d5c1c; }
-.dark .portion-unit-household button.active i { color:#b6cf74; }
 
-/* Mobil sayfalayıcı — ana ekran alt alta 7 blok uzunluğundaydı ve sıfırdan
-   gelen kullanıcı ekranın altında içerik kaldığını fark etmiyordu.
-   Masaüstünde sarmalayıcıların hiçbiri kutu üretmez: kardeş seçiciler ve
-   .energy-dashboard gibi eksi kenar boşlukları bugünkü gibi çalışmaya devam
-   eder, yerleşim birebir korunur. */
-.mobile-pager,.mobile-pager-track,.mobile-pager-page { display:contents; }
-.mobile-pager-controls { display:none; }
-
-@media (max-width:700px) {
-  .mobile-pager { display:block; }
-  /* Sayfalayıcı varken ana ekran tam olarak ekrana sığmalı: üst boşluk ve
-     altbilgi 73px'lik bir dikey taşma bırakıyordu (ölçüldü). Altbilgi yalnız
-     bu görünümde gizlenir, diğer sekmelerde yerinde durur. */
-  main:has(.mobile-pager) > .dashboard { margin-top:0; }
-  main:has(.mobile-pager) > footer { display:none; }
-  /* İz ekran kenarlarına taşar; sayfalar tam genişlikte hizalanır. */
-  .mobile-pager-track {
-    display:flex; margin-inline:-16px; overflow-x:auto; overflow-y:hidden;
-    /* Yumuşak kaydırma BİLEREK tanımlanmadı: snap mandatory ile birlikte
-       programatik kaydırmayı iptal edip sayfayı başa geri atıyordu (ölçüldü).
-       Parmakla kaydırma zaten akıcı; düğme/nokta geçişi anlık yapılır. */
-    scroll-snap-type:x mandatory;
-    overscroll-behavior-inline:contain; -webkit-overflow-scrolling:touch;
-    scrollbar-width:none; touch-action:pan-x pan-y;
-  }
-  .mobile-pager-track::-webkit-scrollbar { display:none; }
-  /* Sayfa görünür alanı doldurur; topbar (112) + kontroller (63) düşülür.
-     İçerik yine de taşarsa kendi içinde kayar — sayfa dışarı büyümez. */
-  .mobile-pager-page {
-    flex:0 0 100%; width:100%; min-width:0; padding-inline:16px;
-    scroll-snap-align:start; scroll-snap-stop:always;
-    min-height:calc(100dvh - 175px); max-height:calc(100dvh - 175px);
-    overflow-y:auto; overscroll-behavior-block:contain;
-    display:flex; flex-direction:column; justify-content:center; gap:4px;
-  }
-  .mobile-pager-page::-webkit-scrollbar { display:none; }
-  .mobile-pager-page > * { flex:0 0 auto; }
-  /* Sayfa içinde dikey ortalanan bloklar kendi dış boşluklarını taşımamalı. */
-  .mobile-pager-page > .stats-row { margin:22px 0 0; }
-  .mobile-pager-page > .wellness-row,.mobile-pager-page > .quick-actions { margin-bottom:0; }
-  .mobile-pager-page > .energy-dashboard { margin:14px 0 0; }
-
-  .mobile-pager-controls {
-    position:sticky; z-index:60; bottom:0; display:grid;
-    grid-template-columns:auto 1fr auto; align-items:center; gap:10px;
-    margin:0 -16px; padding:11px 16px calc(11px + env(safe-area-inset-bottom));
-    border-top:1px solid var(--line); background:var(--surface-soft,#fbfbf7);
-  }
-  .mobile-pager-status { min-width:0; display:grid; }
-  .mobile-pager-status strong { font-size:12px; letter-spacing:-.2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .mobile-pager-status small { color:var(--muted-text); font-size:9px; font-variant-numeric:tabular-nums; }
-  .mobile-pager-dots { display:flex; justify-content:center; gap:7px; }
-  .mobile-pager-dots button {
-    width:9px; height:9px; padding:0; border:0; border-radius:50%;
-    background:var(--line); cursor:pointer; transition:background-color .2s ease,transform .2s ease;
-  }
-  .mobile-pager-dots button.active { background:var(--ink); transform:scale(1.25); }
-  .mobile-pager-next {
-    display:inline-flex; align-items:center; gap:6px; min-height:40px; max-width:47vw;
-    padding:0 14px; border:0; border-radius:999px; background:var(--ink); color:var(--paper);
-    font:inherit; font-size:11px; font-weight:700; white-space:nowrap; overflow:hidden;
-    text-overflow:ellipsis; cursor:pointer;
-  }
-  /* Devre dışı görünüm bilerek tanımlanmıyor: globals'taki genel
-     button:disabled kuralı (bkz. --disabled-bg) uygulamanın ortak görünümünü
-     verir ve özgüllük olarak da zaten burayı geçer. */
+/* Ana ekran mobilde sayfa sayfa kaydırılan bir yapıdaydı (MobilePager);
+   içerik mini seri + kompakt hedef planı şeridi + tek satırlık enerji
+   özetiyle artık tek ekrana sığdığı için sayfalama kaldırıldı. */
+.activity-streak-mini {
+  display:inline-flex; align-items:center; gap:3px; margin-left:8px;
+  padding:2px 8px; border-radius:999px; background:var(--lime); color:#3a4515;
+  font-size:13px; font-weight:800; vertical-align:middle;
 }
+.activity-streak-mini span { font-size:12px; }
+.dark .activity-streak-mini { background:#3a4a1c; color:#d9ed9e; }
 
-.dark .mobile-pager-controls { background:#20231a; border-color:#46502c; }
-.dark .mobile-pager-dots button { background:#46502c; }
-.dark .mobile-pager-dots button.active { background:var(--lime); }
-.dark .mobile-pager-next { background:var(--lime); color:#222a10; }
+.goal-plan-compact { display:block; width:100%; margin:0 0 20px; padding:16px 18px; border:1px solid var(--line); border-radius:var(--r-md,10px); background:var(--surface-soft,#fbfbf7); text-align:left; font:inherit; color:inherit; cursor:pointer; }
+.goal-plan-compact:hover { border-color:#a9bf57; }
+.goal-plan-compact .eyebrow { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.goal-plan-compact-arrow { color:var(--muted-text); font-size:9px; font-weight:800; letter-spacing:.5px; text-transform:none; }
+.goal-plan-compact > strong { display:block; margin-top:10px; font-size:15px; }
+.goal-plan-compact-disabled { cursor:default; color:var(--muted-text); }
+.goal-plan-compact-disabled p { margin:10px 0 0; font-size:12px; }
+.goal-plan-compact-stats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-top:12px; }
+.goal-plan-compact-stats > div { min-width:0; }
+.goal-plan-compact-stats strong { display:block; font-size:18px; letter-spacing:-.4px; font-variant-numeric:tabular-nums; }
+.goal-plan-compact-stats strong small { font-size:10px; font-weight:600; }
+.goal-plan-compact-stats span { display:block; margin-top:2px; color:var(--muted-text); font-size:9px; font-weight:800; letter-spacing:.6px; text-transform:uppercase; }
+.dark .goal-plan-compact { background:#181915; }
 
-@media (prefers-reduced-motion: reduce) {
-  .mobile-pager-dots button { transition:none; }
+.goal-plan-overlay { position:fixed; z-index:100; inset:0; display:grid; place-items:center; padding:20px; background:rgba(24,24,21,.68); backdrop-filter:blur(8px); overflow:auto; }
+.goal-plan-overlay-inner { position:relative; width:min(640px,100%); max-height:calc(100vh - 40px); overflow:auto; border-radius:14px; background:var(--surface); box-shadow:0 30px 80px rgba(0,0,0,.28); }
+.goal-plan-overlay-inner .goal-plan { margin:0; border:0; border-radius:14px; }
+/* Kapatma çarpısı sabit konumlu; kartın kendi "Planı değiştir" düğmesiyle
+   aynı köşeye düşüyordu. Başlık satırına sağdan boşluk bırakılır. */
+.goal-plan-overlay-inner .goal-plan .section-title { padding-right:44px; }
+@media (max-width:700px) { .goal-plan-overlay { padding:0; place-items:end stretch; } .goal-plan-overlay-inner { width:100%; max-height:88vh; border-radius:16px 16px 0 0; } }
+
+/* Enerji satırı: çember, BMR ve TDEE aynı sırada. Eskiden çember kendi
+   satırında, BMR/TDEE ayrı bir ızgarada duruyordu ve mobilde alt alta
+   dizilerek tek başına bir sayfa kaplıyordu. */
+.home-energy-row { display:grid; grid-template-columns:auto 1fr 1fr; align-items:center; gap:14px; margin:0 0 20px; padding:16px 18px; border:1px solid var(--line); border-radius:var(--r-md,10px); background:var(--surface-soft,#fbfbf7); }
+.home-energy-row .calorie-ring { display:grid; place-items:center; width:64px; height:64px; border:6px solid #c8e75e; border-top-color:var(--ink); border-radius:50%; }
+.home-energy-row .calorie-ring i { font-style:normal; font-size:15px; font-weight:800; }
+.home-energy-row .calorie-ring small { display:block; color:var(--muted-text); font-size:8px; font-weight:700; text-transform:uppercase; }
+.home-energy-stat { min-width:0; }
+.home-energy-stat span { display:block; color:var(--muted-text); font-size:8px; font-weight:800; letter-spacing:.8px; text-transform:uppercase; }
+.home-energy-stat strong { display:block; margin-top:5px; font-size:17px; letter-spacing:-.3px; font-variant-numeric:tabular-nums; }
+.home-energy-stat strong small { font-size:10px; font-weight:600; }
+.dark .home-energy-row { background:#181915; }
+@media (max-width:400px) {
+  /* 420px BİLEREK kullanılmadı: dosyada .option-cards-3'ü barındıran bir
+     420px bloğu var ve bazı testler "son 420px bloğu" varsayımıyla o
+     satırı arıyor; aynı değeri burada tekrarlamak o testi kırardı. */
+  .home-energy-row { gap:10px; padding:13px 14px; }
+  .home-energy-row .calorie-ring { width:54px; height:54px; }
+  .home-energy-row .calorie-ring i { font-size:13px; }
+  .home-energy-stat strong { font-size:15px; }
 }
 
 /* Öğün ekleme alanı dikey bir akış: önce porsiyon (gram/ml + ev ölçüleri),

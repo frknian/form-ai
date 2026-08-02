@@ -510,21 +510,12 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
                   olmadan da seçilebilir. Porsiyon ve adet ise yemeğe özgüdür;
                   tahmin yokken kilitli kalırlar, yoksa uydurma bir ağırlıkla
                   sessizce yanlış kalori kaydedilirdi. */}
+              {/* Porsiyon ve adet artık gram/ml'nin yanında, aynı grupta:
+                  ikisi de AI tahminine bağlı kaldığı için tahmin gelene kadar
+                  kilitli kalırlar, ama artık ikinci sırada aranmıyorlar. */}
               <span className="portion-unit-switch" role="group" aria-label={t.calorieTracker.portionUnitLabel}>
-                {PRIMARY_PORTION_UNITS.map((unit) => <button
-                  key={unit}
-                  type="button"
-                  aria-pressed={portionUnit === unit}
-                  className={portionUnit === unit ? "active" : ""}
-                  onClick={() => switchPortionUnit(unit)}
-                >{portionUnitLabel(t, unit)}</button>)}
-              </span>
-              {/* Ev ölçüleri ikinci grupta ve gram karşılığıyla: "Tabak"ın ne
-                  kadar olduğunu görmeden seçmek kullanıcıyı tahmine bırakıyordu. */}
-              <span className="portion-unit-switch portion-unit-household" role="group" aria-label={t.calorieTracker.portionUnitHouseholdLabel}>
-                {HOUSEHOLD_PORTION_UNITS.map((unit) => {
+                {PRIMARY_PORTION_UNITS.map((unit) => {
                   const locked = needsAnalysis(unit) && analysedGrams === null;
-                  const grams = referenceGrams(unit, analysedGrams, foodName);
                   return <button
                     key={unit}
                     type="button"
@@ -533,8 +524,20 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
                     aria-pressed={portionUnit === unit}
                     className={portionUnit === unit ? "active" : ""}
                     onClick={() => switchPortionUnit(unit)}
-                  >{portionUnitLabel(t, unit)}{grams !== null && !locked && <i>{Math.round(grams)} g</i>}</button>;
+                  >{portionUnitLabel(t, unit)}</button>;
                 })}
+              </span>
+              {/* Ev ölçüleri her zaman kullanılabilir: bir su bardağının hacmi
+                  yemekten yemeğe değişmez, AI tahmini gerekmez. Gram karşılığı
+                  metni kaldırıldı; çipler sade tutuldu. */}
+              <span className="portion-unit-switch portion-unit-household" role="group" aria-label={t.calorieTracker.portionUnitHouseholdLabel}>
+                {HOUSEHOLD_PORTION_UNITS.map((unit) => <button
+                  key={unit}
+                  type="button"
+                  aria-pressed={portionUnit === unit}
+                  className={portionUnit === unit ? "active" : ""}
+                  onClick={() => switchPortionUnit(unit)}
+                >{portionUnitLabel(t, unit)}</button>)}
               </span>
               {portionUnit !== "g" && unitGrams !== null && <small className="portion-unit-hint">{t.calorieTracker.portionUnitHint(portionUnitLabel(t, portionUnit), Math.round(unitGrams))}</small>}
             </label>
