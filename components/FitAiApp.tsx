@@ -28,6 +28,7 @@ import { GoalPlanCard } from "@/components/GoalPlanCard";
 import { TrainingPrograms } from "@/components/TrainingPrograms";
 import { normalizeCustomPrograms, removeCustomProgram, summarizeProgramProgress, upsertCustomProgram, type CustomProgram } from "@/lib/training-programs";
 import { QuickActions } from "@/components/QuickActions";
+import { MobilePager } from "@/components/MobilePager";
 import type { AppView } from "@/lib/quick-actions";
 import { FrozenAccountScreen, ProfileManager } from "@/components/ProfileManager";
 import { TrainingPlaceSwitch } from "@/components/TrainingPlaceSwitch";
@@ -1734,14 +1735,34 @@ export default function Home() {
           />
           </>
           : <>
-          <div className="dashboard-head"><div><div className="eyebrow">{t.dashboard.todaysPlan}</div><h1>{t.dashboard.greeting(name || t.dashboard.defaultName)}<em>{t.dashboard.greetingEm}</em></h1></div><ActivityStreak userId={authUser.id} /></div>
-          <div className="stats-row"><div><span>{t.dashboard.bmiLabel}</span><strong>{bmi}</strong><small>{t.dashboard.bmiHint}</small></div><div><span>{t.dashboard.goalLabel}</span><strong>{goalText ? t.dashboard.goalPersonal : t.dashboard.goalDefault}</strong><small>{t.dashboard.goalHint}</small></div><div><span>{t.dashboard.environmentLabel}</span><strong>{gym === "Salon" ? t.onboarding.gymLabel : t.onboarding.homeLabel}</strong><small>{equipmentText || t.dashboard.noEquipment}</small></div></div>
-          <button type="button" className="activity-open" onClick={() => setActivityOpen(true)}><span className="activity-open-icon">🏃</span><span className="activity-open-text"><span className="eyebrow">{t.dashboard.activityEyebrow}</span><strong>{t.dashboard.activityTitle}</strong><small>{t.dashboard.activityBody}</small></span><span className="activity-open-cta">{t.dashboard.activityOpen} →</span></button>
-          {activityOpen && <div className="activity-overlay" role="dialog" aria-modal="true" aria-label={t.dashboard.activityDialogLabel} onClick={(event) => { if (event.target === event.currentTarget) setActivityOpen(false); }}><div className="activity-modal"><button type="button" className="activity-modal-close" onClick={() => setActivityOpen(false)} aria-label={t.dashboard.activityCloseLabel}>×</button><ActivityLogger userId={authUser.id} weightKg={Number(weight) || 70} /></div></div>}
-          <QuickActions onNavigate={navigateFromQuickAction} />
-          <GoalPlanCard userId={authUser?.id} currentWeightKg={Number(weight) || null} />
-          <div className="wellness-row"><div className="wellness-card calorie-card"><div><span>{t.dashboard.todaysEnergy}</span><strong>{displayedSessionCalories} <small>kcal</small></strong><p>{t.dashboard.todaysEnergyBody}</p></div><div className="calorie-ring"><i>{displayedSessionCalories}</i></div><div className="calorie-note"><span>{t.dashboard.trackingLabel}</span><strong>{t.dashboard.trackingValue}</strong><small>{t.dashboard.trackingHint}</small></div></div></div>
-          {energyMetrics && <div className="energy-dashboard"><article><span>{t.dashboard.bmrLabel}</span><strong>{energyMetrics.bmr} <small>kcal/gün</small></strong><p>{t.dashboard.bmrBody}</p></article><article><span>{t.dashboard.tdeeLabel}</span><strong>{energyMetrics.tdee} <small>kcal/gün</small></strong><p>{t.dashboard.tdeeBody(energyMetrics.activityLabel)}</p></article><div><strong>{t.dashboard.approxTitle}</strong><p>{t.dashboard.approxBody}</p></div></div>}</>}
+          {/* Ana ekran mobilde 7 blok boyunca aşağı iniyordu; sıfırdan gelen
+              kullanıcı altta içerik kaldığını görmüyordu. Bloklar dört sayfaya
+              bölündü. Masaüstünde sayfalayıcı kutu üretmez, yerleşim aynıdır. */}
+          <MobilePager
+            label={t.pager.homeLabel}
+            nextLabel={t.pager.next}
+            lastLabel={t.pager.last}
+            goToLabel={t.pager.goTo}
+            positionLabel={t.pager.position}
+            pages={[
+              { key: "today", label: t.pager.homeToday, content: <>
+                <div className="dashboard-head"><div><div className="eyebrow">{t.dashboard.todaysPlan}</div><h1>{t.dashboard.greeting(name || t.dashboard.defaultName)}<em>{t.dashboard.greetingEm}</em></h1></div><ActivityStreak userId={authUser.id} /></div>
+                <div className="stats-row"><div><span>{t.dashboard.bmiLabel}</span><strong>{bmi}</strong><small>{t.dashboard.bmiHint}</small></div><div><span>{t.dashboard.goalLabel}</span><strong>{goalText ? t.dashboard.goalPersonal : t.dashboard.goalDefault}</strong><small>{t.dashboard.goalHint}</small></div><div><span>{t.dashboard.environmentLabel}</span><strong>{gym === "Salon" ? t.onboarding.gymLabel : t.onboarding.homeLabel}</strong><small>{equipmentText || t.dashboard.noEquipment}</small></div></div>
+              </> },
+              { key: "actions", label: t.pager.homeActions, content: <>
+                <button type="button" className="activity-open" onClick={() => setActivityOpen(true)}><span className="activity-open-icon">🏃</span><span className="activity-open-text"><span className="eyebrow">{t.dashboard.activityEyebrow}</span><strong>{t.dashboard.activityTitle}</strong><small>{t.dashboard.activityBody}</small></span><span className="activity-open-cta">{t.dashboard.activityOpen} →</span></button>
+                <QuickActions onNavigate={navigateFromQuickAction} />
+              </> },
+              { key: "goal", label: t.pager.homeGoal, content: <GoalPlanCard userId={authUser?.id} currentWeightKg={Number(weight) || null} /> },
+              { key: "energy", label: t.pager.homeEnergy, content: <>
+                <div className="wellness-row"><div className="wellness-card calorie-card"><div><span>{t.dashboard.todaysEnergy}</span><strong>{displayedSessionCalories} <small>kcal</small></strong><p>{t.dashboard.todaysEnergyBody}</p></div><div className="calorie-ring"><i>{displayedSessionCalories}</i></div><div className="calorie-note"><span>{t.dashboard.trackingLabel}</span><strong>{t.dashboard.trackingValue}</strong><small>{t.dashboard.trackingHint}</small></div></div></div>
+                {energyMetrics && <div className="energy-dashboard"><article><span>{t.dashboard.bmrLabel}</span><strong>{energyMetrics.bmr} <small>kcal/gün</small></strong><p>{t.dashboard.bmrBody}</p></article><article><span>{t.dashboard.tdeeLabel}</span><strong>{energyMetrics.tdee} <small>kcal/gün</small></strong><p>{t.dashboard.tdeeBody(energyMetrics.activityLabel)}</p></article><div><strong>{t.dashboard.approxTitle}</strong><p>{t.dashboard.approxBody}</p></div></div>}
+              </> },
+            ]}
+          />
+          {/* Kaplama sayfaların dışında durur: sabit konumlu bir diyalog,
+              yatay kaydırılan izin içinde beklenmedik biçimde kırpılabilir. */}
+          {activityOpen && <div className="activity-overlay" role="dialog" aria-modal="true" aria-label={t.dashboard.activityDialogLabel} onClick={(event) => { if (event.target === event.currentTarget) setActivityOpen(false); }}><div className="activity-modal"><button type="button" className="activity-modal-close" onClick={() => setActivityOpen(false)} aria-label={t.dashboard.activityCloseLabel}>×</button><ActivityLogger userId={authUser.id} weightKg={Number(weight) || 70} /></div></div>}</>}
           </>}
         </section>
       )}

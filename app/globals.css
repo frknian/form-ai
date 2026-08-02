@@ -1786,3 +1786,80 @@ button.brand:hover .brand-mark { transform:scale(1.06); }
 .portion-unit-household button i { color:var(--muted-text); font-size:9.5px; font-style:normal; font-weight:600; }
 .portion-unit-household button.active i { color:#4d5c1c; }
 .dark .portion-unit-household button.active i { color:#b6cf74; }
+
+/* Mobil sayfalayıcı — ana ekran alt alta 7 blok uzunluğundaydı ve sıfırdan
+   gelen kullanıcı ekranın altında içerik kaldığını fark etmiyordu.
+   Masaüstünde sarmalayıcıların hiçbiri kutu üretmez: kardeş seçiciler ve
+   .energy-dashboard gibi eksi kenar boşlukları bugünkü gibi çalışmaya devam
+   eder, yerleşim birebir korunur. */
+.mobile-pager,.mobile-pager-track,.mobile-pager-page { display:contents; }
+.mobile-pager-controls { display:none; }
+
+@media (max-width:700px) {
+  .mobile-pager { display:block; }
+  /* Sayfalayıcı varken ana ekran tam olarak ekrana sığmalı: üst boşluk ve
+     altbilgi 73px'lik bir dikey taşma bırakıyordu (ölçüldü). Altbilgi yalnız
+     bu görünümde gizlenir, diğer sekmelerde yerinde durur. */
+  main:has(.mobile-pager) > .dashboard { margin-top:0; }
+  main:has(.mobile-pager) > footer { display:none; }
+  /* İz ekran kenarlarına taşar; sayfalar tam genişlikte hizalanır. */
+  .mobile-pager-track {
+    display:flex; margin-inline:-16px; overflow-x:auto; overflow-y:hidden;
+    /* Yumuşak kaydırma BİLEREK tanımlanmadı: snap mandatory ile birlikte
+       programatik kaydırmayı iptal edip sayfayı başa geri atıyordu (ölçüldü).
+       Parmakla kaydırma zaten akıcı; düğme/nokta geçişi anlık yapılır. */
+    scroll-snap-type:x mandatory;
+    overscroll-behavior-inline:contain; -webkit-overflow-scrolling:touch;
+    scrollbar-width:none; touch-action:pan-x pan-y;
+  }
+  .mobile-pager-track::-webkit-scrollbar { display:none; }
+  /* Sayfa görünür alanı doldurur; topbar (112) + kontroller (63) düşülür.
+     İçerik yine de taşarsa kendi içinde kayar — sayfa dışarı büyümez. */
+  .mobile-pager-page {
+    flex:0 0 100%; width:100%; min-width:0; padding-inline:16px;
+    scroll-snap-align:start; scroll-snap-stop:always;
+    min-height:calc(100dvh - 175px); max-height:calc(100dvh - 175px);
+    overflow-y:auto; overscroll-behavior-block:contain;
+    display:flex; flex-direction:column; justify-content:center; gap:4px;
+  }
+  .mobile-pager-page::-webkit-scrollbar { display:none; }
+  .mobile-pager-page > * { flex:0 0 auto; }
+  /* Sayfa içinde dikey ortalanan bloklar kendi dış boşluklarını taşımamalı. */
+  .mobile-pager-page > .stats-row { margin:22px 0 0; }
+  .mobile-pager-page > .wellness-row,.mobile-pager-page > .quick-actions { margin-bottom:0; }
+  .mobile-pager-page > .energy-dashboard { margin:14px 0 0; }
+
+  .mobile-pager-controls {
+    position:sticky; z-index:60; bottom:0; display:grid;
+    grid-template-columns:auto 1fr auto; align-items:center; gap:10px;
+    margin:0 -16px; padding:11px 16px calc(11px + env(safe-area-inset-bottom));
+    border-top:1px solid var(--line); background:var(--surface-soft,#fbfbf7);
+  }
+  .mobile-pager-status { min-width:0; display:grid; }
+  .mobile-pager-status strong { font-size:12px; letter-spacing:-.2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .mobile-pager-status small { color:var(--muted-text); font-size:9px; font-variant-numeric:tabular-nums; }
+  .mobile-pager-dots { display:flex; justify-content:center; gap:7px; }
+  .mobile-pager-dots button {
+    width:9px; height:9px; padding:0; border:0; border-radius:50%;
+    background:var(--line); cursor:pointer; transition:background-color .2s ease,transform .2s ease;
+  }
+  .mobile-pager-dots button.active { background:var(--ink); transform:scale(1.25); }
+  .mobile-pager-next {
+    display:inline-flex; align-items:center; gap:6px; min-height:40px; max-width:47vw;
+    padding:0 14px; border:0; border-radius:999px; background:var(--ink); color:var(--paper);
+    font:inherit; font-size:11px; font-weight:700; white-space:nowrap; overflow:hidden;
+    text-overflow:ellipsis; cursor:pointer;
+  }
+  /* Devre dışı görünüm bilerek tanımlanmıyor: globals'taki genel
+     button:disabled kuralı (bkz. --disabled-bg) uygulamanın ortak görünümünü
+     verir ve özgüllük olarak da zaten burayı geçer. */
+}
+
+.dark .mobile-pager-controls { background:#20231a; border-color:#46502c; }
+.dark .mobile-pager-dots button { background:#46502c; }
+.dark .mobile-pager-dots button.active { background:var(--lime); }
+.dark .mobile-pager-next { background:var(--lime); color:#222a10; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-pager-dots button { transition:none; }
+}

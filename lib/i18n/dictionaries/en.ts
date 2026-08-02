@@ -23,6 +23,17 @@ export const en: typeof tr = {
     library: "Exercise library",
     profile: "My profile",
   },
+  pager: {
+    homeLabel: "Home screen pages",
+    next: (pageName: string) => `Next · ${pageName}`,
+    last: "Last page",
+    goTo: (pageName: string) => `Go to ${pageName}`,
+    position: (current: number, total: number) => `${current} / ${total}`,
+    homeToday: "Today",
+    homeActions: "Quick actions",
+    homeGoal: "Your goal",
+    homeEnergy: "Energy",
+  },
   auth: {
     loadingTitle: "Warming up",
     loadingBody: "Setting up your secure session…",
