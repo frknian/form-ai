@@ -43,7 +43,7 @@ import { extractSessionMinutes, extractWeeklyDays, planProgressionBlock } from "
 import { alternativeExercises } from "@/lib/exercise-alternatives";
 import { canPerformExercise, hasEquipment, usableEquipmentText } from "@/lib/equipment-match";
 import { EQUIPMENT_PROFILES, buildReadyProgram, isReplacementCompatible } from "@/lib/ready-programs";
-import { FREE_TEXT_QUESTIONS, QUESTION, QUESTION_COUNT, emptyHistory, isHistoryComplete, normalizeHistory } from "@/lib/onboarding-questions";
+import { CURRENT_PROFILE_TEST_VERSION, FREE_TEXT_QUESTIONS, QUESTION, QUESTION_COUNT, emptyHistory, isHistoryComplete, normalizeHistory } from "@/lib/onboarding-questions";
 import { applyPreviousPerformance, buildCompletedExerciseLog, createWorkoutSetDrafts, exerciseLogKey, type CompletedExerciseLog, type PreviousExercisePerformance, type WorkoutSetDraft } from "@/lib/workout-log";
 import { localTimeKey } from "@/lib/workout-calendar";
 import { localDateKey } from "@/lib/streak";
@@ -989,7 +989,12 @@ export default function Home() {
       // kullanıcının hedefini "deneyim" sanmak gibi sessiz hatalar üretirdi.
       const savedHistory = normalizeHistory(profile.history_answers);
       if (Array.isArray(profile.history_answers) && profile.history_answers.length) setHistory(savedHistory);
-      if (isHistoryComplete(savedHistory)) setStep(STEP.dashboard);
+      // Cevaplar artık farklı yorumlanıyorsa (bkz. CURRENT_PROFILE_TEST_VERSION)
+      // testi tamamlamış kullanıcı bile panele geçmez; cevapları hazır gelerek
+      // testi yeniden görür ve onaylar. retakeProfileTest ile aynı hedefe
+      // (STEP.test, soru 1) gider, yalnız burada otomatik tetiklenir.
+      const completedCurrentVersion = Number(profile.profile_test_version) >= CURRENT_PROFILE_TEST_VERSION;
+      if (isHistoryComplete(savedHistory)) setStep(completedCurrentVersion ? STEP.dashboard : STEP.test);
     }
     void loadProfile();
     return () => { cancelled = true; };
@@ -1460,7 +1465,7 @@ export default function Home() {
             requestedExercises,
             avatarPath,
           });
-          await supabase.from("profiles").update({ history_answers: history, updated_at: new Date().toISOString() }).eq("id", user.id);
+          await supabase.from("profiles").update({ history_answers: history, profile_test_version: CURRENT_PROFILE_TEST_VERSION, updated_at: new Date().toISOString() }).eq("id", user.id);
         }
       }
     } catch {

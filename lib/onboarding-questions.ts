@@ -116,3 +116,12 @@ export const REQUIRED_QUESTIONS: number[] = [QUESTION.goal, QUESTION.level, QUES
 export function isHistoryComplete(history: string[]): boolean {
   return REQUIRED_QUESTIONS.every((index) => Boolean(history[index]?.trim()));
 }
+
+/**
+ * Profil testinin geçerli sürümü. Yağ kaybını kilo vermeden ayıran değişiklik
+ * gibi, eski cevapların artık farklı yorumlanması gereken durumlarda bu sayı
+ * artırılır — testi tamamlamış kullanıcılar bile bir sonraki açılışta testi
+ * yeniden görür. `profiles.profile_test_version` bu sayıya eşit değilse test
+ * tamamlanmamış sayılır (bkz. db/migrations/20260803_profile_test_version.sql).
+ */
+export const CURRENT_PROFILE_TEST_VERSION = 1;

@@ -1,0 +1,14 @@
+-- Profil testini kayıtlı kullanıcılara yeniden gönderir.
+--
+-- Yağ kaybını kilo vermeden ayrı bir hedef yapan değişiklikten sonra, testi
+-- daha önce tamamlamış kullanıcıların cevapları artık eski varsayımla
+-- yorumlanıyordu (ör. "Yağ oranımı düşürmek" cevabı kilo vermeyle aynı
+-- kategoriye düşüyordu). Var olan cevapları sessizce yeniden yorumlamak
+-- yerine, kullanıcı bir sonraki açılışta testi (cevapları hazır gelerek)
+-- yeniden görür ve onaylar.
+--
+-- Sürüm sayısı lib/onboarding-questions.ts#CURRENT_PROFILE_TEST_VERSION ile
+-- eşleşir. Bundan sonra testin yeniden yorumlanmasını gerektiren bir
+-- değişiklik olduğunda bu sayı artırılır; mevcut satırlar geride kaldığı
+-- için ilgili kullanıcılar otomatik olarak yeniden teste yönlendirilir.
+alter table public.profiles add column if not exists profile_test_version integer not null default 0;
