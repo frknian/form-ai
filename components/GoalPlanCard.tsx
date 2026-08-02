@@ -40,14 +40,20 @@ function intensityCopy(t: ReturnType<typeof useTranslations>, intensity: GoalInt
  * çalışma temposunu söylüyor, uygulama takvimi hesaplıyor, grafik çiziyor ve
  * yapay zekâ bu sayıları yorumluyor.
  */
-export function GoalPlanCard({ userId, currentWeightKg }: { userId?: string; currentWeightKg?: number | null }) {
+/**
+ * `profileBmr`: panelde boy/kilo/doğum tarihinden zaten hesaplanan BMR.
+ * Kart yalnız nutrition_goals tablosuna bakıyordu; beslenme sekmesini hiç
+ * açmamış kullanıcıda o satır olmadığı için profil eksiksizken bile
+ * "günlük kalori hedefi için boy, kilo ve doğum tarihi gerekiyor" diyordu.
+ */
+export function GoalPlanCard({ userId, currentWeightKg, profileBmr }: { userId?: string; currentWeightKg?: number | null; profileBmr?: number | null }) {
   const t = useTranslations();
   const locale = useLocale();
   const unit = useWeightUnit();
   const savedRaw = useStoredGoalPlan();
   const saved = useMemo(() => normalizeAnswers(savedRaw), [savedRaw]);
 
-  const [bmr, setBmr] = useState<number | null>(null);
+  const [storedBmr, setStoredBmr] = useState<number | null>(null);
   const [measurements, setMeasurements] = useState<WeightPoint[]>([]);
   const [step, setStep] = useState<number | null>(null);
   const [draft, setDraft] = useState<GoalPlanAnswers | null>(null);
@@ -70,7 +76,7 @@ export function GoalPlanCard({ userId, currentWeightKg }: { userId?: string; cur
       ]);
       if (cancelled) return;
       const bmrValue = Number(goalResult.data?.bmr);
-      setBmr(Number.isFinite(bmrValue) && bmrValue > 0 ? bmrValue : null);
+      setStoredBmr(Number.isFinite(bmrValue) && bmrValue > 0 ? bmrValue : null);
       setMeasurements((measurementResult.data || [])
         .map((row) => ({ dateIso: String(row.measured_at), weightKg: Number(row.weight_kg) }))
         .filter((point) => Number.isFinite(point.weightKg) && point.weightKg > 0));
@@ -78,6 +84,8 @@ export function GoalPlanCard({ userId, currentWeightKg }: { userId?: string; cur
     return () => { cancelled = true; };
   }, [userId]);
 
+  // Kaydedilmiş hedef tablosu önceliklidir; yoksa profilden hesaplanana düşer.
+  const bmr = storedBmr ?? (Number.isFinite(Number(profileBmr)) && Number(profileBmr) > 0 ? Number(profileBmr) : null);
   // En taze kilo: tartı kaydı profildeki değerden güncel olabilir.
   const latestWeight = measurements.length ? measurements[measurements.length - 1].weightKg : null;
   const effectiveWeight = latestWeight ?? (Number.isFinite(Number(currentWeightKg)) && Number(currentWeightKg) > 0 ? Number(currentWeightKg) : null);

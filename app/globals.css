@@ -318,7 +318,10 @@ button,input { font:inherit; } button { cursor:pointer; }
 .meal-group { margin-top:20px; }.meal-group:first-of-type { margin-top:16px; }.meal-group-head { display:flex; align-items:center; justify-content:space-between; padding:0 3px 9px; border-bottom:1px solid var(--line); }.meal-group-head strong { font-size:12px; }.meal-group-head span { color:#79892f; font-size:10px; font-weight:800; }.food-log-item { display:grid; grid-template-columns:34px 1fr auto 30px; align-items:center; gap:11px; padding:12px 3px; border-bottom:1px solid #e7e7df; }.food-icon { display:grid; place-items:center; width:31px; height:31px; border-radius:8px; color:#66792a; background:#edf5cf; font-size:14px; }.food-log-item > div:nth-child(2) { display:grid; gap:3px; }.food-log-item strong { font-size:11px; }.food-log-item small,.food-log-item span { color:#92928b; font-size:9px; }.food-log-item b { color:#3e3e3a; font-size:12px; }.food-log-item b small { font-weight:500; }.food-log-item button { display:grid; place-items:center; border:0; color:#a2a29b; background:transparent; cursor:pointer; }.food-log-item button:hover { color:#b2674e; }.empty-meal { margin:0; padding:13px 3px 0; color:#a0a099; font-size:10px; }
 @media (max-width:850px) { .nutrition-progress-grid { grid-template-columns:1fr 1fr; }.calorie-hero { grid-template-columns:132px 1fr; }.calorie-remaining { grid-column:1/-1; grid-row:2; justify-items:start; display:flex; align-items:baseline; gap:8px; padding:13px 0 0; border-top:1px solid rgba(255,255,255,.15); border-left:0; }.calorie-remaining strong { margin:0; }.manual-fields { grid-template-columns:repeat(3,minmax(0,1fr)); }.manual-fields .food-name { grid-column:span 3; }.manual-fields .add-food { grid-column:span 2; } }
 @media (max-width:700px) { .calorie-page-head { align-items:flex-start; flex-direction:column; }.date-switcher { width:100%; box-sizing:border-box; }.nutrition-goals { padding:16px; }.nutrition-goals-head { display:grid; }.nutrition-edit { width:100%; justify-content:center; }.nutrition-goal-types,.nutrition-target-inputs,.nutrition-guidance-grid { grid-template-columns:1fr; }.nutrition-goal-types button { min-height:58px; }.nutrition-adjustment { align-items:flex-start; flex-direction:column; }.nutrition-adjustment small { margin-left:0; }.nutrition-editor-actions { align-items:stretch; flex-direction:column; }.nutrition-editor-actions button { justify-content:center; }.nutrition-save-message { text-align:left; }.calorie-hero { grid-template-columns:1fr; justify-items:center; gap:18px; padding:20px; text-align:center; }.calorie-hero-copy > p { max-width:330px; }.macro-row { justify-content:center; }.calorie-remaining { width:100%; justify-content:center; }.food-entry-panel,.food-log { padding:16px; }.food-methods { grid-template-columns:1fr; }.barcode-content { grid-template-columns:1fr; }.manual-fields { grid-template-columns:minmax(0,1fr) minmax(0,1fr); }.manual-fields .food-name,.manual-fields .add-food { grid-column:1/-1; }.food-log-item { grid-template-columns:32px 1fr auto 22px; gap:8px; }.food-log-item span { display:none; } }
-@media (max-width:700px) { .ai-nutrition-values { grid-template-columns:1fr 1fr; }.ai-nutrition-values b:first-child { grid-column:1/-1; }.manual-fields .ai-estimate-btn { justify-content:center; } }
+/* Sütun sayısı auto-fit'e bırakıldı (bkz. .ai-nutrition-values); buradaki
+   grid-template-columns zaten dosyada sonra gelen kural tarafından eziliyordu.
+   Kalori kutusu mobilde kendi satırını alır, makrolar altına dizilir. */
+@media (max-width:700px) { .ai-nutrition-values b:first-child { grid-column:1/-1; }.manual-fields .ai-estimate-btn { justify-content:center; } }
 @media (max-width:700px) {
   .exercise-media .motion-figure { transform:scale(.66); }
   .form-cues { grid-template-columns:1fr; }
@@ -803,6 +806,10 @@ button,input { font:inherit; } button { cursor:pointer; }
 @media (max-width:700px) {
   .theme-toggle small,.language-toggle small { display:none; }.theme-toggle,.language-toggle { width:36px; justify-content:center; padding:0; }
   .onboarding-toggle-row { top:14px; right:20px; }
+  /* Dil/tema düğmeleri position:fixed olduğu için yer ayırmıyor ve adım
+     sayacının (sağa yaslı) tam üstüne biniyordu; sayaç düğmelerin arkasında
+     kırpılıyordu. Düğmeler 14+36=50 px'te biter, içerik altından başlar. */
+  .onboarding-wrap { margin-top:62px; }
   .top-actions { gap:7px; }
   .coach-launcher { right:16px; bottom:16px; min-height:46px; padding:0 14px; }
   .coach-chat { right:8px; bottom:72px; width:calc(100vw - 16px); height:min(620px,calc(100dvh - 88px)); border-radius:14px; }
@@ -1149,7 +1156,12 @@ input,select,textarea { color-scheme:inherit; }
 .ai-estimate-card strong { font-size:13px; }
 .ai-estimate-card small { color:var(--muted-text); font-size:9px; line-height:1.45; }
 .ai-estimate-card p { margin:2px 0 0; color:var(--muted-text); font-size:9px; }
-.ai-nutrition-values { display:grid; grid-template-columns:repeat(5,minmax(74px,1fr)); gap:7px; margin:9px 0 5px; }
+/* auto-fit: sabit 5 sütun, 5x74+4x7=398 px'lik bir alt sınır dayatıyordu ve
+   dar kartta ızgara kabın dışına taşıyordu (bkz. ekran görüntüsü: kcal kutusu
+   kartın yeşil kenarını aşıyordu). Satır 321'deki mobil düzeltmesi de dosyada
+   DAHA ÖNCE geldiği için bu kural tarafından eziliyordu. auto-fit sığmayan
+   sütunu alt satıra indirir; medya sorgusuna gerek kalmaz. */
+.ai-nutrition-values { display:grid; grid-template-columns:repeat(auto-fit,minmax(74px,1fr)); gap:7px; margin:9px 0 5px; }
 .ai-nutrition-values b { display:grid; gap:3px; padding:9px; border:1px solid rgba(116,135,46,.18); border-radius:7px; background:rgba(255,255,255,.7); color:#3f4728; font-size:15px; }
 .ai-nutrition-values b small { color:#7d8569; font-size:7px; font-weight:750; text-transform:none; }
 .dark .ai-estimate-btn { border-color:#4f5f28; background:#242a18; color:#cfe392; }
@@ -1273,6 +1285,10 @@ input,select,textarea { color-scheme:inherit; }
    burada da içeriğin kırılabilmesini garantiye alıyoruz. */
 .ai-estimate-card { min-width:0; }
 .ai-estimate-card strong,.ai-estimate-card small,.ai-estimate-card p { overflow-wrap:anywhere; }
+/* Dar ekranda auto-fit 3 sütun bırakıyor ve dört makro 3+1 diye bölünüyordu.
+   İki sütunda 2x2 dizilirler. Bu kural temel kuraldan SONRA gelmeli; aynı
+   düzeltme dosyanın başında yazılmıştı ve sessizce eziliyordu. */
+@media (max-width:700px) { .ai-nutrition-values { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 .manual-fields > * { min-width:0; }
 .manual-fields input,.manual-fields select { max-width:100%; box-sizing:border-box; }
 

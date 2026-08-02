@@ -1409,6 +1409,10 @@ export default function Home() {
     // seans süresi zaten teste soruldu; ikinci kez sormak yerine oradan alınır.
     const targetKg = readMeasure(shownTargetWeight, WEIGHT_RANGE, 0);
     const currentKg = readMeasure(shownWeight, WEIGHT_RANGE, 0);
+    // Test cevabı hedef planının TEK kaynağıdır. Eskiden yalnız gerçek bir
+    // hedef varken yazılıyordu; "kilonu koru" seçen ya da hedefini değiştiren
+    // kullanıcıda önceki plan olduğu yerde kalıp karta eski hedefi
+    // gösteriyordu (101 kg'da "hedef 69 kg, 32 kg kaldı" gibi).
     if (targetKg > 0 && Math.abs(targetKg - currentKg) >= 0.5) {
       setStoredGoalPlan({
         targetWeightKg: targetKg,
@@ -1416,6 +1420,8 @@ export default function Home() {
         sessionMinutes: extractSessionMinutes(history[QUESTION.sessionMinutes]),
         intensity: "steady",
       });
+    } else {
+      setStoredGoalPlan(null);
     }
     setAiStatus("scanning");
     setAiStage("profile");
@@ -1753,7 +1759,7 @@ export default function Home() {
                 <button type="button" className="activity-open" onClick={() => setActivityOpen(true)}><span className="activity-open-icon">🏃</span><span className="activity-open-text"><span className="eyebrow">{t.dashboard.activityEyebrow}</span><strong>{t.dashboard.activityTitle}</strong><small>{t.dashboard.activityBody}</small></span><span className="activity-open-cta">{t.dashboard.activityOpen} →</span></button>
                 <QuickActions onNavigate={navigateFromQuickAction} />
               </> },
-              { key: "goal", label: t.pager.homeGoal, content: <GoalPlanCard userId={authUser?.id} currentWeightKg={Number(weight) || null} /> },
+              { key: "goal", label: t.pager.homeGoal, content: <GoalPlanCard userId={authUser?.id} currentWeightKg={Number(weight) || null} profileBmr={energyMetrics?.bmr ?? null} /> },
               { key: "energy", label: t.pager.homeEnergy, content: <>
                 <div className="wellness-row"><div className="wellness-card calorie-card"><div><span>{t.dashboard.todaysEnergy}</span><strong>{displayedSessionCalories} <small>kcal</small></strong><p>{t.dashboard.todaysEnergyBody}</p></div><div className="calorie-ring"><i>{displayedSessionCalories}</i></div><div className="calorie-note"><span>{t.dashboard.trackingLabel}</span><strong>{t.dashboard.trackingValue}</strong><small>{t.dashboard.trackingHint}</small></div></div></div>
                 {energyMetrics && <div className="energy-dashboard"><article><span>{t.dashboard.bmrLabel}</span><strong>{energyMetrics.bmr} <small>kcal/gün</small></strong><p>{t.dashboard.bmrBody}</p></article><article><span>{t.dashboard.tdeeLabel}</span><strong>{energyMetrics.tdee} <small>kcal/gün</small></strong><p>{t.dashboard.tdeeBody(energyMetrics.activityLabel)}</p></article><div><strong>{t.dashboard.approxTitle}</strong><p>{t.dashboard.approxBody}</p></div></div>}
