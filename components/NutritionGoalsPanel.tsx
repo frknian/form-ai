@@ -52,7 +52,7 @@ export function NutritionGoalsPanel({ goal, recommendedGoals, totals, trend, tre
     : trendProgress && trendProgress.count >= 1 && trendProgress.daysLeft > 0 ? t.nutritionGoals.trendWaitDays(trendProgress.daysLeft)
     : trendProgress && trendProgress.count >= 1 ? t.nutritionGoals.trendAddSecond
     : weightTrendAdvice(trend, draft.goalType, t);
-  const goalHints: Record<NutritionGoalType, string> = { lose: t.nutritionGoals.loseHint, gain: t.nutritionGoals.gainHint, maintain: t.nutritionGoals.maintainHint };
+  const goalHints: Record<NutritionGoalType, string> = { lose: t.nutritionGoals.loseHint, fatLoss: t.nutritionGoals.fatLossHint, gain: t.nutritionGoals.gainHint, maintain: t.nutritionGoals.maintainHint };
 
   return <section className="nutrition-goals" aria-labelledby="nutrition-goals-title">
     <div className="nutrition-goals-head">
@@ -61,7 +61,7 @@ export function NutritionGoalsPanel({ goal, recommendedGoals, totals, trend, tre
     </div>
 
     <div className="nutrition-goal-types" aria-label={t.nutritionGoals.goalTypeLabel}>
-      {(["lose", "maintain", "gain"] as NutritionGoalType[]).map((goalType) => <button type="button" key={goalType} aria-pressed={draft.goalType === goalType} className={draft.goalType === goalType ? "active" : ""} onClick={() => selectGoal(goalType)}><Target size={14} /><span>{nutritionGoalLabel(goalType, t)}</span><small>{goalHints[goalType]}</small></button>)}
+      {(["lose", "fatLoss", "maintain", "gain"] as NutritionGoalType[]).map((goalType) => <button type="button" key={goalType} aria-pressed={draft.goalType === goalType} className={draft.goalType === goalType ? "active" : ""} onClick={() => selectGoal(goalType)}><Target size={14} /><span>{nutritionGoalLabel(goalType, t)}</span><small>{goalHints[goalType]}</small></button>)}
     </div>
 
     <div className="nutrition-adjustment"><span>{nutritionGoalLabel(draft.goalType, t)}</span><strong>{adjustmentLabel}</strong><small>{t.nutritionGoals.tdeeToTarget(draft.tdee, draft.calorieTarget)}</small></div>

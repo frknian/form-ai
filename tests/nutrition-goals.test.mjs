@@ -19,7 +19,11 @@ test("derives safe calorie and macro targets for all goals", () => {
 });
 
 test("infers goal and weekly training frequency from profile answers", () => {
-  assert.equal(inferNutritionGoal("Yağ yakıp kilo vermek"), "lose");
+  // Serbest metinde ikisi birden geçiyorsa yağ kaybı kazanır: daha küçük açık
+  // ve daha yüksek protein üretir, yani tartıyı da düşürür ama kası korur.
+  // Ters yönde bir hata (sert açık) kas kaybıyla sonuçlanırdı.
+  assert.equal(inferNutritionGoal("Yağ yakıp kilo vermek"), "fatLoss");
+  assert.equal(inferNutritionGoal("Kilo vermek"), "lose");
   assert.equal(inferNutritionGoal("Kas geliştirmek"), "gain");
   assert.equal(inferWorkoutDays("3–4 gün"), 4);
   assert.equal(inferWorkoutDays("5+ gün"), 5);

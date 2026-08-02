@@ -5,7 +5,7 @@ import type { Locale } from "./i18n/locale.ts";
 
 export interface WeeklyReviewSummary {
   weekStart: string;
-  goalCategory: "Kilo verme" | "Kas geliştirme" | "Kondisyon" | "Güçlenme" | "Genel fitness";
+  goalCategory: "Kilo verme" | "Yağ kaybı" | "Kas geliştirme" | "Kondisyon" | "Güçlenme" | "Genel fitness";
   sessionCount: number;
   completionRate: number;
   totalMinutes: number;
@@ -58,7 +58,7 @@ export function validateWeeklySummary(value: unknown): WeeklyReviewSummary | nul
   const item = value as Record<string, unknown>;
   const weekStart = cleanString(item.weekStart, 10);
   const goal = cleanString(item.goalCategory, 40);
-  const validGoals: WeeklyReviewSummary["goalCategory"][] = ["Kilo verme", "Kas geliştirme", "Kondisyon", "Güçlenme", "Genel fitness"];
+  const validGoals: WeeklyReviewSummary["goalCategory"][] = ["Kilo verme", "Yağ kaybı", "Kas geliştirme", "Kondisyon", "Güçlenme", "Genel fitness"];
   const sessionCount = finiteNumber(item.sessionCount, 0, 14);
   const completionRate = finiteNumber(item.completionRate, 0, 100);
   const totalMinutes = finiteNumber(item.totalMinutes, 0, 2_000);
@@ -107,7 +107,10 @@ export function weeklyReviewWeekStart(reference: Date | number = new Date()) {
 
 export function weeklyGoalCategory(value: string): WeeklyReviewSummary["goalCategory"] {
   const normalized = value.toLocaleLowerCase("tr-TR");
-  if (normalized.includes("kilo") || normalized.includes("yağ")) return "Kilo verme";
+  // Yağ kaybı ayrı kategori: tartıyı düşürmekle yağ oranını düşürmek aynı
+  // hedef değil ve haftalık geri bildirim ikisine aynı dili konuşamaz.
+  if (normalized.includes("yağ") || normalized.includes("tanımlı")) return "Yağ kaybı";
+  if (normalized.includes("kilo")) return "Kilo verme";
   if (normalized.includes("kas")) return "Kas geliştirme";
   if (normalized.includes("kondisyon")) return "Kondisyon";
   if (normalized.includes("güç")) return "Güçlenme";

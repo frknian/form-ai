@@ -1,6 +1,19 @@
 import type { Dictionary } from "./i18n/translate.ts";
 
-export type NutritionGoalType = "lose" | "maintain" | "gain";
+/**
+ * "lose" ile "fatLoss" bilerek ayrı: tartıdaki sayıyı düşürmek ile yağ kütlesini
+ * düşürmek aynı şey değildir. Sert açık ve düşük proteinle kaybın ciddi kısmı
+ * kas ve su olur; tartı hızlı iner ama vücut kompozisyonu iyileşmez. Bu yüzden
+ * yağ kaybı modunda açık daha ılımlı, protein daha yüksek tutulur ve ilerleme
+ * tartı yerine ölçüden okunur. Eskiden iki hedef arayüzde ayrı sunuluyor ama
+ * içeride tek kategoriye düşüyordu; kullanıcı var olmayan bir seçim yapıyordu.
+ */
+export type NutritionGoalType = "lose" | "fatLoss" | "maintain" | "gain";
+
+/** Tartının düşmesi beklenen hedefler (açık üretenler). */
+export function isDeficitGoal(goalType: NutritionGoalType) {
+  return goalType === "lose" || goalType === "fatLoss";
+}
 
 export interface NutritionGoal {
   goalType: NutritionGoalType;
@@ -40,13 +53,17 @@ function clamp(value: number, min: number, max: number) {
 
 export function nutritionGoalLabel(goalType: NutritionGoalType, t: Dictionary) {
   if (goalType === "lose") return t.nutritionGoals.goalLose;
+  if (goalType === "fatLoss") return t.nutritionGoals.goalFatLoss;
   if (goalType === "gain") return t.nutritionGoals.goalGain;
   return t.nutritionGoals.goalMaintain;
 }
 
 export function inferNutritionGoal(goalText: string): NutritionGoalType {
   const normalized = goalText.toLocaleLowerCase("tr-TR");
-  if (normalized.includes("kilo") || normalized.includes("yağ") || normalized.includes("zayıf")) return "lose";
+  // "yağ" önce bakılır: "yağ oranımı düşürmek" ifadesi "kilo" da içerebilir ve
+  // eskiden ikisi de aynı kategoriye düşüyordu.
+  if (normalized.includes("yağ") || normalized.includes("tanımlı")) return "fatLoss";
+  if (normalized.includes("kilo") || normalized.includes("zayıf")) return "lose";
   if (normalized.includes("kas") || normalized.includes("hacim")) return "gain";
   return "maintain";
 }
@@ -71,16 +88,21 @@ export function calculateNutritionGoal(input: {
   const tdee = Math.round(clamp(input.tdee, bmr, 7_000));
   const weightKg = clamp(input.weightKg, 30, 350);
   const workoutDays = Math.round(clamp(input.workoutDays, 0, 7));
+  // Yağ kaybında açık bilerek daha ılımlı: sert açık kaybın kas payını
+  // büyütür, tartı hızlı iner ama yağ oranı beklendiği kadar düşmez.
   const desiredAdjustment = input.goalType === "lose"
     ? -Math.round(clamp(tdee * 0.15, 250, 500))
-    : input.goalType === "gain"
-      ? Math.round(clamp(tdee * 0.08, 150, 300))
-      : 0;
-  const calorieTarget = input.goalType === "lose"
+    : input.goalType === "fatLoss"
+      ? -Math.round(clamp(tdee * 0.10, 200, 350))
+      : input.goalType === "gain"
+        ? Math.round(clamp(tdee * 0.08, 150, 300))
+        : 0;
+  const calorieTarget = isDeficitGoal(input.goalType)
     ? Math.max(bmr, tdee + desiredAdjustment)
     : tdee + desiredAdjustment;
   const calorieAdjustment = calorieTarget - tdee;
-  const proteinMultiplier = input.goalType === "maintain" ? 1.6 : 1.8;
+  // Açıktayken kası koruyan asıl değişken protein; yağ kaybı modunda en yüksek.
+  const proteinMultiplier = input.goalType === "fatLoss" ? 2.2 : input.goalType === "maintain" ? 1.6 : 1.8;
   const proteinGrams = Math.round(weightKg * proteinMultiplier);
   const fatMultiplier = input.goalType === "gain" ? 0.9 : 0.8;
   const fatGrams = Math.round(Math.max(weightKg * fatMultiplier, calorieTarget * 0.2 / 9));
@@ -107,7 +129,7 @@ export function calculateNutritionGoal(input: {
 export function sanitizeNutritionGoal(value: unknown): NutritionGoal | null {
   if (!value || typeof value !== "object") return null;
   const item = value as Record<string, unknown>;
-  if (!(["lose", "maintain", "gain"] as unknown[]).includes(item.goalType)) return null;
+  if (!(["lose", "fatLoss", "maintain", "gain"] as unknown[]).includes(item.goalType)) return null;
   const number = (field: string, min: number, max: number) => {
     const parsed = Number(item[field]);
     return Number.isFinite(parsed) ? clamp(Math.round(parsed), min, max) : null;
@@ -165,6 +187,14 @@ export function weightTrendAdvice(trend: WeightTrend | null, goalType: Nutrition
     if (rate < -1) return t.nutritionGoals.trendLoseTooFast;
     if (rate >= 0) return t.nutritionGoals.trendLoseNone;
     return t.nutritionGoals.trendLoseOk;
+  }
+  if (goalType === "fatLoss") {
+    // Yağ kaybında düz tartı başarısızlık DEĞİL: aynı anda kas kazanılıyorsa
+    // yağ kaybı tartıya yansımaz. Kullanıcıyı sayıya değil ölçüye yönlendirir.
+    if (rate < -1) return t.nutritionGoals.trendFatLossTooFast;
+    if (rate > 0.25) return t.nutritionGoals.trendFatLossGaining;
+    if (rate >= -0.1) return t.nutritionGoals.trendFatLossFlat;
+    return t.nutritionGoals.trendFatLossOk;
   }
   if (goalType === "gain") {
     if (rate > 0.75) return t.nutritionGoals.trendGainTooFast;

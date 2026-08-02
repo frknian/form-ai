@@ -91,7 +91,9 @@ test("hedef kartları plan üretiminin okuduğu anahtar kelimeleri taşır", asy
 
   const { profileSignals } = await import("../app/api/generate-plan/route.ts");
   assert.equal(profileSignals({ goal: byId.lose }).primaryGoal, "Kilo verme");
-  assert.equal(profileSignals({ goal: byId.fat }).primaryGoal, "Kilo verme");
+  // Yağ kaybı ayrı hedef: tartıyı düşürmek ile yağ kütlesini düşürmek aynı
+  // şey değil ve program da aynı olmamalı (direnç antrenmanı korunur).
+  assert.equal(profileSignals({ goal: byId.fat }).primaryGoal, "Yağ kaybı");
   assert.equal(profileSignals({ goal: byId.muscle }).primaryGoal, "Kas geliştirme");
   assert.equal(profileSignals({ goal: byId.condition }).primaryGoal, "Kondisyon");
   assert.equal(profileSignals({ goal: byId.strength }).primaryGoal, "Güçlenme");

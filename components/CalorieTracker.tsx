@@ -60,7 +60,7 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
   const locale = useLocale();
   const dateLocale = locale === "en" ? "en-US" : "tr-TR";
   const inferredGoal = inferNutritionGoal(profileGoal);
-  const recommendedGoals = useMemo(() => Object.fromEntries((["lose", "maintain", "gain"] as NutritionGoalType[]).map((goalType) => [goalType, calculateNutritionGoal({ goalType, bmr, tdee, weightKg, activityFactor, workoutDays })])) as Record<NutritionGoalType, NutritionGoal>, [activityFactor, bmr, tdee, weightKg, workoutDays]);
+  const recommendedGoals = useMemo(() => Object.fromEntries((["lose", "fatLoss", "maintain", "gain"] as NutritionGoalType[]).map((goalType) => [goalType, calculateNutritionGoal({ goalType, bmr, tdee, weightKg, activityFactor, workoutDays })])) as Record<NutritionGoalType, NutritionGoal>, [activityFactor, bmr, tdee, weightKg, workoutDays]);
   const [entries, setEntries] = useState<FoodEntry[]>([]);
   const [nutritionGoal, setNutritionGoal] = useState<NutritionGoal>(() => calculateNutritionGoal({ goalType: inferredGoal, bmr, tdee, weightKg, activityFactor, workoutDays }));
   const [weightTrend, setWeightTrend] = useState<WeightTrend | null>(null);

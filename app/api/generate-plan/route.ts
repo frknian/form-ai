@@ -106,7 +106,13 @@ export function profileSignals(payload: Record<string, unknown>) {
   const sessionMinutes = goalPlan ? goalPlan.sessionMinutes : extractSessionMinutes(history[QUESTION.sessionMinutes]);
   const experience = history[QUESTION.level] || "Yeni başlıyorum";
   const goal = `${history[QUESTION.goal] || ""} ${text(payload.goal)}`.toLocaleLowerCase("tr-TR");
-  const primaryGoal = goal.includes("kilo") || goal.includes("yağ") ? "Kilo verme" : goal.includes("kas") ? "Kas geliştirme" : goal.includes("kondisyon") ? "Kondisyon" : "Güçlenme";
+  // Yağ kaybı ile kilo verme ayrı hedefler: tartıyı düşürmek ile yağ kütlesini
+  // düşürmek aynı şey değil. Yağ kaybında direnç antrenmanı korunmalı, yoksa
+  // açık kaybın kas payını büyütür. Eskiden ikisi tek kategoriye düşüyordu.
+  const primaryGoal = goal.includes("yağ") || goal.includes("tanımlı") ? "Yağ kaybı"
+    : goal.includes("kilo") ? "Kilo verme"
+    : goal.includes("kas") ? "Kas geliştirme"
+    : goal.includes("kondisyon") ? "Kondisyon" : "Güçlenme";
   const frequencyText = goalPlan ? `${goalPlan.weeklyDays} gün` : history[QUESTION.availableDays] || history[QUESTION.recentFrequency] || "1–2 gün";
   const weeklyDays = goalPlan ? goalPlan.weeklyDays : extractWeeklyDays(frequencyText);
   const recentFrequency = history[QUESTION.recentFrequency] || "Belirtilmedi";
@@ -119,7 +125,7 @@ export function profileSignals(payload: Record<string, unknown>) {
   const intensity = beginner || sedentary ? "Düşük-orta" : primaryGoal === "Kondisyon" ? "Orta-yüksek" : "Orta";
   const exerciseCount = sessionMinutes <= 15 ? 3 : sessionMinutes >= 60 ? 6 : sessionMinutes >= 45 ? 5 : 4;
   const setRange = beginner ? "2–3" : sessionMinutes >= 45 ? "3–4" : "3";
-  const restRange = primaryGoal === "Kondisyon" || primaryGoal === "Kilo verme" ? "30–60 sn" : beginner ? "60–90 sn" : "75–120 sn";
+  const restRange = primaryGoal === "Kondisyon" || primaryGoal === "Kilo verme" ? "30–60 sn" : beginner ? "60–90 sn" : primaryGoal === "Yağ kaybı" ? "60–90 sn" : "75–120 sn";
   const raw = JSON.stringify({ age: payload.age, gender: payload.gender, height: payload.height, weight: payload.weight, environment: payload.environment, equipment: payload.equipment, goal: payload.goal, requestedExercises: payload.requestedExercises, history });
   const fingerprint = [...raw].reduce((hash, character) => (hash * 33 + character.charCodeAt(0)) % 1000003, 17).toString(36).toUpperCase();
   return {
@@ -184,7 +190,8 @@ UYGULAMANIN GEÇMİŞTEN HESAPLADIĞI UYARLAMA KARARI:
 ${JSON.stringify(adaptation)}
 
 BU PROFİL İÇİN ZORUNLU PLAN PARAMETRELERİ:
-- Ana hedef: ${signals.primaryGoal}
+- Ana hedef: ${signals.primaryGoal}${signals.primaryGoal === "Yağ kaybı" ? `
+- YAĞ KAYBI KURALI: Programı sadece kardiyoya çevirme. Direnç antrenmanı ana omurga olarak kalsın; yağ kaybında kası koruyan şey yüktür. Kardiyo destek olarak eklenebilir, yerine geçemez.` : ""}
 - Deneyim: ${signals.experience}
 - Haftalık sıklık: ${signals.weeklyDays} gün (${signals.frequencyText})
 - Seans süresi: yaklaşık ${signals.sessionMinutes} dakika
