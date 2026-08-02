@@ -412,6 +412,7 @@ export const tr = {
     productFoundMessage: "Ürün bulundu. Porsiyon ve değerleri kontrol ederek günlüğe ekleyebilirsin.",
     photoUnreadable: "Fotoğraf okunamadı. Başka bir fotoğraf dene.",
     analyzingPhoto: "Fotoğraf analiz ediliyor…",
+    restoringPhoto: "Çektiğin fotoğraf geri getiriliyor…",
     photoAnalysisFailed: "Fotoğraf analizi tamamlanamadı.",
     photoResultMessage: "Yemek tanındı; gramaj ve makrolar dolduruldu. Kontrol edip günlüğe ekleyebilirsin.",
     photoResultLowConfidence: "Yemek net seçilemedi; tahmin temkinli tutuldu. Gramajı ve değerleri kontrol et.",

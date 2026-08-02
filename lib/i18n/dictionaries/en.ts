@@ -414,6 +414,7 @@ export const en: typeof tr = {
     productFoundMessage: "Product found. You can add it to your log after checking the portion and values.",
     photoUnreadable: "Photo couldn't be read. Try another photo.",
     analyzingPhoto: "Analyzing photo…",
+    restoringPhoto: "Restoring the photo you took…",
     photoAnalysisFailed: "Photo analysis couldn't be completed.",
     photoResultMessage: "Food recognized; portion and macros filled in. Check them and add to your log.",
     photoResultLowConfidence: "The food wasn't clearly visible, so the estimate is conservative. Check the portion and values.",

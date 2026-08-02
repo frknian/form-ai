@@ -30,6 +30,7 @@ import { normalizeCustomPrograms, removeCustomProgram, summarizeProgramProgress,
 import { QuickActions } from "@/components/QuickActions";
 import { MobilePager } from "@/components/MobilePager";
 import type { AppView } from "@/lib/quick-actions";
+import { usePendingFoodPhoto } from "@/lib/mobile";
 import { FrozenAccountScreen, ProfileManager } from "@/components/ProfileManager";
 import { TrainingPlaceSwitch } from "@/components/TrainingPlaceSwitch";
 import { BodyMetrics } from "@/components/onboarding/BodyMetrics";
@@ -788,7 +789,18 @@ export default function Home() {
   const [aiProgression, setAiProgression] = useState<string[]>([]);
   const [aiFingerprint, setAiFingerprint] = useState("");
   const [aiStage, setAiStage] = useState<AiStage>("profile");
-  const [activeView, setActiveView] = useState<"plan" | "workout" | "progress" | "library" | "nutrition" | "calendar" | "profile">("plan");
+  // Kamera dönüşünde Android süreci öldürdüyse uygulama sıfırdan açılır ve
+  // kullanıcı ana ekranda kalırdı. Bekleyen bir öğün fotoğrafı varsa beslenme
+  // sekmesi gösterilir; fotoğrafı orada CalorieTracker karşılar. Kullanıcı
+  // elle bir sekme seçer seçmez tercihi kazanır.
+  const pendingFoodPhoto = usePendingFoodPhoto();
+  const [chosenView, setChosenView] = useState<"plan" | "workout" | "progress" | "library" | "nutrition" | "calendar" | "profile" | null>(null);
+  // İşaret bir kez görüldüyse yapışır: analiz başlarken temizleniyor ve buna
+  // bağlı kalsaydı kullanıcı tam o anda ana ekrana geri atılırdı.
+  const sawPendingFoodPhoto = useRef(false);
+  if (pendingFoodPhoto) sawPendingFoodPhoto.current = true;
+  const activeView = chosenView ?? (sawPendingFoodPhoto.current ? "nutrition" : "plan");
+  const setActiveView = setChosenView;
   const topLinksRef = useRef<HTMLDivElement>(null);
   const [, setAiStatus] = useState<"idle" | "scanning" | "complete" | "fallback">("idle");
   const [activityOpen, setActivityOpen] = useState(false);

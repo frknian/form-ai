@@ -9,7 +9,7 @@ import { frequentMeals } from "@/lib/frequent-meals";
 import { HOUSEHOLD_PORTION_UNITS, PRIMARY_PORTION_UNITS, fromGrams, needsAnalysis, referenceGrams, toGrams, type PortionUnit } from "@/lib/portion-unit";
 import { emptyFoodNutrition, scaleFoodNutrition, type FoodMicronutrients, type FoodNutrition } from "@/lib/food-search";
 import { calculateNutritionGoal, calculateWeeklyWeightTrend, inferNutritionGoal, sanitizeNutritionGoal, type NutritionGoal, type NutritionGoalType, type WeightTrend } from "@/lib/nutrition-goals";
-import { isNativeApp, mobileImpact, takeFoodPhoto } from "@/lib/mobile";
+import { clearPendingFoodPhoto, isNativeApp, listenForRestoredFoodPhoto, mobileImpact, takeFoodPhoto, usePendingFoodPhoto } from "@/lib/mobile";
 import { createClient } from "@/lib/supabase/client";
 import { localDateKey } from "@/lib/streak";
 import { authorizedFetch } from "@/lib/api-client";
@@ -70,7 +70,12 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
   const [trendProgress, setTrendProgress] = useState<{ count: number; daysLeft: number } | null>(null);
   const [goalSaving, setGoalSaving] = useState(false);
   const [goalMessage, setGoalMessage] = useState("");
-  const [activeMethod, setActiveMethod] = useState<"text" | "photo">("text");
+  // Kamera dönüşünde süreç öldürülmüşse kullanıcı fotoğraf adımındaydı; oraya
+  // geri getiriyoruz. Elle bir yöntem seçilirse o kazanır.
+  const pendingFoodPhoto = usePendingFoodPhoto();
+  const [chosenMethod, setChosenMethod] = useState<"text" | "photo" | null>(null);
+  const activeMethod = chosenMethod ?? (pendingFoodPhoto ? "photo" : "text");
+  const setActiveMethod = setChosenMethod;
   const [meal, setMeal] = useState<Meal>("Atıştırmalık");
   const [foodName, setFoodName] = useState("");
   const [grams, setGrams] = useState("100");
@@ -116,6 +121,29 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
   useEffect(() => () => {
     if (photoPreview?.startsWith("blob:")) URL.revokeObjectURL(photoPreview);
   }, [photoPreview]);
+
+  // --- Kamera dönüşünde süreç öldürülmüşse fotoğrafı kurtar ---------------
+  //
+  // Android, kamera öndeyken barındıran Activity'yi öldürebiliyor: WebView
+  // sıfırdan yükleniyor, takeFoodPhoto'nun sözü hiç çözülmüyor ve kullanıcı
+  // uygulamayı baştan açılmış buluyordu — çektiği fotoğraf kayboluyordu.
+  // Capacitor bu sonucu yeniden açılışta appRestoredResult ile bir kez
+  // yayınlar; aşağıdaki dinleyici onu yakalayıp analize sokar.
+  const analyzeRef = useRef<(photoDataUrl: string) => Promise<void>>(async () => undefined);
+  useEffect(() => listenForRestoredFoodPhoto((dataUrl) => {
+    // Yöntemi sabitle: işaret birazdan temizlenecek ve seçim ona bağlı
+    // kalsaydı kullanıcı analiz tam başlarken metin adımına geri atılırdı.
+    setChosenMethod("photo");
+    void analyzeRef.current(dataUrl);
+  }), []);
+
+  // Sonuç hiç gelmezse (vazgeçildi ya da dosya okunamadı) işaret asılı kalıp
+  // beslenme sekmesini her açılışta fotoğraf adımına kilitlemesin.
+  useEffect(() => {
+    if (!pendingFoodPhoto) return;
+    const timer = setTimeout(clearPendingFoodPhoto, 8_000);
+    return () => clearTimeout(timer);
+  }, [pendingFoodPhoto]);
 
   useEffect(() => {
     if (!userId) return;
@@ -361,6 +389,8 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
     await analyzeFoodPhoto(photoDataUrl, URL.createObjectURL(file));
   }
 
+  analyzeRef.current = (photoDataUrl: string) => analyzeFoodPhoto(photoDataUrl);
+
   async function analyzeFoodPhoto(photoDataUrl: string, previewUrl = photoDataUrl) {
     if (!photoDataUrl) { setMessage(t.calorieTracker.photoUnreadable); return; }
     setPhotoPreview(previewUrl);
@@ -519,7 +549,9 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
             <button type="button" className="primary-btn add-food" disabled={isSubmitting || estimating || (activeMethod === "photo" && !aiEstimate)} onClick={() => void submitManual()}><Plus size={16} /> {estimating ? t.calorieTracker.estimating : aiEstimate ? t.calorieTracker.addToLog : t.calorieTracker.analyzeAndAdd}</button>
           </div>
         </>}
-        {message && <p className="food-message">{message}</p>}
+        {/* Kamera dönüşünde süreç öldürüldüyse fotoğraf geri getirilirken
+            kullanıcı boş bir ekranla karşılaşmasın. */}
+        {(message || pendingFoodPhoto) && <p className="food-message">{message || t.calorieTracker.restoringPhoto}</p>}
       </div>
     </section>
 

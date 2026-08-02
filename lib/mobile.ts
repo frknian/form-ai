@@ -1,3 +1,4 @@
+import { useSyncExternalStore } from "react";
 import { App } from "@capacitor/app";
 import { Browser } from "@capacitor/browser";
 import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
@@ -24,33 +25,49 @@ export async function openNativeBrowser(url: string) {
 }
 
 /**
- * Öğün fotoğrafı çeker ve data URL döndürür.
+ * Kamera açılmadan önce konur, sonuç işlenince silinir.
  *
- * Sonuç DataUrl yerine Uri olarak istenir: kamera uygulaması öndeyken Android,
- * bellek baskısı altında barındıran Activity'yi öldürebiliyor. DataUrl, kamera
- * açık kaldığı sürece bellekte megabaytlarca base64 dizesi tutarak bu baskıyı
- * artırıyor ve uygulama fotoğraftan sonra yeniden açılıp kaydı kaybediyordu.
- * Uri hafiftir; dosyayı ancak uygulama yeniden ön plana geldikten sonra,
- * güvenli anda data URL'ye çeviririz. (Manifest'teki largeHeap de aynı riski
- * azaltır.)
+ * Android kamera öndeyken barındıran Activity'yi öldürebiliyor; dönüşte WebView
+ * sıfırdan yükleniyor ve kullanıcı uygulamayı baştan açılmış buluyordu. Bu
+ * işaret sayesinde yeniden açılışta hangi ekrana dönüleceği bilinir.
  */
-export async function takeFoodPhoto() {
-  if (!isNativeApp()) return null;
-  const photo = await Camera.getPhoto({
-    quality: 72,
-    width: 1280,
-    allowEditing: false,
-    resultType: CameraResultType.Uri,
-    source: CameraSource.Prompt,
-    promptLabelHeader: "Öğün fotoğrafı",
-    promptLabelPhoto: "Galeriden seç",
-    promptLabelPicture: "Fotoğraf çek",
-    promptLabelCancel: "Vazgeç",
-  });
-  if (photo.dataUrl) return photo.dataUrl;
-  if (!photo.webPath) return null;
+const PENDING_FOOD_PHOTO_KEY = "hedefit:pending-food-photo";
+
+const pendingPhotoListeners = new Set<() => void>();
+
+export function markPendingFoodPhoto() {
+  try { localStorage.setItem(PENDING_FOOD_PHOTO_KEY, "1"); } catch { /* depolama kapalı */ }
+  pendingPhotoListeners.forEach((listener) => listener());
+}
+
+export function hasPendingFoodPhoto() {
+  try { return typeof localStorage !== "undefined" && localStorage.getItem(PENDING_FOOD_PHOTO_KEY) === "1"; } catch { return false; }
+}
+
+export function clearPendingFoodPhoto() {
+  try { localStorage.removeItem(PENDING_FOOD_PHOTO_KEY); } catch { /* depolama kapalı */ }
+  pendingPhotoListeners.forEach((listener) => listener());
+}
+
+function subscribePendingFoodPhoto(callback: () => void) {
+  pendingPhotoListeners.add(callback);
+  return () => { pendingPhotoListeners.delete(callback); };
+}
+
+/**
+ * Bekleyen bir öğün fotoğrafı olup olmadığını izler.
+ *
+ * Sunucu anlık görüntüsü daima false: işaret yalnız cihazda anlamlıdır ve
+ * doğrudan efekt içinde setState çağırmak yerine bu mağazadan okunur.
+ */
+export function usePendingFoodPhoto(): boolean {
+  return useSyncExternalStore(subscribePendingFoodPhoto, hasPendingFoodPhoto, () => false);
+}
+
+/** Yerel dosya yolunu data URL'ye çevirir; okunamazsa null döner. */
+async function fileToDataUrl(source: string): Promise<string | null> {
   try {
-    const blob = await fetch(photo.webPath).then((response) => response.blob());
+    const blob = await fetch(source).then((response) => response.blob());
     return await new Promise<string | null>((resolve) => {
       const reader = new FileReader();
       reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : null);
@@ -60,6 +77,68 @@ export async function takeFoodPhoto() {
   } catch {
     return null;
   }
+}
+
+/**
+ * Öğün fotoğrafı çeker ve data URL döndürür.
+ *
+ * Sonuç DataUrl yerine Uri olarak istenir: kamera uygulaması öndeyken Android,
+ * bellek baskısı altında barındıran Activity'yi öldürebiliyor. DataUrl, kamera
+ * açık kaldığı sürece bellekte megabaytlarca base64 dizesi tutarak bu baskıyı
+ * artırıyor ve uygulama fotoğraftan sonra yeniden açılıp kaydı kaybediyordu.
+ * Uri hafiftir; dosyayı ancak uygulama yeniden ön plana geldikten sonra,
+ * güvenli anda data URL'ye çeviririz. (Manifest'teki largeHeap de aynı riski
+ * azaltır.)
+ *
+ * Activity yine de öldürülürse bu çağrının sözü hiç çözülmez — JS bağlamı yok
+ * olmuştur. O senaryoyu listenForRestoredFoodPhoto karşılar.
+ */
+export async function takeFoodPhoto() {
+  if (!isNativeApp()) return null;
+  markPendingFoodPhoto();
+  try {
+    const photo = await Camera.getPhoto({
+      quality: 72,
+      width: 1280,
+      allowEditing: false,
+      resultType: CameraResultType.Uri,
+      source: CameraSource.Prompt,
+      promptLabelHeader: "Öğün fotoğrafı",
+      promptLabelPhoto: "Galeriden seç",
+      promptLabelPicture: "Fotoğraf çek",
+      promptLabelCancel: "Vazgeç",
+    });
+    if (photo.dataUrl) return photo.dataUrl;
+    if (!photo.webPath) return null;
+    return await fileToDataUrl(photo.webPath);
+  } finally {
+    clearPendingFoodPhoto();
+  }
+}
+
+/**
+ * Activity öldürüldüğü için çözülemeyen kamera çağrısının sonucunu yakalar.
+ *
+ * Capacitor bu durumu tam olarak bunun için `appRestoredResult` ile bildirir:
+ * uygulama yeniden açıldığında, uçuşta kalan eklenti çağrısının sonucu bir kez
+ * yayınlanır. Böylece kullanıcı fotoğrafı yeniden çekmek zorunda kalmaz.
+ */
+export function listenForRestoredFoodPhoto(handler: (dataUrl: string) => void) {
+  if (!isNativeApp()) return () => undefined;
+  let active = true;
+  let handle: { remove: () => Promise<void> } | null = null;
+  void App.addListener("appRestoredResult", (result) => {
+    if (!active || result.pluginId !== "Camera" || result.methodName !== "getPhoto") return;
+    void (async () => {
+      const data = result.data as { dataUrl?: string; webPath?: string; path?: string } | undefined;
+      // path yerel dosya sistemi yolu; WebView'in okuyabilmesi için çevrilir.
+      const source = data?.webPath || (data?.path ? Capacitor.convertFileSrc(data.path) : null);
+      const dataUrl = data?.dataUrl || (source ? await fileToDataUrl(source) : null);
+      clearPendingFoodPhoto();
+      if (active && result.success && dataUrl) handler(dataUrl);
+    })();
+  }).then((registered) => { if (active) handle = registered; else void registered.remove(); });
+  return () => { active = false; void handle?.remove(); };
 }
 
 export async function mobileImpact() {
