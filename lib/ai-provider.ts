@@ -16,8 +16,19 @@ function hasAiProvider() {
   return Boolean(process.env.AI_API_KEY);
 }
 
+// ÖLÇÜM (2026-08): sağlayıcının "akıl yürüten" modelleri bu uygulama için çok
+// yavaş. Aynı soru/plan için ölçülen süreler:
+//
+//   sohbet yanıtı   kimi-k3 42 sn · kimi-k2.6 104 sn · k2.7-highspeed  4,8 sn
+//   tam plan        kimi-k3 >100 sn (zaman aşımı)   · k2.7-highspeed 19 sn
+//
+// kimi-k3 ile sohbet 20 sn'lik pencereye yetişmediği için neredeyse her zaman
+// güvenli yerel yanıta düşüyor, plan ise hiç üretilemiyordu. Varsayılan bu
+// yüzden hızlı modele alındı; AI_MODEL ortam değişkeniyle yine ezilebilir.
+const DEFAULT_MODEL = "kimi-k2.7-code-highspeed";
+
 function aiModelId() {
-  return process.env.AI_MODEL || "kimi-k3";
+  return process.env.AI_MODEL || DEFAULT_MODEL;
 }
 
 function languageModel(modelId = aiModelId()) {

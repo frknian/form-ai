@@ -1779,3 +1779,10 @@ button.brand:hover .brand-mark { transform:scale(1.06); }
 .refresh-plan-zone button { min-height:40px; padding:0 16px; border:1px solid #cbdc92; border-radius:9px; background:#f0f8d0; color:#52641a; font-size:12px; font-weight:700; cursor:pointer; }
 .refresh-plan-zone button:disabled { opacity:.6; cursor:wait; }
 .dark .refresh-plan-zone button { background:#33411f; border-color:#5d7030; color:#d9ed9e; }
+
+/* Ev ölçüsü çipleri ikinci grup: gram karşılığını da taşırlar. */
+.portion-unit-household { margin-top:6px; }
+.portion-unit-household button { display:inline-flex; align-items:baseline; gap:5px; }
+.portion-unit-household button i { color:var(--muted-text); font-size:9.5px; font-style:normal; font-weight:600; }
+.portion-unit-household button.active i { color:#4d5c1c; }
+.dark .portion-unit-household button.active i { color:#b6cf74; }

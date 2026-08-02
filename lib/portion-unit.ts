@@ -18,6 +18,12 @@ export type PortionUnit = "g" | "ml" | "teaGlass" | "waterGlass" | "mug" | "plat
 
 export const PORTION_UNITS: PortionUnit[] = ["g", "ml", "teaGlass", "waterGlass", "mug", "plate", "bowl", "portion", "piece"];
 
+// Arayüzde iki grup: önce ölçülen birim (gram/ml), sonra ev ölçüleri. Hepsi
+// tek sırada eşit görünürken kullanıcı tartıyla ölçtüğü değeri bardak/tabak
+// arasında arıyordu; asıl birim öne alındı.
+export const PRIMARY_PORTION_UNITS: PortionUnit[] = ["g", "ml"];
+export const HOUSEHOLD_PORTION_UNITS: PortionUnit[] = ["teaGlass", "waterGlass", "mug", "plate", "bowl", "portion", "piece"];
+
 // Ev ölçülerinin yaklaşık gram karşılığı. Bunlar SABİTTİR: porsiyon ve adetten
 // farklı olarak bir AI tahminine ihtiyaç duymazlar, çünkü bir su bardağının
 // hacmi yemekten yemeğe değişmez.

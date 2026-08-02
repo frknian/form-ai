@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";
-import { detectPieceCount, fromGrams, parseAmount, referenceGrams, toGrams } from "../lib/portion-unit.ts";
+import { HOUSEHOLD_PORTION_UNITS, PRIMARY_PORTION_UNITS, detectPieceCount, fromGrams, parseAmount, referenceGrams, toGrams } from "../lib/portion-unit.ts";
 
 test("miktar ayrıştırma virgüllü ondalığı kabul eder", () => {
   assert.equal(parseAmount("1,5"), 1.5);
@@ -123,6 +123,30 @@ test("birim seçici mobilde kırpılmaz", async () => {
   assert.match(rule, /flex-wrap:wrap/, "çipler sarmalanmalı");
   assert.doesNotMatch(rule, /overflow:hidden/, "kırpma geri gelmiş");
   assert.match(css, /\.manual-fields > label:has\(\.portion-unit-switch\) \{ grid-column:1\/-1; \}/, "porsiyon alanı mobilde tam satır olmalı");
+});
+
+test("gram/ml birinci, ev ölçüleri ikinci katmanda", () => {
+  // Kullanıcı geri bildirimi: 9 birim eşit ağırlıkta yan yana durunca gram/ml
+  // ile bardak/tabak gibi tahmini ölçüler ayrım gözetmeksizin sunuluyordu.
+  assert.deepEqual(PRIMARY_PORTION_UNITS, ["g", "ml"]);
+  assert.deepEqual(HOUSEHOLD_PORTION_UNITS, ["teaGlass", "waterGlass", "mug", "plate", "bowl", "portion", "piece"]);
+  for (const unit of PRIMARY_PORTION_UNITS) assert.ok(!HOUSEHOLD_PORTION_UNITS.includes(unit), `${unit} iki grupta birden olmamalı`);
+});
+
+test("kalori takipçisinde iki ayrı birim grubu render edilir", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const tsx = await readFile(new URL("../components/CalorieTracker.tsx", import.meta.url), "utf8");
+  assert.match(tsx, /PRIMARY_PORTION_UNITS\.map/, "birincil birimler (g, ml) ayrı render edilmeli");
+  assert.match(tsx, /HOUSEHOLD_PORTION_UNITS\.map/, "ev ölçüleri ayrı render edilmeli");
+  assert.match(tsx, /portion-unit-household/, "ev ölçüleri grubu ikincil stille işaretlenmeli");
+  // Ev ölçüsü çipleri gram karşılığını da göstermeli (ör. "Tabak 350 g").
+  assert.match(tsx, /Math\.round\(grams\)\}\s*g/);
+});
+
+test("ev ölçüsü grubunun CSS'i tanımlı", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  assert.match(css, /\.portion-unit-household \{/, "ikinci grup için stil bulunmalı");
 });
 
 test("profilden planı yenilemek panelde kalır", async () => {

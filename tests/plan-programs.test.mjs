@@ -286,6 +286,20 @@ test("plan üretiminde akıl yürütme bütçesi içeriği aç bırakmaz", async
   assert.match(provider, /maxRetries: 0/);
 });
 
+test("koç sohbeti zaman aşımı hızlı modele göre paylı", async () => {
+  // ÖLÇÜLDÜ: varsayılan akıl yürüten modelde bir sohbet cevabı 42 sn sürdü;
+  // eski 20 sn'lik zaman aşımı neredeyse her seferinde güvenli yerel yanıta
+  // düşüyordu. Varsayılan model hızlıya alındı, pencere yine de paylı tutuldu.
+  const route = await readFile(new URL("../app/api/chat/route.ts", import.meta.url), "utf8");
+  const match = route.match(/AbortSignal\.timeout\((\d+)_?(\d*)\)/);
+  assert.ok(match, "chat route zaman aşımı bulunamadı");
+  const timeout = Number(`${match[1]}${match[2]}`);
+  assert.ok(timeout >= 30_000, `sohbet zaman aşımı yetersiz: ${timeout}`);
+
+  const provider = await readFile(new URL("../lib/ai-provider.ts", import.meta.url), "utf8");
+  assert.match(provider, /DEFAULT_MODEL\s*=\s*"kimi-k2\.7-code-highspeed"/, "varsayılan hızlı model ayarlı olmalı");
+});
+
 test("plan istemine yalnız yapılabilir hareketler gider", async () => {
   // Tam katalog istemi şişirip üretimi yavaşlatıyordu; ayrıca model evdeki
   // kullanıcıya salon aleti önerebiliyordu.

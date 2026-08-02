@@ -6,7 +6,7 @@ import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { NutritionGoalsPanel } from "@/components/NutritionGoalsPanel";
 import { HydrationFasting } from "@/components/HydrationFasting";
 import { frequentMeals } from "@/lib/frequent-meals";
-import { PORTION_UNITS, fromGrams, needsAnalysis, referenceGrams, toGrams, type PortionUnit } from "@/lib/portion-unit";
+import { HOUSEHOLD_PORTION_UNITS, PRIMARY_PORTION_UNITS, fromGrams, needsAnalysis, referenceGrams, toGrams, type PortionUnit } from "@/lib/portion-unit";
 import { emptyFoodNutrition, scaleFoodNutrition, type FoodMicronutrients, type FoodNutrition } from "@/lib/food-search";
 import { calculateNutritionGoal, calculateWeeklyWeightTrend, inferNutritionGoal, sanitizeNutritionGoal, type NutritionGoal, type NutritionGoalType, type WeightTrend } from "@/lib/nutrition-goals";
 import { isNativeApp, mobileImpact, takeFoodPhoto } from "@/lib/mobile";
@@ -487,8 +487,20 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
                   tahmin yokken kilitli kalırlar, yoksa uydurma bir ağırlıkla
                   sessizce yanlış kalori kaydedilirdi. */}
               <span className="portion-unit-switch" role="group" aria-label={t.calorieTracker.portionUnitLabel}>
-                {PORTION_UNITS.map((unit) => {
+                {PRIMARY_PORTION_UNITS.map((unit) => <button
+                  key={unit}
+                  type="button"
+                  aria-pressed={portionUnit === unit}
+                  className={portionUnit === unit ? "active" : ""}
+                  onClick={() => switchPortionUnit(unit)}
+                >{portionUnitLabel(t, unit)}</button>)}
+              </span>
+              {/* Ev ölçüleri ikinci grupta ve gram karşılığıyla: "Tabak"ın ne
+                  kadar olduğunu görmeden seçmek kullanıcıyı tahmine bırakıyordu. */}
+              <span className="portion-unit-switch portion-unit-household" role="group" aria-label={t.calorieTracker.portionUnitHouseholdLabel}>
+                {HOUSEHOLD_PORTION_UNITS.map((unit) => {
                   const locked = needsAnalysis(unit) && analysedGrams === null;
+                  const grams = referenceGrams(unit, analysedGrams, foodName);
                   return <button
                     key={unit}
                     type="button"
@@ -497,7 +509,7 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
                     aria-pressed={portionUnit === unit}
                     className={portionUnit === unit ? "active" : ""}
                     onClick={() => switchPortionUnit(unit)}
-                  >{portionUnitLabel(t, unit)}</button>;
+                  >{portionUnitLabel(t, unit)}{grams !== null && !locked && <i>{Math.round(grams)} g</i>}</button>;
                 })}
               </span>
               {portionUnit !== "g" && unitGrams !== null && <small className="portion-unit-hint">{t.calorieTracker.portionUnitHint(portionUnitLabel(t, portionUnit), Math.round(unitGrams))}</small>}

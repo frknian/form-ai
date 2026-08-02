@@ -362,6 +362,7 @@ export const en: typeof tr = {
     choosePhotoAgain: "Choose another photo",
     foodNameLabel: "FOOD / MEAL",
     foodNamePlaceholder: "E.g. yogurt, chicken breast, or oats",
+    portionUnitHouseholdLabel: "Household measure",
     portionUnitMl: "ml",
     portionUnitTeaGlass: "Tea glass",
     portionUnitWaterGlass: "Water glass",

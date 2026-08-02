@@ -360,6 +360,7 @@ export const tr = {
     choosePhotoAgain: "Başka fotoğraf seç",
     foodNameLabel: "BESİN / ÖĞÜN",
     foodNamePlaceholder: "Örn. yoğurt, tavuk göğsü veya yulaf",
+    portionUnitHouseholdLabel: "Ev ölçüsü",
     portionUnitMl: "ml",
     portionUnitTeaGlass: "Çay bardağı",
     portionUnitWaterGlass: "Su bardağı",

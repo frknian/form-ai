@@ -52,7 +52,10 @@ export async function POST(request: Request) {
       messages: messages.map((message) => ({ role: message.role, content: message.text })),
       temperature: 0.35,
       maxOutputTokens: 500,
-      abortSignal: AbortSignal.timeout(20_000),
+      // 20 sn, sağlayıcının akıl yürüten modelinde (42 sn ölçüldü) hiç
+      // yetişmiyordu; koç neredeyse her soruda güvenli yerel yanıta düşüyordu.
+      // Varsayılan model hızlıya alındı (~5 sn), pencere yine de paylı.
+      abortSignal: AbortSignal.timeout(35_000),
     });
     // Sınır uygulanmıyorsa (bkz. lib/usage-limits.ts) limit sonsuzdur; JSON'da
     // null'a dönüşüp arayüzde "0/null" görüneceği için alanı hiç göndermiyoruz.
