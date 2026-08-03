@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { canPerformExercise, hasEquipment, usableEquipmentText } from "../lib/equipment-match.ts";
+import { canPerformExercise, hasEquipment, hasEquipmentNamed, usableEquipmentText } from "../lib/equipment-match.ts";
 
 const dumbbellRow = { bodyweight: false, requires: ["dambıl"] };
 const pushup = { bodyweight: true, requires: [] };
@@ -56,4 +56,13 @@ test("evde dambılı olan kullanıcı dambıl hareketi alır", () => {
   const options = { isGym: false, equipmentText: "iki tane 8 kg dambıl" };
   assert.equal(canPerformExercise(dumbbellRow, options), true);
   assert.equal(canPerformExercise(legPress, options), false, "salon makinesi eve girmemeli");
+});
+
+test("ekipman adı Türkçe de İngilizce de olsa aynı kümeye düşer", () => {
+  // Egzersiz veritabanı İngilizce ("dumbbell"), katalog Türkçe ("dambıl")
+  // yazıyor; ikisi de kullanıcının "dambıl" cevabıyla eşleşmeli.
+  assert.equal(hasEquipmentNamed("iki tane 8 kg dambıl", "dumbbell"), true);
+  assert.equal(hasEquipmentNamed("dambıl var, bench yok", "bench"), false, "olumsuzlanan ekipman eşleşmemeli");
+  assert.equal(hasEquipmentNamed("dambıl var, bench yok", "sehpa"), false, "eşanlamlısı da eşleşmemeli");
+  assert.equal(hasEquipmentNamed("iki tane 8 kg dambıl", ""), true, "ekipman gerektirmeyen hareket her zaman yapılabilir");
 });

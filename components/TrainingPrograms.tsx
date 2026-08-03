@@ -26,10 +26,14 @@ type Selection =
   | { kind: "custom"; id: string };
 
 export function TrainingPrograms({
-  equipmentText, smartWorkouts, customPrograms, progress,
+  equipmentText, isGym, smartWorkouts, customPrograms, progress,
   onStart, onSaveCustom, onDeleteCustom, smartExtra, smartFallback = false,
 }: {
   equipmentText: string;
+  /** Profildeki ortam. Sayfadaki salon/ev seçimi kaldırıldı: kullanıcı bunu
+      profil testinde zaten söylüyordu ve iki yerde durunca ekrandaki seçim
+      profili sessizce eziyor, evde çalışan birine salon aleti çıkarabiliyordu. */
+  isGym: boolean;
   /** Profil testinden AI'ın ürettiği program. Boşsa akıllı kart kilitli. */
   smartWorkouts: AiWorkout[];
   customPrograms: CustomProgram[];
@@ -44,8 +48,11 @@ export function TrainingPrograms({
 }) {
   const t = useTranslations();
   const [selection, setSelection] = useState<Selection | null>(null);
-  const [place, setPlace] = useState<TrainingPlace>("home");
   const [builderId, setBuilderId] = useState<string | null>(null);
+  // Hazır programlar arasında geçiş: üç kart alt alta uzayıp ekranı
+  // doldurmasın diye tek panel, üstünde anahtar.
+  const [tab, setTab] = useState<"smart" | "fullBody" | "split">("smart");
+  const place: TrainingPlace = isGym ? "gym" : "home";
 
   function regionLabel(area: string): string {
     const map: Record<string, string> = {
@@ -118,7 +125,9 @@ export function TrainingPrograms({
     return <section className="programs" id="ready-programs">
       <div className="section-title"><div className="eyebrow">{t.programs.eyebrow}</div><button type="button" className="back-btn" onClick={() => setSelection(null)}>{t.programs.backToPrograms}</button></div>
       <h2>{title}</h2>
-      <p className="programs-note">{progressLabel(activeKey)}{selection.kind !== "smart" && selection.kind !== "custom" ? ` · ${selection.place === "gym" ? t.programs.placeGym : t.programs.placeHome}` : ""}</p>
+      {/* Ortam etiketi kaldırıldı: seçim artık profilden geliyor, ekranda
+          değiştirilebilir bir şey değil. */}
+      <p className="programs-note">{progressLabel(activeKey)}</p>
       {selection.kind === "smart" && smartFallback && <p className="programs-note programs-fallback">{t.programs.smartFallbackNote}</p>}
 
       {list.length ? <>
@@ -153,8 +162,45 @@ export function TrainingPrograms({
   return <section className="programs" id="ready-programs">
     <div className="section-title"><div className="eyebrow">{t.programs.eyebrow}</div><span className="programs-hint">{t.programs.hint}</span></div>
 
-    {/* Kendi programını kur en başta: kullanıcı burada kendi hareketlerini
-        seçtiği için hazır programlardan önce görmesi istendi. */}
+    {/* Hazır programlar tek panelde, üstünde anahtar. Üç kart alt alta
+        durunca sayfa uzuyor ve kullanıcı hepsini görmek için kaydırmak
+        zorunda kalıyordu. */}
+    <div className="program-switch" role="tablist" aria-label={t.programs.eyebrow}>
+      <button type="button" role="tab" aria-selected={tab === "smart"} className={tab === "smart" ? "selected" : ""} onClick={() => setTab("smart")}>{t.programs.smartTitle}</button>
+      <button type="button" role="tab" aria-selected={tab === "fullBody"} className={tab === "fullBody" ? "selected" : ""} onClick={() => setTab("fullBody")}>{t.programs.fullBodyTitle}</button>
+      <button type="button" role="tab" aria-selected={tab === "split"} className={tab === "split" ? "selected" : ""} onClick={() => setTab("split")}>{t.programs.splitTitle}</button>
+    </div>
+
+    <div className="program-panel">
+      {tab === "smart" && <article className="program-card">
+        <OnboardingIcon name="condition" />
+        <h3>{t.programs.smartTitle}</h3>
+        <p>{smartFallback ? t.programs.smartFallbackBody : t.programs.smartBody}</p>
+        <small>{progressLabel(programKey("smart"))}</small>
+        <button type="button" disabled={!smartWorkouts.length} onClick={() => setSelection({ kind: "smart" })}>
+          {smartWorkouts.length ? t.programs.open : t.programs.smartLocked} {smartWorkouts.length ? <span>→</span> : null}
+        </button>
+      </article>}
+
+      {tab === "fullBody" && <article className="program-card">
+        <OnboardingIcon name="strength" />
+        <h3>{t.programs.fullBodyTitle}</h3>
+        <p>{t.programs.fullBodyBody}</p>
+        <small>{progressLabel(programKey("fullBody", place))}</small>
+        <button type="button" onClick={() => setSelection({ kind: "fullBody", place })}>{t.programs.open} <span>→</span></button>
+      </article>}
+
+      {tab === "split" && <article className="program-card">
+        <OnboardingIcon name="muscle" />
+        <h3>{t.programs.splitTitle}</h3>
+        <p>{t.programs.splitBody}</p>
+        <div className="program-regions">{BODY_REGIONS.map((area) => (
+          <button type="button" key={area} className="equipment" onClick={() => setSelection({ kind: "split", place, area })}>{regionLabel(area)}</button>
+        ))}</div>
+      </article>}
+    </div>
+
+    {/* Kendi programların en altta, üçü yan yana. */}
     <div className="program-cards program-custom-row">
       {Array.from({ length: CUSTOM_PROGRAM_SLOTS }, (_, index) => {
         const id = customSlotId(index);
@@ -177,41 +223,6 @@ export function TrainingPrograms({
       })}
     </div>
 
-    {/* Salon/ev, Full Body ve Bölgesel için ortak. Profil "Evde" dese bile
-        kullanıcı bugün salona gitmiş olabilir; seçim profili değiştirmez. */}
-    <div className="program-place" role="group" aria-label={t.programs.placeLabel}>
-      <button type="button" aria-pressed={place === "home"} className={place === "home" ? "equipment selected" : "equipment"} onClick={() => setPlace("home")}>{t.programs.placeHome}</button>
-      <button type="button" aria-pressed={place === "gym"} className={place === "gym" ? "equipment selected" : "equipment"} onClick={() => setPlace("gym")}>{t.programs.placeGym}</button>
-    </div>
-
-    <div className="program-cards">
-      <article className="program-card">
-        <OnboardingIcon name="condition" />
-        <h3>{t.programs.smartTitle}</h3>
-        <p>{smartFallback ? t.programs.smartFallbackBody : t.programs.smartBody}</p>
-        <small>{progressLabel(programKey("smart"))}</small>
-        <button type="button" disabled={!smartWorkouts.length} onClick={() => setSelection({ kind: "smart" })}>
-          {smartWorkouts.length ? t.programs.open : t.programs.smartLocked} {smartWorkouts.length ? <span>→</span> : null}
-        </button>
-      </article>
-
-      <article className="program-card">
-        <OnboardingIcon name="strength" />
-        <h3>{t.programs.fullBodyTitle}</h3>
-        <p>{t.programs.fullBodyBody}</p>
-        <small>{progressLabel(programKey("fullBody", place))}</small>
-        <button type="button" onClick={() => setSelection({ kind: "fullBody", place })}>{t.programs.open} <span>→</span></button>
-      </article>
-
-      <article className="program-card">
-        <OnboardingIcon name="muscle" />
-        <h3>{t.programs.splitTitle}</h3>
-        <p>{t.programs.splitBody}</p>
-        <div className="program-regions">{BODY_REGIONS.map((area) => (
-          <button type="button" key={area} className="equipment" onClick={() => setSelection({ kind: "split", place, area })}>{regionLabel(area)}</button>
-        ))}</div>
-      </article>
-    </div>
   </section>;
 }
 

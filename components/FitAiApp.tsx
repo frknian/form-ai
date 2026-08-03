@@ -28,6 +28,7 @@ import { GoalPlanCard } from "@/components/GoalPlanCard";
 import { TrainingPrograms } from "@/components/TrainingPrograms";
 import { normalizeCustomPrograms, removeCustomProgram, summarizeProgramProgress, upsertCustomProgram, type CustomProgram } from "@/lib/training-programs";
 import { QuickActions } from "@/components/QuickActions";
+import { DailyEnergyRing } from "@/components/DailyEnergyRing";
 import type { AppView } from "@/lib/quick-actions";
 import { usePendingFoodPhoto } from "@/lib/mobile";
 import { FrozenAccountScreen, ProfileManager } from "@/components/ProfileManager";
@@ -41,7 +42,7 @@ import { trustedExerciseMedia } from "@/lib/trusted-exercise-media";
 import { translateExerciseLabel, turkishExerciseInstructions } from "@/lib/exercise-translations";
 import { extractSessionMinutes, extractWeeklyDays, planProgressionBlock } from "@/lib/training-profile";
 import { alternativeExercises } from "@/lib/exercise-alternatives";
-import { canPerformExercise, hasEquipment, usableEquipmentText } from "@/lib/equipment-match";
+import { canPerformExercise, hasEquipment, hasEquipmentNamed, usableEquipmentText } from "@/lib/equipment-match";
 import { EQUIPMENT_PROFILES, buildReadyProgram, isReplacementCompatible } from "@/lib/ready-programs";
 import { CURRENT_PROFILE_TEST_VERSION, FREE_TEXT_QUESTIONS, QUESTION, QUESTION_COUNT, emptyHistory, isHistoryComplete, normalizeHistory } from "@/lib/onboarding-questions";
 import { applyPreviousPerformance, buildCompletedExerciseLog, createWorkoutSetDrafts, exerciseLogKey, type CompletedExerciseLog, type PreviousExercisePerformance, type WorkoutSetDraft } from "@/lib/workout-log";
@@ -566,15 +567,21 @@ function profileGoal(goalText: string, history: string[]) {
 function isExerciseSafeForProfile(exercise: { id?: string; name: string; english: string }, gym: string, equipmentText: string, history: string[]) {
   const text = `${exercise.name} ${exercise.english}`.toLocaleLowerCase("tr-TR");
   const pain = (history[QUESTION.injuries] || "").toLocaleLowerCase("tr-TR");
-  const equipment = equipmentText.toLocaleLowerCase("tr-TR");
   if (pain.includes("diz") && /squat|lunge|jump|step|leg press|mountain climber|box jump|skater/.test(text)) return false;
   if (pain.includes("omuz") && /push|press|dip|shoulder|fly|overhead|lateral raise|pulldown|barfiks/.test(text)) return false;
   if (pain.includes("bel") && /deadlift|good morning|back extension|woodchop|superman|russian twist/.test(text)) return false;
+  // Ekipman eşlemesi HAM metinde alt dize aramaz. "Dambılım var, sehpa yok"
+  // yazan kullanıcıya sehpalı hareket çıkıyordu: metin "sehpa" kelimesini
+  // içerdiği için eşleşiyordu. hasEquipment olumsuz cümlecikleri atar ve
+  // eşanlamlıları (dumbbell/bench/lastik…) tanır.
   const databaseExercise = exercise.id ? getExerciseById(exercise.id) : null;
-  if (databaseExercise) return gym === "Salon" || !databaseExercise.equipment || ["body only", "none"].includes(databaseExercise.equipment) || equipment.includes(databaseExercise.equipment);
+  if (databaseExercise) {
+    const requirement = (databaseExercise.equipment || "").toLocaleLowerCase("tr-TR");
+    return gym === "Salon" || !requirement || ["body only", "none"].includes(requirement) || hasEquipmentNamed(equipmentText, requirement);
+  }
   const libraryExercise = findLibraryExercise(exercise);
   if (!libraryExercise) return false;
-  return gym === "Salon" || libraryExercise.bodyweight || libraryExercise.requires.some((requirement) => equipment.includes(requirement));
+  return canPerformExercise(libraryExercise, { isGym: gym === "Salon", equipmentText });
 }
 
 function personalizeAiWorkouts(items: AiWorkout[], gym: string, equipmentText: string, history: string[], goalText: string, requestedExercises: string, completedSessions = 0) {
@@ -871,6 +878,15 @@ export default function Home() {
     return result.status === "ready" ? result : null;
   }, [planReport, shownTargetWeight, shownWeight, energyMetrics]);
   const displayedSessionCalories = Math.round(sessionCalories);
+  // Ana ekrandaki kalori çemberi için bugün yakılan enerji: kaydedilmiş
+  // seanslar + o an sürmekte olan antrenman.
+  const burnedTodayCalories = useMemo(() => {
+    const today = localDateKey();
+    const logged = sessionHistory
+      .filter((session) => localDateKey(new Date(session.completedAt)) === today)
+      .reduce((total, session) => total + (Number(session.calories) || 0), 0);
+    return Math.round(logged + sessionCalories);
+  }, [sessionHistory, sessionCalories]);
   const planGoal = history[QUESTION.goal] || goalText || "Güçlenme";
   const bmi = useMemo(() => {
     const h = Number(height) / 100;
@@ -1737,6 +1753,9 @@ export default function Home() {
               üstte "hazır programlar", altta ayrı bir "günün antrenmanı"
               listesi vardı; ikisi farklı hareketler gösterip aynı şeyi
               anlatıyor gibi duruyordu. Günün antrenmanı kaldırıldı. */}
+          {/* Aktivite günlüğü sekmenin EN ÜSTÜNDE: koşu/yürüyüş kaydı en sık
+              yapılan iş, programların altında kaydırma gerektiriyordu. */}
+          <button type="button" className="activity-open" onClick={() => setActivityOpen(true)}><span className="activity-open-icon">🏃</span><span className="activity-open-text"><span className="eyebrow">{t.dashboard.activityEyebrow}</span><strong>{t.dashboard.activityTitle}</strong><small>{t.dashboard.activityBody}</small></span><span className="activity-open-cta">{t.dashboard.activityOpen} →</span></button>
           {/* AI başarısız olursa (zaman aşımı, kota, ağ) smartWorkouts boş kalır
               ve kart "Önce profil testi" deyip kilitleniyordu — testi az önce
               bitirmiş kullanıcı hiç program alamıyordu. localPlan profile göre
@@ -1750,15 +1769,13 @@ export default function Home() {
               {aiAnalysis && <AiPlanInsights analysis={aiAnalysis} schedule={aiSchedule} progression={aiProgression} fingerprint={aiFingerprint} />}
             </>}
             equipmentText={equipmentText}
+            isGym={gym === "Salon"}
             customPrograms={customPrograms}
             progress={programProgress}
             onStart={startProgram}
             onSaveCustom={saveCustomProgram}
             onDeleteCustom={deleteCustomProgram}
           />
-          {/* Aktivite günlüğü ana ekrandan buraya alındı: yürüyüş ve koşu
-              kaydetmek de bir antrenman kaydı, ana ekranın işi değil. */}
-          <button type="button" className="activity-open" onClick={() => setActivityOpen(true)}><span className="activity-open-icon">🏃</span><span className="activity-open-text"><span className="eyebrow">{t.dashboard.activityEyebrow}</span><strong>{t.dashboard.activityTitle}</strong><small>{t.dashboard.activityBody}</small></span><span className="activity-open-cta">{t.dashboard.activityOpen} →</span></button>
           </>
           : <>
           {/* Ana ekran tek, sığan bir ekranda: mini seri selamlamanın yanında,
@@ -1767,17 +1784,16 @@ export default function Home() {
               ile aynı satırda durur. Eskiden bunlar 4 ayrı kaydırmalı sayfaydı
               ve hedef planı tek başına grafik+analizle koca bir sayfa
               kaplıyordu; şimdi hepsi tek bakışta sığıyor. */}
-          <div className="dashboard-head"><div><div className="eyebrow">{t.dashboard.todaysPlan}</div><h1>{t.dashboard.greeting(name || t.dashboard.defaultName)}<em>{t.dashboard.greetingEm}</em> <ActivityStreak userId={authUser.id} compact /></h1></div></div>
-          <div className="stats-row"><div><span>{t.dashboard.bmiLabel}</span><strong>{bmi}</strong><small>{t.dashboard.bmiHint}</small></div><div><span>{t.dashboard.goalLabel}</span><strong>{goalText ? t.dashboard.goalPersonal : t.dashboard.goalDefault}</strong><small>{t.dashboard.goalHint}</small></div><div><span>{t.dashboard.environmentLabel}</span><strong>{gym === "Salon" ? t.onboarding.gymLabel : t.onboarding.homeLabel}</strong><small>{equipmentText || t.dashboard.noEquipment}</small></div></div>
+          <div className="dashboard-head"><div><div className="eyebrow">{t.dashboard.todaysPlan}</div><h1 className="dashboard-greeting"><span>{t.dashboard.greeting(name || t.dashboard.defaultName)}<em>{t.dashboard.greetingEm}</em></span><ActivityStreak userId={authUser.id} compact /></h1></div></div>
+          {/* Üst satır: VKİ ve günlük kalori çemberi yan yana. "Hedef" ve
+              "Ortam" sütunları buradan kalktı — ikisi de profilde duran, her
+              gün bakılmayan bilgi; yerini bugün değişen tek sayı aldı. */}
+          <div className="home-top-row">
+            <div className="home-bmi"><span>{t.dashboard.bmiLabel}</span><strong>{bmi}</strong><small>{t.dashboard.bmiHint}</small></div>
+            <DailyEnergyRing userId={authUser?.id} burnedKcal={burnedTodayCalories} fallbackTargetKcal={energyMetrics?.tdee ?? null} />
+          </div>
           <QuickActions onNavigate={navigateFromQuickAction} />
           <GoalPlanCard compact onOpen={() => setGoalPlanOpen(true)} userId={authUser?.id} currentWeightKg={Number(weight) || null} profileBmr={energyMetrics?.bmr ?? null} />
-          <div className="home-energy-row">
-            <div className="calorie-ring"><i>{displayedSessionCalories}</i><small>kcal</small></div>
-            {energyMetrics && <>
-              <div className="home-energy-stat"><span>{t.dashboard.bmrLabel}</span><strong>{energyMetrics.bmr} <small>kcal</small></strong></div>
-              <div className="home-energy-stat"><span>{t.dashboard.tdeeLabel}</span><strong>{energyMetrics.tdee} <small>kcal</small></strong></div>
-            </>}
-          </div>
           </>}
           </>}
         </section>

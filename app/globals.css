@@ -307,7 +307,7 @@ button,input { font:inherit; } button { cursor:pointer; }
 .calorie-remaining { display:grid; justify-items:end; min-width:100px; padding-left:25px; border-left:1px solid rgba(255,255,255,.15); }.calorie-remaining strong { margin:5px 0 -2px; color:#d5ef7c; font-size:32px; }.calorie-remaining small { color:#a9af90; font-size:10px; }
 .food-entry-panel,.food-log { padding:22px; border:1px solid var(--line); border-radius:11px; background:#fbfbf7; }.food-entry-panel { margin-bottom:20px; }.food-entry-note,.log-total { display:flex; align-items:center; gap:6px; color:#76872c; font-size:10px; }.food-methods { display:grid; grid-template-columns:repeat(2,1fr); gap:9px; margin:18px 0; }.food-methods button { display:grid; grid-template-columns:34px 1fr; column-gap:11px; align-items:center; padding:13px; border:1px solid var(--line); border-radius:9px; color:#66665f; text-align:left; background:#fff; cursor:pointer; }.food-methods svg { grid-row:1/3; color:#7b7b73; }.food-methods strong { font-size:11px; }.food-methods small { color:#999991; font-size:9px; }.food-methods button.active { border-color:#b7cf5b; background:#f8fce8; box-shadow:0 0 0 2px rgba(184,209,92,.17); }.food-methods button.active svg,.food-methods button.active strong { color:#6a7d25; }
 .entry-workspace { position:relative; padding:17px; border-radius:9px; background:#f1f3e9; }.entry-workspace > label,.manual-fields label,.method-content label { display:grid; gap:7px; color:#85857d; font-size:9px; font-weight:800; letter-spacing:1px; }.entry-workspace select,.entry-workspace input { width:100%; height:39px; padding:0 11px; border:1px solid #d9dbd0; border-radius:7px; outline:none; color:#3f3f3b; background:#fff; font:inherit; font-size:11px; }.entry-workspace select:focus,.entry-workspace input:focus { border-color:#9bb540; }.method-content { margin-top:14px; }.barcode-content { display:grid; grid-template-columns:1fr 1fr auto; align-items:end; gap:11px; }.scanner-visual { display:flex; align-items:center; gap:12px; min-height:62px; padding:10px 13px; border:1px dashed #bcc998; border-radius:8px; color:#75852e; background:#f8fbe9; }.scanner-visual span { max-width:160px; color:#6e7560; font-size:10px; line-height:1.4; }.barcode-content > small { grid-column:1/-1; color:#93938b; font-size:9px; }
-.manual-fields { display:grid; grid-template-columns:minmax(220px,2fr) minmax(110px,.7fr) auto auto; align-items:end; gap:9px; margin-top:14px; }.manual-fields .add-food { display:flex; align-items:center; justify-content:center; gap:5px; height:39px; padding:0 13px; white-space:nowrap; }.food-search-panel { display:grid; gap:8px; margin-top:12px; padding:12px; border:1px solid #d8e2bd; border-radius:9px; background:#fafcf3; }.food-search-heading { display:flex; justify-content:space-between; gap:12px; color:#6f7e32; font-size:8px; font-weight:850; letter-spacing:1px; }.food-search-heading span { color:#878b7a; font-weight:700; letter-spacing:0; text-align:right; }.food-search-results { display:grid; max-height:224px; overflow:auto; border-top:1px solid #e3e7d7; }.food-search-results button { display:flex; align-items:center; justify-content:space-between; gap:14px; width:100%; min-height:52px; padding:9px 2px; border:0; border-bottom:1px solid #e3e7d7; background:transparent; color:#3e4138; text-align:left; cursor:pointer; }.food-search-results button:hover { background:#f1f6df; }.food-search-results button > span { display:grid; gap:3px; }.food-search-results strong { font-size:10px; }.food-search-results small { color:#8a8e80; font-size:8px; }.food-search-results b { display:grid; gap:2px; color:#596c20; font-size:10px; text-align:right; white-space:nowrap; }.food-search-loading { display:flex; align-items:center; gap:5px; min-height:35px; color:#7b8761; font-size:9px; }.food-search-loading i { width:5px; height:5px; border-radius:50%; background:#9bb64a; animation:food-search-pulse .9s ease-in-out infinite; }.food-search-loading i:nth-child(2) { animation-delay:.12s; }.food-search-loading i:nth-child(3) { animation-delay:.24s; }.food-search-empty { display:grid; gap:4px; padding:4px 0; color:#848878; font-size:9px; line-height:1.45; }.food-search-empty strong { color:#5f6455; font-size:10px; }.selected-food-summary { display:grid; grid-template-columns:1fr auto; gap:4px 12px; padding-top:8px; border-top:1px solid #dbe4c3; }.selected-food-summary span { display:grid; gap:3px; }.selected-food-summary strong { font-size:10px; }.selected-food-summary small,.selected-food-summary p { color:#7b826b; font-size:8px; }.selected-food-summary b { color:#596c20; font-size:11px; }.selected-food-summary p { grid-column:1/-1; margin:2px 0 0; }.food-photo-drop { display:grid; place-items:center; width:100%; min-height:155px; padding:22px; border:1px dashed #b5c67b; border-radius:8px; color:#72832e; background:#fafcf1; cursor:pointer; overflow:hidden; }.food-photo-drop strong { margin-top:8px; font-size:12px; }.food-photo-drop span { max-width:330px; margin-top:5px; color:#858b76; font-size:10px; line-height:1.4; }.food-photo-drop img { width:100%; max-height:245px; object-fit:cover; border-radius:6px; }.photo-food-content { display:grid; gap:9px; }.food-message { margin:12px 0 0; color:#8c652e; font-size:10px; }.sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; }
+.manual-fields { display:grid; grid-template-columns:minmax(220px,2fr) minmax(110px,.7fr) auto auto; align-items:end; gap:9px; margin-top:14px; }.manual-fields .add-food { display:flex; align-items:center; justify-content:center; gap:5px; height:39px; padding:0 13px; white-space:nowrap; }.food-search-panel { display:grid; gap:8px; margin-top:12px; padding:12px; border:1px solid #d8e2bd; border-radius:9px; background:#fafcf3; }.food-search-heading { display:flex; justify-content:space-between; gap:12px; color:#6f7e32; font-size:8px; font-weight:850; letter-spacing:1px; }.food-search-heading span { color:#878b7a; font-weight:700; letter-spacing:0; text-align:right; }.food-search-results { display:grid; max-height:224px; overflow:auto; border-top:1px solid #e3e7d7; }.food-search-results button { display:flex; align-items:center; justify-content:space-between; gap:14px; width:100%; min-height:52px; padding:9px 2px; border:0; border-bottom:1px solid #e3e7d7; background:transparent; color:#3e4138; text-align:left; cursor:pointer; }.food-search-results button:hover { background:#f1f6df; }.food-search-results button > span { display:grid; gap:3px; }.food-search-results strong { font-size:10px; }.food-search-results small { color:#8a8e80; font-size:8px; }.food-search-results b { display:grid; gap:2px; color:#596c20; font-size:10px; text-align:right; white-space:nowrap; }.food-search-loading { display:flex; align-items:center; gap:5px; min-height:35px; color:#7b8761; font-size:9px; }.food-search-loading i { width:5px; height:5px; border-radius:50%; background:#9bb64a; animation:food-search-pulse .9s ease-in-out infinite; }.food-search-loading i:nth-child(2) { animation-delay:.12s; }.food-search-loading i:nth-child(3) { animation-delay:.24s; }.food-search-empty { display:grid; gap:4px; padding:4px 0; color:#848878; font-size:9px; line-height:1.45; }.food-search-empty strong { color:#5f6455; font-size:10px; }.selected-food-summary { display:grid; grid-template-columns:1fr auto; gap:4px 12px; padding-top:8px; border-top:1px solid #dbe4c3; }.selected-food-summary span { display:grid; gap:3px; }.selected-food-summary strong { font-size:10px; }.selected-food-summary small,.selected-food-summary p { color:#7b826b; font-size:8px; }.selected-food-summary b { color:#596c20; font-size:11px; }.selected-food-summary p { grid-column:1/-1; margin:2px 0 0; }.food-photo-drop { display:grid; place-items:center; width:100%; min-height:155px; padding:22px; border:1px dashed #b5c67b; border-radius:8px; color:#72832e; background:#fafcf1; cursor:pointer; overflow:hidden; }.food-photo-drop strong { margin-top:8px; font-size:12px; }.food-photo-drop span { max-width:330px; margin-top:5px; color:#858b76; font-size:10px; line-height:1.4; }.food-photo-drop img { width:100%; max-height:245px; object-fit:cover; border-radius:6px; }.photo-food-content { display:grid; gap:9px; }.photo-actions { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:8px; }.photo-actions .outline-btn { width:100%; height:auto; min-height:38px; padding:9px 12px; border-radius:8px; font-size:11px; }.food-message { margin:12px 0 0; color:#8c652e; font-size:10px; }.sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; }
 @keyframes food-search-pulse { 0%,100% { opacity:.3; transform:translateY(0); } 50% { opacity:1; transform:translateY(-2px); } }
 .meal-group { margin-top:20px; }.meal-group:first-of-type { margin-top:16px; }.meal-group-head { display:flex; align-items:center; justify-content:space-between; padding:0 3px 9px; border-bottom:1px solid var(--line); }.meal-group-head strong { font-size:12px; }.meal-group-head span { color:#79892f; font-size:10px; font-weight:800; }.food-log-item { display:grid; grid-template-columns:34px 1fr auto 30px; align-items:center; gap:11px; padding:12px 3px; border-bottom:1px solid #e7e7df; }.food-icon { display:grid; place-items:center; width:31px; height:31px; border-radius:8px; color:#66792a; background:#edf5cf; font-size:14px; }.food-log-item > div:nth-child(2) { display:grid; gap:3px; }.food-log-item strong { font-size:11px; }.food-log-item small,.food-log-item span { color:#92928b; font-size:9px; }.food-log-item b { color:#3e3e3a; font-size:12px; }.food-log-item b small { font-weight:500; }.food-log-item button { display:grid; place-items:center; border:0; color:#a2a29b; background:transparent; cursor:pointer; }.food-log-item button:hover { color:#b2674e; }.empty-meal { margin:0; padding:13px 3px 0; color:#a0a099; font-size:10px; }
 @media (max-width:850px) { .nutrition-progress-grid { grid-template-columns:1fr 1fr; }.calorie-hero { grid-template-columns:132px 1fr; }.calorie-remaining { grid-column:1/-1; grid-row:2; justify-items:start; display:flex; align-items:baseline; gap:8px; padding:13px 0 0; border-top:1px solid rgba(255,255,255,.15); border-left:0; }.calorie-remaining strong { margin:0; }.manual-fields { grid-template-columns:repeat(3,minmax(0,1fr)); }.manual-fields .food-name { grid-column:span 3; }.manual-fields .add-food { grid-column:span 2; } }
@@ -1679,11 +1679,22 @@ button.brand:hover .brand-mark { transform:scale(1.06); }
 .programs-hint,.programs-note { color:var(--muted-text); font-size:11px; }
 .programs-note { margin:0 0 16px; font-weight:700; }
 
-.program-place { display:grid; grid-template-columns:1fr 1fr; gap:8px; max-width:340px; margin:0 0 18px; }
-.program-place button { width:100%; }
+/* Hazır programlar arasında anahtar: akıllı / full body / bölgesel tek
+   panelde. Salon–ev seçimi buradan kaldırıldı; ortam profil testinden gelir. */
+.program-switch { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px; margin:0 0 14px; padding:4px; border:1px solid var(--line); border-radius:999px; background:var(--surface-soft,#fbfbf7); }
+.program-switch button { min-height:38px; min-width:0; padding:8px 6px; border:0; border-radius:999px; background:transparent; color:var(--muted-text); font-size:12px; font-weight:700; cursor:pointer; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.program-switch button.selected { background:var(--ink); color:var(--surface); }
+.dark .program-switch { background:#20231a; border-color:#46502c; }
+.dark .program-switch button.selected { background:var(--lime); color:#22270f; }
+.program-panel { margin:0 0 18px; }
+.program-panel .program-card { max-width:520px; }
 
 .program-cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; }
-.program-custom-row { margin-top:12px; }
+/* Kendi programların en altta, üçü yan yana (dar ekranda da). */
+.program-cards.program-custom-row { grid-template-columns:repeat(3,minmax(0,1fr)); margin-top:12px; }
+.program-custom-row .program-card { padding:14px; }
+.program-custom-row .program-card h3 { font-size:14px; }
+.program-custom-row .program-card p,.program-custom-row .program-card small { font-size:10px; }
 .program-card { display:flex; flex-direction:column; gap:8px; padding:20px; border:1px solid var(--line); border-radius:var(--r-lg); background:var(--surface); box-shadow:var(--shadow-1); transition:transform .18s var(--ease), box-shadow .18s var(--ease), border-color .18s var(--ease); }
 .program-card:hover { transform:translateY(-2px); box-shadow:var(--shadow-2); border-color:#a9bf57; }
 .program-card .onboarding-icon { width:26px; height:26px; color:var(--muted-text); }
@@ -1816,26 +1827,62 @@ button.brand:hover .brand-mark { transform:scale(1.06); }
 .goal-plan-overlay-inner .goal-plan .section-title { padding-right:44px; }
 @media (max-width:700px) { .goal-plan-overlay { padding:0; place-items:end stretch; } .goal-plan-overlay-inner { width:100%; max-height:88vh; border-radius:16px 16px 0 0; } }
 
-/* Enerji satırı: çember, BMR ve TDEE aynı sırada. Eskiden çember kendi
-   satırında, BMR/TDEE ayrı bir ızgarada duruyordu ve mobilde alt alta
-   dizilerek tek başına bir sayfa kaplıyordu. */
-.home-energy-row { display:grid; grid-template-columns:auto 1fr 1fr; align-items:center; gap:14px; margin:0 0 20px; padding:16px 18px; border:1px solid var(--line); border-radius:var(--r-md,10px); background:var(--surface-soft,#fbfbf7); }
-.home-energy-row .calorie-ring { display:grid; place-items:center; width:64px; height:64px; border:6px solid #c8e75e; border-top-color:var(--ink); border-radius:50%; }
-.home-energy-row .calorie-ring i { font-style:normal; font-size:15px; font-weight:800; }
-.home-energy-row .calorie-ring small { display:block; color:var(--muted-text); font-size:8px; font-weight:700; text-transform:uppercase; }
-.home-energy-stat { min-width:0; }
-.home-energy-stat span { display:block; color:var(--muted-text); font-size:8px; font-weight:800; letter-spacing:.8px; text-transform:uppercase; }
-.home-energy-stat strong { display:block; margin-top:5px; font-size:17px; letter-spacing:-.3px; font-variant-numeric:tabular-nums; }
-.home-energy-stat strong small { font-size:10px; font-weight:600; }
-.dark .home-energy-row { background:#181915; }
+/* Selamlama ve seri rozeti aynı satırda: rozet başlığın altına düşmesin.
+   Metin kendi içinde sarabilir, rozet satırın sağında dikey ortalı kalır. */
+.dashboard-greeting { display:flex; align-items:center; gap:12px; flex-wrap:nowrap; }
+.dashboard-greeting > span { min-width:0; }
+.dashboard-greeting .activity-streak-mini { flex:0 0 auto; }
+
+/* Üst satır: VKİ ve günlük kalori çemberi YAN YANA (mobilde de). "Hedef" ve
+   "Ortam" sütunları kaldırıldı; ikisi de profilde duran, gün içinde
+   değişmeyen bilgiydi. */
+.home-top-row { display:grid; grid-template-columns:minmax(0,0.8fr) minmax(0,1.2fr); align-items:stretch; gap:12px; margin:24px 0 18px; }
+.home-bmi { display:flex; flex-direction:column; justify-content:center; min-width:0; padding:16px 18px; border:1px solid var(--line); border-radius:var(--r-md,10px); background:var(--surface-soft,#fbfbf7); }
+.home-bmi span { color:var(--muted-text); font-size:9px; font-weight:800; letter-spacing:.8px; text-transform:uppercase; }
+.home-bmi strong { display:block; margin:8px 0 3px; font-size:34px; line-height:1; letter-spacing:-1.5px; font-variant-numeric:tabular-nums; }
+.home-bmi small { color:var(--muted-text); font-size:10px; }
+.dark .home-bmi { background:#181915; }
+
+/* Kalori çemberi: ortada BUGÜN kalan kalori, çevresinde alınanın hedefe
+   oranı. Yanında alınan/harcanan/hedef üçlüsü. */
+.energy-ring-card { display:grid; grid-template-columns:auto minmax(0,1fr); align-items:center; gap:14px; min-width:0; padding:14px 16px; border:1px solid var(--line); border-radius:var(--r-md,10px); background:var(--surface-soft,#fbfbf7); }
+.energy-ring { position:relative; width:88px; height:88px; }
+.energy-ring svg { width:100%; height:100%; transform:rotate(-90deg); }
+.energy-ring-track { fill:none; stroke:var(--line); stroke-width:9; }
+.energy-ring-fill { fill:none; stroke:#c8e75e; stroke-width:9; stroke-linecap:round; transition:stroke-dasharray .35s ease; }
+.energy-ring-card.over .energy-ring-fill { stroke:#e08a5a; }
+.energy-ring-center { position:absolute; inset:0; display:grid; place-content:center; text-align:center; }
+.energy-ring-center strong { display:block; font-size:21px; line-height:1; letter-spacing:-.8px; font-variant-numeric:tabular-nums; }
+.energy-ring-center small { display:block; margin-top:3px; color:var(--muted-text); font-size:8px; font-weight:700; }
+.energy-ring-legend { display:grid; gap:7px; min-width:0; }
+.energy-ring-legend span { display:block; color:var(--muted-text); font-size:8px; font-weight:800; letter-spacing:.8px; text-transform:uppercase; }
+.energy-ring-legend strong { display:block; font-size:15px; line-height:1.1; letter-spacing:-.3px; font-variant-numeric:tabular-nums; }
+.energy-ring-legend strong small { margin-left:3px; font-size:9px; font-weight:600; color:var(--muted-text); }
+.dark .energy-ring-card { background:#181915; }
+@media (prefers-reduced-motion: reduce) { .energy-ring-fill { transition:none; } }
+
+/* Kısayollar tek sırada dört sütun: mobilde de alt alta uzayıp ana ekranı
+   ikinci sayfaya taşımasın. */
+.quick-actions-list { grid-template-columns:repeat(4,minmax(0,1fr)); }
+
+/* Hedef planı şeridindeki küçük eğri: ana ekranda plan grafiği de görünsün. */
+.goal-plan-chart-mini svg { height:52px; }
+.goal-plan-chart-mini .goal-plan-chart-area { fill:url(#goal-plan-fade-mini); }
+.goal-plan-chart-mini { margin:12px 0 0; }
+.goal-plan-chart-mini figcaption { margin-top:5px; font-size:9px; }
+
 @media (max-width:400px) {
   /* 420px BİLEREK kullanılmadı: dosyada .option-cards-3'ü barındıran bir
      420px bloğu var ve bazı testler "son 420px bloğu" varsayımıyla o
      satırı arıyor; aynı değeri burada tekrarlamak o testi kırardı. */
-  .home-energy-row { gap:10px; padding:13px 14px; }
-  .home-energy-row .calorie-ring { width:54px; height:54px; }
-  .home-energy-row .calorie-ring i { font-size:13px; }
-  .home-energy-stat strong { font-size:15px; }
+  .home-top-row { gap:8px; }
+  .home-bmi { padding:12px 13px; }
+  .home-bmi strong { font-size:26px; }
+  .energy-ring-card { gap:10px; padding:12px 13px; }
+  .energy-ring { width:70px; height:70px; }
+  .energy-ring-center strong { font-size:17px; }
+  .energy-ring-legend strong { font-size:13px; }
+  .quick-actions-list button { padding:9px 8px; font-size:10px; }
 }
 
 /* Öğün ekleme alanı dikey bir akış: önce porsiyon (gram/ml + ev ölçüleri),

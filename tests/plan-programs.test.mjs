@@ -226,14 +226,17 @@ test("antrenman sekmesi tek bir program sistemi gösterir", () => {
   }
 });
 
-test("program sistemi dört tür sunar ve salon/ev ayrımı yapar", async () => {
+test("program sistemi dört tür sunar, ortamı profilden alır", async () => {
   const source = await readFile(new URL("../components/TrainingPrograms.tsx", import.meta.url), "utf8");
   // Akıllı program AI'dan gelir; testi tamamlamadan açılamaz.
   assert.match(source, /disabled=\{!smartWorkouts\.length\}/, "akıllı program test tamamlanmadan açılabiliyor");
   assert.match(source, /kind: "fullBody", place/);
   assert.match(source, /kind: "split", place, area/);
-  // Salon/ev seçimi ekipman profiline çevrilmeli, yoksa evde salon aleti çıkar.
+  // Ortam ekipman profiline çevrilmeli, yoksa evde salon aleti çıkar.
   assert.match(source, /placeToProfile\(selection\.place, equipmentText\)/);
+  // Salon/ev anahtarı ekrandan kalktı: kullanıcı bunu profil testinde söylüyor.
+  assert.doesNotMatch(source, /className="program-place"/, "ekrandaki salon/ev seçimi kalmamalı");
+  assert.match(source, /const place: TrainingPlace = isGym \? "gym" : "home";/);
   assert.match(source, /const BODY_REGIONS = \["Göğüs", "Sırt", "Bacak", "Kalça", "Omuz", "Kol", "Core"\] as const;/);
 });
 

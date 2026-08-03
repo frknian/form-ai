@@ -9,7 +9,7 @@ import { frequentMeals } from "@/lib/frequent-meals";
 import { HOUSEHOLD_PORTION_UNITS, PRIMARY_PORTION_UNITS, fromGrams, needsAnalysis, referenceGrams, toGrams, type PortionUnit } from "@/lib/portion-unit";
 import { emptyFoodNutrition, scaleFoodNutrition, type FoodMicronutrients, type FoodNutrition } from "@/lib/food-search";
 import { calculateNutritionGoal, calculateWeeklyWeightTrend, inferNutritionGoal, sanitizeNutritionGoal, type NutritionGoal, type NutritionGoalType, type WeightTrend } from "@/lib/nutrition-goals";
-import { clearPendingFoodPhoto, isNativeApp, listenForRestoredFoodPhoto, mobileImpact, takeFoodPhoto, usePendingFoodPhoto } from "@/lib/mobile";
+import { clearCapturedFoodPhoto, clearPendingFoodPhoto, isNativeApp, listenForRestoredFoodPhoto, markPendingFoodPhoto, mobileImpact, readCapturedFoodPhoto, storeCapturedFoodPhoto, takeFoodPhoto, usePendingFoodPhoto } from "@/lib/mobile";
 import { createClient } from "@/lib/supabase/client";
 import { localDateKey } from "@/lib/streak";
 import { authorizedFetch } from "@/lib/api-client";
@@ -130,6 +130,9 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
   // Capacitor bu sonucu yeniden açılışta appRestoredResult ile bir kez
   // yayınlar; aşağıdaki dinleyici onu yakalayıp analize sokar.
   const analyzeRef = useRef<(photoDataUrl: string) => Promise<void>>(async () => undefined);
+  // Aynı kare hem appRestoredResult'tan hem depodan gelebilir; ikinci kez
+  // analiz etmek kullanıcının günlük fotoğraf hakkını boşa harcardı.
+  const analyzedPhoto = useRef("");
   useEffect(() => listenForRestoredFoodPhoto((dataUrl) => {
     // Yöntemi sabitle: işaret birazdan temizlenecek ve seçim ona bağlı
     // kalsaydı kullanıcı analiz tam başlarken metin adımına geri atılırdı.
@@ -137,13 +140,21 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
     void analyzeRef.current(dataUrl);
   }), []);
 
-  // Sonuç hiç gelmezse (vazgeçildi ya da dosya okunamadı) işaret asılı kalıp
-  // beslenme sekmesini her açılışta fotoğraf adımına kilitlemesin.
+  // Kaydedilmiş kareyi kaldığı yerden al.
+  //
+  // Kamera dönüşünde sayfa yeniden yüklenmiş (yerli uygulamada Activity
+  // öldürülmüş, mobil tarayıcıda sekme bellek baskısıyla tazelenmiş) olabilir.
+  // Kare, çekilir çekilmez depoya yazıldığı için burada hâlâ duruyordur:
+  // kullanıcıyı fotoğraf adımına getirir ve analizi kendiliğinden başlatırız.
+  // Eskiden yalnız appRestoredResult'a güveniliyordu; o olay gelmediğinde (ya
+  // da analiz isteği o an başarısız olduğunda) fotoğraf kayboluyordu.
   useEffect(() => {
-    if (!pendingFoodPhoto) return;
-    const timer = setTimeout(clearPendingFoodPhoto, 8_000);
-    return () => clearTimeout(timer);
-  }, [pendingFoodPhoto]);
+    const stored = readCapturedFoodPhoto();
+    if (!stored || analyzedPhoto.current === stored) return;
+    setChosenMethod("photo");
+    setPhotoPreview(stored);
+    void analyzeRef.current(stored);
+  }, []);
 
   useEffect(() => {
     if (!userId) return;
@@ -290,6 +301,9 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
       if (!response.ok) setMessage(t.calorieTracker.syncedLocallyOnly);
       else if (result.log?.id) setEntries((current) => current.map((item) => item.id === temporaryId ? { ...item, id: result.log!.id! } : item));
     }
+    // Ana ekranın kalori çemberi başka bir görünümde durur; öğün değişince
+    // haber verilmezse eski sayıyı gösterir.
+    window.dispatchEvent(new CustomEvent("fit-ai-nutrition-changed"));
     setFoodName(""); setGrams("100"); setNutrition(emptyFoodNutrition()); setPhotoPreview(null); setAiEstimate(null);
     setPortionUnit("g"); setAnalysedGrams(null); setUnitAmount("1");
   }
@@ -384,7 +398,7 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
 
   async function handlePhoto(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file) { clearPendingFoodPhoto(); return; }
     const photoDataUrl = await new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onload = () => typeof reader.result === "string" ? resolve(reader.result) : reject(); reader.onerror = reject; reader.readAsDataURL(file); }).catch(() => "");
     await analyzeFoodPhoto(photoDataUrl, URL.createObjectURL(file));
   }
@@ -393,11 +407,22 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
 
   async function analyzeFoodPhoto(photoDataUrl: string, previewUrl = photoDataUrl) {
     if (!photoDataUrl) { setMessage(t.calorieTracker.photoUnreadable); return; }
+    analyzedPhoto.current = photoDataUrl;
+    // Kare önce saklanır, sonra ağa çıkılır: istek yarıda kalsa da fotoğraf
+    // durur. Kamera dönüşünde sayfa yenilenirse kaldığı yerden devam eder.
+    storeCapturedFoodPhoto(photoDataUrl);
+    clearPendingFoodPhoto();
     setPhotoPreview(previewUrl);
     setMessage(t.calorieTracker.analyzingPhoto);
-    const response = await authorizedFetch("/api/nutrition/analyze-photo", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ photoDataUrl }) });
-    const result = await response.json().catch(() => ({})) as { error?: string; name?: string; itemNames?: string[]; grams?: number; calories?: number; protein?: number; carbs?: number; fat?: number; fiber?: number; confidence?: "low" | "medium" | "high"; needsManualNutrition?: boolean; warnings?: string[]; usage?: { used: number; limit: number } };
-    if (!response.ok || !result.name) { setMessage(result.error || t.calorieTracker.photoAnalysisFailed); return; }
+    setEstimating(true);
+    const response = await authorizedFetch("/api/nutrition/analyze-photo", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ photoDataUrl }) })
+      .catch(() => null)
+      .finally(() => setEstimating(false));
+    const result = response ? await response.json().catch(() => ({})) as { error?: string; name?: string; itemNames?: string[]; grams?: number; calories?: number; protein?: number; carbs?: number; fat?: number; fiber?: number; confidence?: "low" | "medium" | "high"; needsManualNutrition?: boolean; warnings?: string[]; usage?: { used: number; limit: number } } : {};
+    // Başarısızlıkta kare SAKLI KALIR: kullanıcı "yeniden analiz et" ile aynı
+    // fotoğrafı tekrar gönderebilsin, yeniden çekmek zorunda kalmasın.
+    if (!response || !response.ok || !result.name) { setMessage(result.error || t.calorieTracker.photoAnalysisFailed); return; }
+    clearCapturedFoodPhoto();
     // Makrolar porsiyonun tamamı için geldiği için gramajı da modelin tahminine
     // eşitliyoruz; aksi halde 100 g varsayımı değerleri yanlış ölçeklerdi.
     setFoodName(result.name);
@@ -442,14 +467,32 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
   }
 
   async function chooseFoodPhoto() {
+    // Mobil tarayıcıda da işaret konur: kamera açıkken sekme bellek baskısıyla
+    // tazelenebiliyor ve kullanıcı ana ekranda uyanıyordu. İşaret sayesinde
+    // dönüşte doğrudan fotoğraf adımına gelir.
+    markPendingFoodPhoto();
     if (!isNativeApp()) { cameraInput.current?.click(); return; }
     try {
       const photoDataUrl = await takeFoodPhoto();
       if (photoDataUrl) { await mobileImpact(); await analyzeFoodPhoto(photoDataUrl); }
-    } catch { setMessage(t.calorieTracker.cameraOrPhotoPermissionDenied); }
+      else clearPendingFoodPhoto();
+    } catch { clearPendingFoodPhoto(); setMessage(t.calorieTracker.cameraOrPhotoPermissionDenied); }
+  }
+
+  /** Aynı kareyi yeniden analize gönderir; fotoğraf yeniden çekilmez. */
+  async function retryPhotoAnalysis() {
+    const stored = readCapturedFoodPhoto();
+    if (!stored) { setMessage(t.calorieTracker.photoUnreadable); return; }
+    analyzedPhoto.current = "";
+    await analyzeFoodPhoto(stored, photoPreview || stored);
   }
 
   function selectMethod(method: "text" | "photo") {
+    // Elle bir yöntem seçmek bekleyen fotoğraf durumunu bitirir; aksi hâlde
+    // "yazarak ekle"ye geçen kullanıcı her açılışta fotoğraf adımına dönerdi.
+    clearPendingFoodPhoto();
+    clearCapturedFoodPhoto();
+    analyzedPhoto.current = "";
     setActiveMethod(method);
     setFoodName("");
     setGrams("100");
@@ -465,6 +508,7 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
   async function deleteEntry(entryId: string) {
     setEntries((current) => current.filter((item) => item.id !== entryId));
     if (userId && /^[0-9a-f-]{36}$/i.test(entryId)) await authorizedFetch(`/api/nutrition/logs/${entryId}`, { method: "DELETE" });
+    window.dispatchEvent(new CustomEvent("fit-ai-nutrition-changed"));
   }
 
   async function saveNutritionGoal(goal: NutritionGoal) {
@@ -498,7 +542,12 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
       </div>
       <div className="entry-workspace">
         <label>{t.calorieTracker.mealLabel}<select value={meal} onChange={(event) => setMeal(event.target.value as Meal)}>{meals.map((option) => <option key={option} value={option}>{option}</option>)}</select></label>
-        {activeMethod === "photo" && <div className="method-content photo-food-content"><button type="button" className="food-photo-drop" onClick={() => void chooseFoodPhoto()}>{photoPreview ? <Image src={photoPreview} alt={t.calorieTracker.photoAlt} width={640} height={480} unoptimized /> : <><ImagePlus size={26} /><strong>{t.calorieTracker.photoDropPrompt1}</strong><span>{t.calorieTracker.photoDropPrompt2}</span></>}</button><input ref={cameraInput} className="sr-only" type="file" accept="image/*" capture="environment" onChange={handlePhoto} />{photoPreview && <button type="button" className="outline-btn" onClick={() => void chooseFoodPhoto()}>{t.calorieTracker.choosePhotoAgain}</button>}</div>}
+        {activeMethod === "photo" && <div className="method-content photo-food-content"><button type="button" className="food-photo-drop" onClick={() => void chooseFoodPhoto()}>{photoPreview ? <Image src={photoPreview} alt={t.calorieTracker.photoAlt} width={640} height={480} unoptimized /> : <><ImagePlus size={26} /><strong>{t.calorieTracker.photoDropPrompt1}</strong><span>{t.calorieTracker.photoDropPrompt2}</span></>}</button><input ref={cameraInput} className="sr-only" type="file" accept="image/*" capture="environment" onChange={handlePhoto} />{photoPreview && <div className="photo-actions">
+          {/* Analiz tamamlanmadıysa kare hâlâ saklıdır: kullanıcı aynı
+              fotoğrafı yeniden gönderebilsin, yeniden çekmek zorunda kalmasın. */}
+          {!aiEstimate && <button type="button" className="outline-btn" disabled={estimating} onClick={() => void retryPhotoAnalysis()}>{estimating ? t.calorieTracker.estimating : t.calorieTracker.retryPhotoAnalysis}</button>}
+          <button type="button" className="outline-btn" onClick={() => void chooseFoodPhoto()}>{t.calorieTracker.choosePhotoAgain}</button>
+        </div>}</div>}
         {(activeMethod === "text" || photoPreview) && <>
           {/* Sıra bilerek böyle: önce ne kadar yediğin (porsiyon), sonra ne
               yediğin ve analiz, en sonda ekle. Eskiden besin adı en üstteydi ve

@@ -33,20 +33,64 @@ export async function openNativeBrowser(url: string) {
  */
 const PENDING_FOOD_PHOTO_KEY = "hedefit:pending-food-photo";
 
+/**
+ * Çekilen fotoğrafın kendisi. İşaretten ayrı tutulur: fotoğraf elimize geçer
+ * geçmez, HERHANGİ bir ağ isteğinden önce buraya yazılır. Analiz isteği
+ * başarısız olsa da, sayfa bir kez daha yeniden yüklense de kare kaybolmaz;
+ * beslenme sekmesi açıldığında kaldığı yerden analize girer.
+ */
+const CAPTURED_FOOD_PHOTO_KEY = "hedefit:captured-food-photo";
+
+/**
+ * İşaret bu süre içinde anlamlıdır. Sabit bir zaman aşımı yerine zaman damgası
+ * tutulur: eskiden 8 saniyelik kör bir sayaç işareti siliyordu ve yavaş bir
+ * cihazda soğuk açılış bu süreyi kolayca aşıyordu.
+ */
+const PENDING_WINDOW_MS = 10 * 60_000;
+
 const pendingPhotoListeners = new Set<() => void>();
 
-export function markPendingFoodPhoto() {
-  try { localStorage.setItem(PENDING_FOOD_PHOTO_KEY, "1"); } catch { /* depolama kapalı */ }
+function notifyPendingPhoto() {
   pendingPhotoListeners.forEach((listener) => listener());
 }
 
+export function markPendingFoodPhoto() {
+  try { localStorage.setItem(PENDING_FOOD_PHOTO_KEY, String(Date.now())); } catch { /* depolama kapalı */ }
+  notifyPendingPhoto();
+}
+
 export function hasPendingFoodPhoto() {
-  try { return typeof localStorage !== "undefined" && localStorage.getItem(PENDING_FOOD_PHOTO_KEY) === "1"; } catch { return false; }
+  try {
+    if (typeof localStorage === "undefined") return false;
+    // Kaydedilmiş bir kare varsa işaretin süresi dolmuş olsa bile bekleyen bir
+    // fotoğraf vardır: kullanıcı onu görmeden hiçbir yere yönlendirilmemeli.
+    if (localStorage.getItem(CAPTURED_FOOD_PHOTO_KEY)) return true;
+    const raw = localStorage.getItem(PENDING_FOOD_PHOTO_KEY);
+    if (!raw) return false;
+    const startedAt = Number(raw);
+    if (!Number.isFinite(startedAt)) return false;
+    return Date.now() - startedAt < PENDING_WINDOW_MS;
+  } catch { return false; }
 }
 
 export function clearPendingFoodPhoto() {
   try { localStorage.removeItem(PENDING_FOOD_PHOTO_KEY); } catch { /* depolama kapalı */ }
-  pendingPhotoListeners.forEach((listener) => listener());
+  notifyPendingPhoto();
+}
+
+/** Çekilen kareyi ağ isteğinden ÖNCE saklar; kota dolarsa sessizce vazgeçer. */
+export function storeCapturedFoodPhoto(dataUrl: string) {
+  try { localStorage.setItem(CAPTURED_FOOD_PHOTO_KEY, dataUrl); } catch { /* kota/depolama */ }
+  notifyPendingPhoto();
+}
+
+export function readCapturedFoodPhoto(): string | null {
+  try { return typeof localStorage === "undefined" ? null : localStorage.getItem(CAPTURED_FOOD_PHOTO_KEY); } catch { return null; }
+}
+
+export function clearCapturedFoodPhoto() {
+  try { localStorage.removeItem(CAPTURED_FOOD_PHOTO_KEY); } catch { /* depolama kapalı */ }
+  notifyPendingPhoto();
 }
 
 function subscribePendingFoodPhoto(callback: () => void) {
@@ -108,9 +152,12 @@ export async function takeFoodPhoto() {
       promptLabelPicture: "Fotoğraf çek",
       promptLabelCancel: "Vazgeç",
     });
-    if (photo.dataUrl) return photo.dataUrl;
-    if (!photo.webPath) return null;
-    return await fileToDataUrl(photo.webPath);
+    const dataUrl = photo.dataUrl || (photo.webPath ? await fileToDataUrl(photo.webPath) : null);
+    // Kare, analiz isteğinden ÖNCE saklanır: istek başarısız olsa ya da
+    // sayfa yeniden yüklense de kullanıcı fotoğrafı yeniden çekmek zorunda
+    // kalmasın.
+    if (dataUrl) storeCapturedFoodPhoto(dataUrl);
+    return dataUrl;
   } finally {
     clearPendingFoodPhoto();
   }
@@ -135,7 +182,11 @@ export function listenForRestoredFoodPhoto(handler: (dataUrl: string) => void) {
       const source = data?.webPath || (data?.path ? Capacitor.convertFileSrc(data.path) : null);
       const dataUrl = data?.dataUrl || (source ? await fileToDataUrl(source) : null);
       clearPendingFoodPhoto();
-      if (active && result.success && dataUrl) handler(dataUrl);
+      if (!result.success || !dataUrl) return;
+      // Dinleyici sökülmüş olsa bile (kullanıcı o an başka sekmedeydi) kare
+      // saklanır; beslenme sekmesi açıldığında oradan alınır.
+      storeCapturedFoodPhoto(dataUrl);
+      if (active) handler(dataUrl);
     })();
   }).then((registered) => { if (active) handle = registered; else void registered.remove(); });
   return () => { active = false; void handle?.remove(); };

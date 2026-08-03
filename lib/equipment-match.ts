@@ -57,6 +57,21 @@ export function hasEquipment(equipmentText: string, requirement: string): boolea
 }
 
 /**
+ * Serbest bir ekipman ADIYLA eşleme. Katalog `requires` anahtarları Türkçe
+ * ("dambıl"), egzersiz veritabanınınki İngilizce ("dumbbell"); ikisi de aynı
+ * eşanlamlı kümesine düşer. Ad tanınmıyorsa doğrudan aranır.
+ */
+export function hasEquipmentNamed(equipmentText: string, name: string): boolean {
+  const normalized = normalize(name);
+  if (!normalized) return true;
+  for (const [key, synonyms] of Object.entries(SYNONYMS)) {
+    const group = [normalize(key), ...synonyms.map(normalize)];
+    if (group.includes(normalized)) return hasEquipment(equipmentText, key);
+  }
+  return hasEquipment(equipmentText, name);
+}
+
+/**
  * Hareketin kullanıcının ortamı ve ekipmanıyla yapılabilir olup olmadığı.
  * Salonda her şey, evde yalnızca vücut ağırlığı veya sahip olunan ekipman.
  */

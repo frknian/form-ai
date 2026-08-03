@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";
+import { readFileSync } from "node:fs";
 
 const app = await readFile(new URL("../components/FitAiApp.tsx", import.meta.url), "utf8");
 const goalCard = await readFile(new URL("../components/GoalPlanCard.tsx", import.meta.url), "utf8");
@@ -19,7 +20,8 @@ test("ana ekran mobil sayfalayıcı olmadan tek akışta durur", () => {
   assert.match(home, /<ActivityStreak userId=\{authUser\.id\} compact \/>/, "mini seri selamlamanın yanında olmalı");
   assert.match(home, /<QuickActions onNavigate=\{navigateFromQuickAction\} \/>/);
   assert.match(home, /<GoalPlanCard compact onOpen=\{\(\) => setGoalPlanOpen\(true\)\}/);
-  assert.match(home, /className="home-energy-row"/);
+  assert.match(home, /className="home-top-row"/);
+  assert.match(home, /<DailyEnergyRing userId=/, "kalori çemberi VKİ'nin yanında olmalı");
 });
 
 test("hedef planının tam hâli yalnız kaplamada, dokununca açılır", () => {
@@ -46,26 +48,39 @@ test("hedef planı kompakt şeridi hafta, kalan ve günlük hedefi yan yana gös
   assert.match(compactBlock, /t\.goalPlan\.compactDurationLabel/, "süre");
   assert.match(compactBlock, /t\.goalPlan\.compactRemainingLabel/, "kalan");
   assert.match(compactBlock, /t\.goalPlan\.compactIntakeLabel/, "günlük hedef");
-  // Kompakt şeritte grafik ve AI analizi render edilmemeli.
-  assert.doesNotMatch(compactBlock, /goal-plan-chart/);
+  // Küçük eğri kompakt şeritte de var (kullanıcı planı ana ekranda grafikle
+  // görmek istedi); AI analizi hâlâ yalnız kaplamada.
+  assert.match(compactBlock, /goal-plan-chart goal-plan-chart-mini/);
   assert.doesNotMatch(compactBlock, /goal-plan-analysis/);
 });
 
-test("enerji satırında çember, BMR ve TDEE aynı satırda durur", () => {
-  const rule = css.match(/\.home-energy-row \{([^}]*)\}/)?.[1] ?? "";
-  assert.match(rule, /display:grid/);
-  assert.match(rule, /grid-template-columns:auto 1fr 1fr/, "çember + iki istatistik yan yana olmalı");
+test("VKİ ve kalori çemberi yan yana, kısayollar tek sırada dört sütun", () => {
+  const topRow = css.match(/\.home-top-row \{([^}]*)\}/)?.[1] ?? "";
+  assert.match(topRow, /display:grid/);
+  assert.match(topRow, /grid-template-columns:minmax\(0,0\.8fr\) minmax\(0,1\.2fr\)/, "iki sütun, alt alta değil");
+  assert.match(css, /\.quick-actions-list \{ grid-template-columns:repeat\(4,minmax\(0,1fr\)\); \}/);
+  // Hedef ve ortam sütunları ana ekrandan kalktı.
+  assert.doesNotMatch(app.slice(app.indexOf('className="dashboard-head"')), /t\.dashboard\.environmentLabel/);
 });
 
-test("program oluşturma kartları hazır programlardan önce gelir", () => {
-  // Kullanıcı kendi hareketlerini seçtiği kartı en başta görmek istedi.
+test("kalori çemberi hedeften düşer: alınan eksi, antrenman yakımı artı", () => {
+  const ring = readFileSync(new URL("../components/DailyEnergyRing.tsx", import.meta.url), "utf8");
+  assert.match(ring, /const budget = target === null \? null : target \+ burned;/);
+  assert.match(ring, /const remaining = budget === null \? null : budget - consumed;/);
+});
+
+test("hazır programlar anahtarla değişir, kendi programların en altta", () => {
+  // Üç kart alt alta durunca sayfa uzuyordu; artık tek panel + anahtar.
+  const switchRow = training.indexOf('className="program-switch"');
+  const panel = training.indexOf('className="program-panel"');
   const customRow = training.indexOf('className="program-cards program-custom-row"');
-  const readyRow = training.indexOf('className="program-cards"');
-  assert.ok(customRow > 0 && readyRow > 0);
-  assert.ok(customRow < readyRow, "program oluştur en başta olmalı");
-  // Salon/ev, akıllı program, full body ve bölgesel hâlâ aynı ızgarada yan yana.
-  const readyBlock = training.slice(readyRow, training.indexOf("</section>", readyRow));
-  assert.match(readyBlock, /t\.programs\.smartTitle/);
-  assert.match(readyBlock, /t\.programs\.fullBodyTitle/);
-  assert.match(readyBlock, /t\.programs\.splitTitle/);
+  assert.ok(switchRow > 0 && panel > switchRow, "anahtar panelin üstünde olmalı");
+  assert.ok(customRow > panel, "kendi programların en altta olmalı");
+  // Anahtarın üç sekmesi: akıllı, full body, bölgesel.
+  const switchBlock = training.slice(switchRow, panel);
+  assert.match(switchBlock, /t\.programs\.smartTitle/);
+  assert.match(switchBlock, /t\.programs\.fullBodyTitle/);
+  assert.match(switchBlock, /t\.programs\.splitTitle/);
+  // Üç özel program yan yana durur.
+  assert.match(css, /\.program-cards\.program-custom-row \{ grid-template-columns:repeat\(3,minmax\(0,1fr\)\);/);
 });

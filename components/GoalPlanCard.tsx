@@ -178,11 +178,31 @@ export function GoalPlanCard({ userId, currentWeightKg, profileBmr, compact = fa
       <span className="goal-plan-compact-arrow">→</span>
     </button>;
 
-    // Üç kısa değer yan yana: hafta, kalan kilo, günlük kalori hedefi. Tam
-    // karttaki uzun açıklamalar (haftalık tempo, antrenman yakımı) burada
-    // yok — dokununca kaplamada tam kart bunları zaten gösterir.
+    // Üç kısa değer ve hedefe giden eğrinin küçük hâli. Uzun açıklamalar
+    // (haftalık tempo, AI analizi) burada yok — dokununca kaplamada tam kart
+    // bunları zaten gösterir.
+    const compactPath = seriesToPath(projectWeightSeries(effectiveWeight, plan.weeklyRateKg, saved.targetWeightKg, plan.weeks), 100, 46);
     return <button type="button" className="goal-plan goal-plan-compact goal-plan-compact-ready" onClick={onOpen}>
       <div className="eyebrow">{t.goalPlan.eyebrow}<span className="goal-plan-compact-arrow">{t.goalPlan.compactOpen} →</span></div>
+      <figure className="goal-plan-chart goal-plan-chart-mini">
+        <svg viewBox="0 0 100 46" preserveAspectRatio="none" role="img" aria-label={t.goalPlan.chartLabel}>
+          {/* Kaplamadaki tam kart aynı anda açık olabildiği için ayrı bir id:
+              iki gradyan aynı id'yi paylaşırsa biri diğerini geçersizler. */}
+          <defs>
+            <linearGradient id="goal-plan-fade-mini" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="currentColor" stopOpacity="0.34" />
+              <stop offset="100%" stopColor="currentColor" stopOpacity="0.02" />
+            </linearGradient>
+          </defs>
+          <path className="goal-plan-chart-area" fill="url(#goal-plan-fade-mini)" d={`${compactPath} L100 46 L0 46 Z`} />
+          <line className="goal-plan-chart-target" x1="0" y1="45" x2="100" y2="45" />
+          <path className="goal-plan-chart-line" d={compactPath} />
+        </svg>
+        <figcaption>
+          <span>{formatWeight(effectiveWeight, unit, { withUnit: true })}</span>
+          <span>{formatWeight(saved.targetWeightKg, unit, { withUnit: true })}</span>
+        </figcaption>
+      </figure>
       <div className="goal-plan-compact-stats">
         <div><strong>{plan.weeks}</strong><span>{t.goalPlan.compactDurationLabel}</span></div>
         <div><strong>{formatWeight(plan.remainingKg, unit, { withUnit: true })}</strong><span>{t.goalPlan.compactRemainingLabel}</span></div>
