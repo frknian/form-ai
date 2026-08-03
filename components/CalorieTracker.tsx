@@ -10,6 +10,7 @@ import { HOUSEHOLD_PORTION_UNITS, PRIMARY_PORTION_UNITS, fromGrams, needsAnalysi
 import { emptyFoodNutrition, scaleFoodNutrition, type FoodMicronutrients, type FoodNutrition } from "@/lib/food-search";
 import { calculateNutritionGoal, calculateWeeklyWeightTrend, inferNutritionGoal, sanitizeNutritionGoal, type NutritionGoal, type NutritionGoalType, type WeightTrend } from "@/lib/nutrition-goals";
 import { clearCapturedFoodPhoto, clearPendingFoodPhoto, isNativeApp, listenForRestoredFoodPhoto, markPendingFoodPhoto, mobileImpact, readCapturedFoodPhoto, storeCapturedFoodPhoto, takeFoodPhoto, usePendingFoodPhoto } from "@/lib/mobile";
+import { MAX_PHOTO_CHARS, compressFoodPhoto } from "@/lib/photo-compress";
 import { createClient } from "@/lib/supabase/client";
 import { localDateKey } from "@/lib/streak";
 import { authorizedFetch } from "@/lib/api-client";
@@ -399,15 +400,26 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
   async function handlePhoto(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) { clearPendingFoodPhoto(); return; }
-    const photoDataUrl = await new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onload = () => typeof reader.result === "string" ? resolve(reader.result) : reject(); reader.onerror = reject; reader.readAsDataURL(file); }).catch(() => "");
-    await analyzeFoodPhoto(photoDataUrl, URL.createObjectURL(file));
+    setMessage(t.calorieTracker.analyzingPhoto);
+    // Kamera karesi 12 MP olabiliyor; küçültmeden ne yüklemek ne saklamak
+    // mantıklı. Küçültme başarısız olursa özgün kareyle devam edilir.
+    const compressed = await compressFoodPhoto(file);
+    const photoDataUrl = compressed ?? await new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onload = () => typeof reader.result === "string" ? resolve(reader.result) : reject(); reader.onerror = reject; reader.readAsDataURL(file); }).catch(() => "");
+    await analyzeFoodPhoto(photoDataUrl);
   }
 
   analyzeRef.current = (photoDataUrl: string) => analyzeFoodPhoto(photoDataUrl);
 
-  async function analyzeFoodPhoto(photoDataUrl: string, previewUrl = photoDataUrl) {
-    if (!photoDataUrl) { setMessage(t.calorieTracker.photoUnreadable); return; }
+  async function analyzeFoodPhoto(rawPhotoDataUrl: string, previewOverride?: string) {
+    if (!rawPhotoDataUrl) { setMessage(t.calorieTracker.photoUnreadable); return; }
+    // Yerli kamera ve kurtarılan kareler de buradan geçer: sunucu 7 MB üstü
+    // base64'ü reddediyor, localStorage kotası ise çok daha düşük.
+    const photoDataUrl = rawPhotoDataUrl.length > MAX_PHOTO_CHARS ? (await compressFoodPhoto(rawPhotoDataUrl)) ?? rawPhotoDataUrl : rawPhotoDataUrl;
+    const previewUrl = previewOverride ?? photoDataUrl;
     analyzedPhoto.current = photoDataUrl;
+    // Fotoğraf çekildikten sonra ekran öğün ekleme alanına dönsün: kullanıcı
+    // kameradan çıkınca sayfanın neresinde kaldığını aramak zorunda kalmasın.
+    document.getElementById("food-entry-panel")?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
     // Kare önce saklanır, sonra ağa çıkılır: istek yarıda kalsa da fotoğraf
     // durur. Kamera dönüşünde sayfa yenilenirse kaldığı yerden devam eder.
     storeCapturedFoodPhoto(photoDataUrl);
@@ -431,9 +443,37 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
     setAiEstimate({ grams: result.grams || 100, items: result.itemNames || [], confidence: result.confidence || "medium" });
     setAnalysedGrams(Math.round(result.grams || 0) || null);
     setUnitAmount("1");
-    const resultMessage = result.confidence === "low" ? t.calorieTracker.photoResultLowConfidence : t.calorieTracker.photoResultMessage;
     const confidenceNotice = result.needsManualNutrition ? ` ${t.calorieTracker.photoLowConfidenceRetry}` : "";
-    setMessage(`${resultMessage}${confidenceNotice} ${(result.warnings || []).join(" ")}${result.usage ? ` ${t.calorieTracker.photoDailyUsage(result.usage.used, result.usage.limit)}` : ""}`.trim());
+    const notes = `${confidenceNotice} ${(result.warnings || []).join(" ")}${result.usage ? ` ${t.calorieTracker.photoDailyUsage(result.usage.used, result.usage.limit)}` : ""}`.trim();
+
+    // Analiz biter bitmez günlüğe yazılır: kullanıcı fotoğrafı çektikten sonra
+    // ayrıca bir "ekle" düğmesi aramak zorunda kalmasın. Değerler beğenilmezse
+    // kayıt listeden silinip yeniden eklenebilir.
+    if ((result.calories || 0) > 0) {
+      setIsSubmitting(true);
+      try {
+        await addEntry({
+          name: result.name,
+          meal,
+          calories: result.calories || 0,
+          protein: result.protein || 0,
+          carbs: result.carbs || 0,
+          fat: result.fat || 0,
+          fiber: result.fiber || 0,
+          grams: Math.round(result.grams || 0) || 100,
+          micros: {},
+          source: "Fotoğraf",
+          isEstimated: true,
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
+      setMessage(`${t.calorieTracker.entryAdded} ${notes}`.trim());
+      return;
+    }
+
+    const resultMessage = result.confidence === "low" ? t.calorieTracker.photoResultLowConfidence : t.calorieTracker.photoResultMessage;
+    setMessage(`${resultMessage} ${notes}`.trim());
   }
 
   // Girdi seçili birimde okunur; iç matematik her zaman GRAM üzerinden yürür.
