@@ -1308,7 +1308,7 @@ export const tr = {
     smartFallbackNote: "Bu program profilinden yerel olarak üretildi. Yapay zekâ analizi için profilinden \"Planı yenile\" deyebilirsin.",
     smartLocked: "Önce profil testi",
     smartEmptyBody: "Profil testini tamamladığında yapay zekânın kurduğu program burada görünecek.",
-    fullBodyTitle: "Full Body",
+    fullBodyTitle: "Tam Vücut",
     fullBodyBody: "Tüm vücut. Salonda salon hareketleri, evde senin ekipmanın.",
     splitTitle: "Bölgesel",
     splitBody: "Tek bir bölgeye yüklen. Yine salon/ev ayrımıyla.",

@@ -1679,24 +1679,12 @@ button.brand:hover .brand-mark { transform:scale(1.06); }
 .programs-hint,.programs-note { color:var(--muted-text); font-size:11px; }
 .programs-note { margin:0 0 16px; font-weight:700; }
 
-/* Hazır programlar arasında anahtar: akıllı / full body / bölgesel tek
-   panelde. Salon–ev seçimi buradan kaldırıldı; ortam profil testinden gelir. */
-.program-switch { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px; margin:0 0 14px; padding:4px; border:1px solid var(--line); border-radius:999px; background:var(--surface-soft,#fbfbf7); }
-.program-switch button { min-height:38px; min-width:0; padding:8px 6px; border:0; border-radius:999px; background:transparent; color:var(--muted-text); font-size:12px; font-weight:700; cursor:pointer; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.program-switch button.selected { background:var(--ink); color:var(--surface); }
-.dark .program-switch { background:#20231a; border-color:#46502c; }
-.dark .program-switch button.selected { background:var(--lime); color:#22270f; }
-/* Dar ekran: yalnız seçili kart görünür. */
+/* Hazır programlar: dar ekranda alt alta, 860 px'ten sonra üçü yan yana.
+   Salon-ev seçimi buradan kaldırıldı; ortam profil testinden gelir. Sekme
+   anahtarı da kaldırıldı: anahtar ve kartlar aynı üç adı gösterdiği için
+   mobilde aynı şey ekranda iki kez duruyordu. */
 .program-panel { display:grid; gap:12px; margin:0 0 18px; }
-.program-panel-item { display:none; }
-.program-panel-item.active { display:flex; }
-/* Geniş ekran: anahtara gerek yok, üçü yan yana sığıyor. 860 px eşiği, üç
-   kartın dar sütunlarda ezilmemesi için: altında anahtar çalışmaya devam eder. */
-@media (min-width:860px) {
-  .program-switch { display:none; }
-  .program-panel { grid-template-columns:repeat(3,minmax(0,1fr)); }
-  .program-panel-item { display:flex; }
-}
+@media (min-width:860px) { .program-panel { grid-template-columns:repeat(3,minmax(0,1fr)); } }
 
 .program-cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; }
 /* Kendi programların en altta, üçü yan yana (dar ekranda da). */

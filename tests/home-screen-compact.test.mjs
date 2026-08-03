@@ -69,24 +69,23 @@ test("kalori çemberi hedeften düşer: alınan eksi, antrenman yakımı artı",
   assert.match(ring, /const remaining = budget === null \? null : budget - consumed;/);
 });
 
-test("hazır programlar anahtarla değişir, kendi programların en altta", () => {
-  // Üç kart alt alta durunca sayfa uzuyordu; artık tek panel + anahtar.
-  const switchRow = training.indexOf('className="program-switch"');
+test("hazır programlar tek listede, kendi programların en altta", () => {
+  // Sekme anahtarı kaldırıldı: anahtar da kartlar da aynı üç adı gösteriyordu,
+  // mobilde aynı şey ekranda iki kez duruyordu.
+  assert.doesNotMatch(training, /program-switch/, "anahtar kalmamalı");
   const panel = training.indexOf('className="program-panel"');
   const customRow = training.indexOf('className="program-cards program-custom-row"');
-  assert.ok(switchRow > 0 && panel > switchRow, "anahtar panelin üstünde olmalı");
-  assert.ok(customRow > panel, "kendi programların en altta olmalı");
-  // Masaüstünde anahtar gizlenir, üç kart yan yana durur; bu yüzden üçü de
-  // her zaman render edilir ve görünürlüğe CSS karar verir.
-  assert.equal(training.split("program-card program-panel-item active").length - 1, 3, "üç kart da her zaman render edilmeli");
-  assert.match(css, /@media \(min-width:860px\) \{\s*\n?\s*\.program-switch \{ display:none; \}/);
-  assert.match(css, /\.program-panel \{ grid-template-columns:repeat\(3,minmax\(0,1fr\)\); \}/);
-  assert.match(css, /\.program-panel-item \{ display:none; \}/, "dar ekranda yalnız seçili kart görünmeli");
-  // Anahtarın üç sekmesi: akıllı, full body, bölgesel.
-  const switchBlock = training.slice(switchRow, panel);
-  assert.match(switchBlock, /t\.programs\.smartTitle/);
-  assert.match(switchBlock, /t\.programs\.fullBodyTitle/);
-  assert.match(switchBlock, /t\.programs\.splitTitle/);
+  assert.ok(panel > 0 && customRow > panel, "kendi programların en altta olmalı");
+  // Üç kart da her zaman listede; dar ekranda alt alta, geniş ekranda yan yana.
+  assert.equal(training.split('className="program-card program-panel-item"').length - 1, 3);
+  assert.match(css, /@media \(min-width:860px\) \{ \.program-panel \{ grid-template-columns:repeat\(3,minmax\(0,1fr\)\); \} \}/);
+  const panelBlock = training.slice(panel, customRow);
+  assert.match(panelBlock, /t\.programs\.smartTitle/);
+  assert.match(panelBlock, /t\.programs\.fullBodyTitle/);
+  assert.match(panelBlock, /t\.programs\.splitTitle/);
+  // Başlık şeridi ("PROGRAMLAR" + "Seç, başla…") liste ekranından kalktı.
+  assert.doesNotMatch(panelBlock, /programs-hint/);
+  assert.ok(!training.slice(panel).includes("t.programs.eyebrow"), "liste ekranında PROGRAMLAR başlığı kalmamalı");
   // Üç özel program yan yana durur.
   assert.match(css, /\.program-cards\.program-custom-row \{ grid-template-columns:repeat\(3,minmax\(0,1fr\)\);/);
 });

@@ -49,9 +49,6 @@ export function TrainingPrograms({
   const t = useTranslations();
   const [selection, setSelection] = useState<Selection | null>(null);
   const [builderId, setBuilderId] = useState<string | null>(null);
-  // Hazır programlar arasında geçiş: üç kart alt alta uzayıp ekranı
-  // doldurmasın diye tek panel, üstünde anahtar.
-  const [tab, setTab] = useState<"smart" | "fullBody" | "split">("smart");
   const place: TrainingPlace = isGym ? "gym" : "home";
 
   function regionLabel(area: string): string {
@@ -160,20 +157,13 @@ export function TrainingPrograms({
   // --- Program seçimi ---
   const freeSlot = nextFreeSlot(customPrograms);
   return <section className="programs" id="ready-programs">
-    <div className="section-title"><div className="eyebrow">{t.programs.eyebrow}</div><span className="programs-hint">{t.programs.hint}</span></div>
-
-    {/* Dar ekranda hazır programlar tek panelde, üstünde anahtar: üç kart alt
-        alta durunca sayfa uzuyordu. Geniş ekranda yer var, orada anahtar
-        gizlenir ve üç kart yan yana görünür — bu yüzden üçü de HER ZAMAN
-        render edilir, hangisinin görüneceğine CSS karar verir. */}
-    <div className="program-switch" role="tablist" aria-label={t.programs.eyebrow}>
-      <button type="button" role="tab" aria-selected={tab === "smart"} className={tab === "smart" ? "selected" : ""} onClick={() => setTab("smart")}>{t.programs.smartTitle}</button>
-      <button type="button" role="tab" aria-selected={tab === "fullBody"} className={tab === "fullBody" ? "selected" : ""} onClick={() => setTab("fullBody")}>{t.programs.fullBodyTitle}</button>
-      <button type="button" role="tab" aria-selected={tab === "split"} className={tab === "split" ? "selected" : ""} onClick={() => setTab("split")}>{t.programs.splitTitle}</button>
-    </div>
-
+    {/* Hazır programlar: dar ekranda alt alta, geniş ekranda yan yana. Bir
+        dönem üstlerinde sekme anahtarı vardı; anahtar da kartlar da aynı üç
+        adı gösterdiği için ekranda aynı şey iki kez duruyordu. Başlık şeridi
+        ("PROGRAMLAR" + "Seç, başla…") de kalktı: kartların kendisi zaten
+        anlatıyor. */}
     <div className="program-panel">
-      <article className={tab === "smart" ? "program-card program-panel-item active" : "program-card program-panel-item"}>
+      <article className="program-card program-panel-item">
         <OnboardingIcon name="condition" />
         <h3>{t.programs.smartTitle}</h3>
         <p>{smartFallback ? t.programs.smartFallbackBody : t.programs.smartBody}</p>
@@ -183,7 +173,7 @@ export function TrainingPrograms({
         </button>
       </article>
 
-      <article className={tab === "fullBody" ? "program-card program-panel-item active" : "program-card program-panel-item"}>
+      <article className="program-card program-panel-item">
         <OnboardingIcon name="strength" />
         <h3>{t.programs.fullBodyTitle}</h3>
         <p>{t.programs.fullBodyBody}</p>
@@ -191,7 +181,7 @@ export function TrainingPrograms({
         <button type="button" onClick={() => setSelection({ kind: "fullBody", place })}>{t.programs.open} <span>→</span></button>
       </article>
 
-      <article className={tab === "split" ? "program-card program-panel-item active" : "program-card program-panel-item"}>
+      <article className="program-card program-panel-item">
         <OnboardingIcon name="muscle" />
         <h3>{t.programs.splitTitle}</h3>
         <p>{t.programs.splitBody}</p>
