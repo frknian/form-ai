@@ -162,9 +162,10 @@ export function TrainingPrograms({
   return <section className="programs" id="ready-programs">
     <div className="section-title"><div className="eyebrow">{t.programs.eyebrow}</div><span className="programs-hint">{t.programs.hint}</span></div>
 
-    {/* Hazır programlar tek panelde, üstünde anahtar. Üç kart alt alta
-        durunca sayfa uzuyor ve kullanıcı hepsini görmek için kaydırmak
-        zorunda kalıyordu. */}
+    {/* Dar ekranda hazır programlar tek panelde, üstünde anahtar: üç kart alt
+        alta durunca sayfa uzuyordu. Geniş ekranda yer var, orada anahtar
+        gizlenir ve üç kart yan yana görünür — bu yüzden üçü de HER ZAMAN
+        render edilir, hangisinin görüneceğine CSS karar verir. */}
     <div className="program-switch" role="tablist" aria-label={t.programs.eyebrow}>
       <button type="button" role="tab" aria-selected={tab === "smart"} className={tab === "smart" ? "selected" : ""} onClick={() => setTab("smart")}>{t.programs.smartTitle}</button>
       <button type="button" role="tab" aria-selected={tab === "fullBody"} className={tab === "fullBody" ? "selected" : ""} onClick={() => setTab("fullBody")}>{t.programs.fullBodyTitle}</button>
@@ -172,7 +173,7 @@ export function TrainingPrograms({
     </div>
 
     <div className="program-panel">
-      {tab === "smart" && <article className="program-card">
+      <article className={tab === "smart" ? "program-card program-panel-item active" : "program-card program-panel-item"}>
         <OnboardingIcon name="condition" />
         <h3>{t.programs.smartTitle}</h3>
         <p>{smartFallback ? t.programs.smartFallbackBody : t.programs.smartBody}</p>
@@ -180,24 +181,24 @@ export function TrainingPrograms({
         <button type="button" disabled={!smartWorkouts.length} onClick={() => setSelection({ kind: "smart" })}>
           {smartWorkouts.length ? t.programs.open : t.programs.smartLocked} {smartWorkouts.length ? <span>→</span> : null}
         </button>
-      </article>}
+      </article>
 
-      {tab === "fullBody" && <article className="program-card">
+      <article className={tab === "fullBody" ? "program-card program-panel-item active" : "program-card program-panel-item"}>
         <OnboardingIcon name="strength" />
         <h3>{t.programs.fullBodyTitle}</h3>
         <p>{t.programs.fullBodyBody}</p>
         <small>{progressLabel(programKey("fullBody", place))}</small>
         <button type="button" onClick={() => setSelection({ kind: "fullBody", place })}>{t.programs.open} <span>→</span></button>
-      </article>}
+      </article>
 
-      {tab === "split" && <article className="program-card">
+      <article className={tab === "split" ? "program-card program-panel-item active" : "program-card program-panel-item"}>
         <OnboardingIcon name="muscle" />
         <h3>{t.programs.splitTitle}</h3>
         <p>{t.programs.splitBody}</p>
         <div className="program-regions">{BODY_REGIONS.map((area) => (
           <button type="button" key={area} className="equipment" onClick={() => setSelection({ kind: "split", place, area })}>{regionLabel(area)}</button>
         ))}</div>
-      </article>}
+      </article>
     </div>
 
     {/* Kendi programların en altta, üçü yan yana. */}

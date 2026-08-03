@@ -76,6 +76,12 @@ test("hazır programlar anahtarla değişir, kendi programların en altta", () =
   const customRow = training.indexOf('className="program-cards program-custom-row"');
   assert.ok(switchRow > 0 && panel > switchRow, "anahtar panelin üstünde olmalı");
   assert.ok(customRow > panel, "kendi programların en altta olmalı");
+  // Masaüstünde anahtar gizlenir, üç kart yan yana durur; bu yüzden üçü de
+  // her zaman render edilir ve görünürlüğe CSS karar verir.
+  assert.equal(training.split("program-card program-panel-item active").length - 1, 3, "üç kart da her zaman render edilmeli");
+  assert.match(css, /@media \(min-width:860px\) \{\s*\n?\s*\.program-switch \{ display:none; \}/);
+  assert.match(css, /\.program-panel \{ grid-template-columns:repeat\(3,minmax\(0,1fr\)\); \}/);
+  assert.match(css, /\.program-panel-item \{ display:none; \}/, "dar ekranda yalnız seçili kart görünmeli");
   // Anahtarın üç sekmesi: akıllı, full body, bölgesel.
   const switchBlock = training.slice(switchRow, panel);
   assert.match(switchBlock, /t\.programs\.smartTitle/);

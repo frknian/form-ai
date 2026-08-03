@@ -1686,8 +1686,17 @@ button.brand:hover .brand-mark { transform:scale(1.06); }
 .program-switch button.selected { background:var(--ink); color:var(--surface); }
 .dark .program-switch { background:#20231a; border-color:#46502c; }
 .dark .program-switch button.selected { background:var(--lime); color:#22270f; }
-.program-panel { margin:0 0 18px; }
-.program-panel .program-card { max-width:520px; }
+/* Dar ekran: yalnız seçili kart görünür. */
+.program-panel { display:grid; gap:12px; margin:0 0 18px; }
+.program-panel-item { display:none; }
+.program-panel-item.active { display:flex; }
+/* Geniş ekran: anahtara gerek yok, üçü yan yana sığıyor. 860 px eşiği, üç
+   kartın dar sütunlarda ezilmemesi için: altında anahtar çalışmaya devam eder. */
+@media (min-width:860px) {
+  .program-switch { display:none; }
+  .program-panel { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .program-panel-item { display:flex; }
+}
 
 .program-cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; }
 /* Kendi programların en altta, üçü yan yana (dar ekranda da). */
@@ -1898,4 +1907,42 @@ button.brand:hover .brand-mark { transform:scale(1.06); }
 @media (max-width:520px) {
   .food-name-row { flex-direction:column; align-items:stretch; }
   .food-name-row .ai-estimate-btn { justify-content:center; }
+}
+
+/* --- Masaüstü ölçekleri -----------------------------------------------------
+   Ana ekran ve antrenman sekmesi telefon genişliğine göre ölçülmüştü; 1120 px
+   kolonda kartlar seyrek, sayılar küçük kalıyordu. Bu blok YALNIZ geniş
+   ekranı büyütür (min-width:701px), mobil kurallara hiç dokunmaz — dosyanın
+   sonunda durur ki temel değerleri ezebilsin. */
+@media (min-width:701px) {
+  .home-top-row { grid-template-columns:minmax(0,1fr) minmax(0,1.6fr); gap:18px; margin:30px 0 22px; }
+  .home-bmi { padding:22px 26px; }
+  .home-bmi span { font-size:10px; }
+  .home-bmi strong { margin:12px 0 5px; font-size:46px; }
+  .home-bmi small { font-size:11px; }
+
+  .energy-ring-card { grid-template-columns:auto minmax(0,1fr); gap:24px; padding:20px 26px; }
+  .energy-ring { width:118px; height:118px; }
+  .energy-ring-center strong { font-size:29px; }
+  .energy-ring-center small { margin-top:5px; font-size:10px; }
+  /* Üç değer geniş ekranda yan yana: dikey liste çemberin yanında boşluk
+     bırakıp kartı gereksiz uzatıyordu. */
+  .energy-ring-legend { grid-template-columns:repeat(3,minmax(0,1fr)); align-items:center; gap:16px; }
+  .energy-ring-legend span { font-size:9px; }
+  .energy-ring-legend strong { font-size:19px; }
+  .energy-ring-legend strong small { font-size:10px; }
+
+  .quick-actions { padding:18px 22px; }
+  .quick-actions-list button { min-height:56px; padding:14px 16px; font-size:13px; }
+
+  .goal-plan-compact { padding:20px 26px; }
+  .goal-plan-chart-mini svg { height:84px; }
+  .goal-plan-chart-mini figcaption { font-size:10px; }
+  .goal-plan-compact-stats { gap:16px; margin-top:16px; }
+  .goal-plan-compact-stats strong { font-size:22px; }
+  .goal-plan-compact-stats span { font-size:10px; }
+
+  /* Anahtar masaüstünde hiç görünmez (üç kart zaten yan yana); kartlar
+     sütunlarına yayılsın diye genişlik sınırı da yok. */
+
 }
