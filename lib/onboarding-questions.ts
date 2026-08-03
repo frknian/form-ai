@@ -30,6 +30,24 @@ export const QUESTION_COUNT = Object.keys(QUESTION).length;
 export const FREE_TEXT_QUESTIONS: number[] = [QUESTION.motivation, QUESTION.freeNote];
 
 /**
+ * Tek seçimli sorular: şıkları birbirini dışlayan bir ÖLÇEĞİN noktalarıdır
+ * (ör. "0 gün" / "1–2 gün" / "3–4 gün" / "5+ gün" — biri seçilince diğerleri
+ * anlamsızlaşır, "hem 1-2 hem 3-4 gün" diye bir cevap yoktur). Geri kalan
+ * sorular (engel, ilgi alanı, ekipman, sakatlık bölgesi) gerçekten birden
+ * fazla doğru cevap alabildiği için çoklu seçimde kalır.
+ */
+export const SINGLE_SELECT_QUESTIONS: number[] = [
+  QUESTION.goal,
+  QUESTION.experience,
+  QUESTION.level,
+  QUESTION.recentFrequency,
+  QUESTION.availableDays,
+  QUESTION.sessionMinutes,
+  QUESTION.dailyMovement,
+  QUESTION.sleep,
+];
+
+/**
  * Eski 10 soruluk testten kaydedilmiş cevapları yeni 15'lik sıraya taşır.
  *
  * Sıra tamamen değiştiği için taşımadan okumak, kullanıcının hedefini "deneyim"

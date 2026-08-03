@@ -109,15 +109,20 @@ test("hareket kütüphanesi kartı harekete girilmeden animasyon oynatmaz", asyn
   assert.doesNotMatch(detail, /<ExerciseAnimation[^/]*autoplay=\{false\}/);
 });
 
-test("profil testinde tüm seçenekli sorular çoklu seçimdir", () => {
-  // Tek seçim, otomatik ilerleme ve sakatlığa özel dal kaldırıldı.
+test("profil testinde seçenekli sorular soruya göre tek ya da çoklu seçimlidir", () => {
+  // Gerçekten birden fazla doğru cevap alabilen sorular (engel, ilgi alanı,
+  // ekipman, sakatlık) çoklu seçim kalır; birbirini dışlayan bir ölçeğin
+  // noktaları olan sorular (gün, süre, seviye vb.) artık tek seçimlidir.
   assert.match(appSource, /function toggleAnswer\(answer: string\)/);
   assert.doesNotMatch(appSource, /function setAnswer\(/);
   assert.doesNotMatch(appSource, /toggleInjury/);
   // Seçili durum birleşik değerden okunmalı, tam eşitlikle değil.
   assert.match(appSource, /\(history\[questionIndex\] \|\| ""\)\.split\(" · "\)\.includes\(answer\)/);
-  // "Yok" gibi dışlayıcı cevaplar diğerleriyle birlikte işaretlenemez.
-  assert.match(appSource, /EXCLUSIVE_ANSWERS = new Set\(\["Yok", "Hayır", "0 gün"\]\)/);
+  // Çoklu seçimde "Yok"/"Hiçbiri" gibi dışlayıcı cevaplar diğerleriyle
+  // birlikte işaretlenemez. "Hayır"/"0 gün" artık gerekmiyor: onların
+  // sorduğu sorular (deneyim, son 3 ay sıklığı) tek seçimli oldu.
+  assert.match(appSource, /EXCLUSIVE_ANSWERS = new Set\(\["Yok", "Hiçbiri"\]\)/);
+  assert.match(appSource, /isSingleSelect = SINGLE_SELECT_QUESTIONS\.includes\(questionIndex\)/);
 });
 
 test("birleşik cevaplar aşağı akışta tam eşitlikle okunmaz", () => {

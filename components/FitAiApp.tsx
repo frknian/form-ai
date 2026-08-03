@@ -44,7 +44,7 @@ import { extractSessionMinutes, extractWeeklyDays, planProgressionBlock } from "
 import { alternativeExercises } from "@/lib/exercise-alternatives";
 import { canPerformExercise, hasEquipment, hasEquipmentNamed, usableEquipmentText } from "@/lib/equipment-match";
 import { EQUIPMENT_PROFILES, buildReadyProgram, isReplacementCompatible } from "@/lib/ready-programs";
-import { CURRENT_PROFILE_TEST_VERSION, FREE_TEXT_QUESTIONS, QUESTION, QUESTION_COUNT, emptyHistory, isHistoryComplete, normalizeHistory } from "@/lib/onboarding-questions";
+import { CURRENT_PROFILE_TEST_VERSION, FREE_TEXT_QUESTIONS, QUESTION, QUESTION_COUNT, SINGLE_SELECT_QUESTIONS, emptyHistory, isHistoryComplete, normalizeHistory } from "@/lib/onboarding-questions";
 import { applyPreviousPerformance, buildCompletedExerciseLog, createWorkoutSetDrafts, exerciseLogKey, type CompletedExerciseLog, type PreviousExercisePerformance, type WorkoutSetDraft } from "@/lib/workout-log";
 import { localTimeKey } from "@/lib/workout-calendar";
 import { localDateKey } from "@/lib/streak";
@@ -70,9 +70,12 @@ const answerOptions = tr.onboarding.answerOptions;
 const STEP = { profile: 1, place: 2, photo: 3, test: 4, building: 5, report: 6, dashboard: 7 } as const;
 const FORM_STEP_COUNT = 4;
 
-// Diğer seçeneklerle birlikte işaretlenmesi anlamsız olan cevaplar. Bunlardan
-// biri seçilince diğerleri temizlenir (ör. "Yok" ile birlikte "Diz" olamaz).
-const EXCLUSIVE_ANSWERS = new Set(["Yok", "Hayır", "0 gün"]);
+// Çoklu seçimli sorularda diğer şıklarla birlikte işaretlenmesi anlamsız olan
+// "yok/hiçbiri" cevapları. Bunlardan biri seçilince diğerleri temizlenir (ör.
+// ekipmanda "Hiçbiri" ile birlikte "Dambıl" olamaz). Tek seçimli sorularda
+// (bkz. SINGLE_SELECT_QUESTIONS) bu zaten yapısal olarak imkânsız olduğu için
+// "Hayır" ve "0 gün" burada tutulmuyor.
+const EXCLUSIVE_ANSWERS = new Set(["Yok", "Hiçbiri"]);
 
 const coreExerciseLibrary = [
   { name: "Goblet Squat", english: "Goblet Squat", area: "Bacak", tone: "orange", icon: "◒", requires: ["dambıl", "kettlebell"], bodyweight: false, goals: ["güç", "kas", "kilo"], instructions: "Ayaklarını omuz genişliğinde aç. Ağırlığı göğsünde tut, kalçanı geriye ve aşağıya indir; topuklardan güç alarak kalk." },
@@ -912,24 +915,48 @@ export default function Home() {
     }
   }
 
-  // Tüm seçenekli sorular çoklu seçimdir: insanların cevabı çoğu zaman tek
+  // Bazı sorular (engel, ilgi alanı, ekipman, sakatlık bölgesi) gerçekten
+  // birden fazla doğru cevap alabilir — insanların cevabı çoğu zaman tek
   // kutuya sığmıyor (ör. hem kuvvet hem kardiyo, hem bel hem diz). Seçimler
   // " · " ile birleştirilir; aşağı akıştaki okuyucular bu biçimi bekler.
-  // Çoklu seçimde otomatik ilerleme yapılmaz; kullanıcı "Sonraki" ile geçer.
+  // Diğerleri (SINGLE_SELECT_QUESTIONS) birbirini dışlayan bir ölçeğin
+  // noktalarıdır ("0 gün" ile "5+ gün" aynı anda doğru olamaz); bunlarda tek
+  // şık seçilebilir ve seçim otomatik olarak bir sonraki soruya geçer —
+  // kullanıcı her tek cevaplı soruda ayrıca "Sonraki"ye basmak zorunda kalmaz.
+  // Geri dönüp cevabı değiştirmek her zaman "← Geri" ile mümkündür.
+  const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // questionIndex her değiştiğinde (otomatik ilerlemenin kendisi dahil, ama
+  // özellikle kullanıcı zamanlayıcı dolmadan elle "Geri"/"Sonraki" bastığında)
+  // bekleyen zamanlayıcı iptal edilir; aksi hâlde kullanıcı geri gittikten
+  // hemen sonra beklenmedik biçimde ileri fırlatılabilirdi.
+  useEffect(() => () => { if (autoAdvanceTimer.current) clearTimeout(autoAdvanceTimer.current); }, [questionIndex]);
+
   function toggleAnswer(answer: string) {
+    const isSingleSelect = SINGLE_SELECT_QUESTIONS.includes(questionIndex);
+    const wasSelected = (history[questionIndex] || "").split(" · ").includes(answer);
     setHistory((current) => {
       const selected = current[questionIndex] ? current[questionIndex].split(" · ").filter(Boolean) : [];
       let next: string[];
-      if (selected.includes(answer)) {
+      if (isSingleSelect) {
+        // Tek seçim bir radyo düğmesi gibi davranır: aynı şıkka tekrar
+        // basmak cevabı temizler, başka bir şıkka basmak öncekinin yerini alır.
+        next = selected.includes(answer) ? [] : [answer];
+      } else if (selected.includes(answer)) {
         next = selected.filter((value) => value !== answer);
       } else if (EXCLUSIVE_ANSWERS.has(answer)) {
-        // "Yok" / "0 gün" gibi cevaplar yalnız başına anlamlıdır.
+        // "Yok" / "Hiçbiri" gibi cevaplar yalnız başına anlamlıdır.
         next = [answer];
       } else {
         next = [...selected.filter((value) => !EXCLUSIVE_ANSWERS.has(value)), answer];
       }
       return current.map((value, index) => index === questionIndex ? next.join(" · ") : value);
     });
+    // Yalnız YENİ bir seçimde ilerle: cevabı geri çekmek (aynı şıkka tekrar
+    // basmak) kullanıcının yeniden düşünmek istediği anlamına gelir.
+    if (isSingleSelect && !wasSelected && questionIndex < QUESTION_COUNT - 1) {
+      if (autoAdvanceTimer.current) clearTimeout(autoAdvanceTimer.current);
+      autoAdvanceTimer.current = setTimeout(() => setQuestionIndex((index) => index + 1), 350);
+    }
   }
 
   function setFreeAnswer(answer: string) {
@@ -1705,7 +1732,7 @@ export default function Home() {
             {/* Sayaç ve çubuk doğrudan sorunun üstünde: uzun başlık ve lead
                 arada kalınca kullanıcı kaçıncı soruda olduğunu göremiyordu. */}
             <div className="question-progress"><div className="question-counter"><b>{questionIndex + 1}</b><span>/{QUESTION_COUNT}</span></div><div className="question-progress-bar" role="progressbar" aria-valuenow={questionIndex + 1} aria-valuemin={1} aria-valuemax={QUESTION_COUNT}><i style={{ width: `${((questionIndex + 1) / QUESTION_COUNT) * 100}%` }} /></div></div>
-            <div className="question-card"><h2>{t.onboarding.historyQuestions[questionIndex]}</h2>{(answerOptions[questionIndex] ?? []).length > 0 && <p className="multi-select-note">{t.onboarding.multiSelectNote}</p>}<div className="answer-grid">{(answerOptions[questionIndex] ?? []).map((answer, answerIndex) => { const label = (t.onboarding.answerOptions[questionIndex] ?? [])[answerIndex] ?? answer; const selected = (history[questionIndex] || "").split(" · ").includes(answer); return <button type="button" key={answer} aria-pressed={selected} className={selected ? "answer selected" : "answer"} onClick={() => toggleAnswer(answer)}>{label}</button>; })}</div>{FREE_TEXT_QUESTIONS.includes(questionIndex) && <textarea className="question-note" aria-label={t.onboarding.historyQuestions[questionIndex]} value={history[questionIndex]} onChange={(e) => setFreeAnswer(e.target.value)} rows={4} />}</div>
+            <div className="question-card"><h2>{t.onboarding.historyQuestions[questionIndex]}</h2>{(answerOptions[questionIndex] ?? []).length > 0 && !SINGLE_SELECT_QUESTIONS.includes(questionIndex) && <p className="multi-select-note">{t.onboarding.multiSelectNote}</p>}<div className="answer-grid">{(answerOptions[questionIndex] ?? []).map((answer, answerIndex) => { const label = (t.onboarding.answerOptions[questionIndex] ?? [])[answerIndex] ?? answer; const selected = (history[questionIndex] || "").split(" · ").includes(answer); return <button type="button" key={answer} aria-pressed={selected} className={selected ? "answer selected" : "answer"} onClick={() => toggleAnswer(answer)}>{label}</button>; })}</div>{FREE_TEXT_QUESTIONS.includes(questionIndex) && <textarea className="question-note" aria-label={t.onboarding.historyQuestions[questionIndex]} value={history[questionIndex]} onChange={(e) => setFreeAnswer(e.target.value)} rows={4} />}</div>
             <div className="action-row"><button className="back-btn" type="button" onClick={() => questionIndex ? setQuestionIndex(questionIndex - 1) : setStep(STEP.photo)}>{t.common.back}</button>{questionIndex < QUESTION_COUNT - 1 ? <button className="primary-btn" type="button" onClick={() => setQuestionIndex(questionIndex + 1)}>{t.onboarding.next} <span>→</span></button> : <button className="primary-btn" type="button" onClick={() => void createPlan()} disabled={saving}>{t.onboarding.buildPlan} <span>→</span></button>}</div>
           </div>}
 
