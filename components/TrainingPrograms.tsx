@@ -27,7 +27,7 @@ type Selection =
 
 export function TrainingPrograms({
   equipmentText, isGym, smartWorkouts, customPrograms, progress,
-  onStart, onSaveCustom, onDeleteCustom, smartExtra, smartFallback = false,
+  onStart, onSaveCustom, onDeleteCustom, onOpenActivityLog, smartExtra, smartFallback = false,
 }: {
   equipmentText: string;
   /** Profildeki ortam. Sayfadaki salon/ev seçimi kaldırıldı: kullanıcı bunu
@@ -41,6 +41,10 @@ export function TrainingPrograms({
   onStart: (workouts: AiWorkout[], key: string) => void;
   onSaveCustom: (program: CustomProgram) => void;
   onDeleteCustom: (id: string) => void;
+  /** Aktivite günlüğünü açar. Buton YALNIZ program listesinde durur: bir
+      programın içine girildiğinde ekran o antrenmana ait olmalı, koşu/yürüyüş
+      kaydı oraya kadar peşinden gelmemeli. */
+  onOpenActivityLog: () => void;
   /** Akıllı programın altında gösterilecek AI raporu / uyarlama kartı. */
   smartExtra?: React.ReactNode;
   /** Program AI'dan değil, yerel yedekten geldi. */
@@ -157,6 +161,9 @@ export function TrainingPrograms({
   // --- Program seçimi ---
   const freeSlot = nextFreeSlot(customPrograms);
   return <section className="programs" id="ready-programs">
+    {/* Spor ekle listenin en üstünde: koşu/yürüyüş kaydı en sık yapılan iş. */}
+    <button type="button" className="activity-open" onClick={onOpenActivityLog}><span className="activity-open-icon">🏃</span><span className="activity-open-text"><strong>{t.dashboard.activityTitle}</strong><small>{t.dashboard.activityBody}</small></span><span className="activity-open-cta">{t.dashboard.activityOpen} →</span></button>
+
     {/* Hazır programlar: dar ekranda alt alta, geniş ekranda yan yana. Bir
         dönem üstlerinde sekme anahtarı vardı; anahtar da kartlar da aynı üç
         adı gösterdiği için ekranda aynı şey iki kez duruyordu. Başlık şeridi

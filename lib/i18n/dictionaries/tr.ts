@@ -1095,7 +1095,6 @@ export const tr = {
     goalHint: "Profiline göre",
     environmentLabel: "Ortam",
     noEquipment: "Ekipmansız",
-    activityEyebrow: "AKTİVİTE GÜNLÜĞÜ",
     activityTitle: "Spor ekle",
     activityBody: "Koşu, yürüyüş, bisiklet ve program dışı sporlarını kaydet, geçmişini gör.",
     activityOpen: "Aç",

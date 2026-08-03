@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 
 const tracker = await readFile(new URL("../components/CalorieTracker.tsx", import.meta.url), "utf8");
 const app = await readFile(new URL("../components/FitAiApp.tsx", import.meta.url), "utf8");
+const training = await readFile(new URL("../components/TrainingPrograms.tsx", import.meta.url), "utf8");
 const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
 
 test("öğün ekleme alanı istenen sırada dizilir", () => {
@@ -55,17 +56,19 @@ test("sık yediklerin öğün ekleme panelinin altında", () => {
   assert.ok(frequent > panel, "sık yenenler formdan sonra gelmeli");
 });
 
-test("aktivite günlüğü antrenman sekmesinin en üstünde", () => {
-  const homeStart = app.indexOf('className="dashboard-head"');
-  const programs = app.indexOf("<TrainingPrograms");
-  const activity = app.indexOf('className="activity-open"');
-  assert.ok(activity > 0 && programs > 0 && activity < programs, "spor ekle programların üstünde olmalı");
-  const workout = app.slice(app.indexOf('activeView === "workout"'), homeStart);
-  assert.match(workout, /className="activity-open"/, "buton antrenman sekmesinde olmalı");
-  // Ana ekranda (mini seri + hızlı işlemler + hedef + enerji şeridi) kalmamalı.
-  const home = app.slice(homeStart, app.indexOf("</section>", homeStart));
-  assert.doesNotMatch(home, /className="activity-open"/, "ana ekrandan kaldırılmalı");
-  assert.equal(app.split('className="activity-open"').length - 1, 1, "tek kez render edilmeli");
+test("spor ekle antrenman sekmesinde, program listesinin en üstünde", () => {
+  // Buton program LİSTESİNDE durur: bir programın içine girildiğinde ekran o
+  // antrenmana aittir, koşu/yürüyüş kaydı oraya kadar peşinden gelmemeli.
+  const listStart = training.indexOf('return <section className="programs" id="ready-programs">\n    {/* Spor ekle');
+  assert.ok(listStart > 0, "buton program listesi dalında olmalı");
+  assert.equal(training.split('className="activity-open"').length - 1, 1, "tek kez render edilmeli");
+  assert.doesNotMatch(app, /className="activity-open"/, "buton artık FitAiApp'te değil");
+  assert.match(app, /onOpenActivityLog=\{\(\) => setActivityOpen\(true\)\}/);
+  // Başlık şeridi kaldırıldı; "Spor ekle" ve açıklaması aynen kalır.
+  const button = training.slice(training.indexOf('className="activity-open"'), training.indexOf("activity-open-cta"));
+  assert.doesNotMatch(button, /activityEyebrow/);
+  assert.match(button, /t\.dashboard\.activityTitle/);
+  assert.match(button, /t\.dashboard\.activityBody/);
 });
 
 test("aktivite kaplaması görünüm dallarının dışında kalır", () => {

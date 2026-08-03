@@ -1753,9 +1753,6 @@ export default function Home() {
               üstte "hazır programlar", altta ayrı bir "günün antrenmanı"
               listesi vardı; ikisi farklı hareketler gösterip aynı şeyi
               anlatıyor gibi duruyordu. Günün antrenmanı kaldırıldı. */}
-          {/* Aktivite günlüğü sekmenin EN ÜSTÜNDE: koşu/yürüyüş kaydı en sık
-              yapılan iş, programların altında kaydırma gerektiriyordu. */}
-          <button type="button" className="activity-open" onClick={() => setActivityOpen(true)}><span className="activity-open-icon">🏃</span><span className="activity-open-text"><span className="eyebrow">{t.dashboard.activityEyebrow}</span><strong>{t.dashboard.activityTitle}</strong><small>{t.dashboard.activityBody}</small></span><span className="activity-open-cta">{t.dashboard.activityOpen} →</span></button>
           {/* AI başarısız olursa (zaman aşımı, kota, ağ) smartWorkouts boş kalır
               ve kart "Önce profil testi" deyip kilitleniyordu — testi az önce
               bitirmiş kullanıcı hiç program alamıyordu. localPlan profile göre
@@ -1770,6 +1767,7 @@ export default function Home() {
             </>}
             equipmentText={equipmentText}
             isGym={gym === "Salon"}
+            onOpenActivityLog={() => setActivityOpen(true)}
             customPrograms={customPrograms}
             progress={programProgress}
             onStart={startProgram}

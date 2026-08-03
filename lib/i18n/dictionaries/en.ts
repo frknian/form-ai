@@ -1094,7 +1094,6 @@ export const en: typeof tr = {
     goalHint: "Based on your profile",
     environmentLabel: "Environment",
     noEquipment: "No equipment",
-    activityEyebrow: "ACTIVITY LOG",
     activityTitle: "Add a sport",
     activityBody: "Log runs, walks, cycling, and other sports outside your program, and see your history.",
     activityOpen: "Open",
