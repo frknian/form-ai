@@ -43,16 +43,26 @@ test("ölçü birimli ifadeler adet sayılmaz", () => {
   assert.equal(detectPieceCount("100 gram yoğurt"), null);
 });
 
-test("porsiyon referansı analiz edilen miktarın tamamıdır", () => {
-  assert.equal(referenceGrams("portion", 320, "tavuklu pilav"), 320);
+test("porsiyon referansı standart porsiyon ağırlığından gelir", () => {
+  // Yemek adı tabloda varsa standart kazanır: 1 porsiyon çorba, analiz
+  // kutusunda ne yazdığından bağımsız olarak 250 g'dır.
+  assert.equal(referenceGrams("portion", null, "mercimek çorbası"), 250);
+  assert.equal(referenceGrams("portion", 100, "mercimek çorbası"), 250);
+  assert.equal(referenceGrams("portion", null, "tavuklu pilav"), 150);
   assert.equal(referenceGrams("g", 320, "tavuklu pilav"), 1);
 });
 
-test("adet referansı sayıya bölünür, sayı yoksa tamamı tek adettir", () => {
-  // "3 yumurta = 180 g" analiz edildiyse 1 adet 60 g'dır.
-  assert.equal(referenceGrams("piece", 180, "3 yumurta"), 60);
-  assert.equal(referenceGrams("piece", 180, "yumurta"), 180);
-  assert.equal(referenceGrams("piece", null, "3 yumurta"), null);
+test("adet referansı standart adet ağırlığından gelir", () => {
+  assert.equal(referenceGrams("piece", null, "yumurta"), 50);
+  assert.equal(referenceGrams("piece", null, "3 yumurta"), 50);
+  assert.equal(referenceGrams("piece", null, "elma"), 150);
+  assert.equal(referenceGrams("piece", null, "2 dilim ekmek"), 25);
+});
+
+test("tabloda olmayan yemekte adet referansı analize düşer", () => {
+  // "3 kumpir = 900 g" analiz edildiyse 1 adet 300 g'dır.
+  assert.equal(referenceGrams("piece", 900, "3 kumpir"), 300);
+  assert.equal(referenceGrams("piece", 900, "kumpir"), 900);
 });
 
 test("birim değişince miktar karşılığına çevrilir", () => {
@@ -83,10 +93,9 @@ test("öğün alanları mobilde ızgarayı taşırmaz", async () => {
   assert.match(css, /\.ai-estimate-card strong[^{]*\{[^}]*overflow-wrap:anywhere/);
 });
 
-test("ev ölçüleri AI tahmini olmadan da gram üretir", async () => {
-  const { referenceGrams, needsAnalysis, toGrams } = await import("../lib/portion-unit.ts");
-  // Bir su bardağının hacmi yemekten yemeğe değişmez; porsiyon/adetten farklı
-  // olarak bunlar bir tahmine bağlı değildir.
+test("ev ölçüleri sabit gram karşılığı taşır", async () => {
+  const { referenceGrams, toGrams } = await import("../lib/portion-unit.ts");
+  // Bir su bardağının hacmi yemekten yemeğe değişmez.
   assert.equal(referenceGrams("waterGlass", null), 200);
   assert.equal(referenceGrams("teaGlass", null), 110);
   assert.equal(referenceGrams("mug", null), 250);
@@ -94,24 +103,39 @@ test("ev ölçüleri AI tahmini olmadan da gram üretir", async () => {
   assert.equal(referenceGrams("bowl", null), 250);
   assert.equal(referenceGrams("ml", null), 1);
   assert.equal(toGrams("2", "waterGlass", referenceGrams("waterGlass", null)), 400);
-
-  for (const unit of ["ml", "teaGlass", "waterGlass", "mug", "plate", "bowl"]) {
-    assert.equal(needsAnalysis(unit), false, `${unit} tahmine bağlı olmamalı`);
-  }
 });
 
-test("porsiyon ve adet hâlâ tahmin ister", async () => {
-  const { referenceGrams, needsAnalysis, toGrams } = await import("../lib/portion-unit.ts");
-  // Tahmin yokken uydurma bir ağırlıkla devam etmek sessizce yanlış kalori
-  // kaydederdi; bu yüzden null döner ve arayüz birimi kilitler.
-  assert.equal(referenceGrams("portion", null), null);
-  assert.equal(referenceGrams("piece", null), null);
-  assert.equal(toGrams("2", "portion", null), null);
-  assert.equal(needsAnalysis("portion"), true);
-  assert.equal(needsAnalysis("piece"), true);
-  // Tahmin varsa çalışırlar.
-  assert.equal(referenceGrams("portion", 320), 320);
-  assert.equal(referenceGrams("piece", 300, "3 yumurta"), 100);
+test("porsiyon ve adet artık tahmin istemez", async () => {
+  const { referenceGrams, toGrams, DEFAULT_PORTION_GRAMS, DEFAULT_PIECE_GRAMS } = await import("../lib/portion-unit.ts");
+  // Eskiden tahmin yokken null dönüyor ve arayüz birimi kilitliyordu.
+  // Artık tabloda karşılığı olmayan yemekte bile genel bir karşılık verilir.
+  assert.equal(referenceGrams("portion", null, "zerdeçallı kumpir"), DEFAULT_PORTION_GRAMS);
+  assert.equal(referenceGrams("piece", null, "kumpir"), DEFAULT_PIECE_GRAMS);
+  assert.equal(referenceGrams("portion", null, ""), DEFAULT_PORTION_GRAMS);
+  assert.equal(toGrams("2", "portion", referenceGrams("portion", null, "çorba")), 500);
+});
+
+test("standart tablo Türkçe eklerle ve tamlamanın ana ismiyle eşleşir", async () => {
+  const { standardPortionGrams, standardPieceGrams } = await import("../lib/portion-unit.ts");
+  // Ekler sona geldiği için kelime başından eşleşmek yeterlidir.
+  assert.equal(standardPortionGrams("çorbası"), 250);
+  assert.equal(standardPortionGrams("yoğurt"), 200);
+  // Türkçede ana isim sonda durur: mercimek çorbası bir çorbadır.
+  assert.equal(standardPortionGrams("mercimek çorbası"), 250);
+  assert.equal(standardPortionGrams("mercimek yemeği"), 200);
+  // Kelime ortasında aranmaz; yoksa "omlet" içindeki "et" eşleşirdi.
+  assert.equal(standardPortionGrams("omlet"), 150);
+  // Ünsüz yumuşaması: kök "ekmek" ama yemek adı "ekmeği" diye yazılır.
+  assert.equal(standardPortionGrams("tam buğday ekmeği"), 50);
+  assert.equal(standardPortionGrams("somon balığı"), 150, "bal değil balık eşleşmeli");
+  assert.equal(standardPieceGrams("2 dilim ekmeği"), 25);
+  // Uzun kalıntı ek değil, yeni bir köktür: "zeytinyağlı" bir zeytin porsiyonu
+  // değildir, sebze yemeği varsayılanına düşmeli.
+  assert.equal(standardPortionGrams("zeytinyağlı enginar"), null);
+  assert.equal(standardPortionGrams("bilinmeyen bir şey"), null);
+  // Porsiyon ve adet ayrı tablolardır: 1 porsiyon yumurta 2 adettir.
+  assert.equal(standardPortionGrams("yumurta"), 100);
+  assert.equal(standardPieceGrams("yumurta"), 50);
 });
 
 test("birim seçici mobilde kırpılmaz", async () => {
@@ -126,11 +150,31 @@ test("birim seçici mobilde kırpılmaz", async () => {
 });
 
 test("porsiyon ve adet gram/ml'nin yanında, ev ölçüleri ikinci katmanda", () => {
-  // Porsiyon ve adet ikinci gruptayken bardak/tabak arasında aranıyordu;
-  // artık gram/ml ile aynı grupta, AI tahmini gelene kadar kilitli kalırlar.
   assert.deepEqual(PRIMARY_PORTION_UNITS, ["g", "ml", "portion", "piece"]);
   assert.deepEqual(HOUSEHOLD_PORTION_UNITS, ["teaGlass", "waterGlass", "mug", "plate", "bowl"]);
   for (const unit of PRIMARY_PORTION_UNITS) assert.ok(!HOUSEHOLD_PORTION_UNITS.includes(unit), `${unit} iki grupta birden olmamalı`);
+});
+
+test("birim çipleri kilitli render edilmez", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const tsx = await readFile(new URL("../components/CalorieTracker.tsx", import.meta.url), "utf8");
+  const block = tsx.slice(tsx.indexOf("PRIMARY_PORTION_UNITS.map"), tsx.indexOf("portion-unit-household"));
+  assert.doesNotMatch(block, /disabled=/, "porsiyon ve adet artık kilitlenmemeli");
+  assert.doesNotMatch(tsx, /needsAnalysis/, "kilit mantığı tamamen kalkmalı");
+});
+
+test("dokunulmamış porsiyon alanı birim değişince 1 birime oturur", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const tsx = await readFile(new URL("../components/CalorieTracker.tsx", import.meta.url), "utf8");
+  const fn = tsx.slice(tsx.indexOf("function switchPortionUnit"), tsx.indexOf("function updateGrams"));
+  // Varsayılan 100 g, "0,4 porsiyon çorba" gibi anlamsız bir değere çevriliyordu.
+  assert.match(fn, /if \(!portionTouched && !aiEstimate\) \{/);
+  assert.match(fn, /setUnitAmount\("1"\)/);
+  assert.match(fn, /updateGrams\(String\(Math\.round\(reference\)\)\)/);
+  // Kullanıcının kendi girdiği ya da AI'ın analiz ettiği gramaj korunur.
+  assert.match(fn, /setUnitAmount\(fromGrams\(/);
+  assert.match(tsx, /setPortionTouched\(true\)/, "porsiyon alanına yazmak işaretlenmeli");
+  assert.match(tsx, /setPortionTouched\(false\)/, "kayıt sonrası sıfırlanmalı");
 });
 
 test("kalori takipçisinde iki ayrı birim grubu render edilir", async () => {
