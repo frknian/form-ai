@@ -1,26 +1,11 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
-import { summarizeAiNutrition, validateAiNutrition, validateAiTextNutrition } from "../lib/ai-nutrition-estimator.ts";
+import { validateAiTextNutrition } from "../lib/ai-nutrition-estimator.ts";
 import { calculatePortionNutrition, validateManualNutrition, valueForPortion } from "../lib/nutrition-calculation.ts";
 import { containsPromptInjection } from "../lib/nutrition-parser.ts";
 import { INPUT_METHODS, sourceForInputMethod, toCompatibleFoodEntryRow, validateNutritionLogInput } from "../lib/nutrition-log.ts";
 import { authorizedRequest, withAuthenticatedFetch, withSupabaseAuthEnv } from "./helpers/auth.mjs";
-
-const validAiNutrition = {
-  items: [{
-    name: "Mercimek çorbası",
-    grams: 250,
-    calories: 225,
-    protein: 12,
-    carbohydrates: 34,
-    fat: 5,
-    fiber: 8,
-    confidence: 0.78,
-    assumptions: ["Ev yapımı, orta yağlı tarif varsayıldı."],
-  }],
-  warnings: ["Tarife göre değerler değişebilir."],
-};
 
 const validAiTextNutrition = {
   name: "Mercimek çorbası",
@@ -48,24 +33,6 @@ test("100 gram ve ondalık porsiyon besin değerleri tek formülle hesaplanır",
 test("negatif, sıfır, NaN, Infinity ve aşırı porsiyonlar reddedilir", () => {
   for (const grams of [-1, 0, NaN, Infinity, 5001]) assert.throws(() => valueForPortion(100, grams), RangeError);
   assert.throws(() => valueForPortion(-1, 100), RangeError);
-});
-
-test("AI besin sonucu şemayla doğrulanır ve makrolar sunucuda toplanır", () => {
-  const validated = validateAiNutrition(validAiNutrition);
-  assert.ok(validated);
-  assert.deepEqual(summarizeAiNutrition(validated).totals, {
-    calories: 225,
-    protein: 12,
-    carbohydrates: 34,
-    fat: 5,
-    fiber: 8,
-  });
-});
-
-test("AI sonucu negatif, taşkın veya eksik değer içerirse reddedilir", () => {
-  assert.equal(validateAiNutrition({ ...validAiNutrition, items: [{ ...validAiNutrition.items[0], calories: -1 }] }), null);
-  assert.equal(validateAiNutrition({ ...validAiNutrition, items: [{ ...validAiNutrition.items[0], grams: 5001 }] }), null);
-  assert.equal(validateAiNutrition({ ...validAiNutrition, items: [{ ...validAiNutrition.items[0], name: "" }] }), null);
 });
 
 test("kompakt yazılı öğün sonucu kullanıcı gramajını korur", () => {
@@ -135,6 +102,10 @@ test("yemek adı ve gramaj AI ile kalori ve makrolara çevrilir", { concurrency:
       assert.equal(aiRequest.model, "kimi-k2.6");
       assert.equal(aiRequest.max_tokens, 500);
       assert.deepEqual(aiRequest.thinking, { type: "disabled" });
+      // Alan bilgisi kaynakta durmakla kalmayıp isteğe de binmeli.
+      const system = aiRequest.messages.find((message) => message.role === "system")?.content ?? "";
+      assert.match(system, /çiğ|pişmiş/i, "çiğ/pişmiş ağırlık kuralı system mesajında olmalı");
+      assert.match(system, /1 g yağ = 9 kcal/);
       return Response.json({ choices: [{ message: { role: "assistant", content: JSON.stringify(validAiTextNutrition) }, finish_reason: "stop" }], usage: {} });
     }
     throw new TypeError(`beklenmeyen ağ isteği: ${url}`);
@@ -166,12 +137,51 @@ test("yemek adı ve gramaj AI ile kalori ve makrolara çevrilir", { concurrency:
   }
 });
 
-test("kalori model yönlendirmesi metni K2'ye, fotoğrafı K3'e yollar", async () => {
+test("kalori tahmini ekonomik K2 modeline yönlendirilir", async () => {
   const source = await readFile(new URL("../lib/ai-nutrition-estimator.ts", import.meta.url), "utf8");
   assert.match(source, /AI_NUTRITION_TEXT_MODEL \|\| "kimi-k2\.6"/);
-  assert.match(source, /AI_NUTRITION_VISION_MODEL \|\| "kimi-k3"/);
   assert.match(source, /thinking: \{ type: "disabled" \}/);
   assert.match(source, /name alanını mutlaka doğal Türkçe yaz/);
+});
+
+test("kalori tahmini prompt'u çiğ/pişmiş ağırlık farkını öğretir", async () => {
+  // Tek başına %30-200 sapma yaratan en yaygın hata: kullanıcı tabaktakini
+  // tartar, model çiğ ağırlık varsayarsa pirinci üç katı kaydeder.
+  const source = await readFile(new URL("../lib/ai-nutrition-estimator.ts", import.meta.url), "utf8");
+  const prompt = source.slice(source.indexOf("const NUTRITION_SYSTEM_PROMPT"), source.indexOf("export async function estimateAiTextNutrition"));
+  assert.match(prompt, /su kaybeder/, "et pişerken ağırlık kaybı");
+  assert.match(prompt, /su emer/, "tahıl pişerken ağırlık artışı");
+  assert.match(prompt, /pişmiş kabul et/, "ibare yoksa tabaktaki hâli esas alınmalı");
+});
+
+test("kalori tahmini prompt'u makro katsayılarını ve sınırları taşır", async () => {
+  const source = await readFile(new URL("../lib/ai-nutrition-estimator.ts", import.meta.url), "utf8");
+  const prompt = source.slice(source.indexOf("const NUTRITION_SYSTEM_PROMPT"), source.indexOf("export async function estimateAiTextNutrition"));
+  // Atwater katsayıları: makrolar ile kalori birbirini tutmalı.
+  assert.match(prompt, /karbonhidrat = 4 kcal/);
+  assert.match(prompt, /protein = 4 kcal/);
+  assert.match(prompt, /yağ = 9 kcal/);
+  assert.match(prompt, /alkol = 7 kcal/);
+  // Pişirme yağı ve dışarıda yeme payı unutulmamalı.
+  assert.match(prompt, /zeytinyağı ~119 kcal/);
+  assert.match(prompt, /%15-25/);
+  // El ölçüleri tartı olmadığında porsiyonu okumaya yarar.
+  assert.match(prompt, /avuç içi/);
+  assert.match(prompt, /kart destesi/);
+  // TEF bir harcama kalemidir; yemeğin kalorisinden düşülmemeli.
+  assert.match(prompt, /termik etkisini \(TEF\)[\s\S]*DÜŞME/);
+  assert.match(prompt, /gramajı DEĞİŞTİRME/i);
+});
+
+test("öğün önerisi prompt'u enerji dengesini ve BMR sınırını bilir", async () => {
+  const source = await readFile(new URL("../app/api/nutrition/advice/route.ts", import.meta.url), "utf8");
+  const prompt = source.slice(source.indexOf("const ADVICE_SYSTEM_PROMPT"), source.indexOf("function bounded"));
+  assert.match(prompt, /kalori açığı/);
+  assert.match(prompt, /yağ olarak depolanır/);
+  // BMR altına inmek kas kaybı ve metabolik yavaşlama demektir.
+  assert.match(prompt, /BMR\) altına inmeyi ASLA teşvik/);
+  assert.match(prompt, /termik etki/i);
+  assert.match(source, /generateAiText\(\{ system: ADVICE_SYSTEM_PROMPT/, "system prompt çağrıya bağlanmalı");
 });
 
 test("gramaj verilmeden AI besin çağrısı yapılmaz", { concurrency: false }, async () => {

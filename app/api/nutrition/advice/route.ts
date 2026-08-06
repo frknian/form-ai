@@ -5,6 +5,31 @@ import { generateAiText, hasAiProvider } from "@/lib/ai-provider";
 
 export const runtime = "edge";
 
+/**
+ * Öğün önerisinin alan bilgisi. Yalnız modele gider, arayüzde gösterilmez.
+ *
+ * Öneri, kalan makroya bakıp besin sıralamaktan ibaret olmamalı: enerji
+ * dengesinin nasıl işlediğini ve nerede durulması gerektiğini bilmeli.
+ */
+const ADVICE_SYSTEM_PROMPT = `Sen bir beslenme ve kalori analizi uzmanısın.
+Kalori, vücudun hayati ve fiziksel tüm işlevleri için kullandığı enerji
+birimidir; kilo yönü alınan ve harcanan enerji arasındaki dengeyle belirlenir.
+Alınan harcanandan fazlaysa fazlalık yağ olarak depolanır, azsa (kalori açığı)
+vücut depodaki yağı kullanır, eşitse ağırlık sabit kalır.
+
+Öneriyi buna göre kur:
+- Günlük hedefin altındaki boşluğu ve eksik makroyu birlikte değerlendir.
+- Protein en yüksek termik etkiye sahiptir (%20-30; karbonhidrat %5-10, yağ
+  %0-3) ve doygunluğu en çok artıran makrodur. Doğal, az işlenmiş gıdaların
+  termik etkisi aynı kalorideki işlenmiş gıdalardan belirgin biçimde yüksektir;
+  eksik kapatılırken bunları öne çıkar.
+- Kalori açığı önerirken bazal metabolizmanın (BMR) altına inmeyi ASLA teşvik
+  etme; bu, kas kaybına ve metabolik yavaşlamaya yol açar. Günlük harcamanın
+  %60-75'ini BMR oluşturur.
+- Hedef aşılmışsa suçlayıcı olma; bir sonraki öğünü hafifletmeyi ya da hareketi
+  artırmayı sakin bir dille öner.
+- Tanı koyma, hastalık veya takviye tavsiyesi verme, kesin sağlık iddiası kurma.`;
+
 function bounded(value: unknown, maximum: number) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? Math.max(0, Math.min(maximum, parsed)) : 0;
@@ -47,7 +72,7 @@ export async function POST(request: Request) {
   const languageInstruction = locale === "en" ? "in English" : "Türkçe";
   const prompt = `Aşağıdaki anonim günlük beslenme özetine göre ${languageInstruction}, tıbbi olmayan ve tek paragraf halinde en fazla 65 kelimelik bir sonraki öğün önerisi yaz. Kesin sağlık iddiası üretme. Eksik makrolara odaklan ve 2-4 yaygın besin örneği ver. Kalori hedefini aşmayı teşvik etme.\n${JSON.stringify(input)}`;
   try {
-    const advice = await generateAiText({ prompt, temperature: 0.3, maxOutputTokens: 180, abortSignal: AbortSignal.timeout(15_000) });
+    const advice = await generateAiText({ system: ADVICE_SYSTEM_PROMPT, prompt, temperature: 0.3, maxOutputTokens: 180, abortSignal: AbortSignal.timeout(15_000) });
     if (advice.trim()) return Response.json({ advice: advice.trim(), source: "ai" });
   } catch {
     // Yerel yedeğe düşülür.
