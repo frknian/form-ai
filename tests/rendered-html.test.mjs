@@ -132,7 +132,6 @@ test("keeps email verification and Google authentication wired into profile crea
   assert.match(mobileRuntime, /com\.hedefit\.app:\/\/auth\/callback/);
   assert.match(mobileRuntime, /exchangeCodeForSession/);
   assert.match(mobileRuntime, /LocalNotifications\.schedule/);
-  assert.match(mobileRuntime, /Camera\.getPhoto/);
   assert.match(mobileConfig, /appId: "com\.hedefit\.app"/);
   assert.doesNotMatch(mobileConfig, /AI_API_KEY|SUPABASE_ANON_KEY/);
   assert.match(androidManifest, /android:scheme="com\.hedefit\.app"/);

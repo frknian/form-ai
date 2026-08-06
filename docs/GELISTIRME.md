@@ -20,11 +20,10 @@ npm run lint
 
 `.env.example` dosyasını `.env` olarak kopyalayıp doldurun:
 
-- `AI_API_KEY`, `AI_BASE_URL`, `AI_MODEL` — AI plan üretimi, sohbet, öğün fotoğrafı analizi ve haftalık değerlendirme. OpenAI-uyumlu herhangi bir sağlayıcıyla çalışır (OpenRouter, Together, Fireworks, kendi vLLM/Ollama sunucunuz). Anahtar yoksa uygulama her yerde güvenli bir yerel yedeğe düşer.
-- Görsel girdi (öğün fotoğrafı, plan fotoğrafı) gerektiği için `AI_MODEL` görsel destekli bir model olmalı; varsayılan `kimi-k3`, Moonshot AI'nin kendi API'si (`https://api.moonshot.ai/v1`) üzerinden native görsel destekler. OpenRouter/Together/Fireworks gibi başka bir sağlayıcıya geçmek için `.env.example`'daki örneğe bakın.
+- `AI_API_KEY`, `AI_BASE_URL`, `AI_MODEL` — AI plan üretimi, sohbet, yazılı besin tahmini ve haftalık değerlendirme. OpenAI-uyumlu herhangi bir sağlayıcıyla çalışır (OpenRouter, Together, Fireworks, kendi vLLM/Ollama sunucunuz). Anahtar yoksa uygulama her yerde güvenli bir yerel yedeğe düşer.
+- Görsel girdi (vücut analizi fotoğrafı) gerektiği için `AI_MODEL` görsel destekli bir model olmalı; varsayılan `kimi-k3`, Moonshot AI'nin kendi API'si (`https://api.moonshot.ai/v1`) üzerinden native görsel destekler. OpenRouter/Together/Fireworks gibi başka bir sağlayıcıya geçmek için `.env.example`'daki örneğe bakın.
 - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` — hesap ve veri katmanı. Tanımlı değilse giriş ekranı "yapılandırılmamış" durumunu gösterir.
 - `SUPABASE_SECRET_KEY` — yalnız sunucu tarafındaki hesap silme işlemi için; `NEXT_PUBLIC_` öneki eklemeyin.
-- `AI_VISION_ENABLED` — Kimi K3 dağıtımında görsel girdi kapalıysa `false`; fotoğraf akışı kullanıcıyı güvenli biçimde yazarak eklemeye yönlendirir.
 - `CAPACITOR_SERVER_URL` — Capacitor geliştirmesinde yerel sunucu adresi.
 
 ## Veritabanı kurulumu

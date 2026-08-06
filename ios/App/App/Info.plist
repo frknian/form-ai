@@ -36,9 +36,9 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Öğün ve isteğe bağlı vücut fotoğraflarını analiz etmek için kameraya erişim gerekir.</string>
+	<string>İsteğe bağlı vücut ve profil fotoğrafını çekebilmen için kameraya erişim gerekir.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Analiz etmek istediğin fotoğrafı seçebilmen için fotoğraf arşivine erişim gerekir.</string>
+	<string>Vücut analizi veya profil fotoğrafını seçebilmen için fotoğraf arşivine erişim gerekir.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

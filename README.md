@@ -24,8 +24,8 @@ Hedefit tersini yapar: ilk gün seni tanır, sonra **her antrenmandan sonra
 dinler**. Hareket zor geldiyse yükü düşürür, kolay geldiyse artırır, ağrı
 bildirdiğin bölgeyi programdan çıkarır.
 
-Yanında bir de beslenme tarafı var — yediğini fotoğrafını çekerek, barkodunu
-okutarak veya sadece yazarak ekleyebilirsin.
+Yanında bir de beslenme tarafı var — yediğini yazman yeterli, yapay zeka
+kalori ve makroları hesaplasın.
 
 ## Öne çıkanlar
 
@@ -45,8 +45,6 @@ Her hareketin nasıl yapıldığını gösteren yerel animasyon kareleri, kas gr
 ekipman filtreleri, Türkçe hareket ve kas adları.
 
 ### AI kalori takibi
-- **Fotoğraf** — tabağının fotoğrafını çek, yapay zeka yemeği tanısın, gramajı
-  ve makroları tahmin etsin
 - **Yazarak** — yemek adını ve tarttığın gramajı gir; yapay zeka porsiyonun
   kalori, protein, karbonhidrat, yağ ve lif değerlerini hesaplasın
 
@@ -71,7 +69,6 @@ Türkçe ve İngilizce · tüm verilerini tek JSON dosyası olarak indirme
 | Manuel öğün kaydı ve makro takibi | ✔ | ✔ |
 | Ölçümler, rekorlar, seri, takvim | ✔ | ✔ |
 | AI koç sohbeti | günde 5 mesaj | günde 20 mesaj |
-| Fotoğrafla öğün analizi | günde 1 fotoğraf | günde 10 fotoğraf |
 | Yazarak AI besin tahmini | günde 3 öğün | günde 20 öğün |
 | Planı AI ile yeniden düzenleme | ayda 1 | adil kullanım kapsamında |
 | Haftalık AI değerlendirmesi | örnek özet | tam kişisel analiz |
@@ -81,7 +78,6 @@ Premium: **₺89/ay** veya **₺799/yıl**.
 
 ## Gizliliğin
 
-- **Öğün fotoğrafların saklanmaz.** Yalnızca analiz sonucu (ad, gramaj, makrolar) kaydedilir.
 - **Konum toplanmaz.** Uygulamada GPS izni yok.
 - **Reklam yok.** Projede hiçbir reklam SDK'sı bulunmaz, verilerin reklam için kullanılmaz.
 - **Hesabın senin.** Uygulama içinden dondurabilir, tüm verini indirebilir, ilerlemeni

@@ -47,9 +47,9 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
 
-    <!-- Barkod tarayıcı (WebView getUserMedia) ve öğün fotoğrafı çekimi -->
+    <!-- Vücut analizi ve profil fotoğrafı için kamerayla çekim -->
     <uses-permission android:name="android.permission.CAMERA" />
-    <!-- Fotoğraf arşivinden öğün görseli seçme -->
+    <!-- Fotoğraf arşivinden görsel seçme -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
     <!-- Antrenman hatırlatmaları (Android 13+ zorunlu; olmadan bildirimler sessizce hiç görünmez) -->

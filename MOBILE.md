@@ -22,7 +22,6 @@ Google sağlayıcısı Supabase içinde etkin olmalı. Mobil OAuth, sistem taray
 
 ## Yerel özellikler
 
-- Öğün kamerası ve fotoğraf seçimi
 - Antrenman yerel bildirimleri
 - Android geri tuşu
 - Çevrimdışı bağlantı uyarısı

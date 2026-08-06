@@ -153,24 +153,3 @@ test("sınır altındayken sohbet yanıtı kullanım bilgisiyle birlikte döner"
     if (previousKey === undefined) delete process.env.AI_API_KEY; else process.env.AI_API_KEY = previousKey;
   }
 });
-
-test("fotoğraf analizi günlük sınıra ulaşınca AI'ya hiç gitmeden 429 döner", { concurrency: false }, async () => {
-  const previousKey = process.env.AI_API_KEY;
-  const previousFetch = globalThis.fetch;
-  const restoreAuthEnv = withSupabaseAuthEnv();
-  process.env.AI_API_KEY = "test-key";
-  globalThis.fetch = withRouteFetch({ allowed: false, currentCount: 5 });
-  const tinyPng = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
-  try {
-    const { POST } = await import(`../app/api/nutrition/analyze-photo/route.ts?test=${Date.now()}`);
-    const response = await POST(authorizedRequest("http://localhost/api/nutrition/analyze-photo", { method: "POST", body: JSON.stringify({ photoDataUrl: `data:image/png;base64,${tinyPng}` }) }));
-    assert.equal(response.status, 429);
-    const payload = await response.json();
-    assert.equal(payload.limitReached, true);
-    assert.equal(payload.feature, "photo");
-  } finally {
-    globalThis.fetch = previousFetch;
-    restoreAuthEnv();
-    if (previousKey === undefined) delete process.env.AI_API_KEY; else process.env.AI_API_KEY = previousKey;
-  }
-});
