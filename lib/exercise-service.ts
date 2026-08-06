@@ -106,19 +106,68 @@ const EQUIPMENT_TAG_SYNONYMS: Record<string, string[]> = {
 const BODYWEIGHT_TAGS = new Set(["body only", "", "other"]);
 
 /**
+ * Plan istemine giden hareket sayısının üst sınırı.
+ *
+ * ÖLÇÜM: katalog 873 harekete çıkınca salon profilinde istemin yalnız katalog
+ * kısmı ~31.400 token oluyor (106 hareketlik katalogda ~3.800'dü). Sağlayıcının
+ * modeli akıl yürüten bir model ve plan üretimi zaten 60 sn'lik pencerede zar
+ * zor tamamlanıyor; kataloğu sekiz katına çıkarmak üretimi o pencerenin dışına
+ * taşırdı. Sınır kütüphaneyi DEĞİL yalnız istemi bağlar: kullanıcı 873 hareketin
+ * tamamını uygulamada görmeye devam eder.
+ */
+const PROMPT_CATALOG_LIMIT = 240;
+
+function groupBy<T>(items: T[], key: (item: T) => string): T[][] {
+  const buckets = new Map<string, T[]>();
+  for (const item of items) {
+    const bucket = buckets.get(key(item));
+    if (bucket) bucket.push(item);
+    else buckets.set(key(item), [item]);
+  }
+  return [...buckets.values()];
+}
+
+/** Grupları sırayla dolaşarak tek listeye örer; baştaki grup listeyi kaplamaz. */
+function interleave<T>(groups: T[][]): T[] {
+  const woven: T[] = [];
+  const deepest = groups.reduce((longest, group) => Math.max(longest, group.length), 0);
+  for (let index = 0; index < deepest; index += 1) {
+    for (const group of groups) {
+      if (index < group.length) woven.push(group[index]);
+    }
+  }
+  return woven;
+}
+
+/**
+ * Kataloğu sınıra indirirken çeşitliliği korur.
+ *
+ * Düz `slice` alfabetik sıraya güvenir ve listeyi ilk kas grubuna boğardı; bu
+ * yüzden önce kas grubu, sonra her grubun içinde ekipman bazında sırayla seçim
+ * yapılır. Böylece sınır dolduğunda her kas grubu ve her ekipman türü listede
+ * temsil edilmiş olur.
+ */
+function balanceForPrompt(exercises: AIExerciseContext[], limit = PROMPT_CATALOG_LIMIT) {
+  if (exercises.length <= limit) return exercises;
+  const byMuscle = groupBy(exercises, (exercise) => exercise.primaryMuscles[0] || "other");
+  return interleave(byMuscle.map((group) => interleave(groupBy(group, (exercise) => exercise.equipment || "none")))).slice(0, limit);
+}
+
+/**
  * Plan istemine giden kataloğu kullanıcının GERÇEKTEN yapabileceklerine indirir.
  *
  * Ölçüldü: tam katalog istemi o kadar büyütüyordu ki üretim zaman aşımına
  * düşüyordu. Filtreleme hem istemi küçültür hem de plan kalitesini artırır —
- * model evdeki kullanıcıya lat pulldown öneremez.
+ * model evdeki kullanıcıya lat pulldown öneremez. Ekipman elemesinden sonra
+ * kalan liste ayrıca PROMPT_CATALOG_LIMIT ile sınırlanır.
  */
 export function getExercisesForProfile(isGym: boolean, equipmentText: string): AIExerciseContext[] {
   const owned = equipmentText.toLocaleLowerCase("tr-TR");
-  return getExercisesForAI().filter((exercise) => {
+  return balanceForPrompt(getExercisesForAI().filter((exercise) => {
     const tag = (exercise.equipment || "").toLocaleLowerCase("en-US");
     if (BODYWEIGHT_TAGS.has(tag)) return true;
     if (isGym) return true;
     const synonyms = EQUIPMENT_TAG_SYNONYMS[tag];
     return synonyms ? synonyms.some((word) => owned.includes(word)) : false;
-  });
+  }));
 }

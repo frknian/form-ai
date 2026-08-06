@@ -314,13 +314,41 @@ test("plan istemine yalnız yapılabilir hareketler gider", async () => {
   const { getExercisesForProfile } = await import("../lib/exercise-service.ts");
   const home = getExercisesForProfile(false, "Dambıl · Yoga matı");
   const gym = getExercisesForProfile(true, "Salon ekipmanı");
-  assert.ok(home.length > 0 && home.length < gym.length, `evde katalog daralmalı: ${home.length} / ${gym.length}`);
+  assert.ok(home.length > 0 && gym.length > 0);
   for (const exercise of home) {
     const tag = (exercise.equipment || "").toLowerCase();
     assert.ok(!["barbell", "cable", "machine"].includes(tag), `evdeki kataloğa salon aleti sızdı: ${exercise.name} (${tag})`);
   }
+  // Salon profili, evde elenen ekipmanları gerçekten görebilmeli; yoksa eleme
+  // "her yerde aynı listeyi ver"e dönüşmüş olurdu.
+  const gymTags = new Set(gym.map((exercise) => (exercise.equipment || "").toLowerCase()));
+  assert.ok(["barbell", "cable", "machine"].some((tag) => gymTags.has(tag)), "salon kataloğunda salon aleti yok");
   // Ekipmansız kullanıcıya yalnız vücut ağırlığı gider.
   const none = getExercisesForProfile(false, "Hiçbiri");
-  assert.ok(none.length > 0 && none.length < home.length);
+  assert.ok(none.length > 0);
+  for (const exercise of none) {
+    const tag = (exercise.equipment || "").toLowerCase();
+    assert.ok(["body only", "", "other"].includes(tag), `ekipmansız kataloğa alet sızdı: ${exercise.name} (${tag})`);
+  }
   assert.match(appSource, /getExercisesForProfile\(gym === "Salon", equipmentText\)/);
+});
+
+test("istem kataloğu sınırlıdır ama kas gruplarını temsil etmeyi sürdürür", async () => {
+  // Katalog 873 harekete çıktı. Tamamını isteme koymak salon profilinde yalnız
+  // katalog için ~31.400 token demekti ve akıl yürüten model 60 sn'lik üretim
+  // penceresine sığmıyordu. Sınır, hiçbir kas grubunu listeden düşürmemeli.
+  const { getExercisesForProfile, getAllExercises } = await import("../lib/exercise-service.ts");
+  const gym = getExercisesForProfile(true, "Salon ekipmanı");
+  assert.ok(gym.length <= 240, `istem kataloğu sınırı aşıldı: ${gym.length}`);
+  assert.ok(gym.length > 106, `istem kataloğu eski katalogdan geniş olmalı: ${gym.length}`);
+
+  const primaryMuscle = (exercise) => exercise.primaryMuscles[0] || "other";
+  const everyMuscle = new Set(getAllExercises().map(primaryMuscle));
+  const promptMuscles = new Set(gym.map(primaryMuscle));
+  for (const muscle of everyMuscle) {
+    assert.ok(promptMuscles.has(muscle), `kas grubu istem kataloğundan düştü: ${muscle}`);
+  }
+
+  // Kimlikler benzersiz kalmalı; model katalogdan id ile seçim yapıyor.
+  assert.equal(new Set(gym.map((exercise) => exercise.id)).size, gym.length);
 });

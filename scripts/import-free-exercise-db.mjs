@@ -8,21 +8,6 @@ const licenseUrl = "https://raw.githubusercontent.com/yuhonas/free-exercise-db/m
 const imageBaseUrl = "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises";
 const sourceArgument = process.argv.find((argument) => argument.startsWith("--source="))?.slice(9);
 
-const targetMuscles = [
-  ["chest", 10],
-  ["lats", 8],
-  ["middle back", 8],
-  ["shoulders", 10],
-  ["biceps", 10],
-  ["triceps", 10],
-  ["abdominals", 10],
-  ["quadriceps", 10],
-  ["hamstrings", 10],
-  ["glutes", 10],
-  ["calves", 10],
-];
-
-const preferredTerms = /push-up|press|fly|row|pull-up|pulldown|raise|curl|extension|dip|crunch|plank|squat|lunge|deadlift|bridge|calf|leg/i;
 const safeId = (value) => String(value || "").replace(/[^a-zA-Z0-9_-]/g, "");
 
 async function sourceData() {
@@ -32,19 +17,11 @@ async function sourceData() {
   return response.json();
 }
 
+// Kaynaktaki görseli olan tüm hareketleri al; kas grubuna göre seçici
+// filtreleme yapmıyoruz ki AI plan üretimi elindeki hareket çeşitliliğini
+// tam olarak kullanabilsin.
 function chooseExercises(source) {
-  const selected = [];
-  for (const [muscle, count] of targetMuscles) {
-    const matches = source
-      .filter((exercise) => Array.isArray(exercise.primaryMuscles) && exercise.primaryMuscles.includes(muscle) && Array.isArray(exercise.images) && exercise.images.length > 0)
-      .sort((a, b) => Number(preferredTerms.test(b.name || "")) - Number(preferredTerms.test(a.name || "")) || String(a.level).localeCompare(String(b.level)) || String(a.name).localeCompare(String(b.name)));
-    for (const exercise of matches) {
-      if (selected.some((item) => item.id === exercise.id)) continue;
-      selected.push(exercise);
-      if (selected.filter((item) => item.primaryMuscles?.includes(muscle)).length >= count) break;
-    }
-  }
-  return selected;
+  return source.filter((exercise) => Array.isArray(exercise.images) && exercise.images.length > 0);
 }
 
 async function downloadImage(sourcePath, localPath) {
