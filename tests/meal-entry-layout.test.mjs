@@ -48,6 +48,43 @@ test("alan dikey akışa alınır ve kural en sonda tanımlanır", () => {
   assert.match(css, /\.food-name-row \{ display:flex;/);
 });
 
+test("günün özeti sayfanın en üstünde, hedef paneli en altında", () => {
+  // Bu ekranın ilk sorusu "ne kadar kaldı". Özet formun altındayken kullanıcı
+  // öğün ekledikten sonra sonucu görmek için kaydırmak zorunda kalıyordu.
+  // Hedef DÜZENLEME paneli ise ayda bir dokunulan bir ayar, en sonda durur.
+  const at = (needle) => {
+    const index = tracker.indexOf(needle);
+    assert.ok(index > 0, `bulunamadı: ${needle}`);
+    return index;
+  };
+  const head = at('className="calorie-page-head"');
+  const hero = at('className="calorie-hero"');
+  const form = at('className="food-entry-panel"');
+  const log = at('className="food-log"');
+  const goals = at("<NutritionGoalsPanel");
+  assert.ok(head < hero, "tarih şeridi en üstte");
+  assert.ok(hero < form, "günün özeti formun üstünde olmalı");
+  assert.ok(form < log, "öğün günlüğü formun altında");
+  assert.ok(log < goals, "hedef paneli günlükten sonra, en sonda");
+});
+
+test("özet kartı kalanı halkada ve makroları çubukla gösterir", () => {
+  // "0/112g" metni tek başına ne kadar yol alındığını göstermiyordu.
+  const hero = tracker.slice(tracker.indexOf('className="calorie-hero"'), tracker.indexOf('className="food-entry-panel"'));
+  assert.match(hero, /--macro-progress/, "makrolar oransal çubuk taşımalı");
+  assert.match(hero, /calorie-progress/, "kalan kalori halkada");
+  assert.doesNotMatch(hero, /calorie-remaining/, "ayrı kalan sütunu halkaya taşındı");
+  assert.match(css, /\.macro-row span::after \{ content:""/, "çubuk için stil bulunmalı");
+});
+
+test("boş öğün grupları tek satıra iner", () => {
+  // Dördü birden "Henüz kayıt yok" derken ekranın 400 pikselini yiyordu.
+  const log = tracker.slice(tracker.indexOf('className="food-log"'));
+  assert.match(log, /group\.length \? "meal-group" : "meal-group empty"/);
+  assert.doesNotMatch(log, /empty-meal/, "ayrı boş satır bileşeni kaldırıldı");
+  assert.match(css, /\.meal-group\.empty \.meal-group-head \{[^}]*border-bottom:0/);
+});
+
 test("sık yediklerin öğün ekleme panelinin altında", () => {
   // Kısayol, formun üstünde durunca asıl işi aşağı itiyordu.
   const panel = tracker.indexOf('className="food-entry-panel"');

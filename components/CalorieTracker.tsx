@@ -1,16 +1,13 @@
 "use client";
 
-import { Camera, ChevronLeft, ChevronRight, ImagePlus, Plus, Sparkles, Trash2, Utensils } from "lucide-react";
-import Image from "next/image";
-import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
+import { ChevronLeft, ChevronRight, Plus, Sparkles, Trash2, Utensils } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { NutritionGoalsPanel } from "@/components/NutritionGoalsPanel";
 import { HydrationFasting } from "@/components/HydrationFasting";
 import { frequentMeals } from "@/lib/frequent-meals";
-import { HOUSEHOLD_PORTION_UNITS, PRIMARY_PORTION_UNITS, fromGrams, needsAnalysis, referenceGrams, toGrams, type PortionUnit } from "@/lib/portion-unit";
+import { HOUSEHOLD_PORTION_UNITS, PRIMARY_PORTION_UNITS, fromGrams, referenceGrams, toGrams, type PortionUnit } from "@/lib/portion-unit";
 import { emptyFoodNutrition, scaleFoodNutrition, type FoodMicronutrients, type FoodNutrition } from "@/lib/food-search";
 import { calculateNutritionGoal, calculateWeeklyWeightTrend, inferNutritionGoal, sanitizeNutritionGoal, type NutritionGoal, type NutritionGoalType, type WeightTrend } from "@/lib/nutrition-goals";
-import { clearCapturedFoodPhoto, clearPendingFoodPhoto, isNativeApp, listenForRestoredFoodPhoto, markPendingFoodPhoto, mobileImpact, readCapturedFoodPhoto, storeCapturedFoodPhoto, takeFoodPhoto, usePendingFoodPhoto } from "@/lib/mobile";
-import { MAX_PHOTO_CHARS, compressFoodPhoto } from "@/lib/photo-compress";
 import { createClient } from "@/lib/supabase/client";
 import { localDateKey } from "@/lib/streak";
 import { authorizedFetch } from "@/lib/api-client";
@@ -71,21 +68,18 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
   const [trendProgress, setTrendProgress] = useState<{ count: number; daysLeft: number } | null>(null);
   const [goalSaving, setGoalSaving] = useState(false);
   const [goalMessage, setGoalMessage] = useState("");
-  // Kamera dönüşünde süreç öldürülmüşse kullanıcı fotoğraf adımındaydı; oraya
-  // geri getiriyoruz. Elle bir yöntem seçilirse o kazanır.
-  const pendingFoodPhoto = usePendingFoodPhoto();
-  const [chosenMethod, setChosenMethod] = useState<"text" | "photo" | null>(null);
-  const activeMethod = chosenMethod ?? (pendingFoodPhoto ? "photo" : "text");
-  const setActiveMethod = setChosenMethod;
   const [meal, setMeal] = useState<Meal>("Atıştırmalık");
   const [foodName, setFoodName] = useState("");
   const [grams, setGrams] = useState("100");
   const [portionUnit, setPortionUnit] = useState<PortionUnit>("g");
-  // AI'ın analiz ettiği toplam gramaj. Porsiyon ve adet referansları bundan
-  // türetilir; bilinmeden bu birimler anlamlı bir gram üretemeyeceği için
-  // arayüzde de sunulmazlar.
+  // AI'ın analiz ettiği toplam gramaj. Standart porsiyon tablosunda karşılığı
+  // olmayan yemeklerde (ev usulü karışık tabaklar) porsiyon/adet referansı
+  // buradan türetilir.
   const [analysedGrams, setAnalysedGrams] = useState<number | null>(null);
   const [unitAmount, setUnitAmount] = useState("1");
+  // Kullanıcı porsiyon alanına kendi değerini girdi mi? Girmediyse birim
+  // değiştirmek dokunulmamış varsayılanı çevirmek yerine 1 birime oturur.
+  const [portionTouched, setPortionTouched] = useState(false);
   const [nutrition, setNutrition] = useState<FoodNutrition>(emptyFoodNutrition);
   const [aiEstimate, setAiEstimate] = useState<{ grams: number; items: string[]; confidence: "low" | "medium" | "high" } | null>(null);
   const [estimating, setEstimating] = useState(false);
@@ -94,11 +88,9 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
   const [mealAdviceLoading, setMealAdviceLoading] = useState(false);
   const [mealAdviceSource, setMealAdviceSource] = useState<"ai" | "fallback">("fallback");
   const [adviceRevision, setAdviceRevision] = useState(0);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dateOffset, setDateOffset] = useState(0);
   const [storageReady, setStorageReady] = useState(false);
-  const cameraInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -118,44 +110,6 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
     if (!storageReady) return;
     localStorage.setItem("fit-ai-calorie-entries", JSON.stringify(entries));
   }, [entries, storageReady]);
-
-  useEffect(() => () => {
-    if (photoPreview?.startsWith("blob:")) URL.revokeObjectURL(photoPreview);
-  }, [photoPreview]);
-
-  // --- Kamera dönüşünde süreç öldürülmüşse fotoğrafı kurtar ---------------
-  //
-  // Android, kamera öndeyken barındıran Activity'yi öldürebiliyor: WebView
-  // sıfırdan yükleniyor, takeFoodPhoto'nun sözü hiç çözülmüyor ve kullanıcı
-  // uygulamayı baştan açılmış buluyordu — çektiği fotoğraf kayboluyordu.
-  // Capacitor bu sonucu yeniden açılışta appRestoredResult ile bir kez
-  // yayınlar; aşağıdaki dinleyici onu yakalayıp analize sokar.
-  const analyzeRef = useRef<(photoDataUrl: string) => Promise<void>>(async () => undefined);
-  // Aynı kare hem appRestoredResult'tan hem depodan gelebilir; ikinci kez
-  // analiz etmek kullanıcının günlük fotoğraf hakkını boşa harcardı.
-  const analyzedPhoto = useRef("");
-  useEffect(() => listenForRestoredFoodPhoto((dataUrl) => {
-    // Yöntemi sabitle: işaret birazdan temizlenecek ve seçim ona bağlı
-    // kalsaydı kullanıcı analiz tam başlarken metin adımına geri atılırdı.
-    setChosenMethod("photo");
-    void analyzeRef.current(dataUrl);
-  }), []);
-
-  // Kaydedilmiş kareyi kaldığı yerden al.
-  //
-  // Kamera dönüşünde sayfa yeniden yüklenmiş (yerli uygulamada Activity
-  // öldürülmüş, mobil tarayıcıda sekme bellek baskısıyla tazelenmiş) olabilir.
-  // Kare, çekilir çekilmez depoya yazıldığı için burada hâlâ duruyordur:
-  // kullanıcıyı fotoğraf adımına getirir ve analizi kendiliğinden başlatırız.
-  // Eskiden yalnız appRestoredResult'a güveniliyordu; o olay gelmediğinde (ya
-  // da analiz isteği o an başarısız olduğunda) fotoğraf kayboluyordu.
-  useEffect(() => {
-    const stored = readCapturedFoodPhoto();
-    if (!stored || analyzedPhoto.current === stored) return;
-    setChosenMethod("photo");
-    setPhotoPreview(stored);
-    void analyzeRef.current(stored);
-  }, []);
 
   useEffect(() => {
     if (!userId) return;
@@ -305,15 +259,15 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
     // Ana ekranın kalori çemberi başka bir görünümde durur; öğün değişince
     // haber verilmezse eski sayıyı gösterir.
     window.dispatchEvent(new CustomEvent("fit-ai-nutrition-changed"));
-    setFoodName(""); setGrams("100"); setNutrition(emptyFoodNutrition()); setPhotoPreview(null); setAiEstimate(null);
-    setPortionUnit("g"); setAnalysedGrams(null); setUnitAmount("1");
+    setFoodName(""); setGrams("100"); setNutrition(emptyFoodNutrition()); setAiEstimate(null);
+    setPortionUnit("g"); setAnalysedGrams(null); setUnitAmount("1"); setPortionTouched(false);
   }
 
   async function submitManual() {
     if (isSubmitting || !foodName.trim()) { if (!foodName.trim()) setMessage(t.calorieTracker.fillNameAndCalories); return; }
     // Manuel kalori ve makro girişi kaldırıldı. Yazılı öğün, kaydedilmeden
     // önce mutlaka AI tarafından analiz edilir.
-    if (activeMethod === "text" && !aiEstimate) {
+    if (!aiEstimate) {
       await estimateFromText(true);
       return;
     }
@@ -324,7 +278,7 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
     }
     setIsSubmitting(true);
     try {
-      await addEntry({ name: foodName.trim(), meal, calories: nutrition.calories, protein: nutrition.protein, carbs: nutrition.carbs, fat: nutrition.fat, fiber: nutrition.fiber, grams: portionGrams, micros: nutrition.micros, source: activeMethod === "photo" ? "Fotoğraf" : "AI analizi", isEstimated: true });
+      await addEntry({ name: foodName.trim(), meal, calories: nutrition.calories, protein: nutrition.protein, carbs: nutrition.carbs, fat: nutrition.fat, fiber: nutrition.fiber, grams: portionGrams, micros: nutrition.micros, source: "AI analizi", isEstimated: true });
       setMessage(t.calorieTracker.entryAdded);
     } finally {
       setIsSubmitting(false);
@@ -397,91 +351,13 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
     }
   }
 
-  async function handlePhoto(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    if (!file) { clearPendingFoodPhoto(); return; }
-    setMessage(t.calorieTracker.analyzingPhoto);
-    // Kamera karesi 12 MP olabiliyor; küçültmeden ne yüklemek ne saklamak
-    // mantıklı. Küçültme başarısız olursa özgün kareyle devam edilir.
-    const compressed = await compressFoodPhoto(file);
-    const photoDataUrl = compressed ?? await new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onload = () => typeof reader.result === "string" ? resolve(reader.result) : reject(); reader.onerror = reject; reader.readAsDataURL(file); }).catch(() => "");
-    await analyzeFoodPhoto(photoDataUrl);
-  }
-
-  analyzeRef.current = (photoDataUrl: string) => analyzeFoodPhoto(photoDataUrl);
-
-  async function analyzeFoodPhoto(rawPhotoDataUrl: string, previewOverride?: string) {
-    if (!rawPhotoDataUrl) { setMessage(t.calorieTracker.photoUnreadable); return; }
-    // Yerli kamera ve kurtarılan kareler de buradan geçer: sunucu 7 MB üstü
-    // base64'ü reddediyor, localStorage kotası ise çok daha düşük.
-    const photoDataUrl = rawPhotoDataUrl.length > MAX_PHOTO_CHARS ? (await compressFoodPhoto(rawPhotoDataUrl)) ?? rawPhotoDataUrl : rawPhotoDataUrl;
-    const previewUrl = previewOverride ?? photoDataUrl;
-    analyzedPhoto.current = photoDataUrl;
-    // Fotoğraf çekildikten sonra ekran öğün ekleme alanına dönsün: kullanıcı
-    // kameradan çıkınca sayfanın neresinde kaldığını aramak zorunda kalmasın.
-    document.getElementById("food-entry-panel")?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
-    // Kare önce saklanır, sonra ağa çıkılır: istek yarıda kalsa da fotoğraf
-    // durur. Kamera dönüşünde sayfa yenilenirse kaldığı yerden devam eder.
-    storeCapturedFoodPhoto(photoDataUrl);
-    clearPendingFoodPhoto();
-    setPhotoPreview(previewUrl);
-    setMessage(t.calorieTracker.analyzingPhoto);
-    setEstimating(true);
-    const response = await authorizedFetch("/api/nutrition/analyze-photo", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ photoDataUrl }) })
-      .catch(() => null)
-      .finally(() => setEstimating(false));
-    const result = response ? await response.json().catch(() => ({})) as { error?: string; name?: string; itemNames?: string[]; grams?: number; calories?: number; protein?: number; carbs?: number; fat?: number; fiber?: number; confidence?: "low" | "medium" | "high"; needsManualNutrition?: boolean; warnings?: string[]; usage?: { used: number; limit: number } } : {};
-    // Başarısızlıkta kare SAKLI KALIR: kullanıcı "yeniden analiz et" ile aynı
-    // fotoğrafı tekrar gönderebilsin, yeniden çekmek zorunda kalmasın.
-    if (!response || !response.ok || !result.name) { setMessage(result.error || t.calorieTracker.photoAnalysisFailed); return; }
-    clearCapturedFoodPhoto();
-    // Makrolar porsiyonun tamamı için geldiği için gramajı da modelin tahminine
-    // eşitliyoruz; aksi halde 100 g varsayımı değerleri yanlış ölçeklerdi.
-    setFoodName(result.name);
-    setGrams(String(result.grams || 100));
-    setNutrition({ calories: result.calories || 0, protein: result.protein || 0, carbs: result.carbs || 0, fat: result.fat || 0, fiber: result.fiber || 0, micros: {} });
-    setAiEstimate({ grams: result.grams || 100, items: result.itemNames || [], confidence: result.confidence || "medium" });
-    setAnalysedGrams(Math.round(result.grams || 0) || null);
-    setUnitAmount("1");
-    const confidenceNotice = result.needsManualNutrition ? ` ${t.calorieTracker.photoLowConfidenceRetry}` : "";
-    const notes = `${confidenceNotice} ${(result.warnings || []).join(" ")}${result.usage ? ` ${t.calorieTracker.photoDailyUsage(result.usage.used, result.usage.limit)}` : ""}`.trim();
-
-    // Analiz biter bitmez günlüğe yazılır: kullanıcı fotoğrafı çektikten sonra
-    // ayrıca bir "ekle" düğmesi aramak zorunda kalmasın. Değerler beğenilmezse
-    // kayıt listeden silinip yeniden eklenebilir.
-    if ((result.calories || 0) > 0) {
-      setIsSubmitting(true);
-      try {
-        await addEntry({
-          name: result.name,
-          meal,
-          calories: result.calories || 0,
-          protein: result.protein || 0,
-          carbs: result.carbs || 0,
-          fat: result.fat || 0,
-          fiber: result.fiber || 0,
-          grams: Math.round(result.grams || 0) || 100,
-          micros: {},
-          source: "Fotoğraf",
-          isEstimated: true,
-        });
-      } finally {
-        setIsSubmitting(false);
-      }
-      setMessage(`${t.calorieTracker.entryAdded} ${notes}`.trim());
-      return;
-    }
-
-    const resultMessage = result.confidence === "low" ? t.calorieTracker.photoResultLowConfidence : t.calorieTracker.photoResultMessage;
-    setMessage(`${resultMessage} ${notes}`.trim());
-  }
-
   // Girdi seçili birimde okunur; iç matematik her zaman GRAM üzerinden yürür.
-  // Seçili birimin bir tanesinin kaç gram olduğu. Yemek adı da hesaba katılır:
-  // "3 yumurta" analiz edildiyse 1 adet, toplamın üçte biridir.
+  // Seçili birimin bir tanesinin kaç gram olduğu. Yemek adı belirleyicidir:
+  // "mercimek çorbası" için 1 porsiyon 250 g, "3 yumurta" için 1 adet 50 g.
   const unitGrams = referenceGrams(portionUnit, analysedGrams, foodName);
 
   function updatePortion(value: string) {
+    setPortionTouched(true);
     if (portionUnit === "g") { updateGrams(value); return; }
     setUnitAmount(value);
     const nextGrams = toGrams(value, portionUnit, unitGrams);
@@ -493,6 +369,15 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
     setPortionUnit(unit);
     if (unit === "g") return;
     const reference = referenceGrams(unit, analysedGrams, foodName);
+    // Kullanıcı henüz bir miktar girmediyse (ve ortada AI tahmini de yoksa)
+    // birim, standart karşılığıyla tek porsiyon olarak başlar. Aksi hâlde
+    // dokunulmamış 100 g varsayılanı "0,4 porsiyon çorba" gibi anlamsız bir
+    // değere çevriliyordu. Analiz edilmiş gramaj ise anlamlıdır, korunur.
+    if (!portionTouched && !aiEstimate) {
+      setUnitAmount("1");
+      updateGrams(String(Math.round(reference)));
+      return;
+    }
     setUnitAmount(fromGrams(Number(grams.replace(",", ".")) || 0, unit, reference) || "1");
   }
 
@@ -504,45 +389,6 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
       setNutrition((current) => scaleFoodNutrition(current, (next / previous) * 100));
       setAiEstimate((current) => current ? { ...current, grams: Math.round(next) } : current);
     }
-  }
-
-  async function chooseFoodPhoto() {
-    // Mobil tarayıcıda da işaret konur: kamera açıkken sekme bellek baskısıyla
-    // tazelenebiliyor ve kullanıcı ana ekranda uyanıyordu. İşaret sayesinde
-    // dönüşte doğrudan fotoğraf adımına gelir.
-    markPendingFoodPhoto();
-    if (!isNativeApp()) { cameraInput.current?.click(); return; }
-    try {
-      const photoDataUrl = await takeFoodPhoto();
-      if (photoDataUrl) { await mobileImpact(); await analyzeFoodPhoto(photoDataUrl); }
-      else clearPendingFoodPhoto();
-    } catch { clearPendingFoodPhoto(); setMessage(t.calorieTracker.cameraOrPhotoPermissionDenied); }
-  }
-
-  /** Aynı kareyi yeniden analize gönderir; fotoğraf yeniden çekilmez. */
-  async function retryPhotoAnalysis() {
-    const stored = readCapturedFoodPhoto();
-    if (!stored) { setMessage(t.calorieTracker.photoUnreadable); return; }
-    analyzedPhoto.current = "";
-    await analyzeFoodPhoto(stored, photoPreview || stored);
-  }
-
-  function selectMethod(method: "text" | "photo") {
-    // Elle bir yöntem seçmek bekleyen fotoğraf durumunu bitirir; aksi hâlde
-    // "yazarak ekle"ye geçen kullanıcı her açılışta fotoğraf adımına dönerdi.
-    clearPendingFoodPhoto();
-    clearCapturedFoodPhoto();
-    analyzedPhoto.current = "";
-    setActiveMethod(method);
-    setFoodName("");
-    setGrams("100");
-    setNutrition(emptyFoodNutrition());
-    setAiEstimate(null);
-    setPortionUnit("g");
-    setAnalysedGrams(null);
-    setUnitAmount("1");
-    setPhotoPreview(null);
-    setMessage("");
   }
 
   async function deleteEntry(entryId: string) {
@@ -564,85 +410,97 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
     setGoalMessage(error ? t.calorieTracker.goalUpdatedLocalNotSynced : t.calorieTracker.goalSaved);
   }
 
+  const macroBars = [
+    { key: "protein" as const, label: t.calorieTracker.macroProtein, value: totals.protein, target: nutritionGoal.proteinGrams },
+    { key: "carbs" as const, label: t.calorieTracker.macroCarbs, value: totals.carbs, target: nutritionGoal.carbsGrams },
+    { key: "fat" as const, label: t.calorieTracker.macroFat, value: totals.fat, target: nutritionGoal.fatGrams },
+  ];
+
   return <div className="calorie-tracker subview">
+    {/* Başlık şeridi tek satır: eskiden iki satırlık italik bir slogan ve
+        altında tekrar eden bir açıklama vardı, ilk ekranın 150 pikselini
+        yiyor ama hiçbir bilgi taşımıyordu. Açıklama, işe yaradığı yere —
+        öğün ekleme panelinin başına — taşındı. */}
     <div className="calorie-page-head">
-      <div><div className="eyebrow">{t.calorieTracker.eyebrow}</div><h1>{t.calorieTracker.heroTitle1}<br /><em>{t.calorieTracker.heroTitle2}</em></h1><p className="lead">{t.calorieTracker.lead}</p></div>
+      <div className="calorie-page-title"><div className="eyebrow">{t.calorieTracker.eyebrow}</div><h1>{t.calorieTracker.heroTitle1} <em>{t.calorieTracker.heroTitle2}</em></h1></div>
       <div className="date-switcher"><button type="button" aria-label={t.calorieTracker.previousDay} onClick={() => setDateOffset((day) => day - 1)}><ChevronLeft size={17} /></button><div><span>{dateOffset === 0 ? t.calorieTracker.today : t.calorieTracker.dailyLabel}</span><strong>{todayLabel(dateOffset, dateLocale)}</strong></div><button type="button" aria-label={t.calorieTracker.nextDay} disabled={dateOffset >= 0} onClick={() => setDateOffset((day) => Math.min(0, day + 1))}><ChevronRight size={17} /></button></div>
     </div>
 
-    {/* Öğün eklemek bu ekranın günlük işi; hedef paneli ise ayda bir
-        dokunulan bir ayar. Hedefler üstteyken kullanıcı her gün onu geçip
-        aşağı kaydırmak zorunda kalıyordu, bu yüzden sıra ters çevrildi. */}
+    {/* Günün özeti en üstte: bu ekranın ilk sorusu "ne kadar kaldı". Eskiden
+        formun altındaydı ve kullanıcı öğün ekledikten sonra sonucu görmek
+        için kaydırmak zorunda kalıyordu. Hedef DÜZENLEME paneli aşağıda
+        kalır; o ayda bir dokunulan bir ayar. */}
+    <section className="calorie-hero">
+      <div className={overBy ? "calorie-progress over" : "calorie-progress"} style={{ "--progress": `${progress}%` } as React.CSSProperties}>
+        <div><strong>{overBy ? `+${overBy}` : remaining}</strong><small>kcal</small><span>{overBy ? t.calorieTracker.overLabel : t.calorieTracker.remainingLabel}</span></div>
+      </div>
+      <div className="calorie-hero-copy">
+        <div className="calorie-hero-numbers">
+          <div><span>{t.calorieTracker.todayIntake}</span><strong>{totals.calories}<em>kcal</em></strong></div>
+          <div><span>{t.calorieTracker.dailyGoal}</span><strong>{nutritionGoal.calorieTarget}<em>kcal</em></strong></div>
+          <p className={overBy ? "calorie-hero-percent over" : "calorie-hero-percent"}>{t.calorieTracker.percentOfGoal(rawProgress)}</p>
+        </div>
+        <p>{overBy ? t.calorieTracker.overMessage(overBy) : remaining ? t.calorieTracker.remainingMessage(remaining) : t.calorieTracker.goalReached}</p>
+        {/* Makrolar artık çubuklu: "0/112g" metni tek başına ne kadar yol
+            alındığını göstermiyordu, kullanıcı oranı kafadan hesaplıyordu. */}
+        <div className="macro-row">
+          {macroBars.map((macro) => <span key={macro.key} style={{ "--macro-progress": `${Math.min(100, Math.round((macro.value / Math.max(1, macro.target)) * 100))}%` } as React.CSSProperties}>
+            <i className={macro.key} />
+            <small>{macro.label}</small>
+            <b>{macro.value}<em>/{macro.target}g</em></b>
+          </span>)}
+        </div>
+      </div>
+    </section>
 
     <section className="food-entry-panel" id="food-entry-panel">
-      <div className="section-title"><div><div className="eyebrow">{t.calorieTracker.addMealEyebrow}</div><h2>{t.calorieTracker.addMealTitle}</h2></div><span className="food-entry-note"><Sparkles size={14} /> {t.calorieTracker.quickAndPractical}</span></div>
-      <div className="food-methods">
-        <button type="button" className={activeMethod === "photo" ? "active" : ""} onClick={() => selectMethod("photo")}><Camera /><strong>{t.calorieTracker.takePhoto}</strong><small>{t.calorieTracker.takePhotoHint}</small></button>
-        <button type="button" className={activeMethod === "text" ? "active" : ""} onClick={() => selectMethod("text")}><Sparkles /><strong>{t.calorieTracker.typeToAdd}</strong><small>{t.calorieTracker.typeToAddHint}</small></button>
-      </div>
+      <div className="section-title"><div><div className="eyebrow">{t.calorieTracker.addMealEyebrow}</div><h2>{t.calorieTracker.addMealTitle}</h2><p className="section-lead">{t.calorieTracker.lead}</p></div><span className="food-entry-note"><Sparkles size={14} /> {t.calorieTracker.quickAndPractical}</span></div>
       <div className="entry-workspace">
         <label>{t.calorieTracker.mealLabel}<select value={meal} onChange={(event) => setMeal(event.target.value as Meal)}>{meals.map((option) => <option key={option} value={option}>{option}</option>)}</select></label>
-        {activeMethod === "photo" && <div className="method-content photo-food-content"><button type="button" className="food-photo-drop" onClick={() => void chooseFoodPhoto()}>{photoPreview ? <Image src={photoPreview} alt={t.calorieTracker.photoAlt} width={640} height={480} unoptimized /> : <><ImagePlus size={26} /><strong>{t.calorieTracker.photoDropPrompt1}</strong><span>{t.calorieTracker.photoDropPrompt2}</span></>}</button><input ref={cameraInput} className="sr-only" type="file" accept="image/*" capture="environment" onChange={handlePhoto} />{photoPreview && <div className="photo-actions">
-          {/* Analiz tamamlanmadıysa kare hâlâ saklıdır: kullanıcı aynı
-              fotoğrafı yeniden gönderebilsin, yeniden çekmek zorunda kalmasın. */}
-          {!aiEstimate && <button type="button" className="outline-btn" disabled={estimating} onClick={() => void retryPhotoAnalysis()}>{estimating ? t.calorieTracker.estimating : t.calorieTracker.retryPhotoAnalysis}</button>}
-          <button type="button" className="outline-btn" onClick={() => void chooseFoodPhoto()}>{t.calorieTracker.choosePhotoAgain}</button>
-        </div>}</div>}
-        {(activeMethod === "text" || photoPreview) && <>
-          {/* Sıra bilerek böyle: önce ne kadar yediğin (porsiyon), sonra ne
-              yediğin ve analiz, en sonda ekle. Eskiden besin adı en üstteydi ve
-              porsiyon araya sıkışıyordu. */}
-          <div className="manual-fields">
-            <label className="portion-field">{portionUnit === "g" ? t.calorieTracker.portionLabel : portionUnitLabel(t, portionUnit).toLocaleUpperCase("tr-TR")}
-              <input inputMode="decimal" value={portionUnit === "g" ? grams : unitAmount} onChange={(event) => updatePortion(event.target.value)} placeholder={portionUnit === "g" ? "100" : "1"} />
-              {/* Ev ölçüleri sabit gram karşılığı taşır, bu yüzden AI tahmini
-                  olmadan da seçilebilir. Porsiyon ve adet ise yemeğe özgüdür;
-                  tahmin yokken kilitli kalırlar, yoksa uydurma bir ağırlıkla
-                  sessizce yanlış kalori kaydedilirdi. */}
-              {/* Porsiyon ve adet artık gram/ml'nin yanında, aynı grupta:
-                  ikisi de AI tahminine bağlı kaldığı için tahmin gelene kadar
-                  kilitli kalırlar, ama artık ikinci sırada aranmıyorlar. */}
-              <span className="portion-unit-switch" role="group" aria-label={t.calorieTracker.portionUnitLabel}>
-                {PRIMARY_PORTION_UNITS.map((unit) => {
-                  const locked = needsAnalysis(unit) && analysedGrams === null;
-                  return <button
-                    key={unit}
-                    type="button"
-                    disabled={locked}
-                    title={locked ? t.calorieTracker.portionUnitNeedsAnalysis : undefined}
-                    aria-pressed={portionUnit === unit}
-                    className={portionUnit === unit ? "active" : ""}
-                    onClick={() => switchPortionUnit(unit)}
-                  >{portionUnitLabel(t, unit)}</button>;
-                })}
-              </span>
-              {/* Ev ölçüleri her zaman kullanılabilir: bir su bardağının hacmi
-                  yemekten yemeğe değişmez, AI tahmini gerekmez. Gram karşılığı
-                  metni kaldırıldı; çipler sade tutuldu. */}
-              <span className="portion-unit-switch portion-unit-household" role="group" aria-label={t.calorieTracker.portionUnitHouseholdLabel}>
-                {HOUSEHOLD_PORTION_UNITS.map((unit) => <button
-                  key={unit}
-                  type="button"
-                  aria-pressed={portionUnit === unit}
-                  className={portionUnit === unit ? "active" : ""}
-                  onClick={() => switchPortionUnit(unit)}
-                >{portionUnitLabel(t, unit)}</button>)}
-              </span>
-              {portionUnit !== "g" && unitGrams !== null && <small className="portion-unit-hint">{t.calorieTracker.portionUnitHint(portionUnitLabel(t, portionUnit), Math.round(unitGrams))}</small>}
-            </label>
-            {/* Besin adı ve "AI ile analiz et" yan yana: analiz doğrudan bu
-                alandaki metne uygulanır, ikisini ayırmak bağı koparıyordu. */}
-            <div className="food-name-row">
-              <label className="food-name">{t.calorieTracker.foodNameLabel}<input value={foodName} onChange={(event) => { setFoodName(event.target.value); setAiEstimate(null); setNutrition(emptyFoodNutrition()); }} placeholder={t.calorieTracker.foodNamePlaceholder} autoComplete="off" /></label>
-              {activeMethod === "text" && <button type="button" className="ai-estimate-btn" disabled={estimating || foodName.trim().length < 2} onClick={() => void estimateFromText()}><Sparkles size={14} /> {estimating ? t.calorieTracker.estimating : t.calorieTracker.estimateWithAi}</button>}
-            </div>
-            {aiEstimate && <div className={`ai-estimate-card ${aiEstimate.confidence}`}><span>{t.calorieTracker.aiEstimateLabel}</span><strong>{foodName}</strong><small>{t.calorieTracker.aiEstimateGrams(aiEstimate.grams)}</small><div className="ai-nutrition-values"><b>{nutrition.calories}<small>kcal</small></b><b>{nutrition.protein}<small>{t.calorieTracker.macroProtein} (g)</small></b><b>{nutrition.carbs}<small>{t.calorieTracker.macroCarbs} (g)</small></b><b>{nutrition.fat}<small>{t.calorieTracker.macroFat} (g)</small></b><b>{nutrition.fiber}<small>{t.calorieTracker.fieldFiber} (g)</small></b></div>{aiEstimate.items.length > 1 && <small>{aiEstimate.items.join(" · ")}</small>}<p>{aiEstimate.confidence === "low" ? t.calorieTracker.aiConfidenceLow : aiEstimate.confidence === "high" ? t.calorieTracker.aiConfidenceHigh : t.calorieTracker.aiConfidenceMedium}</p></div>}
-            <button type="button" className="primary-btn add-food" disabled={isSubmitting || estimating || (activeMethod === "photo" && !aiEstimate)} onClick={() => void submitManual()}><Plus size={16} /> {estimating ? t.calorieTracker.estimating : aiEstimate ? t.calorieTracker.addToLog : t.calorieTracker.analyzeAndAdd}</button>
+        {/* Sıra bilerek böyle: önce ne kadar yediğin (porsiyon), sonra ne
+            yediğin ve analiz, en sonda ekle. Eskiden besin adı en üstteydi ve
+            porsiyon araya sıkışıyordu. */}
+        <div className="manual-fields">
+          <label className="portion-field">{portionUnit === "g" ? t.calorieTracker.portionLabel : portionUnitLabel(t, portionUnit).toLocaleUpperCase("tr-TR")}
+            <input inputMode="decimal" value={portionUnit === "g" ? grams : unitAmount} onChange={(event) => updatePortion(event.target.value)} placeholder={portionUnit === "g" ? "100" : "1"} />
+            {/* Hiçbir birim kilitli değil: porsiyon ve adet, yemek adına uyan
+                standart ağırlıktan hesaplanır (referenceGrams). Eskiden ikisi
+                de AI tahmini gelene kadar disabled duruyordu ve kullanıcı
+                "1 porsiyon çorba" yazamıyordu. Kullanılan gram karşılığı
+                aşağıdaki ipucunda görünür; katılmıyorsa grama geçebilir. */}
+            <span className="portion-unit-switch" role="group" aria-label={t.calorieTracker.portionUnitLabel}>
+              {PRIMARY_PORTION_UNITS.map((unit) => <button
+                key={unit}
+                type="button"
+                aria-pressed={portionUnit === unit}
+                className={portionUnit === unit ? "active" : ""}
+                onClick={() => switchPortionUnit(unit)}
+              >{portionUnitLabel(t, unit)}</button>)}
+            </span>
+            {/* Ev ölçüleri her zaman kullanılabilir: bir su bardağının hacmi
+                yemekten yemeğe değişmez, AI tahmini gerekmez. Gram karşılığı
+                metni kaldırıldı; çipler sade tutuldu. */}
+            <span className="portion-unit-switch portion-unit-household" role="group" aria-label={t.calorieTracker.portionUnitHouseholdLabel}>
+              {HOUSEHOLD_PORTION_UNITS.map((unit) => <button
+                key={unit}
+                type="button"
+                aria-pressed={portionUnit === unit}
+                className={portionUnit === unit ? "active" : ""}
+                onClick={() => switchPortionUnit(unit)}
+              >{portionUnitLabel(t, unit)}</button>)}
+            </span>
+            {portionUnit !== "g" && <small className="portion-unit-hint">{t.calorieTracker.portionUnitHint(portionUnitLabel(t, portionUnit), Math.round(unitGrams))}</small>}
+          </label>
+          {/* Besin adı ve "AI ile analiz et" yan yana: analiz doğrudan bu
+              alandaki metne uygulanır, ikisini ayırmak bağı koparıyordu. */}
+          <div className="food-name-row">
+            <label className="food-name">{t.calorieTracker.foodNameLabel}<input value={foodName} onChange={(event) => { setFoodName(event.target.value); setAiEstimate(null); setNutrition(emptyFoodNutrition()); }} placeholder={t.calorieTracker.foodNamePlaceholder} autoComplete="off" /></label>
+            <button type="button" className="ai-estimate-btn" disabled={estimating || foodName.trim().length < 2} onClick={() => void estimateFromText()}><Sparkles size={14} /> {estimating ? t.calorieTracker.estimating : t.calorieTracker.estimateWithAi}</button>
           </div>
-        </>}
-        {/* Kamera dönüşünde süreç öldürüldüyse fotoğraf geri getirilirken
-            kullanıcı boş bir ekranla karşılaşmasın. */}
-        {(message || pendingFoodPhoto) && <p className="food-message">{message || t.calorieTracker.restoringPhoto}</p>}
+          {aiEstimate && <div className={`ai-estimate-card ${aiEstimate.confidence}`}><span>{t.calorieTracker.aiEstimateLabel}</span><strong>{foodName}</strong><small>{t.calorieTracker.aiEstimateGrams(aiEstimate.grams)}</small><div className="ai-nutrition-values"><b>{nutrition.calories}<small>kcal</small></b><b>{nutrition.protein}<small>{t.calorieTracker.macroProtein} (g)</small></b><b>{nutrition.carbs}<small>{t.calorieTracker.macroCarbs} (g)</small></b><b>{nutrition.fat}<small>{t.calorieTracker.macroFat} (g)</small></b><b>{nutrition.fiber}<small>{t.calorieTracker.fieldFiber} (g)</small></b></div>{aiEstimate.items.length > 1 && <small>{aiEstimate.items.join(" · ")}</small>}<p>{aiEstimate.confidence === "low" ? t.calorieTracker.aiConfidenceLow : aiEstimate.confidence === "high" ? t.calorieTracker.aiConfidenceHigh : t.calorieTracker.aiConfidenceMedium}</p></div>}
+          <button type="button" className="primary-btn add-food" disabled={isSubmitting || estimating} onClick={() => void submitManual()}><Plus size={16} /> {estimating ? t.calorieTracker.estimating : aiEstimate ? t.calorieTracker.addToLog : t.calorieTracker.analyzeAndAdd}</button>
+        </div>
+        {message && <p className="food-message">{message}</p>}
       </div>
     </section>
 
@@ -657,20 +515,36 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
       </button>)}</div>
     </section>}
 
-    <section className="calorie-hero">
-      <div className={overBy ? "calorie-progress over" : "calorie-progress"} style={{ "--progress": `${progress}%` } as React.CSSProperties}><div><small>{t.calorieTracker.todayIntake}</small><strong>{totals.calories}<em> kcal</em></strong><span>{t.calorieTracker.percentOfGoal(rawProgress)}</span></div></div>
-      <div className="calorie-hero-copy"><span>{t.calorieTracker.dailyGoal}</span><strong>{nutritionGoal.calorieTarget} kcal</strong><p>{overBy ? t.calorieTracker.overMessage(overBy) : remaining ? t.calorieTracker.remainingMessage(remaining) : t.calorieTracker.goalReached}</p><div className="macro-row"><span><i className="protein" />{t.calorieTracker.macroProtein} <b>{totals.protein}/{nutritionGoal.proteinGrams}g</b></span><span><i className="carbs" />{t.calorieTracker.macroCarbs} <b>{totals.carbs}/{nutritionGoal.carbsGrams}g</b></span><span><i className="fat" />{t.calorieTracker.macroFat} <b>{totals.fat}/{nutritionGoal.fatGrams}g</b></span></div></div>
-      <div className={overBy ? "calorie-remaining over" : "calorie-remaining"}><span>{overBy ? t.calorieTracker.overLabel : t.calorieTracker.remainingLabel}</span><strong>{overBy ? `+${overBy}` : remaining}</strong><small>kcal</small></div>
+    {/* Günün kaydı, hedef panelinden çok daha sık bakılan bir şey; bu yüzden
+        yukarıda. Boş öğün grupları da tek satıra indi: dördü birden
+        "Henüz kayıt yok" derken ekranın 400 pikselini boşa harcıyordu. */}
+    <section className="food-log">
+      <div className="section-title"><div><div className="eyebrow">{t.calorieTracker.dailySummaryEyebrow}</div><h2>{t.calorieTracker.yourMeals}</h2></div><span className="log-total"><Utensils size={14} /> {t.calorieTracker.recordCount(dailyEntries.length)}</span></div>
+      {meals.map((mealName) => {
+        const group = dailyEntries.filter((entry) => entry.meal === mealName);
+        const groupCalories = group.reduce((sum, entry) => sum + entry.calories, 0);
+        return <div className={group.length ? "meal-group" : "meal-group empty"} key={mealName}>
+          <div className="meal-group-head">
+            <strong><i aria-hidden="true">{mealName === "Kahvaltı" ? "☀" : mealName === "Öğle yemeği" ? "◒" : mealName === "Akşam yemeği" ? "◐" : "✦"}</i>{mealName}</strong>
+            <span>{group.length ? `${groupCalories} kcal` : t.calorieTracker.noRecordsYet}</span>
+          </div>
+          {group.map((entry) => <article className="food-log-item" key={entry.id}>
+            <div><strong>{entry.name}</strong><small>{entry.time} · {entry.source}</small><span>P {entry.protein}g · K {entry.carbs}g · Y {entry.fat}g</span></div>
+            <b>{entry.calories} <small>kcal</small></b>
+            <button type="button" aria-label={t.calorieTracker.deleteEntry(entry.name)} onClick={() => void deleteEntry(entry.id)}><Trash2 size={15} /></button>
+          </article>)}
+        </div>;
+      })}
     </section>
-
-    <NutritionGoalsPanel key={`${nutritionGoal.goalType}-${nutritionGoal.calorieTarget}-${nutritionGoal.proteinGrams}-${nutritionGoal.carbsGrams}-${nutritionGoal.fatGrams}`} goal={nutritionGoal} recommendedGoals={recommendedGoals} totals={totals} trend={weightTrend} trendProgress={trendProgress} saving={goalSaving} saveMessage={goalMessage} onSave={saveNutritionGoal} />
-
-    <HydrationFasting userId={userId} weightKg={weightKg} />
 
     <section className="meal-ai-advice" aria-labelledby="meal-ai-advice-title">
       <div className="meal-ai-icon" aria-hidden="true">✦</div><div><span>{t.calorieTracker.mealAdviceEyebrow}</span><h2 id="meal-ai-advice-title">{t.calorieTracker.mealAdviceTitle}</h2><p>{mealAdviceLoading ? t.calorieTracker.mealAdviceLoading : mealAdvice || t.calorieTracker.mealAdvicePreparing}</p><small>{mealAdviceSource === "ai" ? t.calorieTracker.mealAdviceAiNote : t.calorieTracker.mealAdviceFallbackNote} {t.calorieTracker.mealAdviceDisclaimer}</small></div><button type="button" disabled={mealAdviceLoading} onClick={() => setAdviceRevision((value) => value + 1)}>{mealAdviceLoading ? t.calorieTracker.refreshing : t.calorieTracker.refresh}</button>
     </section>
 
-    <section className="food-log"><div className="section-title"><div><div className="eyebrow">{t.calorieTracker.dailySummaryEyebrow}</div><h2>{t.calorieTracker.yourMeals}</h2></div><span className="log-total"><Utensils size={14} /> {t.calorieTracker.recordCount(dailyEntries.length)}</span></div>{meals.map((mealName) => { const group = dailyEntries.filter((entry) => entry.meal === mealName); const groupCalories = group.reduce((sum, entry) => sum + entry.calories, 0); return <div className="meal-group" key={mealName}><div className="meal-group-head"><strong>{mealName}</strong><span>{groupCalories} kcal</span></div>{group.length ? group.map((entry) => <article className="food-log-item" key={entry.id}><div className="food-icon">{entry.meal === "Kahvaltı" ? "☀" : entry.meal === "Öğle yemeği" ? "◒" : entry.meal === "Akşam yemeği" ? "◐" : "✦"}</div><div><strong>{entry.name}</strong><small>{entry.time} · {entry.source}</small><span>P {entry.protein}g · K {entry.carbs}g · Y {entry.fat}g</span></div><b>{entry.calories} <small>kcal</small></b><button type="button" aria-label={t.calorieTracker.deleteEntry(entry.name)} onClick={() => void deleteEntry(entry.id)}><Trash2 size={15} /></button></article>) : <p className="empty-meal">{t.calorieTracker.noRecordsYet}</p>}</div>; })}</section>
+    <HydrationFasting userId={userId} weightKg={weightKg} />
+
+    {/* Hedef paneli en sonda: ayda bir dokunulan bir ayar, günlük akışın
+        ortasında durunca her gün üzerinden kaydırılıyordu. */}
+    <NutritionGoalsPanel key={`${nutritionGoal.goalType}-${nutritionGoal.calorieTarget}-${nutritionGoal.proteinGrams}-${nutritionGoal.carbsGrams}-${nutritionGoal.fatGrams}`} goal={nutritionGoal} recommendedGoals={recommendedGoals} totals={totals} trend={weightTrend} trendProgress={trendProgress} saving={goalSaving} saveMessage={goalMessage} onSave={saveNutritionGoal} />
   </div>;
 }
