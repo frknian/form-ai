@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { checkAndConsumeUsage, usageLimitExceeded } from "../lib/usage-limits.ts";
+import { checkAndConsumeUsage, usageLimitExceeded, daysBetweenWeekStarts, lastAiWeeklyReviewWeekStart } from "../lib/usage-limits.ts";
 import { authorizedRequest, withAuthenticatedFetch, withSupabaseAuthEnv, TEST_TOKEN } from "./helpers/auth.mjs";
 
 function withUsageFetch({ isPremium = false, allowed = true, currentCount = 1 } = {}) {
@@ -23,7 +23,7 @@ test("ücretsiz kullanıcı için doğru günlük limit uygulanır", async () =>
     const request = authorizedRequest("http://localhost/x", { headers: { Authorization: `Bearer ${TEST_TOKEN}` } });
     const result = await checkAndConsumeUsage(request, "chat");
     assert.ok(!("error" in result));
-    assert.deepEqual(result, { allowed: true, used: 3, limit: 5 });
+    assert.deepEqual(result, { allowed: true, used: 3, limit: 5, isPremium: false });
   } finally {
     globalThis.fetch = previousFetch;
     restoreEnv();
@@ -38,7 +38,7 @@ test("ücretli kullanıcı için daha yüksek limit uygulanır", async () => {
     const request = authorizedRequest("http://localhost/x");
     const result = await checkAndConsumeUsage(request, "photo");
     assert.ok(!("error" in result));
-    assert.deepEqual(result, { allowed: true, used: 8, limit: 10 });
+    assert.deepEqual(result, { allowed: true, used: 8, limit: 10, isPremium: true });
   } finally {
     globalThis.fetch = previousFetch;
     restoreEnv();
@@ -64,7 +64,7 @@ test("eski veritabanında yazılı besin sayacı geçici olarak chat sayacına d
   try {
     const result = await checkAndConsumeUsage(authorizedRequest("http://localhost/x"), "text_nutrition");
     assert.deepEqual(requestedFeatures, ["text_nutrition", "chat"]);
-    assert.deepEqual(result, { allowed: true, used: 2, limit: 3 });
+    assert.deepEqual(result, { allowed: true, used: 2, limit: 3, isPremium: false });
   } finally {
     globalThis.fetch = previousFetch;
     restoreEnv();
@@ -99,7 +99,7 @@ test("haftalık AI değerlendirme ücretsiz kullanıcı için düşük limitle s
     const request = authorizedRequest("http://localhost/x");
     const result = await checkAndConsumeUsage(request, "weekly_review");
     assert.ok(!("error" in result));
-    assert.deepEqual(result, { allowed: false, used: 1, limit: 1 });
+    assert.deepEqual(result, { allowed: false, used: 1, limit: 1, isPremium: false });
   } finally {
     globalThis.fetch = previousFetch;
     restoreEnv();
@@ -114,7 +114,29 @@ test("AI beslenme önerisi ücretli kullanıcı için daha yüksek limit uygular
     const request = authorizedRequest("http://localhost/x");
     const result = await checkAndConsumeUsage(request, "nutrition_advice");
     assert.ok(!("error" in result));
-    assert.deepEqual(result, { allowed: true, used: 4, limit: 20 });
+    assert.deepEqual(result, { allowed: true, used: 4, limit: 20, isPremium: true });
+  } finally {
+    globalThis.fetch = previousFetch;
+    restoreEnv();
+  }
+});
+
+test("iki hafta başlangıcı arasındaki gün farkı doğru hesaplanır", () => {
+  assert.equal(daysBetweenWeekStarts("2026-07-06", "2026-07-13"), 7);
+  assert.equal(daysBetweenWeekStarts("2026-07-13", "2026-07-06"), 7);
+  assert.equal(daysBetweenWeekStarts("2026-07-06", "2026-07-20"), 14);
+});
+
+test("en son AI kaynaklı haftalık değerlendirmenin hafta başlangıcı sorgulanır", async () => {
+  const restoreEnv = withSupabaseAuthEnv();
+  const previousFetch = globalThis.fetch;
+  globalThis.fetch = withAuthenticatedFetch((url) => {
+    if (String(url).includes("/rest/v1/weekly_ai_reviews")) return Response.json([{ week_start: "2026-07-13" }]);
+    throw new TypeError(`beklenmeyen ağ isteği: ${url}`);
+  });
+  try {
+    const result = await lastAiWeeklyReviewWeekStart(authorizedRequest("http://localhost/x"));
+    assert.equal(result, "2026-07-13");
   } finally {
     globalThis.fetch = previousFetch;
     restoreEnv();

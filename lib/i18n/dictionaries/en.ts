@@ -1370,13 +1370,13 @@ export const en: typeof tr = {
     freeLimits: {
       chat: "5/day",
       nutritionText: "3/day",
-      weeklyReview: "1/day",
+      weeklyReview: "Every 2 weeks",
       nutritionAdvice: "5/day",
     },
     premiumLimits: {
       chat: "20/day",
       nutritionText: "20/day",
-      weeklyReview: "3/day",
+      weeklyReview: "Every week",
       nutritionAdvice: "20/day",
     },
     ctaUpgrade: "Upgrade to Premium",

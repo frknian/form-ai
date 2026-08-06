@@ -9,7 +9,7 @@ const DAILY_LIMITS = {
   premium: { chat: 20, photo: 10, text_nutrition: 20, weekly_review: 3, nutrition_advice: 20 },
 } as const;
 
-export type UsageCheckResult = { allowed: boolean; used: number; limit: number };
+export type UsageCheckResult = { allowed: boolean; used: number; limit: number; isPremium: boolean };
 
 /**
  * Günlük kullanım sınırını atomik biçimde kontrol eder ve izin varsa sayacı
@@ -50,13 +50,48 @@ export async function checkAndConsumeUsage(request: Request, feature: UsageFeatu
   if (feature === "text_nutrition" && error && isLegacyTextNutritionCounter(error)) {
     ({ data, error } = await client.rpc("increment_usage_counter", { p_feature: "chat", p_limit: limit }).single());
   }
-  if (error && isMissingInfrastructure(error)) return unlimited(feature, "increment_usage_counter");
+  if (error && isMissingInfrastructure(error)) return unlimited(feature, "increment_usage_counter", isPremium);
   if (error || !data) {
     console.error("[usage-limits] rpc failed", error?.code);
     return { error: Response.json({ error: "Kullanım sınırı kontrol edilemedi." }, { status: 500 }) };
   }
   const result = data as { allowed: boolean; current_count: number };
-  return { allowed: result.allowed, used: result.current_count, limit };
+  return { allowed: result.allowed, used: result.current_count, limit, isPremium };
+}
+
+/**
+ * Ücretsiz kullanıcılarda haftalık AI değerlendirmesi 2 haftada bir sunulur
+ * (bkz. weekly_ai_reviews — arşiv istemci tarafında yazılır). Kullanıcının
+ * en son AI kaynaklı değerlendirmesinin hafta başlangıcını döndürür; hiç
+ * yoksa veya sorgu başarısız olursa null döner (kısıtlama uygulanmaz, ilk
+ * değerlendirme her zaman serbesttir).
+ */
+export async function lastAiWeeklyReviewWeekStart(request: Request): Promise<string | null> {
+  const url = normalizeSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL);
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const token = bearerToken(request);
+  if (!url || !anonKey || !token) return null;
+
+  const client = createClient(url, anonKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: { headers: { Authorization: `Bearer ${token}` } },
+  });
+
+  const { data, error } = await client
+    .from("weekly_ai_reviews")
+    .select("week_start")
+    .eq("source", "ai")
+    .order("week_start", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error || !data) return null;
+  return (data as { week_start: string }).week_start;
+}
+
+/** İki hafta başlangıcı (YYYY-MM-DD) arasındaki gün farkı. */
+export function daysBetweenWeekStarts(a: string, b: string): number {
+  const diff = Math.abs(new Date(`${a}T00:00:00Z`).getTime() - new Date(`${b}T00:00:00Z`).getTime());
+  return Math.round(diff / 86_400_000);
 }
 
 // db/migrations/20260726_usage_limits.sql henüz uygulanmamışsa sütun/fonksiyon
@@ -81,9 +116,9 @@ function isLegacyTextNutritionCounter(error: { code?: string | null; message?: s
   return /invalid feature|usage_counters_feature_check/i.test(`${error.message || ""} ${error.details || ""}`);
 }
 
-function unlimited(feature: UsageFeature, missing: string): UsageCheckResult {
+function unlimited(feature: UsageFeature, missing: string, isPremium = false): UsageCheckResult {
   console.warn(`[usage-limits] ${missing} bulunamadı; kullanım sınırı uygulanmıyor. db/migrations/20260726_usage_limits.sql çalıştırılmalı.`);
-  return { allowed: true, used: 0, limit: Number.POSITIVE_INFINITY };
+  return { allowed: true, used: 0, limit: Number.POSITIVE_INFINITY, isPremium };
 }
 
 export function usageLimitExceeded(feature: UsageFeature, used: number, limit: number) {

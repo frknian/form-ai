@@ -3,7 +3,7 @@ import { generateAiObject, hasAiProvider, aiModelId } from "../../../lib/ai-prov
 import { enforceWeeklySafety, hasEnoughWeeklyData, localWeeklyReview, validateWeeklyReview, validateWeeklySummary, type WeeklyReview } from "../../../lib/weekly-review.ts";
 import { authenticateRequest } from "../../../lib/api-auth.ts";
 import { rateLimit, tooManyRequests } from "../../../lib/rate-limit.ts";
-import { checkAndConsumeUsage } from "../../../lib/usage-limits.ts";
+import { checkAndConsumeUsage, daysBetweenWeekStarts, lastAiWeeklyReviewWeekStart } from "../../../lib/usage-limits.ts";
 import { tr } from "../../../lib/i18n/dictionaries/tr.ts";
 import { en } from "../../../lib/i18n/dictionaries/en.ts";
 
@@ -52,6 +52,16 @@ export async function POST(request: Request) {
   // düşülür — tıpkı AI sağlayıcısı yokken yapıldığı gibi.
   const usage = await checkAndConsumeUsage(request, "weekly_review");
   if ("error" in usage || !usage.allowed) return Response.json({ review: fallback, source: "local", reason: "Günlük AI değerlendirme sınırına ulaşıldığı için güvenli yerel değerlendirme kullanıldı." });
+
+  // Ücretsiz planda AI değerlendirme 2 haftada bir sunulur; aradaki
+  // haftalarda sessizce yerel değerlendirmeye düşülür. Premium bu
+  // kısıtlamaya tabi değildir.
+  if (!usage.isPremium) {
+    const lastAiWeek = await lastAiWeeklyReviewWeekStart(request);
+    if (lastAiWeek && daysBetweenWeekStarts(lastAiWeek, safeSummary.weekStart) < 14) {
+      return Response.json({ review: fallback, source: "local", reason: "Ücretsiz planda haftalık AI değerlendirme 2 haftada bir sunulur." });
+    }
+  }
 
   const outputLanguageInstruction = locale === "en"
     ? "- Output must be written entirely in English, short, concrete and supportive."

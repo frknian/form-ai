@@ -85,6 +85,80 @@ test("günlük AI değerlendirme sınırı dolunca AI'ya gitmeden yerel değerle
   }
 });
 
+function withWeeklyReviewFetch({ isPremium, lastAiWeekStart, generated }) {
+  return withAuthenticatedFetch((url) => {
+    if (String(url).includes("/rest/v1/profiles")) return Response.json({ is_premium: isPremium });
+    if (String(url).includes("/rpc/increment_usage_counter")) return Response.json({ allowed: true, current_count: 1 });
+    if (String(url).includes("/rest/v1/weekly_ai_reviews")) return Response.json(lastAiWeekStart ? [{ week_start: lastAiWeekStart }] : []);
+    if (String(url).includes("/chat/completions")) return Response.json({ choices: [{ message: { role: "assistant", content: JSON.stringify(generated) } }] });
+    throw new TypeError(`beklenmeyen ağ isteği: ${url}`);
+  });
+}
+
+const generatedReview = {
+  headline: "İyi bir hafta", summary: "Özet.", positives: ["A"], cautions: ["B"], recommendations: ["C", "D"], safetyNote: "Güvenlik notu.",
+};
+
+test("ücretsiz kullanıcıda son 14 gün içinde AI değerlendirme alındıysa yerele düşülür", { concurrency: false }, async () => {
+  const previousKey = process.env.AI_API_KEY;
+  const previousFetch = globalThis.fetch;
+  const restoreAuthEnv = withSupabaseAuthEnv();
+  process.env.AI_API_KEY = "test-key";
+  // baseSummary.weekStart 2026-07-20; son AI haftası 2026-07-13 → 7 gün önce.
+  globalThis.fetch = withWeeklyReviewFetch({ isPremium: false, lastAiWeekStart: "2026-07-13", generated: generatedReview });
+  try {
+    const { POST } = await import(`../app/api/weekly-review/route.ts?test=${Date.now()}`);
+    const response = await POST(authorizedRequest("http://localhost/api/weekly-review", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ summary: baseSummary }) }));
+    const payload = await response.json();
+    assert.equal(response.status, 200);
+    assert.equal(payload.source, "local");
+  } finally {
+    globalThis.fetch = previousFetch;
+    restoreAuthEnv();
+    if (previousKey === undefined) delete process.env.AI_API_KEY; else process.env.AI_API_KEY = previousKey;
+  }
+});
+
+test("ücretsiz kullanıcıda 14 günden eski AI değerlendirmesi varsa yeni AI değerlendirme üretilir", { concurrency: false }, async () => {
+  const previousKey = process.env.AI_API_KEY;
+  const previousFetch = globalThis.fetch;
+  const restoreAuthEnv = withSupabaseAuthEnv();
+  process.env.AI_API_KEY = "test-key";
+  // 2026-06-29 → 2026-07-20'ye 21 gün, sınırın (14 gün) üzerinde.
+  globalThis.fetch = withWeeklyReviewFetch({ isPremium: false, lastAiWeekStart: "2026-06-29", generated: generatedReview });
+  try {
+    const { POST } = await import(`../app/api/weekly-review/route.ts?test=${Date.now()}`);
+    const response = await POST(authorizedRequest("http://localhost/api/weekly-review", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ summary: baseSummary }) }));
+    const payload = await response.json();
+    assert.equal(response.status, 200);
+    assert.equal(payload.source, "ai");
+  } finally {
+    globalThis.fetch = previousFetch;
+    restoreAuthEnv();
+    if (previousKey === undefined) delete process.env.AI_API_KEY; else process.env.AI_API_KEY = previousKey;
+  }
+});
+
+test("premium kullanıcıda 2 haftalık kısıtlama uygulanmaz", { concurrency: false }, async () => {
+  const previousKey = process.env.AI_API_KEY;
+  const previousFetch = globalThis.fetch;
+  const restoreAuthEnv = withSupabaseAuthEnv();
+  process.env.AI_API_KEY = "test-key";
+  // Son AI haftası bir hafta önce olmasına rağmen premium olduğu için kısıtlanmaz.
+  globalThis.fetch = withWeeklyReviewFetch({ isPremium: true, lastAiWeekStart: "2026-07-13", generated: generatedReview });
+  try {
+    const { POST } = await import(`../app/api/weekly-review/route.ts?test=${Date.now()}`);
+    const response = await POST(authorizedRequest("http://localhost/api/weekly-review", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ summary: baseSummary }) }));
+    const payload = await response.json();
+    assert.equal(response.status, 200);
+    assert.equal(payload.source, "ai");
+  } finally {
+    globalThis.fetch = previousFetch;
+    restoreAuthEnv();
+    if (previousKey === undefined) delete process.env.AI_API_KEY; else process.env.AI_API_KEY = previousKey;
+  }
+});
+
 test("kimliği doğrulanmamış haftalık değerlendirme isteği reddedilir", async () => {
   const restoreAuthEnv = withSupabaseAuthEnv();
   try {

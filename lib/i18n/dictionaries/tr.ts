@@ -1373,13 +1373,13 @@ export const tr = {
     freeLimits: {
       chat: "5/gün",
       nutritionText: "3/gün",
-      weeklyReview: "1/gün",
+      weeklyReview: "2 haftada 1",
       nutritionAdvice: "5/gün",
     },
     premiumLimits: {
       chat: "20/gün",
       nutritionText: "20/gün",
-      weeklyReview: "3/gün",
+      weeklyReview: "Her hafta",
       nutritionAdvice: "20/gün",
     },
     ctaUpgrade: "Premium'a Geç",
