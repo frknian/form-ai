@@ -3,6 +3,7 @@ import { generateAiObject, hasAiProvider, aiModelId } from "../../../lib/ai-prov
 import { enforceWeeklySafety, hasEnoughWeeklyData, localWeeklyReview, validateWeeklyReview, validateWeeklySummary, type WeeklyReview } from "../../../lib/weekly-review.ts";
 import { authenticateRequest } from "../../../lib/api-auth.ts";
 import { rateLimit, tooManyRequests } from "../../../lib/rate-limit.ts";
+import { checkAndConsumeUsage } from "../../../lib/usage-limits.ts";
 import { tr } from "../../../lib/i18n/dictionaries/tr.ts";
 import { en } from "../../../lib/i18n/dictionaries/en.ts";
 
@@ -44,6 +45,13 @@ export async function POST(request: Request) {
 
   const fallback = enforceWeeklySafety(localWeeklyReview(safeSummary, dictionary, locale), safeSummary, dictionary);
   if (!hasAiProvider()) return Response.json({ review: fallback, source: "local", reason: "AI yapılandırılmadığı için güvenli yerel değerlendirme kullanıldı." });
+
+  // Ücretsiz kullanıcılarda AI değerlendirme günlük sınırlıdır; sınır
+  // dolduğunda hata döndürmek yerine (bu istek arka planda otomatik atılır,
+  // kullanıcı doğrudan tetiklemez) sessizce güvenli yerel değerlendirmeye
+  // düşülür — tıpkı AI sağlayıcısı yokken yapıldığı gibi.
+  const usage = await checkAndConsumeUsage(request, "weekly_review");
+  if ("error" in usage || !usage.allowed) return Response.json({ review: fallback, source: "local", reason: "Günlük AI değerlendirme sınırına ulaşıldığı için güvenli yerel değerlendirme kullanıldı." });
 
   const outputLanguageInstruction = locale === "en"
     ? "- Output must be written entirely in English, short, concrete and supportive."

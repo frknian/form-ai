@@ -1,7 +1,8 @@
-import { localNutritionAdvice, type NutritionAdviceInput } from "@/lib/nutrition-advice";
-import { authenticateRequest } from "@/lib/api-auth";
-import { rateLimit, tooManyRequests } from "@/lib/rate-limit";
-import { generateAiText, hasAiProvider } from "@/lib/ai-provider";
+import { localNutritionAdvice, type NutritionAdviceInput } from "../../../../lib/nutrition-advice.ts";
+import { authenticateRequest } from "../../../../lib/api-auth.ts";
+import { rateLimit, tooManyRequests } from "../../../../lib/rate-limit.ts";
+import { generateAiText, hasAiProvider } from "../../../../lib/ai-provider.ts";
+import { checkAndConsumeUsage } from "../../../../lib/usage-limits.ts";
 
 export const runtime = "edge";
 
@@ -68,6 +69,12 @@ export async function POST(request: Request) {
   if (!input || !input.calorieTarget) return Response.json({ error: "Beslenme özeti geçersiz" }, { status: 400 });
   const fallback = localNutritionAdvice(input, locale);
   if (!hasAiProvider() || !input.meals.length) return Response.json({ advice: fallback, source: "fallback" });
+
+  // Bu istek her öğün girişinde arka planda otomatik atılır; ücretsiz
+  // kullanıcılarda günlük AI öneri sınırı dolduğunda hata yerine sessizce
+  // yerel yedeğe düşülür.
+  const usage = await checkAndConsumeUsage(request, "nutrition_advice");
+  if ("error" in usage || !usage.allowed) return Response.json({ advice: fallback, source: "fallback" });
 
   const languageInstruction = locale === "en" ? "in English" : "Türkçe";
   const prompt = `Aşağıdaki anonim günlük beslenme özetine göre ${languageInstruction}, tıbbi olmayan ve tek paragraf halinde en fazla 65 kelimelik bir sonraki öğün önerisi yaz. Kesin sağlık iddiası üretme. Eksik makrolara odaklan ve 2-4 yaygın besin örneği ver. Kalori hedefini aşmayı teşvik etme.\n${JSON.stringify(input)}`;

@@ -2,11 +2,11 @@ import { createClient } from "@supabase/supabase-js";
 import { normalizeSupabaseUrl } from "./supabase/url.ts";
 import { bearerToken } from "./api-auth.ts";
 
-export type UsageFeature = "chat" | "photo" | "text_nutrition";
+export type UsageFeature = "chat" | "photo" | "text_nutrition" | "weekly_review" | "nutrition_advice";
 
 const DAILY_LIMITS = {
-  free: { chat: 5, photo: 1, text_nutrition: 3 },
-  premium: { chat: 20, photo: 10, text_nutrition: 20 },
+  free: { chat: 5, photo: 1, text_nutrition: 3, weekly_review: 1, nutrition_advice: 5 },
+  premium: { chat: 20, photo: 10, text_nutrition: 20, weekly_review: 3, nutrition_advice: 20 },
 } as const;
 
 export type UsageCheckResult = { allowed: boolean; used: number; limit: number };
@@ -91,7 +91,11 @@ export function usageLimitExceeded(feature: UsageFeature, used: number, limit: n
     ? "AI koç mesajı"
     : feature === "photo"
       ? "fotoğrafla öğün analizi"
-      : "yazarak AI besin tahmini";
+      : feature === "text_nutrition"
+        ? "yazarak AI besin tahmini"
+        : feature === "weekly_review"
+          ? "haftalık AI değerlendirme"
+          : "AI beslenme önerisi";
   return Response.json(
     {
       error: `Bugünkü ücretsiz ${featureLabel} sınırına ulaştın (${limit}/${limit}). Yarın tekrar deneyebilirsin.`,

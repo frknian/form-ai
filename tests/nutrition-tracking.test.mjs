@@ -184,6 +184,34 @@ test("öğün önerisi prompt'u enerji dengesini ve BMR sınırını bilir", asy
   assert.match(source, /generateAiText\(\{ system: ADVICE_SYSTEM_PROMPT/, "system prompt çağrıya bağlanmalı");
 });
 
+test("günlük AI öneri sınırı dolunca AI'ya gitmeden yerel öneriye düşülür", { concurrency: false }, async () => {
+  const previousKey = process.env.AI_API_KEY;
+  const previousFetch = globalThis.fetch;
+  const restoreEnv = withSupabaseAuthEnv();
+  process.env.AI_API_KEY = "test-key";
+  globalThis.fetch = withAuthenticatedFetch((url) => {
+    if (String(url).includes("/rest/v1/profiles")) return Response.json({ is_premium: false });
+    if (String(url).includes("/rpc/increment_usage_counter")) return Response.json({ allowed: false, current_count: 5 });
+    throw new TypeError(`beklenmeyen ağ isteği: ${url}`);
+  });
+  try {
+    const { POST } = await import(`../app/api/nutrition/advice/route.ts?test=${Date.now()}`);
+    const response = await POST(authorizedRequest("http://localhost/api/nutrition/advice", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ calorieTarget: 2000, proteinTarget: 120, carbsTarget: 200, fatTarget: 60, totals: { calories: 1200, protein: 60, carbs: 120, fat: 30 }, meals: [{ name: "Tavuk", meal: "Öğle yemeği", calories: 400, protein: 30, carbs: 20, fat: 10 }] }),
+    }));
+    const payload = await response.json();
+    assert.equal(response.status, 200);
+    assert.equal(payload.source, "fallback");
+    assert.ok(typeof payload.advice === "string" && payload.advice.length > 0);
+  } finally {
+    globalThis.fetch = previousFetch;
+    restoreEnv();
+    if (previousKey === undefined) delete process.env.AI_API_KEY; else process.env.AI_API_KEY = previousKey;
+  }
+});
+
 test("gramaj verilmeden AI besin çağrısı yapılmaz", { concurrency: false }, async () => {
   const previousFetch = globalThis.fetch;
   const restoreEnv = withSupabaseAuthEnv();

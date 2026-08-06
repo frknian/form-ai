@@ -1927,3 +1927,24 @@ button.brand:hover .brand-mark { transform:scale(1.06); }
      sütunlarına yayılsın diye genişlik sınırı da yok. */
 
 }
+
+.premium-overlay { position:fixed; z-index:130; inset:0; display:grid; place-items:center; padding:20px; background:rgba(10,12,8,.72); backdrop-filter:blur(8px); overflow:auto; }
+.premium-dialog { position:relative; width:min(560px,100%); max-height:calc(100vh - 40px); overflow:auto; padding:28px; border:1px solid var(--line); border-radius:14px; background:var(--surface-elevated); color:var(--ink); box-shadow:0 28px 80px rgba(0,0,0,.35); }
+.premium-dialog h2 { margin:0 0 6px; font-size:22px; }
+.premium-subtitle { margin:0 0 18px; color:var(--muted-text); font-size:11px; }
+.premium-close { position:absolute; top:14px; right:14px; width:28px; height:28px; border:1px solid var(--line); border-radius:50%; background:var(--surface); color:var(--ink); font-size:16px; line-height:1; cursor:pointer; }
+.premium-plans-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+.premium-plan-card { padding:16px; border:1px solid var(--line); border-radius:12px; background:var(--surface); }
+.premium-plan-card.active { border-color:var(--lime); box-shadow:0 0 0 2px var(--lime) inset; }
+.premium-plan-card > strong { display:block; font-size:14px; }
+.premium-price { display:flex; gap:8px; margin-top:6px; color:var(--muted-text); font-size:11px; }
+.premium-feature-list { list-style:none; margin:12px 0 0; padding:0; display:flex; flex-direction:column; gap:8px; }
+.premium-feature-list li { display:flex; justify-content:space-between; gap:8px; font-size:11px; color:var(--muted-text); }
+.premium-feature-list li b { color:var(--ink); font-weight:700; }
+.premium-cta-button { width:100%; margin-top:18px; padding:12px; border:0; border-radius:10px; background:var(--lime); color:#1d1d1b; font-weight:800; font-size:13px; cursor:pointer; }
+.premium-badge { margin-top:18px; padding:10px 14px; border-radius:10px; background:var(--surface-soft); border:1px solid var(--line); text-align:center; font-weight:700; font-size:12px; }
+.premium-coming-soon-notice { margin:12px 0 0; padding:10px 12px; border-radius:8px; background:var(--surface-soft); color:var(--muted-text); font-size:11px; line-height:1.5; }
+.premium-row .premium-badge { margin-top:0; padding:6px 10px; font-size:10px; }
+@media (max-width:560px) { .premium-plans-grid { grid-template-columns:1fr; } }
+
+.upgrade-inline-cta { display:inline-block; margin-left:6px; padding:4px 10px; border:0; border-radius:8px; background:var(--orange); color:#fff; font-weight:700; font-size:10px; cursor:pointer; }

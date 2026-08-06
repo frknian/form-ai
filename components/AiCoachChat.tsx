@@ -8,7 +8,7 @@ import { authorizedFetch } from "@/lib/api-client";
 import { useTranslations } from "@/lib/i18n/translate";
 import { useLocale } from "@/lib/i18n/locale";
 
-export function AiCoachChat({ context }: { context: string }) {
+export function AiCoachChat({ context, onUpgradeRequest }: { context: string; onUpgradeRequest?: () => void }) {
   const t = useTranslations();
   const locale = useLocale();
   const suggestions = [t.aiCoachChat.suggestion1, t.aiCoachChat.suggestion2, t.aiCoachChat.suggestion3];
@@ -17,6 +17,7 @@ export function AiCoachChat({ context }: { context: string }) {
   const [messages, setMessages] = useState<Array<CoachMessage & { id: string }>>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [limitReached, setLimitReached] = useState(false);
   const [notice, setNotice] = useState("");
   const [usage, setUsage] = useState<{ used: number; limit: number } | null>(null);
   const launcherRef = useRef<HTMLButtonElement>(null);
@@ -50,12 +51,16 @@ export function AiCoachChat({ context }: { context: string }) {
     setBusy(true);
     setError("");
     setNotice("");
+    setLimitReached(false);
     const controller = new AbortController();
     requestController.current = controller;
     try {
       const response = await authorizedFetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ context, messages: conversation.map(({ role, text: messageText }) => ({ role, text: messageText })), locale }), signal: controller.signal });
-      const result = await response.json().catch(() => ({})) as { text?: string; error?: string; notice?: string; usage?: { used: number; limit: number } };
-      if (!response.ok || !result.text) throw new Error(result.error || t.aiCoachChat.coachUnresponsive);
+      const result = await response.json().catch(() => ({})) as { text?: string; error?: string; notice?: string; usage?: { used: number; limit: number }; limitReached?: boolean };
+      if (!response.ok || !result.text) {
+        if (result.limitReached) setLimitReached(true);
+        throw new Error(result.error || t.aiCoachChat.coachUnresponsive);
+      }
       setMessages((current) => [...current, { id: crypto.randomUUID(), role: "assistant", text: result.text as string }]);
       setNotice(result.notice || "");
       if (result.usage) setUsage(result.usage);
@@ -85,7 +90,7 @@ export function AiCoachChat({ context }: { context: string }) {
       <Conversation className="coach-conversation"><ConversationContent className="coach-messages">
         {messages.length === 0 ? <ConversationEmptyState title={t.aiCoachChat.emptyTitle} description={t.aiCoachChat.emptyDescription} icon={<span className="coach-empty-icon">✦</span>} /> : messages.map((message) => <Message from={message.role} key={message.id}><MessageContent><MessageResponse>{message.text}</MessageResponse></MessageContent></Message>)}
         {busy && <div className="coach-thinking" role="status"><i /><i /><i /><span>{t.aiCoachChat.thinking}</span></div>}
-        {error && <div className="coach-error" role="alert">{error} {t.aiCoachChat.tryAgain}</div>}
+        {error && <div className="coach-error" role="alert">{error} {!limitReached && t.aiCoachChat.tryAgain} {limitReached && onUpgradeRequest && <button type="button" className="upgrade-inline-cta" onClick={onUpgradeRequest}>{t.premium.upgradeCta}</button>}</div>}
         {notice && <div className="coach-notice" role="status">{notice}</div>}
         {usage && <div className="coach-usage" role="status">{t.aiCoachChat.dailyUsage(usage.used, usage.limit)}</div>}
       </ConversationContent><ConversationScrollButton aria-label={t.aiCoachChat.goToLastMessage} /></Conversation>

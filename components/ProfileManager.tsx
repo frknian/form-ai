@@ -36,6 +36,8 @@ type ProfileManagerProps = {
   injuryAnswer: string;
   onInjuryChange: (next: string) => void;
   onSignOut: () => Promise<void>;
+  isPremium: boolean;
+  onUpgradeRequest: () => void;
 };
 
 function numberOrNull(value: string) {
@@ -44,7 +46,7 @@ function numberOrNull(value: string) {
   return Number.isFinite(number) && number > 0 ? number : null;
 }
 
-export function ProfileManager({ user, profile, avatarUrl, onSaved, onFrozen, onDeleted, onProgressReset, onRetakeTest, onSignOut, injuryAnswer, onInjuryChange, onRefreshPlan }: ProfileManagerProps) {
+export function ProfileManager({ user, profile, avatarUrl, onSaved, onFrozen, onDeleted, onProgressReset, onRetakeTest, onSignOut, injuryAnswer, onInjuryChange, onRefreshPlan, isPremium, onUpgradeRequest }: ProfileManagerProps) {
   const [refreshing, setRefreshing] = useState(false);
   const t = useTranslations();
   const locale = useLocale();
@@ -304,6 +306,8 @@ export function ProfileManager({ user, profile, avatarUrl, onSaved, onFrozen, on
     {/* KUTU 3 — Ayarlar ve hesap. Beş ayrı kutu hâlinde dağınıktı. */}
     <div className="profile-box profile-settings">
       <div className="profile-box-head"><span>{t.profileChoices.settingsEyebrow}</span><strong>{t.profileChoices.settingsTitle}</strong></div>
+
+    <div className="profile-export premium-row"><div><span>{t.premium.profileRowEyebrow}</span><strong>{isPremium ? t.premium.profileRowTitlePremium : t.premium.profileRowTitleFree}</strong><p>{isPremium ? t.premium.profileRowSubtitlePremium : t.premium.profileRowSubtitleFree}</p></div>{isPremium ? <span className="premium-badge">{t.premium.alreadyPremiumBadge}</span> : <button type="button" onClick={onUpgradeRequest}>{t.premium.ctaUpgrade}</button>}</div>
 
     <div className="profile-preferences"><div><span>{t.profileManager.preferencesEyebrow}</span><strong>{t.profileManager.weightUnitTitle}</strong><small>{t.profileManager.weightUnitHint}</small></div><div className="segmented unit-segmented">{(["kg", "lb"] as WeightUnit[]).map((option) => <button type="button" key={option} aria-pressed={unit === option} className={unit === option ? "selected" : ""} onClick={() => setStoredWeightUnit(option)}>{option === "kg" ? t.profileManager.unitKg : t.profileManager.unitLb}</button>)}</div></div>
 

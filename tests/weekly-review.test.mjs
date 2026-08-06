@@ -61,6 +61,30 @@ test("weekly API returns a validated local fallback without an AI key", async ()
   }
 });
 
+test("günlük AI değerlendirme sınırı dolunca AI'ya gitmeden yerel değerlendirmeye düşülür", async () => {
+  const previousKey = process.env.AI_API_KEY;
+  const previousFetch = globalThis.fetch;
+  const restoreAuthEnv = withSupabaseAuthEnv();
+  process.env.AI_API_KEY = "test-key";
+  globalThis.fetch = withAuthenticatedFetch((url) => {
+    if (String(url).includes("/rest/v1/profiles")) return Response.json({ is_premium: false });
+    if (String(url).includes("/rpc/increment_usage_counter")) return Response.json({ allowed: false, current_count: 1 });
+    throw new TypeError(`beklenmeyen ağ isteği: ${url}`);
+  });
+  try {
+    const { POST } = await import(`../app/api/weekly-review/route.ts?test=${Date.now()}`);
+    const response = await POST(authorizedRequest("http://localhost/api/weekly-review", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ summary: baseSummary }) }));
+    const payload = await response.json();
+    assert.equal(response.status, 200);
+    assert.equal(payload.source, "local");
+    assert.ok(validateWeeklyReview(payload.review));
+  } finally {
+    globalThis.fetch = previousFetch;
+    restoreAuthEnv();
+    if (previousKey === undefined) delete process.env.AI_API_KEY; else process.env.AI_API_KEY = previousKey;
+  }
+});
+
 test("kimliği doğrulanmamış haftalık değerlendirme isteği reddedilir", async () => {
   const restoreAuthEnv = withSupabaseAuthEnv();
   try {

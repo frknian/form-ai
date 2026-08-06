@@ -91,6 +91,36 @@ test("sunucu limiti aştığını bildirdiğinde sayaç artırılmadığı gibi 
   }
 });
 
+test("haftalık AI değerlendirme ücretsiz kullanıcı için düşük limitle sınırlanır", async () => {
+  const restoreEnv = withSupabaseAuthEnv();
+  const previousFetch = globalThis.fetch;
+  globalThis.fetch = withUsageFetch({ isPremium: false, allowed: false, currentCount: 1 });
+  try {
+    const request = authorizedRequest("http://localhost/x");
+    const result = await checkAndConsumeUsage(request, "weekly_review");
+    assert.ok(!("error" in result));
+    assert.deepEqual(result, { allowed: false, used: 1, limit: 1 });
+  } finally {
+    globalThis.fetch = previousFetch;
+    restoreEnv();
+  }
+});
+
+test("AI beslenme önerisi ücretli kullanıcı için daha yüksek limit uygular", async () => {
+  const restoreEnv = withSupabaseAuthEnv();
+  const previousFetch = globalThis.fetch;
+  globalThis.fetch = withUsageFetch({ isPremium: true, allowed: true, currentCount: 4 });
+  try {
+    const request = authorizedRequest("http://localhost/x");
+    const result = await checkAndConsumeUsage(request, "nutrition_advice");
+    assert.ok(!("error" in result));
+    assert.deepEqual(result, { allowed: true, used: 4, limit: 20 });
+  } finally {
+    globalThis.fetch = previousFetch;
+    restoreEnv();
+  }
+});
+
 test("jetonsuz istek Supabase'e hiç gitmeden reddedilir", async () => {
   const restoreEnv = withSupabaseAuthEnv();
   const previousFetch = globalThis.fetch;

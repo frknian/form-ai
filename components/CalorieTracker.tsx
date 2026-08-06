@@ -24,6 +24,7 @@ interface CalorieTrackerProps {
   activityFactor?: number;
   workoutDays?: number;
   profileGoal?: string;
+  onUpgradeRequest?: () => void;
 }
 
 const meals: Meal[] = ["Kahvaltı", "Öğle yemeği", "Akşam yemeği", "Atıştırmalık"];
@@ -53,7 +54,7 @@ function todayLabel(offset: number, dateLocale: string) {
   return new Intl.DateTimeFormat(dateLocale, { weekday: "long", day: "numeric", month: "long" }).format(date);
 }
 
-export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70, activityFactor = 1.375, workoutDays = 3, profileGoal = "" }: CalorieTrackerProps) {
+export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70, activityFactor = 1.375, workoutDays = 3, profileGoal = "", onUpgradeRequest }: CalorieTrackerProps) {
   const t = useTranslations();
   const locale = useLocale();
   const dateLocale = locale === "en" ? "en-US" : "tr-TR";
@@ -84,6 +85,7 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
   const [aiEstimate, setAiEstimate] = useState<{ grams: number; items: string[]; confidence: "low" | "medium" | "high" } | null>(null);
   const [estimating, setEstimating] = useState(false);
   const [message, setMessage] = useState("");
+  const [textNutritionLimitReached, setTextNutritionLimitReached] = useState(false);
   const [mealAdvice, setMealAdvice] = useState("");
   const [mealAdviceLoading, setMealAdviceLoading] = useState(false);
   const [mealAdviceSource, setMealAdviceSource] = useState<"ai" | "fallback">("fallback");
@@ -292,6 +294,7 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
     if (query.length < 2) { setMessage(t.calorieTracker.fillNameAndCalories); return; }
     setEstimating(true);
     setMessage(t.calorieTracker.estimating);
+    setTextNutritionLimitReached(false);
     try {
       const portionGrams = Number(grams.replace(",", "."));
       if (!Number.isFinite(portionGrams) || portionGrams <= 0 || portionGrams > 5000) {
@@ -304,8 +307,13 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
         warnings?: string[];
         totals?: { calories: number; protein: number; carbohydrates: number; fat: number; fiber: number };
         items?: Array<{ query: string; estimatedGrams: number; confidence: number; needsConfirmation: boolean; food: unknown; nutrition: unknown }>;
+        limitReached?: boolean;
       };
-      if (!response.ok) { setMessage(result.error || t.calorieTracker.estimateFailed); return; }
+      if (!response.ok) {
+        if (result.limitReached) setTextNutritionLimitReached(true);
+        setMessage(result.error || t.calorieTracker.estimateFailed);
+        return;
+      }
       const items = result.items || [];
       const totals = result.totals;
       if (!items.length || !totals) { setMessage(t.calorieTracker.estimateNotRecognized); return; }
@@ -500,7 +508,7 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
           {aiEstimate && <div className={`ai-estimate-card ${aiEstimate.confidence}`}><span>{t.calorieTracker.aiEstimateLabel}</span><strong>{foodName}</strong><small>{t.calorieTracker.aiEstimateGrams(aiEstimate.grams)}</small><div className="ai-nutrition-values"><b>{nutrition.calories}<small>kcal</small></b><b>{nutrition.protein}<small>{t.calorieTracker.macroProtein} (g)</small></b><b>{nutrition.carbs}<small>{t.calorieTracker.macroCarbs} (g)</small></b><b>{nutrition.fat}<small>{t.calorieTracker.macroFat} (g)</small></b><b>{nutrition.fiber}<small>{t.calorieTracker.fieldFiber} (g)</small></b></div>{aiEstimate.items.length > 1 && <small>{aiEstimate.items.join(" · ")}</small>}<p>{aiEstimate.confidence === "low" ? t.calorieTracker.aiConfidenceLow : aiEstimate.confidence === "high" ? t.calorieTracker.aiConfidenceHigh : t.calorieTracker.aiConfidenceMedium}</p></div>}
           <button type="button" className="primary-btn add-food" disabled={isSubmitting || estimating} onClick={() => void submitManual()}><Plus size={16} /> {estimating ? t.calorieTracker.estimating : aiEstimate ? t.calorieTracker.addToLog : t.calorieTracker.analyzeAndAdd}</button>
         </div>
-        {message && <p className="food-message">{message}</p>}
+        {message && <p className="food-message">{message} {textNutritionLimitReached && onUpgradeRequest && <button type="button" className="upgrade-inline-cta" onClick={onUpgradeRequest}>{t.premium.upgradeCta}</button>}</p>}
       </div>
     </section>
 
