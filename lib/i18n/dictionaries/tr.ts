@@ -1378,7 +1378,7 @@ export const tr = {
     },
     premiumLimits: {
       chat: "20/gün",
-      nutritionText: "20/gün",
+      nutritionText: "30/gün",
       weeklyReview: "Her hafta",
       nutritionAdvice: "20/gün",
     },

@@ -6,7 +6,7 @@ export type UsageFeature = "chat" | "photo" | "text_nutrition" | "weekly_review"
 
 const DAILY_LIMITS = {
   free: { chat: 5, photo: 1, text_nutrition: 3, weekly_review: 1, nutrition_advice: 5 },
-  premium: { chat: 20, photo: 10, text_nutrition: 20, weekly_review: 3, nutrition_advice: 20 },
+  premium: { chat: 20, photo: 10, text_nutrition: 30, weekly_review: 3, nutrition_advice: 20 },
 } as const;
 
 export type UsageCheckResult = { allowed: boolean; used: number; limit: number; isPremium: boolean };

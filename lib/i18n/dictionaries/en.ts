@@ -1375,7 +1375,7 @@ export const en: typeof tr = {
     },
     premiumLimits: {
       chat: "20/day",
-      nutritionText: "20/day",
+      nutritionText: "30/day",
       weeklyReview: "Every week",
       nutritionAdvice: "20/day",
     },
